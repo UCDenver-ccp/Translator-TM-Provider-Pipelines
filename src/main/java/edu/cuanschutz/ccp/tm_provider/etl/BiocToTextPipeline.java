@@ -19,8 +19,8 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
@@ -66,39 +66,40 @@ public class BiocToTextPipeline {
 		 * version of the document. 2) a PCollection mapping document ID to a String
 		 * representation (BioNLP format) of the section annotations in the document,
 		 * and (possibly) 3) a PCollection logging any errors encountered during the
-		 * BioC-->Plain-text conversion.
+		 * BioC-->Plain-text conversion. 4) a PCollection logging the processing status
+		 * of each document
 		 */
 
 		PCollection<KV<String, String>> docIdToPlainText = output.get(BiocToTextFn.plainTextTag);
 		PCollection<KV<String, String>> docIdToAnnotations = output.get(BiocToTextFn.sectionAnnotationsTag);
 		PCollection<EtlFailureData> failures = output.get(BiocToTextFn.etlFailureTag);
+		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
 		/* store the bioc document content in Cloud Datastore */
 		fileIdAndContent
-				.apply("bioc document --> datastore 'document' entity",
+				.apply("biocxml->document_entity",
 						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML)))
-				.apply("datastore 'document' entity --> datastore",
-						DatastoreIO.v1().write().withProjectId(options.getProject()));
+				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the plain text document content in Cloud Datastore */
 		docIdToPlainText
-				.apply("plain text document --> datastore 'document' entity",
+				.apply("plaintext->document_entity",
 						ParDo.of(new DocumentToEntityFn(DocumentType.TEXT, DocumentFormat.TEXT)))
-				.apply("datastore 'document' entity --> datastore",
-						DatastoreIO.v1().write().withProjectId(options.getProject()));
+				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the serialized annotation document content in Cloud Datastore */
 		docIdToAnnotations
-				.apply("annotations (bionlp) document --> datastore 'document' entity",
+				.apply("annotations->document_entity",
 						ParDo.of(new DocumentToEntityFn(DocumentType.SECTIONS, DocumentFormat.BIONLP)))
-				.apply("datastore 'document' entity --> datastore",
-						DatastoreIO.v1().write().withProjectId(options.getProject()));
+				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures --> datastore 'failure' entity",
-				ParDo.of(new EtlFailureToEntityFn(PipelineKey.BIOC_TO_TEXT)))
-				.apply("datastore 'failure' entity --> datastore",
-						DatastoreIO.v1().write().withProjectId(options.getProject()));
+		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn(PipelineKey.BIOC_TO_TEXT)))
+				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/* store the processing status document for this pipeline in Cloud Datastore */
+		status.apply("status->status_entity", ParDo.of(new ProcessingStatusToEntityFn()))
+				.apply("status_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		p.run().waitUntilFinish();
 

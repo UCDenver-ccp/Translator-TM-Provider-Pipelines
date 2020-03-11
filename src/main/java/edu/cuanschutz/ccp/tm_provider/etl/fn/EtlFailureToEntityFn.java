@@ -17,6 +17,7 @@ import com.google.datastore.v1.Key.Builder;
 import com.google.datastore.v1.Key.PathElement;
 import com.google.protobuf.ByteString;
 
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import lombok.Data;
