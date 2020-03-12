@@ -18,6 +18,7 @@ import com.google.datastore.v1.Key.Builder;
 import com.google.datastore.v1.Key.PathElement;
 import com.google.protobuf.ByteString;
 
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -79,7 +80,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 
 	static Entity createEntity(String docId, DocumentType type, DocumentFormat format, String docContent)
 			throws UnsupportedEncodingException {
-		String docName = docId + "." + type.name().toLowerCase() + "." + format.name().toLowerCase();
+		String docName = DatastoreDocumentUtil.getDocumentKeyName(docId, type, format);
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(DOCUMENT_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();

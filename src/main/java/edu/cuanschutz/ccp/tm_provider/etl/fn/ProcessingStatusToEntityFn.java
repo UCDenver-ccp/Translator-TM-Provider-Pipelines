@@ -2,7 +2,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_BP_DONE;
@@ -14,6 +13,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_BP_DONE;
@@ -36,6 +36,7 @@ import com.google.datastore.v1.Key.Builder;
 import com.google.datastore.v1.Key.PathElement;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -59,7 +60,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 	}
 
 	static Entity buildStatusEntity(ProcessingStatus status) throws UnsupportedEncodingException {
-		String docName = String.format("%s.status", status.getDocumentId());
+		String docName = DatastoreProcessingStatusUtil.getStatusKeyName(status.getDocumentId());
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(STATUS_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();

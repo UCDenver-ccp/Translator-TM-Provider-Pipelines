@@ -348,6 +348,20 @@
 	</profiles>
 
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>3.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+
+
 	<dependencies>
 		<!-- Adds a dependency on the Beam SDK. -->
 		<dependency>
@@ -403,7 +417,6 @@
 		<dependency>
 			<groupId>com.google.http-client</groupId>
 			<artifactId>google-http-client</artifactId>
-			<version>${google-clients.version}</version>
 			<exclusions>
 				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
@@ -418,6 +431,19 @@
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-pubsub</artifactId>
 			<version>${pubsub.version}</version>
+			<exclusions>
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
+					dependency of google-api-client -->
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava-jdk5</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-datastore</artifactId>
 			<exclusions>
 				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
