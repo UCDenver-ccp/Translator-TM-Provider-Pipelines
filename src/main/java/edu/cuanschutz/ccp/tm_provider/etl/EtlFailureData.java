@@ -1,4 +1,4 @@
-package edu.cuanschutz.ccp.tm_provider.etl.fn;
+package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.Arrays;
 

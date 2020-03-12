@@ -55,4 +55,118 @@ public interface DatastoreConstants {
 	 */
 	public static final String FAILURE_PROPERTY_PIPELINE = "pipeline";
 
+	///////////////////////////////////////////////////////////////////////////
+	/////////////////// PROCESSING STATUS ENTITY PROPERTIES ///////////////////
+	///////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * The Cloud Datastore entity type used for logging processing status for each
+	 * document
+	 */
+	public static final String STATUS_KIND = "status";
+	/**
+	 * The document ID corresponding to this status data
+	 */
+	public static final String STATUS_PROPERTY_DOCUMENT_ID = "document_id";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_TEXT_DONE = "text";
+	/**
+	 * true if dependency parsing is complete
+	 */
+	public static final String STATUS_PROPERTY_DEPENDENCY_PARSE_DONE = "dep";
+
+	////////////////////////////////////////////////////////////////
+	/////////////////// public static final String STATUS_PROPERTY_OGER CONCEPT
+	//////////////////////////////////////////////////////////////// PROCESSING
+	//////////////////////////////////////////////////////////////// ////////////////////
+	////////////////////////////////////////////////////////////////
+
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_GO_BP_DONE = "oger_gobp";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_GO_CC_DONE = "oger_gocc";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_GO_MF_DONE = "oger_gomf";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_MOP_DONE = "oger_mop";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_NCBITAXON_DONE = "oger_ncbitaxon";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_SO_DONE = "oger_so";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_PR_DONE = "oger_pr";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_OGER_UBERON_DONE = "oger_uberon";
+
+	////////////////////////////////////////////////////////////////
+	////////////////// BERT CONCEPT PROCESSING /////////////////////
+	////////////////////////////////////////////////////////////////
+
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_CHEBI_DONE = "bert_chebi";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_CL_DONE = "bert_cl";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_GO_BP_DONE = "bert_gobp";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_GO_CC_DONE = "bert_gocc";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_GO_MF_DONE = "bert_gomf";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_MOP_DONE = "bert_mop";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_NCBITAXON_DONE = "bert_ncbitaxon";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_SO_DONE = "bert_so";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_PR_DONE = "bert_pr";
+	/**
+	 * 
+	 */
+	public static final String STATUS_PROPERTY_BERT_UBERON_DONE = "bert_uberon";
+
 }

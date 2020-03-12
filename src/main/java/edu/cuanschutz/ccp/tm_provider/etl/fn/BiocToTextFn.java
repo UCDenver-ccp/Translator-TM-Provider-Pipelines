@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,11 +14,26 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverter;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 
+/**
+ * Outputs four {@link PCollection} objects
+ * <ul>
+ * <li>mapping document ID to plain text</li>
+ * <li>mapping document ID to a serialized (BioNLP) form of the section
+ * annotations</li>
+ * <li>a log of any failures</li>
+ * <li>a status object that indicates which jobs still need processing, e.g.
+ * dependency parse, etc.</li>
+ * </ul>
+ *
+ */
 public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
@@ -29,6 +45,9 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> etlFailureTag = new TupleTag<EtlFailureData>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
 	};
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml) {
@@ -62,6 +81,14 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								String serializedAnnotations = baos
 										.toString(CharacterEncoding.UTF_8.getCharacterSetName());
 								out.get(sectionAnnotationsTag).output(KV.of(docId, serializedAnnotations));
+
+								/*
+								 * output a {@link ProcessingStatus} for the document
+								 */
+								ProcessingStatus status = new ProcessingStatus(docId,
+										EnumSet.of(ProcessingStatusFlag.TEXT_DONE));
+								out.get(processingStatusTag).output(status);
+
 							}
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData("Likely failure during BioC XML parsing.",
@@ -70,7 +97,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 						}
 
 					}
-				}).withOutputTags(plainTextTag, TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag)));
+				}).withOutputTags(plainTextTag,
+						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
 	}
 
 }
