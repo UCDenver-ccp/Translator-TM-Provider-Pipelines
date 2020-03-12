@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_BP_DONE;
@@ -65,6 +66,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
+		entityBuilder.putProperties(STATUS_PROPERTY_DOCUMENT_ID, makeValue(status.getDocumentId()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_TEXT_DONE, makeValue(status.isTextDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE,
 				makeValue(status.isDependencyParseDone()).build());
