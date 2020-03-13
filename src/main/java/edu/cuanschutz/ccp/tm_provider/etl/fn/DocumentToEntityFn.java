@@ -6,8 +6,8 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.PIPELINE_KEY;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.PIPELINE_VERSION;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION;
 
 import java.io.UnsupportedEncodingException;
 
@@ -24,7 +24,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import lombok.Data;
@@ -103,8 +102,8 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 				makeValue(docContentBlob).setExcludeFromIndexes(true).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_FORMAT, makeValue(format.name()).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_TYPE, makeValue(type.name()).build());
-		entityBuilder.putProperties(PIPELINE_VERSION, makeValue(pipelineVersion).build());
-		entityBuilder.putProperties(PIPELINE_KEY, makeValue(pipeline.name()).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE_VERSION, makeValue(pipelineVersion).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(pipeline.name()).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;

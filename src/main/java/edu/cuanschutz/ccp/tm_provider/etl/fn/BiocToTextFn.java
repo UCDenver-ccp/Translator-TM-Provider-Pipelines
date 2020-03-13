@@ -17,6 +17,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverter;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
@@ -50,7 +51,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml) {
+	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml, PipelineKey pipeline,
+			String pipelineVersion, com.google.cloud.Timestamp timestamp) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
@@ -91,8 +93,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 							}
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData("Likely failure during BioC XML parsing.",
-									fileId, biocXml, t);
+							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
+									"Likely failure during BioC XML parsing.", fileId, t, timestamp);
 							out.get(etlFailureTag).output(failure);
 						}
 

@@ -56,8 +56,9 @@ public class DependencyParsePipeline {
 	}
 
 	public static void main(String[] args) {
-
 		String pipelineVersion = Version.getProjectVersion();
+		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
+
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
 		Pipeline p = Pipeline.create(options);
@@ -85,7 +86,8 @@ public class DependencyParsePipeline {
 		PCollection<KV<String, String>> docId2Content = p.apply(
 				Create.of(documentIdToContentList).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
-		PCollectionTuple output = TurkuDepParserFn.process(docId2Content, options.getDependencyParserServiceUri());
+		PCollectionTuple output = TurkuDepParserFn.process(docId2Content, options.getDependencyParserServiceUri(),
+				PIPELINE_KEY, pipelineVersion, timestamp);
 
 		/*
 		 * Processing of the plain text by the dependency parser results in 1) a
@@ -107,8 +109,8 @@ public class DependencyParsePipeline {
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn(PIPELINE_KEY)))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		p.run().waitUntilFinish();
 	}
@@ -128,7 +130,7 @@ public class DependencyParsePipeline {
 
 					@ProcessElement
 					public void processElement(@Element EtlFailureData failure, OutputReceiver<String> out) {
-						out.output(failure.getFileId());
+						out.output(failure.getDocumentId());
 					}
 
 				}));

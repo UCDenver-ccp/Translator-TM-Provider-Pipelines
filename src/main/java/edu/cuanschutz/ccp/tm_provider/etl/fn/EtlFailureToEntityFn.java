@@ -2,10 +2,12 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_KIND;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE_VERSION;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_STACKTRACE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_TIMESTAMP;
 
 import java.io.UnsupportedEncodingException;
 
@@ -20,39 +22,37 @@ import com.google.protobuf.ByteString;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * Transforms a PCollection containing {@lnk EtlFailure} objects to a
  * PCollection containing Google Cloud Datastore Entities
  *
  */
-@Data
-@EqualsAndHashCode(callSuper = false)
 public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 
 	private static final long serialVersionUID = 1L;
-	private final PipelineKey pipelineKey;
 
 	@ProcessElement
 	public void processElement(@Element EtlFailureData failure, OutputReceiver<Entity> out)
 			throws UnsupportedEncodingException {
-		String docId = failure.getFileId();
+		String docId = failure.getDocumentId();
 		String message = failure.getMessage();
 		String stackTrace = failure.getStackTrace();
+		PipelineKey pipeline = failure.getPipeline();
+		String pipelineVersion = failure.getPipelineVersion();
+		com.google.cloud.Timestamp timestamp = failure.getTimestamp();
 
 		/* crop document id if it is a file path */
 		docId = DocumentToEntityFn.updateDocId(docId);
 
-		Entity entity = buildFailureEntity(docId, pipelineKey, message, stackTrace);
+		Entity entity = buildFailureEntity(pipeline, pipelineVersion, docId, message, stackTrace, timestamp);
 		out.output(entity);
 
 	}
 
-	static Entity buildFailureEntity(String docId, PipelineKey pipelineKey, String message, String stackTrace)
-			throws UnsupportedEncodingException {
-		String docName = docId + "." + pipelineKey.name().toLowerCase();
+	static Entity buildFailureEntity(PipelineKey pipeline, String pipelineVersion, String docId, String message,
+			String stackTrace, com.google.cloud.Timestamp timestamp) throws UnsupportedEncodingException {
+		String docName = String.format("%s.%s.%s", docId, pipeline.name().toLowerCase(), pipelineVersion);
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(FAILURE_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();
@@ -64,11 +64,13 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		ByteString stackTraceBlob = ByteString.copyFrom(stackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
-		entityBuilder.putProperties(FAILURE_PROPERTY_ID, makeValue(docId).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(pipeline.name()).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE_VERSION, makeValue(pipelineVersion).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_ID, makeValue(docId).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_TIMESTAMP, makeValue(timestamp.toString()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_MESSAGE, makeValue(message).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_STACKTRACE,
 				makeValue(stackTraceBlob).setExcludeFromIndexes(true).build());
-		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(pipelineKey.name()).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;
