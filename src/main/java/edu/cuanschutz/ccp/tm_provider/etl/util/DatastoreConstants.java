@@ -2,6 +2,15 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 public interface DatastoreConstants {
 
+	/**
+	 * The name of the pipeline used to produce the document
+	 */
+	public static final String PIPELINE_KEY = "pipeline";
+	/**
+	 * The version of the pipeline used to produce the document
+	 */
+	public static final String PIPELINE_VERSION = "pipeline-version";
+
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////// DOCUMENT ENTITY PROPERTIES //////////////////////////
 	///////////////////////////////////////////////////////////////////////////
@@ -29,6 +38,14 @@ public interface DatastoreConstants {
 	 * {@link DocumentType}
 	 */
 	public static final String DOCUMENT_PROPERTY_TYPE = "type";
+	/**
+	 * The pipeline used to produce the document
+	 */
+	public static final String DOCUMENT_PROPERTY_PIPELINE = PIPELINE_KEY;
+	/**
+	 * The version of the pipeline used to produce the document
+	 */
+	public static final String DOCUMENT_PROPERTY_PIPELINE_VERSION = PIPELINE_VERSION;
 
 	///////////////////////////////////////////////////////////////////////////
 	////////////////////// FAILURE ENTITY PROPERTIES //////////////////////////
@@ -39,9 +56,9 @@ public interface DatastoreConstants {
 	 */
 	public static final String FAILURE_KIND = "failure";
 	/**
-	 * A unique id for a given failure = documentId.pipeline-key
+	 * The document ID associated with the failure
 	 */
-	public static final String FAILURE_PROPERTY_ID = "id";
+	public static final String FAILURE_PROPERTY_DOCUMENT_ID = "document_id";
 	/**
 	 * The message provided by the exception that was indicated for the failure
 	 */
@@ -53,7 +70,15 @@ public interface DatastoreConstants {
 	/**
 	 * The pipeline where the failure occurred
 	 */
-	public static final String FAILURE_PROPERTY_PIPELINE = "pipeline";
+	public static final String FAILURE_PROPERTY_PIPELINE = PIPELINE_KEY;
+	/**
+	 * The version of the pipeline when the failure occurred
+	 */
+	public static final String FAILURE_PROPERTY_PIPELINE_VERSION = PIPELINE_VERSION;
+	/**
+	 * The time when the failure occurred
+	 */
+	public static final String FAILURE_PROPERTY_TIMESTAMP = "timestamp";
 
 	///////////////////////////////////////////////////////////////////////////
 	/////////////////// PROCESSING STATUS ENTITY PROPERTIES ///////////////////

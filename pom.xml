@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.cuanschutz.edu</groupId>
 	<artifactId>tm-pipelines</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<description>Pipelines used by the Translator Text Mining Provider</description>
 
 
@@ -33,6 +33,9 @@
 		<flink.artifact.name>beam-runners-flink-1.9</flink.artifact.name>
 	</properties>
 
+	<organization>
+		<name>University of Colorado Anschutz Medical Campus</name>
+	</organization>
 
 
 	<build>
@@ -71,6 +74,14 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>${maven-jar-plugin.version}</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>edu.cuanschutz.ccp.tm_provider.etl.PipelineMain</mainClass>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
 			</plugin>
 
 			<!-- Configures `mvn package` to produce a bundled jar ("fat jar") for 

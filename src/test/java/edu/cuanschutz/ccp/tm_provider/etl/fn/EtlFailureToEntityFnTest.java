@@ -11,6 +11,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.google.cloud.Timestamp;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
@@ -29,6 +30,9 @@ public class EtlFailureToEntityFnTest {
 		String message = "Error!";
 		String expectedMessage = "(This is a intential error made for testing) -- java.io.IOException: " + message;
 		PipelineKey pipelineKey = PipelineKey.BIOC_TO_TEXT;
+		String pipelineVersion = "0.1.0";
+		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
+
 		String stacktrace = null;
 		Throwable t = null;
 		try {
@@ -38,15 +42,15 @@ public class EtlFailureToEntityFnTest {
 			stacktrace = Arrays.toString(e.getStackTrace());
 		}
 
-		EtlFailureData failure = new EtlFailureData("(This is a intential error made for testing)", docId, docContent,
-				t);
+		EtlFailureData failure = new EtlFailureData(pipelineKey, pipelineVersion,
+				"(This is a intential error made for testing)", docId, t, timestamp);
 
 		PCollection<EtlFailureData> input = pipeline.apply(Create.of(failure));
 
-		EtlFailureToEntityFn fn = new EtlFailureToEntityFn(pipelineKey);
+		EtlFailureToEntityFn fn = new EtlFailureToEntityFn();
 		PCollection<Entity> output = input.apply(ParDo.of(fn));
-		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(docId, pipelineKey, expectedMessage,
-				stacktrace);
+		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(pipelineKey, pipelineVersion, docId,
+				expectedMessage, stacktrace, timestamp);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
 		pipeline.run();
