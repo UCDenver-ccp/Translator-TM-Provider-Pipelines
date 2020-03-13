@@ -6,6 +6,8 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.PIPELINE_KEY;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.PIPELINE_VERSION;
 
 import java.io.UnsupportedEncodingException;
 
@@ -21,6 +23,8 @@ import com.google.protobuf.ByteString;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import lombok.Data;
@@ -38,6 +42,8 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 	private static final long serialVersionUID = 1L;
 	private final DocumentType type;
 	private final DocumentFormat format;
+	private final PipelineKey pipeline;
+	private final String pipelineVersion;
 
 	@ProcessElement
 	public void processElement(@Element KV<String, String> docIdToDocContent, OutputReceiver<Entity> out)
@@ -48,7 +54,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 		/* crop document id if it is a file path */
 		docId = updateDocId(docId);
 
-		Entity entity = createEntity(docId, type, format, docContent);
+		Entity entity = createEntity(docId, type, format, pipeline, pipelineVersion, docContent);
 		out.output(entity);
 
 	}
@@ -78,9 +84,9 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 		return docId;
 	}
 
-	static Entity createEntity(String docId, DocumentType type, DocumentFormat format, String docContent)
-			throws UnsupportedEncodingException {
-		String docName = DatastoreDocumentUtil.getDocumentKeyName(docId, type, format);
+	static Entity createEntity(String docId, DocumentType type, DocumentFormat format, PipelineKey pipeline,
+			String pipelineVersion, String docContent) throws UnsupportedEncodingException {
+		String docName = DatastoreDocumentUtil.getDocumentKeyName(docId, type, format, pipeline, pipelineVersion);
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(DOCUMENT_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();
@@ -97,6 +103,8 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 				makeValue(docContentBlob).setExcludeFromIndexes(true).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_FORMAT, makeValue(format.name()).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_TYPE, makeValue(type.name()).build());
+		entityBuilder.putProperties(PIPELINE_VERSION, makeValue(pipelineVersion).build());
+		entityBuilder.putProperties(PIPELINE_KEY, makeValue(pipeline.name()).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;

@@ -4,7 +4,10 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.values.KV;
@@ -21,6 +24,8 @@ import com.google.cloud.datastore.KeyFactory;
  */
 public class DatastoreDocumentUtil {
 
+	private final static Logger LOGGER = Logger.getLogger(DatastoreDocumentUtil.class.getName());
+
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
@@ -34,12 +39,14 @@ public class DatastoreDocumentUtil {
 	 * @return a list of document ID/content pairs queried from Cloud Datastore
 	 */
 	public List<KV<String, String>> getDocumentIdToContentList(List<String> documentIds, DocumentType type,
-			DocumentFormat format) {
+			DocumentFormat format, PipelineKey pipeline, String pipelineVersion) {
 
 		// from the input list of document IDs, create an array of corresponding
 		// document @{link Key} objects
-		Key[] keys = documentIds.stream().map(id -> createDocumentKey(id, type, format)).collect(Collectors.toList())
-				.toArray(new Key[0]);
+		Key[] keys = documentIds.stream().map(id -> createDocumentKey(id, type, format, pipeline, pipelineVersion))
+				.collect(Collectors.toList()).toArray(new Key[0]);
+
+		LOGGER.log(Level.INFO, String.format("key count: %d -- %s", keys.length, Arrays.toString(keys)));
 
 		// Batch query for the entities corresponding to the {@link Key} objects, and
 		// populate a list of document id/content KV pairs
@@ -70,13 +77,16 @@ public class DatastoreDocumentUtil {
 	 * @param format
 	 * @return the Key for the specified document
 	 */
-	public Key createDocumentKey(String docId, DocumentType type, DocumentFormat format) {
-		String docName = getDocumentKeyName(docId, type, format);
+	public Key createDocumentKey(String docId, DocumentType type, DocumentFormat format, PipelineKey pipeline,
+			String pipelineVersion) {
+		String docName = getDocumentKeyName(docId, type, format, pipeline, pipelineVersion);
 		return keyFactory.newKey(docName);
 	}
 
-	public static String getDocumentKeyName(String docId, DocumentType type, DocumentFormat format) {
-		return docId + "." + type.name().toLowerCase() + "." + format.name().toLowerCase();
+	public static String getDocumentKeyName(String docId, DocumentType type, DocumentFormat format,
+			PipelineKey pipeline, String version) {
+		return String.format("%s.%s.%s.%s.%s", docId, type.name().toLowerCase(), format.name().toLowerCase(),
+				pipeline.name().toLowerCase(), version);
 	}
 
 }

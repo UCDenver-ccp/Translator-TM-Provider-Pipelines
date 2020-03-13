@@ -24,8 +24,11 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
+
+	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
@@ -38,6 +41,7 @@ public class BiocToTextPipeline {
 
 	public static void main(String[] args) {
 
+		String pipelineVersion = Version.getProjectVersion();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
 		Pipeline p = Pipeline.create(options);
@@ -78,19 +82,22 @@ public class BiocToTextPipeline {
 		/* store the bioc document content in Cloud Datastore */
 		fileIdAndContent
 				.apply("biocxml->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML)))
+						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
+								"na")))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the plain text document content in Cloud Datastore */
 		docIdToPlainText
 				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.TEXT, DocumentFormat.TEXT)))
+						ParDo.of(new DocumentToEntityFn(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
+								pipelineVersion)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the serialized annotation document content in Cloud Datastore */
 		docIdToAnnotations
 				.apply("annotations->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.SECTIONS, DocumentFormat.BIONLP)))
+						ParDo.of(new DocumentToEntityFn(DocumentType.SECTIONS, DocumentFormat.BIONLP, PIPELINE_KEY,
+								pipelineVersion)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */

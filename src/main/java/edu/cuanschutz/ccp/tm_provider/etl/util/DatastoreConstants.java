@@ -7,6 +7,15 @@ public interface DatastoreConstants {
 	///////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * The name of the pipeline used to produce the document
+	 */
+	public static final String PIPELINE_KEY = "pipeline";
+	/**
+	 * The version of the pipeline used to produce the document
+	 */
+	public static final String PIPELINE_VERSION = "pipeline-version";
+
+	/**
 	 * The Cloud Datastore entity type used for storing documents
 	 */
 	public static final String DOCUMENT_KIND = "document";
