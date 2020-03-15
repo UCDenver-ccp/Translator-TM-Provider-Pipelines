@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
@@ -16,11 +15,10 @@ import org.apache.beam.sdk.transforms.DoFn;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
-import com.google.datastore.v1.Key.Builder;
-import com.google.datastore.v1.Key.PathElement;
 import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -57,11 +55,7 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 	static Entity buildFailureEntity(PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
 			String docId, String message, String stackTrace, com.google.cloud.Timestamp timestamp)
 			throws UnsupportedEncodingException {
-		String docName = String.format("%s.%s.%s.%s", docId, pipeline.name().toLowerCase(), pipelineVersion,
-				documentType.name());
-		Builder builder = Key.newBuilder();
-		PathElement pathElement = builder.addPathBuilder().setKind(FAILURE_KIND).setName(docName).build();
-		Key key = builder.setPath(0, pathElement).build();
+		Key key = DatastoreKeyUtil.createFailureKey(pipeline, pipelineVersion, documentType, docId);
 
 		/*
 		 * the stacktrace is likely too large to store as a property, so we make it a

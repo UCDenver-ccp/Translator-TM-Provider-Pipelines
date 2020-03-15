@@ -1,13 +1,12 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 
 import java.io.UnsupportedEncodingException;
 
@@ -16,11 +15,9 @@ import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
-import com.google.datastore.v1.Key.Builder;
-import com.google.datastore.v1.Key.PathElement;
 import com.google.protobuf.ByteString;
 
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
@@ -85,10 +82,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 
 	static Entity createEntity(String docId, DocumentType type, DocumentFormat format, PipelineKey pipeline,
 			String pipelineVersion, String docContent) throws UnsupportedEncodingException {
-		String docName = DatastoreDocumentUtil.getDocumentKeyName(docId, type, format, pipeline, pipelineVersion);
-		Builder builder = Key.newBuilder();
-		PathElement pathElement = builder.addPathBuilder().setKind(DOCUMENT_KIND).setName(docName).build();
-		Key key = builder.setPath(0, pathElement).build();
+		Key key = DatastoreKeyUtil.createDocumentKey(docId, type, format, pipeline, pipelineVersion);
 
 		/*
 		 * the document content is likely too large to store as a property, so we make
@@ -108,5 +102,6 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 		Entity entity = entityBuilder.build();
 		return entity;
 	}
+
 
 }
