@@ -158,6 +158,10 @@ public class ProcessingStatus extends DoFn {
 
 		// FAILURE IF THE FLAG IS NOT RECOGNIZED
 
+		case NOOP:
+			// do nothing
+			break;
+			
 		default:
 			throw new IllegalArgumentException(String.format(
 					"Unsupported Document Status Flag: %s. Code changes required to use this flag.", flag.name()));

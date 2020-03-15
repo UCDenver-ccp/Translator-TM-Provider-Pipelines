@@ -2,22 +2,37 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Streams;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.Transaction;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.Transaction;
+
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SuccessStatusFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ToKVFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.UpdateStatusFn;
 
 /**
  * Utility for querying/updating 'Status' entities in Cloud Datastore.
@@ -72,13 +87,16 @@ public class DatastoreProcessingStatusUtil {
 	}
 
 	/**
-	 * Executes a transaction with the Datastore to set the specified status flag to
-	 * true
+	 * Executes a transaction with the Datastore to set the specified status flags
+	 * to true. All status flags for a given document need to be called prior to the
+	 * update to avoid the following error:
+	 * com.google.cloud.datastore.DatastoreException: too much contention on these
+	 * datastore entities. please try again.
 	 * 
 	 * @param docId
 	 * @param statusFlag
 	 */
-	public void setStatusTrue(String docId, ProcessingStatusFlag statusFlag) {
+	public void setStatusTrue(String docId, Set<ProcessingStatusFlag> statusFlags) {
 		String keyName = DatastoreProcessingStatusUtil.getStatusKeyName(docId);
 		Key key = keyFactory.newKey(keyName);
 
@@ -86,11 +104,16 @@ public class DatastoreProcessingStatusUtil {
 		try {
 			Entity status = transaction.get(key);
 			if (status != null) {
-				transaction.put(Entity.newBuilder(status).set(statusFlag.getDatastorePropertyName(), true).build());
+				Builder builder = Entity.newBuilder(status);
+				statusFlags.remove(ProcessingStatusFlag.NOOP);
+				for (ProcessingStatusFlag flag : statusFlags) {
+					builder.set(flag.getDatastorePropertyName(), true);
+				}
+				transaction.put(builder.build());
 			} else {
 				throw new IllegalArgumentException(
-						String.format("Unable to find status for key %s. Cannot update status for task:%s.", keyName,
-								statusFlag.getDatastorePropertyName()));
+						String.format("Unable to find status for key %s. Cannot update status for tasks:%s.", keyName,
+								statusFlags.toString()));
 			}
 			transaction.commit();
 		} finally {
@@ -102,6 +125,75 @@ public class DatastoreProcessingStatusUtil {
 
 	public static String getStatusKeyName(String docId) {
 		return String.format("%s.status", docId);
+	}
+
+	/**
+	 * Logs the status of processing (set the flag=true) for the specified
+	 * {@ProcessingStatusFlag} for documents that did not fail as true.
+	 * 
+	 * @param docIdToOutputDoc
+	 * @param failures
+	 * @return
+	 */
+	public static PCollection<KV<String, String>> getSuccessStatus(PCollection<String> processedDocIds,
+			PCollection<EtlFailureData> failures, ProcessingStatusFlag processingStatusFlag) {
+		PCollection<String> failureDocIds = failures.apply("extract failure doc IDs",
+				ParDo.of(new DoFn<EtlFailureData, String>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(@Element EtlFailureData failure, OutputReceiver<String> out) {
+						out.output(failure.getDocumentId());
+					}
+
+				}));
+
+//		PCollection<String> processedDocIds = docIdToConllu.apply(Keys.<String>create());
+		// pair all document id with 'true' b/c we need a KV pair to combine them
+		PCollection<KV<String, Boolean>> processedDocIdsKV = processedDocIds.apply("create all doc ids map",
+				ParDo.of(new ToKVFn()));
+		// pair the failed document id with 'true' b/c we need a KV pair to combine them
+		PCollection<KV<String, Boolean>> failureDocIdsKV = failureDocIds.apply("create failed doc ids map",
+				ParDo.of(new ToKVFn()));
+
+		// Merge collection values into a CoGbkResult collection.
+		final TupleTag<Boolean> allTag = new TupleTag<Boolean>();
+		final TupleTag<Boolean> failedTag = new TupleTag<Boolean>();
+		PCollection<KV<String, CoGbkResult>> joinedCollection = KeyedPCollectionTuple.of(allTag, processedDocIdsKV)
+				.and(failedTag, failureDocIdsKV).apply(CoGroupByKey.<String>create());
+
+		return joinedCollection.apply(ParDo.of(new SuccessStatusFn(processingStatusFlag, allTag, failedTag)));
+	}
+
+	/**
+	 * Performs updates on the status of each document in batch, i.e. all status
+	 * updates for a single document should be performed in a single transaction.
+	 * 
+	 * @param statusList
+	 */
+	public static void performStatusUpdatesInBatch(List<PCollection<KV<String, String>>> statusList) {
+		// merge all docIdToStatusToUpdate KV's by key (document id), then perform the
+		// update once per document ID
+		List<TupleTag<String>> tags = new ArrayList<TupleTag<String>>();
+		PCollection<KV<String, CoGbkResult>> mergedStatus = combineStatusLists(statusList, tags);
+
+		mergedStatus.apply("update status", ParDo.of(new UpdateStatusFn(tags)));
+	}
+
+	static PCollection<KV<String, CoGbkResult>> combineStatusLists(List<PCollection<KV<String, String>>> statusList,
+			List<TupleTag<String>> tags) {
+		for (int i = 0; i < statusList.size(); i++) {
+			tags.add(new TupleTag<String>());
+		}
+
+		KeyedPCollectionTuple<String> collectionTuple = KeyedPCollectionTuple.of(tags.get(0), statusList.get(0));
+		for (int i = 1; i < statusList.size(); i++) {
+			System.out.println("Adding next tag...");
+			collectionTuple = collectionTuple.and(tags.get(i), statusList.get(i));
+		}
+		PCollection<KV<String, CoGbkResult>> mergedStatus = collectionTuple.apply("merge status by document",
+				CoGroupByKey.<String>create());
+		return mergedStatus;
 	}
 
 }
