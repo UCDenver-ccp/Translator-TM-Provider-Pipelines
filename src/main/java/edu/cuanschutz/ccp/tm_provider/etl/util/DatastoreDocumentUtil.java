@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.KeyFactory;
+import com.google.cloud.datastore.PathElement;
 
 /**
  * Utility for querying 'Documents' in Cloud Datastore.
@@ -23,9 +24,6 @@ public class DatastoreDocumentUtil {
 
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-
-	// Create a Key factory to construct keys associated with this project.
-	private final KeyFactory keyFactory = datastore.newKeyFactory().setKind(DOCUMENT_KIND);
 
 	/**
 	 * @param documentIds
@@ -72,14 +70,8 @@ public class DatastoreDocumentUtil {
 	 */
 	public Key createDocumentKey(String docId, DocumentType type, DocumentFormat format, PipelineKey pipeline,
 			String pipelineVersion) {
-		String docName = getDocumentKeyName(docId, type, format, pipeline, pipelineVersion);
-		return keyFactory.newKey(docName);
+		String docName = DatastoreKeyUtil.getDocumentKeyName(docId, type, format, pipeline, pipelineVersion);
+		return datastore.newKeyFactory().addAncestor(PathElement.of(STATUS_KIND, DatastoreKeyUtil.getStatusKeyName(docId)))
+				.setKind(DOCUMENT_KIND).newKey(docName);
 	}
-
-	public static String getDocumentKeyName(String docId, DocumentType type, DocumentFormat format,
-			PipelineKey pipeline, String version) {
-		return String.format("%s.%s.%s.%s.%s", docId, type.name().toLowerCase(), format.name().toLowerCase(),
-				pipeline.name().toLowerCase(), version);
-	}
-
 }

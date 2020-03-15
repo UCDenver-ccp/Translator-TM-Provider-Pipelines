@@ -22,7 +22,6 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.KeyFactory;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
@@ -41,9 +40,6 @@ public class DatastoreProcessingStatusUtil {
 
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-
-	// Create a Key factory to construct keys associated with this project.
-	private final KeyFactory keyFactory = datastore.newKeyFactory().setKind(STATUS_KIND);
 
 	/**
 	 * @param targetProcessStatusFlag    The flag indicating the desired (target)
@@ -97,8 +93,8 @@ public class DatastoreProcessingStatusUtil {
 	 * @param statusFlag
 	 */
 	public void setStatusTrue(String docId, Set<ProcessingStatusFlag> statusFlags) {
-		String keyName = DatastoreProcessingStatusUtil.getStatusKeyName(docId);
-		Key key = keyFactory.newKey(keyName);
+		String keyName = DatastoreKeyUtil.getStatusKeyName(docId);
+		Key key = datastore.newKeyFactory().setKind(STATUS_KIND).newKey(keyName);
 
 		Transaction transaction = datastore.newTransaction();
 		try {
@@ -121,10 +117,6 @@ public class DatastoreProcessingStatusUtil {
 				transaction.rollback();
 			}
 		}
-	}
-
-	public static String getStatusKeyName(String docId) {
-		return String.format("%s.status", docId);
 	}
 
 	/**

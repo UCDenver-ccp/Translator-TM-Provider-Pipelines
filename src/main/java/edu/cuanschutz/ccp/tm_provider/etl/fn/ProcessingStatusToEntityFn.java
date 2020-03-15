@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_BP_DONE;
@@ -32,11 +31,9 @@ import org.apache.beam.sdk.transforms.DoFn;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
-import com.google.datastore.v1.Key.Builder;
-import com.google.datastore.v1.Key.PathElement;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -60,10 +57,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 	}
 
 	static Entity buildStatusEntity(ProcessingStatus status) throws UnsupportedEncodingException {
-		String docName = DatastoreProcessingStatusUtil.getStatusKeyName(status.getDocumentId());
-		Builder builder = Key.newBuilder();
-		PathElement pathElement = builder.addPathBuilder().setKind(STATUS_KIND).setName(docName).build();
-		Key key = builder.setPath(0, pathElement).build();
+		Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
