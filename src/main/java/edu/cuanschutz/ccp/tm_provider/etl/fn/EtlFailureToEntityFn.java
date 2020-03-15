@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE_VERSION;
@@ -20,6 +21,7 @@ import com.google.datastore.v1.Key.PathElement;
 import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 
@@ -40,19 +42,23 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		String stackTrace = failure.getStackTrace();
 		PipelineKey pipeline = failure.getPipeline();
 		String pipelineVersion = failure.getPipelineVersion();
+		DocumentType documentType = failure.getDocumentType();
 		com.google.cloud.Timestamp timestamp = failure.getTimestamp();
 
 		/* crop document id if it is a file path */
 		docId = DocumentToEntityFn.updateDocId(docId);
 
-		Entity entity = buildFailureEntity(pipeline, pipelineVersion, docId, message, stackTrace, timestamp);
+		Entity entity = buildFailureEntity(pipeline, pipelineVersion, documentType, docId, message, stackTrace,
+				timestamp);
 		out.output(entity);
 
 	}
 
-	static Entity buildFailureEntity(PipelineKey pipeline, String pipelineVersion, String docId, String message,
-			String stackTrace, com.google.cloud.Timestamp timestamp) throws UnsupportedEncodingException {
-		String docName = String.format("%s.%s.%s", docId, pipeline.name().toLowerCase(), pipelineVersion);
+	static Entity buildFailureEntity(PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
+			String docId, String message, String stackTrace, com.google.cloud.Timestamp timestamp)
+			throws UnsupportedEncodingException {
+		String docName = String.format("%s.%s.%s.%s", docId, pipeline.name().toLowerCase(), pipelineVersion,
+				documentType.name());
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(FAILURE_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();
@@ -66,6 +72,7 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(pipeline.name()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE_VERSION, makeValue(pipelineVersion).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_TYPE, makeValue(documentType.name()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_ID, makeValue(docId).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_TIMESTAMP, makeValue(timestamp.toString()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_MESSAGE, makeValue(message).build());

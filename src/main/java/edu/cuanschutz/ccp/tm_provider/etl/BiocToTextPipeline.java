@@ -42,7 +42,7 @@ public class BiocToTextPipeline {
 	public static void main(String[] args) {
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
-		
+
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
 		Pipeline p = Pipeline.create(options);
@@ -63,7 +63,8 @@ public class BiocToTextPipeline {
 					}
 				}));
 
-		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, PIPELINE_KEY, pipelineVersion, timestamp);
+		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, PIPELINE_KEY, pipelineVersion,
+				DocumentType.BIOC, timestamp);
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly
@@ -102,8 +103,8 @@ public class BiocToTextPipeline {
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the processing status document for this pipeline in Cloud Datastore */
 		status.apply("status->status_entity", ParDo.of(new ProcessingStatusToEntityFn()))
