@@ -26,7 +26,9 @@ public class PipelineMain {
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
 				break;
-
+			case OGER:
+				OgerPipeline.main(pipelineArgs);
+				break;
 			default:
 				throw new IllegalArgumentException(String.format(
 						"Valid pipeline (%s) but a code change required before it can be used. Valid choices are %s",

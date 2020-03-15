@@ -11,6 +11,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 
@@ -34,10 +35,10 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 	};
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
-			String dependencyParserServiceUri, PipelineKey pipeline, String pipelineVersion,
+			String dependencyParserServiceUri, PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
 			com.google.cloud.Timestamp timestamp) {
 
-		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
+		return docIdToBiocXml.apply("Compute dependency parse",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
 					private static final long serialVersionUID = 1L;
 
@@ -60,7 +61,7 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 							out.get(CONLLU_TAG).output(KV.of(docId, conllu));
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during dependency parsing.", docId, t, timestamp);
+									"Failure during dependency parsing.", docId, documentType, t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 					}

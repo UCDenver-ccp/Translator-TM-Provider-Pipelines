@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.apache.beam.sdk.transforms.DoFn;
 
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,14 +25,16 @@ public class EtlFailureData extends DoFn {
 	private final String stackTrace;
 	private final PipelineKey pipeline;
 	private final String pipelineVersion;
+	private final DocumentType documentType;
 	private final com.google.cloud.Timestamp timestamp;
 
 	public EtlFailureData(PipelineKey pipeline, String pipelineVersion, String customMessage, String documentId,
-			Throwable thrown, com.google.cloud.Timestamp timestamp) {
+			DocumentType documentType, Throwable thrown, com.google.cloud.Timestamp timestamp) {
 		this.pipeline = pipeline;
 		this.pipelineVersion = pipelineVersion;
 		this.message = customMessage + " -- " + thrown.toString();
 		this.documentId = documentId;
+		this.documentType = documentType;
 		this.stackTrace = Arrays.toString(thrown.getStackTrace());
 		this.timestamp = timestamp;
 	}

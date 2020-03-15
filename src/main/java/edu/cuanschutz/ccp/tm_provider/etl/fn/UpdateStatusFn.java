@@ -1,5 +1,9 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
@@ -14,10 +18,12 @@ import lombok.EqualsAndHashCode;
 
 /**
  * This function takes a combined-by-group-key result as input that is comprised
- * of all document identifiers that were scheduled to be processed and all
- * document identifiers that resulted in failures. For the document identifiers
- * that did not result in failure, it updates the status of the specified
- * {@link ProcessStatusFlag} in Cloud Datastore (setting the flag to true). 
+ * of all document identifiers that were scheduled to be processed and all of
+ * the {@link ProcessingStatusFlag}s that need to be updated (set to true). It
+ * updates all flags for a given document in a single transaction, which is
+ * necessary in order to avoid the following Datastore exception:
+ * com.google.cloud.datastore.DatastoreException: too much contention on these
+ * datastore entities. please try again.
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -25,60 +31,38 @@ public class UpdateStatusFn extends DoFn<KV<String, CoGbkResult>, Empty> {
 
 	private static final long serialVersionUID = 1L;
 
-	private final ProcessingStatusFlag statusFlag;
-	private final TupleTag<Boolean> allTag;
-	private final TupleTag<Boolean> failedTag;
+	private final List<TupleTag<String>> tags;
 
 	@ProcessElement
-	public void processElement(@Element KV<String, CoGbkResult> docIdToUpdateFlags, OutputReceiver<Empty> out) {
+	public void processElement(@Element KV<String, CoGbkResult> docIdToUpdateFlags) {
 		String docId = docIdToUpdateFlags.getKey();
+		Set<ProcessingStatusFlag> flagsToUpdate = getFlagsToUpdate(docIdToUpdateFlags, tags);
+		new DatastoreProcessingStatusUtil().setStatusTrue(docId, flagsToUpdate);
+	}
+
+	static Set<ProcessingStatusFlag> getFlagsToUpdate(KV<String, CoGbkResult> docIdToUpdateFlags,
+			List<TupleTag<String>> tags) {
 		CoGbkResult joinResult = docIdToUpdateFlags.getValue();
 
-		Iterable<Boolean> all = joinResult.getAll(allTag);
-		Iterable<Boolean> failed = joinResult.getAll(failedTag);
-
-		sanityCheck(all, failed);
-
-		// there should only be one Boolean in each iterable. 'all' will always be true,
-		// so we only need to check 'failed'
-		boolean processFailed = false;
-		if (failed.iterator().hasNext()) {
-			processFailed = failed.iterator().next();
+		Set<ProcessingStatusFlag> flagsToUpdate = new HashSet<ProcessingStatusFlag>();
+		for (TupleTag<String> tag : tags) {
+//			try {
+			Iterable<String> flags = joinResult.getAll(tag);
+			for (String flag : flags) {
+				if (flag != ProcessingStatusFlag.NOOP.name()) {
+					flagsToUpdate.add(ProcessingStatusFlag.valueOf(flag));
+				}
+			}
+//			} catch (IllegalArgumentException e) {
+//				//FIXME
+//				// think it's possible for an IllegalArgumentException if a document contains no
+//				// annotations for one of the ontologies. The exception is thrown by
+//				// joinResults.getAll(tag). We simply let it pass and continue on. Not good form
+//				// to use exception handling for logic, but there's no other obvious way.
+//				// throw new RuntimeException("DocID: " + docId + "TAGS: " + tags.toString() +
+//				// "\n\n\n", e);
+//			}
 		}
-
-		// if the process did not log a failure, then updated the status for the
-		// specified statusFlag
-		if (!processFailed) {
-			new DatastoreProcessingStatusUtil().setStatusTrue(docId, statusFlag);
-		}
-
+		return flagsToUpdate;
 	}
-
-	/**
-	 * Sanity check function - we expect only one item in each iterable, and this
-	 * makes sure that assumption holds true.
-	 * 
-	 * @param all
-	 * @param failed
-	 */
-	private void sanityCheck(Iterable<Boolean> all, Iterable<Boolean> failed) {
-		// check to make sure there is only one item per iterable
-		int count = 0;
-		for (@SuppressWarnings("unused")
-		Boolean b : all) {
-			count++;
-		}
-		if (count > 1) {
-			throw new RuntimeException(String.format("size of all: %d", count));
-		}
-		count = 0;
-		for (@SuppressWarnings("unused")
-		Boolean b : failed) {
-			count++;
-		}
-		if (count > 1) {
-			throw new RuntimeException(String.format("size of failed: %d", count));
-		}
-	}
-
 }

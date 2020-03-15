@@ -100,7 +100,12 @@ public enum ProcessingStatusFlag {
 	/**
 	 * 
 	 */
-	BERT_UBERON_DONE(DatastoreConstants.STATUS_PROPERTY_BERT_UBERON_DONE);
+	BERT_UBERON_DONE(DatastoreConstants.STATUS_PROPERTY_BERT_UBERON_DONE),
+
+	/**
+	 * used to mark a failed process
+	 */
+	NOOP(null);
 
 	////////////////////////////////////////////////////////////////
 	//////////////////// RELATION PROCESSING ///////////////////////

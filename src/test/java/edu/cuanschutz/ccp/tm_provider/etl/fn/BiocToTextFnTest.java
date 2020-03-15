@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
@@ -37,7 +38,8 @@ public class BiocToTextFnTest {
 		PCollection<KV<String, String>> input = pipeline.apply(
 				Create.of(KV.of(docId, biocXml)).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
-		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, timestamp);
+		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, DocumentType.BIOC,
+				timestamp);
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
@@ -65,7 +67,8 @@ public class BiocToTextFnTest {
 		PCollection<KV<String, String>> input = pipeline.apply(
 				Create.of(KV.of(docId, biocXml)).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
-		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, timestamp);
+		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, DocumentType.BIOC,
+				timestamp);
 
 		PAssert.that(output.get(BiocToTextFn.plainTextTag)).empty();
 		PAssert.that(output.get(BiocToTextFn.sectionAnnotationsTag)).empty();

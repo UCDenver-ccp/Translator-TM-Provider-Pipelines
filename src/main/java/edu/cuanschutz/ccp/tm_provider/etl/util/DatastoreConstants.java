@@ -60,6 +60,10 @@ public interface DatastoreConstants {
 	 */
 	public static final String FAILURE_PROPERTY_DOCUMENT_ID = "document_id";
 	/**
+	 * The document type associated with the failure
+	 */
+	public static final String FAILURE_PROPERTY_DOCUMENT_TYPE = "document_type";
+	/**
 	 * The message provided by the exception that was indicated for the failure
 	 */
 	public static final String FAILURE_PROPERTY_MESSAGE = "message";

@@ -4,10 +4,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.values.KV;
@@ -23,8 +20,6 @@ import com.google.cloud.datastore.KeyFactory;
  * Utility for querying 'Documents' in Cloud Datastore.
  */
 public class DatastoreDocumentUtil {
-
-	private final static Logger LOGGER = Logger.getLogger(DatastoreDocumentUtil.class.getName());
 
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
@@ -45,8 +40,6 @@ public class DatastoreDocumentUtil {
 		// document @{link Key} objects
 		Key[] keys = documentIds.stream().map(id -> createDocumentKey(id, type, format, pipeline, pipelineVersion))
 				.collect(Collectors.toList()).toArray(new Key[0]);
-
-		LOGGER.log(Level.INFO, String.format("key count: %d -- %s", keys.length, Arrays.toString(keys)));
 
 		// Batch query for the entities corresponding to the {@link Key} objects, and
 		// populate a list of document id/content KV pairs

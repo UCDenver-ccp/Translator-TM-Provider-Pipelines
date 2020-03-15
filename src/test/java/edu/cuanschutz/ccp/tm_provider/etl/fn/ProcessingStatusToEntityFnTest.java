@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.apache.beam.sdk.testing.PAssert;
@@ -16,7 +15,6 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 
 public class ProcessingStatusToEntityFnTest {
 

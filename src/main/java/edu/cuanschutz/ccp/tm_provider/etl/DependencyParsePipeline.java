@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -14,22 +15,15 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TupleTag;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.ToKVFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.TurkuDepParserFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.UpdateStatusFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -87,7 +81,7 @@ public class DependencyParsePipeline {
 				Create.of(documentIdToContentList).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
 		PCollectionTuple output = TurkuDepParserFn.process(docId2Content, options.getDependencyParserServiceUri(),
-				PIPELINE_KEY, pipelineVersion, timestamp);
+				PIPELINE_KEY, pipelineVersion, DocumentType.DEPENDENCY_PARSE, timestamp);
 
 		/*
 		 * Processing of the plain text by the dependency parser results in 1) a
@@ -98,8 +92,6 @@ public class DependencyParsePipeline {
 
 		PCollection<KV<String, String>> docIdToConllu = output.get(TurkuDepParserFn.CONLLU_TAG);
 		PCollection<EtlFailureData> failures = output.get(TurkuDepParserFn.ETL_FAILURE_TAG);
-
-		updateProcessingStatus(docIdToConllu, failures, ProcessingStatusFlag.DP_DONE);
 
 		/* store the serialized CoNLL-U document content in Cloud Datastore */
 		docIdToConllu
@@ -112,40 +104,15 @@ public class DependencyParsePipeline {
 		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
+		// update the status for documents that were successfully processed
+		PCollection<KV<String, String>> successStatus = DatastoreProcessingStatusUtil
+				.getSuccessStatus(docId2Content.apply(Keys.<String>create()), failures, ProcessingStatusFlag.DP_DONE);
+		List<PCollection<KV<String, String>>> statusList = new ArrayList<PCollection<KV<String, String>>>();
+		statusList.add(successStatus);
+		DatastoreProcessingStatusUtil.performStatusUpdatesInBatch(statusList);
+
 		p.run().waitUntilFinish();
 	}
 
-	/**
-	 * Logs the status of processing (set the flag=true) for the specified
-	 * {@ProcessingStatusFlag} for documents that did not fail as true.
-	 * 
-	 * @param docIdToConllu
-	 * @param failures
-	 */
-	private static void updateProcessingStatus(PCollection<KV<String, String>> docIdToConllu,
-			PCollection<EtlFailureData> failures, ProcessingStatusFlag processingStatusFlag) {
-		PCollection<String> failureDocIds = failures.apply("extract failure doc IDs",
-				ParDo.of(new DoFn<EtlFailureData, String>() {
-					private static final long serialVersionUID = 1L;
-
-					@ProcessElement
-					public void processElement(@Element EtlFailureData failure, OutputReceiver<String> out) {
-						out.output(failure.getDocumentId());
-					}
-
-				}));
-
-		PCollection<String> processedDocIds = docIdToConllu.apply(Keys.<String>create());
-		PCollection<KV<String, Boolean>> processedDocIdsKV = processedDocIds.apply(ParDo.of(new ToKVFn()));
-		PCollection<KV<String, Boolean>> failureDocIdsKV = failureDocIds.apply(ParDo.of(new ToKVFn()));
-
-		// Merge collection values into a CoGbkResult collection.
-		final TupleTag<Boolean> allTag = new TupleTag<Boolean>();
-		final TupleTag<Boolean> failedTag = new TupleTag<Boolean>();
-		PCollection<KV<String, CoGbkResult>> joinedCollection = KeyedPCollectionTuple.of(allTag, processedDocIdsKV)
-				.and(failedTag, failureDocIdsKV).apply(CoGroupByKey.<String>create());
-
-		joinedCollection.apply(ParDo.of(new UpdateStatusFn(processingStatusFlag, allTag, failedTag)));
-	}
 
 }
