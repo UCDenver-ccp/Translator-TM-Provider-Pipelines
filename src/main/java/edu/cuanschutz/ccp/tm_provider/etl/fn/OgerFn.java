@@ -60,9 +60,9 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 							String ogerTsv = annotate(plainText, ogerServiceUri);
 							String bionlp = convertToBioNLP(ogerTsv, docId, plainText);
 //							// if the string is empty, then no need to store it.
-							if (!bionlp.isEmpty()) {
+//							if (!bionlp.isEmpty()) {
 								out.get(ANNOTATIONS_TAG).output(KV.of(docId, bionlp));
-							}
+//							}
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
 									"Failure during OGER annotation.", docId, documentType, t, timestamp);
