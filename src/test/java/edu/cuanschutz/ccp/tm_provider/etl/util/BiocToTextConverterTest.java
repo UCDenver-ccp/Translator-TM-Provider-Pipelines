@@ -18,7 +18,9 @@ import com.ctc.wstx.exc.WstxUnexpectedCharException;
 
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
+import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class BiocToTextConverterTest {
 
@@ -34,17 +36,30 @@ public class BiocToTextConverterTest {
 		assertEquals(132, td.getAnnotations().size());
 		assertTrue(td.getText().startsWith("Quantifying Organismal Complexity"));
 		assertTrue(td.getText().endsWith("What is a gene?"));
-		
-		String expectedText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMC1790863.txt", CharacterEncoding.UTF_8);
+
+		String expectedText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMC1790863.txt",
+				CharacterEncoding.UTF_8);
 		assertEquals(expectedText, td.getText());
-		
+
+		for (TextAnnotation ta : td.getAnnotations()) {
+			System.out.println(ta.getAggregateSpan() + " -- " + ta.getCoveredText());
+			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
+					ta.getAggregateSpan().getSpanEnd());
+			if (StringUtil.startsWithRegex(substring, "\\s")) {
+				throw new RuntimeException("covered text starts with space |" + substring + "|");
+			}
+		}
+
 	}
-	
+
 	@Test(expected = WstxUnexpectedCharException.class)
 	public void testConvert_invalidXml() throws FactoryConfigurationError, XMLStreamException, IOException {
-		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC1790863_invalid.xml");
+		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(),
+				"PMC1790863_invalid.xml");
 		convert(sampleDocStream);
-		
+
 	}
 
 }
+
+

@@ -1,5 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -20,7 +23,11 @@ import com.pengyifan.bioc.BioCDocument;
 import com.pengyifan.bioc.BioCPassage;
 import com.pengyifan.bioc.io.BioCDocumentReader;
 
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
+import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
@@ -69,11 +76,32 @@ public class BiocToTextConverter {
 
 				TextDocument td = new TextDocument(docId, source, text);
 				td.addAnnotations(sections);
+				// check annotations for any that start with whitespace and adjust accordingly.
+				adjustForAddedWhitespace(td);
+
 				docId2DocumentMap.put(docId, td);
 //				System.out.println(text);
 			}
 		}
+
 		return docId2DocumentMap;
+	}
+
+	private static void adjustForAddedWhitespace(TextDocument td) {
+		for (TextAnnotation ta : td.getAnnotations()) {
+			System.out.println(ta.getAggregateSpan() + " -- " + ta.getCoveredText());
+			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
+					ta.getAggregateSpan().getSpanEnd());
+			while (StringUtil.startsWithRegex(substring, "\\s")) {
+				System.out.println(ta.getCoveredText());
+				Span span = ta.getAggregateSpan();
+				Span updatedSpan = new Span(span.getSpanStart() + 1, span.getSpanEnd() + 1);
+				ta.setSpan(updatedSpan);
+				substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
+						ta.getAggregateSpan().getSpanEnd());
+			}
+		}
+
 	}
 
 	/**
@@ -157,9 +185,31 @@ public class BiocToTextConverter {
 					logger.log(Level.WARNING,
 							"Unknown section type observed: " + sectionType + " in document: " + doc.getID());
 				}
-				updateSectionTypes(text, sections, openSections, sectionType, taFactory);
 
-				text = updateText(text, doc, passage);
+				boolean justOpenedNewSection = updateSectionTypes(text, sections, openSections, sectionType, taFactory);
+
+				OpenSection justOpennedSection = null;
+				if (justOpenedNewSection) {
+					justOpennedSection = openSections.peek();
+				}
+
+				// if we update the text (by adding line breaks) we need to update the passage
+				// annotation that was just added. And if a section was just opened, we need to
+				// adjust its starting offset.
+				TextAnnotation lastPassageAnnot = sections.get(sections.size() - 1);
+				text = updateText(text, doc, passage, lastPassageAnnot, justOpennedSection);
+
+				// remove any leading spaces from annotations
+				String substring = text.substring(lastPassageAnnot.getAnnotationSpanStart(),
+						lastPassageAnnot.getAnnotationSpanEnd());
+				while (StringUtil.startsWithRegex(substring, "\\s")) {
+					Span span = lastPassageAnnot.getSpans().get(0);
+					Span updatedSpan = new Span(span.getSpanStart() + 1, span.getSpanEnd());
+					lastPassageAnnot.setSpan(updatedSpan);
+					substring = text.substring(lastPassageAnnot.getAnnotationSpanStart(),
+							lastPassageAnnot.getAnnotationSpanEnd());
+				}
+
 			} else {
 				// encountered passage with no text
 			}
@@ -176,11 +226,13 @@ public class BiocToTextConverter {
 	 * @param openSections
 	 * @param sectionName
 	 * @param taFactory
+	 * @return true if a section was just opened
 	 */
-	private static void updateSectionTypes(String text, List<TextAnnotation> sections, Stack<OpenSection> openSections,
-			String sectionName, TextAnnotationFactory taFactory) {
+	private static boolean updateSectionTypes(String text, List<TextAnnotation> sections,
+			Stack<OpenSection> openSections, String sectionName, TextAnnotationFactory taFactory) {
 		if (openSections.isEmpty()) {
 			openSection(text, openSections, sectionName);
+			return true;
 		} else {
 			String prevSectionName = openSections.peek().getType();
 			if (!sectionName.equals(prevSectionName)) {
@@ -205,11 +257,14 @@ public class BiocToTextConverter {
 					 */
 					closeSection(text, sections, openSections, taFactory);
 					openSection(text, openSections, sectionName);
+					return true;
 				} else {
 					openSection(text, openSections, sectionName);
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -231,6 +286,11 @@ public class BiocToTextConverter {
 		if (sectionType.startsWith("title")) {
 			sectionType = sectionType.replace("title", "section_heading");
 		}
+
+		if (StringUtil.startsWithRegex(passageText, "\\s")) {
+			throw new RuntimeException("PASSAGE SARTS WITH SPACE!!");
+		}
+
 		return taFactory.createAnnotation(text.length(), text.length() + passageText.length(), passageText,
 				sectionType);
 	}
@@ -248,8 +308,20 @@ public class BiocToTextConverter {
 		OpenSection sectionToClose = openSections.pop();
 		int startOffset = sectionToClose.getStartOffset();
 		int endOffset = text.length();
+
+		String substring = text.substring(startOffset, endOffset);
+		while (StringUtil.startsWithRegex(substring, "\\s")) {
+			startOffset++;
+			substring = text.substring(startOffset, endOffset);
+		}
+
 		TextAnnotation sectionAnnot = factory.createAnnotation(startOffset, endOffset,
 				text.substring(startOffset, endOffset), sectionToClose.getType());
+
+		substring = text.substring(startOffset, endOffset);
+		if (StringUtil.startsWithRegex(substring, "\\s")) {
+			throw new RuntimeException("starts with space: " + substring);
+		}
 		sections.add(sectionAnnot);
 	}
 
@@ -272,10 +344,31 @@ public class BiocToTextConverter {
 	 * @param text
 	 * @param doc
 	 * @param passage
+	 * @param lastPassageAnnot
+	 * @param justOpenedSection
 	 * @return
 	 */
-	private static String updateText(String text, BioCDocument doc, BioCPassage passage) {
+	private static String updateText(String text, BioCDocument doc, BioCPassage passage,
+			TextAnnotation lastPassageAnnot, OpenSection justOpenedSection) {
+		int lengthBefore = text.length();
 		text = matchTextByteOffsetToBioCByteOffset(doc, text, passage.getOffset());
+		
+		int lengthAfter = text.length();
+		int diff = lengthAfter - lengthBefore;
+		System.out.println("diff: " + diff);
+
+		// adjust the most recently added passage
+		Span span = lastPassageAnnot.getSpans().get(0);
+		System.out.println("before: span: " + span.toString());
+		Span updatedSpan = new Span(span.getSpanStart() + diff, span.getSpanEnd() + diff);
+		System.out.println("after: span: " + updatedSpan.toString());
+		lastPassageAnnot.setSpan(updatedSpan);
+
+		// adjust the recently opened section if necessary
+		if (justOpenedSection != null) {
+			justOpenedSection.setStartOffset(justOpenedSection.getStartOffset() + diff);
+		}
+
 		/* each passage is by default separated by a line break */
 		text += (((!text.isEmpty()) ? "\n" : "") + passage.getText().get());
 		return text;
@@ -321,8 +414,25 @@ public class BiocToTextConverter {
 	 */
 	@Data
 	private static class OpenSection {
-		private final int startOffset;
+		private int startOffset;
 		private final String type;
+
+		public OpenSection(int startOffset, String type) {
+			this.startOffset = startOffset;
+			this.type = type;
+		}
+	}
+
+	public static void main(String[] args)
+			throws FileNotFoundException, FactoryConfigurationError, XMLStreamException, IOException {
+
+		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+		Map<String, TextDocument> convert = BiocToTextConverter.convert(new FileInputStream(
+				new File("/Users/bill/projects/ncats-translator/prototype/testing-data/bioc-dir/PMC1790863.xml")));
+		TextDocument td = convert.entrySet().iterator().next().getValue();
+		writer.serialize(td, new File(
+				"/Users/bill/projects/ncats-translator/prototype/tm-pipelines.git/src/test/resources/edu/cuanschutz/ccp/tm_provider/etl/util/PMC1790863-sections1.bionlp"),
+				CharacterEncoding.UTF_8);
 	}
 
 }
