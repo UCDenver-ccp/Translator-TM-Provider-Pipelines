@@ -537,7 +537,7 @@
 		<dependency>
 			<groupId>edu.ucdenver.ccp</groupId>
 			<artifactId>file-conversion</artifactId>
-			<version>0.2.2</version>
+			<version>0.2.3</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.pengyifan.bioc/pengyifan-bioc -->
