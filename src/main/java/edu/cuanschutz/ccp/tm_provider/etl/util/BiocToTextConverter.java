@@ -1,8 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -23,10 +20,8 @@ import com.pengyifan.bioc.BioCDocument;
 import com.pengyifan.bioc.BioCPassage;
 import com.pengyifan.bioc.io.BioCDocumentReader;
 
-import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
-import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
@@ -89,11 +84,9 @@ public class BiocToTextConverter {
 
 	private static void adjustForAddedWhitespace(TextDocument td) {
 		for (TextAnnotation ta : td.getAnnotations()) {
-			System.out.println(ta.getAggregateSpan() + " -- " + ta.getCoveredText());
 			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
 					ta.getAggregateSpan().getSpanEnd());
 			while (StringUtil.startsWithRegex(substring, "\\s")) {
-				System.out.println(ta.getCoveredText());
 				Span span = ta.getAggregateSpan();
 				Span updatedSpan = new Span(span.getSpanStart() + 1, span.getSpanEnd() + 1);
 				ta.setSpan(updatedSpan);
@@ -287,10 +280,6 @@ public class BiocToTextConverter {
 			sectionType = sectionType.replace("title", "section_heading");
 		}
 
-		if (StringUtil.startsWithRegex(passageText, "\\s")) {
-			throw new RuntimeException("PASSAGE SARTS WITH SPACE!!");
-		}
-
 		return taFactory.createAnnotation(text.length(), text.length() + passageText.length(), passageText,
 				sectionType);
 	}
@@ -318,10 +307,6 @@ public class BiocToTextConverter {
 		TextAnnotation sectionAnnot = factory.createAnnotation(startOffset, endOffset,
 				text.substring(startOffset, endOffset), sectionToClose.getType());
 
-		substring = text.substring(startOffset, endOffset);
-		if (StringUtil.startsWithRegex(substring, "\\s")) {
-			throw new RuntimeException("starts with space: " + substring);
-		}
 		sections.add(sectionAnnot);
 	}
 
@@ -352,16 +337,13 @@ public class BiocToTextConverter {
 			TextAnnotation lastPassageAnnot, OpenSection justOpenedSection) {
 		int lengthBefore = text.length();
 		text = matchTextByteOffsetToBioCByteOffset(doc, text, passage.getOffset());
-		
+
 		int lengthAfter = text.length();
 		int diff = lengthAfter - lengthBefore;
-		System.out.println("diff: " + diff);
 
 		// adjust the most recently added passage
 		Span span = lastPassageAnnot.getSpans().get(0);
-		System.out.println("before: span: " + span.toString());
 		Span updatedSpan = new Span(span.getSpanStart() + diff, span.getSpanEnd() + diff);
-		System.out.println("after: span: " + updatedSpan.toString());
 		lastPassageAnnot.setSpan(updatedSpan);
 
 		// adjust the recently opened section if necessary
@@ -423,16 +405,24 @@ public class BiocToTextConverter {
 		}
 	}
 
-	public static void main(String[] args)
-			throws FileNotFoundException, FactoryConfigurationError, XMLStreamException, IOException {
-
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
-		Map<String, TextDocument> convert = BiocToTextConverter.convert(new FileInputStream(
-				new File("/Users/bill/projects/ncats-translator/prototype/testing-data/bioc-dir/PMC1790863.xml")));
-		TextDocument td = convert.entrySet().iterator().next().getValue();
-		writer.serialize(td, new File(
-				"/Users/bill/projects/ncats-translator/prototype/tm-pipelines.git/src/test/resources/edu/cuanschutz/ccp/tm_provider/etl/util/PMC1790863-sections1.bionlp"),
-				CharacterEncoding.UTF_8);
-	}
+//	public static void main(String[] args)
+//			throws FileNotFoundException, FactoryConfigurationError, XMLStreamException, IOException {
+//
+//		File txtDir = new File("/Users/bill/projects/ncats-translator/prototype/testing-data/asthma/txt");
+//		File sectionDir = new File("/Users/bill/projects/ncats-translator/prototype/testing-data/asthma/sections");
+//		for (Iterator<File> fileIterator = FileUtil.getFileIterator(
+//				new File("/Users/bill/projects/ncats-translator/prototype/testing-data/asthma/bioc"),
+//				false); fileIterator.hasNext();) {
+//			File biocFile = fileIterator.next();
+//			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+//			Map<String, TextDocument> convert = BiocToTextConverter.convert(new FileInputStream(biocFile));
+//			TextDocument td = convert.entrySet().iterator().next().getValue();
+//			writer.serialize(td, new File(sectionDir, td.getSourceid() + "-sections.bionlp"), CharacterEncoding.UTF_8);
+//			try (BufferedWriter bw = FileWriterUtil.initBufferedWriter(new File(txtDir, td.getSourceid() + ".txt"))) {
+//				bw.write(td.getText());
+//			}
+//
+//		}
+//	}
 
 }
