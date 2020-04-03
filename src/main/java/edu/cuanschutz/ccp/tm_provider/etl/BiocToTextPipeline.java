@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -28,6 +29,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
 
+	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
+
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
 	public interface Options extends DataflowPipelineOptions {
@@ -45,6 +48,15 @@ public class BiocToTextPipeline {
 
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
+		// TODO figure out how to exclude files that have already been processed
+//		DatastoreProcessingStatusUtil statusUtil = new DatastoreProcessingStatusUtil();
+//		// query Cloud Datastore to find document IDs that have already been processed
+//		// so that they can be skipped
+//		List<String> documentIdsAlreadyProcessed = statusUtil
+//				.getDocumentIdsAlreadyProcessed(ProcessingStatusFlag.TEXT_DONE);
+//		LOGGER.log(Level.INFO, String.format("Pipeline: %s, %d documents have ALREADY BEEN processed...",
+//				PIPELINE_KEY.name(), documentIdsAlreadyProcessed.size()));
+
 		Pipeline p = Pipeline.create(options);
 
 		TypeDescriptor<KV<String, String>> td = new TypeDescriptor<KV<String, String>>() {
@@ -53,6 +65,7 @@ public class BiocToTextPipeline {
 
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		/* Note: bioc files will be downloaded as xml */
+		// TODO: figure out how to exclude files that have already been downloaded
 		String biocFilePattern = options.getBiocDir() + "/*.xml";
 		PCollection<KV<String, String>> fileIdAndContent = p.apply(FileIO.match().filepattern(biocFilePattern))
 				.apply(FileIO.readMatches()).apply(MapElements.into(td).via((ReadableFile f) -> {
@@ -82,11 +95,12 @@ public class BiocToTextPipeline {
 		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
 		/* store the bioc document content in Cloud Datastore */
-		fileIdAndContent
-				.apply("biocxml->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
-								"na")))
-				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		// TODO: revisit this. Not storing the original BioC for now to conserve space
+//		fileIdAndContent
+//				.apply("biocxml->document_entity",
+//						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
+//								"na")))
+//				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the plain text document content in Cloud Datastore */
 		docIdToPlainText
