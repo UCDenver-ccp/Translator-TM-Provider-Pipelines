@@ -56,6 +56,9 @@ public class PipelineMain {
 			case OGER:
 				OgerPipeline.main(pipelineArgs);
 				break;
+			case BIGQUERY_EXPORT:
+				BigQueryExportPipeline.main(pipelineArgs);
+				break;
 			default:
 				throw new IllegalArgumentException(String.format(
 						"Valid pipeline (%s) but a code change required before it can be used. Valid choices are %s",

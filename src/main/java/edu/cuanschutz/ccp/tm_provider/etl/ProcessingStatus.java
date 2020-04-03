@@ -41,6 +41,7 @@ public class ProcessingStatus extends DoFn {
 	private boolean bertPrDone;
 	private boolean bertSoDone;
 	private boolean bertUberonDone;
+	private boolean bigqueryExportDone;
 	private boolean isTest;
 
 	public ProcessingStatus(String documentId, EnumSet<ProcessingStatusFlag> flags) {
@@ -158,6 +159,10 @@ public class ProcessingStatus extends DoFn {
 		////////////////////////////////////////////////////////////////
 
 		// FAILURE IF THE FLAG IS NOT RECOGNIZED
+		case BIGQUERY_LOAD_FILE_EXPORT_DONE:
+			bigqueryExportDone = status;
+			break;
+			
 		case TEST:
 			isTest = status;
 			break;
@@ -165,7 +170,7 @@ public class ProcessingStatus extends DoFn {
 		case NOOP:
 			// do nothing
 			break;
-			
+
 		default:
 			throw new IllegalArgumentException(String.format(
 					"Unsupported Document Status Flag: %s. Code changes required to use this flag.", flag.name()));

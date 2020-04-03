@@ -24,6 +24,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEST;
 
 import java.io.UnsupportedEncodingException;
@@ -72,6 +73,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_BP_DONE, makeValue(status.isOgerGoBpDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_CC_DONE, makeValue(status.isOgerGoCcDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_MF_DONE, makeValue(status.isOgerGoMfDone()).build());
+//		entityBuilder.putProperties(STATUS_PROPERTY_OGER_HGNC_DONE, makeValue(status.isOgerHgncDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_OGER_MOP_DONE, makeValue(status.isOgerMopDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_OGER_NCBITAXON_DONE,
 				makeValue(status.isOgerNcbiTaxonDone()).build());
@@ -90,6 +92,9 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_PR_DONE, makeValue(status.isBertPrDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_SO_DONE, makeValue(status.isBertSoDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_UBERON_DONE, makeValue(status.isBertUberonDone()).build());
+// BigQuery export
+		entityBuilder.putProperties(STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE,
+				makeValue(status.isBigqueryExportDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_TEST,
 				makeValue(status.isTest()).build());
 

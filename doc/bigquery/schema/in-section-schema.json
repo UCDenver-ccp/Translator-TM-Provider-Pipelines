@@ -1,0 +1,12 @@
+[
+    {
+        "name": "inner_annot_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "outer_annot_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    }
+]

@@ -1,0 +1,22 @@
+[
+    {
+        "name": "source_annot_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "annotator_name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "type",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "target_annot_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    }
+]

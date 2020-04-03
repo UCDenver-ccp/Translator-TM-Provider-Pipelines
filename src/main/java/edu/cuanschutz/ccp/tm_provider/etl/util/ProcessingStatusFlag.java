@@ -105,7 +105,7 @@ public enum ProcessingStatusFlag {
 	/**
 	 * used to mark a failed process
 	 */
-	NOOP(null);
+	NOOP(null),
 	TEST(DatastoreConstants.STATUS_PROPERTY_TEST),
 
 	////////////////////////////////////////////////////////////////
@@ -117,6 +117,9 @@ public enum ProcessingStatusFlag {
 	 */
 //	ASSOC_CHEMICAL_PROTEIN_DONE
 
+	BIGQUERY_LOAD_FILE_EXPORT_DONE(DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE);
+	
+	
 	@Getter
 	private final String datastorePropertyName;
 

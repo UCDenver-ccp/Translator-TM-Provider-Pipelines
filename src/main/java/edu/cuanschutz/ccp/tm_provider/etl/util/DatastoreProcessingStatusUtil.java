@@ -83,6 +83,29 @@ public class DatastoreProcessingStatusUtil {
 	}
 
 	/**
+	 * @param targetProcessStatusFlag
+	 * @return a list of document IDs where the specified ProcessingStatusFlag ==
+	 *         true
+	 */
+	public List<String> getDocumentIdsAlreadyProcessed(ProcessingStatusFlag targetProcessStatusFlag) {
+
+		// FIXME: Note that this query could probably be converted to a key-only query
+		// and therefore be more cost-effective. The document Id can be parsed from each
+		// key.
+		Query<Entity> query = Query.newEntityQueryBuilder().setKind(STATUS_KIND)
+				.setFilter(PropertyFilter.eq(targetProcessStatusFlag.getDatastorePropertyName(), true)).build();
+
+		QueryResults<Entity> results = datastore.run(query);
+
+		/* convert the query results into a list of document IDs */
+		List<String> documentIds = Streams.stream(results)
+				.map(entity -> entity.getString(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID))
+				.collect(Collectors.toList());
+
+		return documentIds;
+	}
+
+	/**
 	 * Executes a transaction with the Datastore to set the specified status flags
 	 * to true. All status flags for a given document need to be called prior to the
 	 * update to avoid the following error:
@@ -110,6 +133,40 @@ public class DatastoreProcessingStatusUtil {
 				throw new IllegalArgumentException(
 						String.format("Unable to find status for key %s. Cannot update status for tasks:%s.", keyName,
 								statusFlags.toString()));
+			}
+			transaction.commit();
+		} finally {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+		}
+	}
+
+	public void setStatus(List<Key> keys, Set<ProcessingStatusFlag> statusFlags, boolean status) {
+		Transaction transaction = datastore.newTransaction();
+		try {
+
+			int count  = 0;
+			for (Key key : keys) {
+				if (count++ % 100 == 0) {
+					System.out.println("progress: " + count);
+				}
+//				String keyName = DatastoreKeyUtil.getStatusKeyName(docId);
+//				Key key = datastore.newKeyFactory().setKind(STATUS_KIND).newKey(keyName);
+
+				Entity statusEntity = transaction.get(key);
+				if (statusEntity != null) {
+					Builder builder = Entity.newBuilder(statusEntity);
+					statusFlags.remove(ProcessingStatusFlag.NOOP);
+					for (ProcessingStatusFlag flag : statusFlags) {
+						builder.set(flag.getDatastorePropertyName(), status);
+					}
+					transaction.put(builder.build());
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Unable to find status for key %s. Cannot update status for tasks:%s.",
+									key.toString(), statusFlags.toString()));
+				}
 			}
 			transaction.commit();
 		} finally {
@@ -180,7 +237,6 @@ public class DatastoreProcessingStatusUtil {
 
 		KeyedPCollectionTuple<String> collectionTuple = KeyedPCollectionTuple.of(tags.get(0), statusList.get(0));
 		for (int i = 1; i < statusList.size(); i++) {
-			System.out.println("Adding next tag...");
 			collectionTuple = collectionTuple.and(tags.get(i), statusList.get(i));
 		}
 		PCollection<KV<String, CoGbkResult>> mergedStatus = collectionTuple.apply("merge status by document",

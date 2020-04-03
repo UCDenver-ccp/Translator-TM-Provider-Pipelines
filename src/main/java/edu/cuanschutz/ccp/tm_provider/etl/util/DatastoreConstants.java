@@ -197,6 +197,9 @@ public interface DatastoreConstants {
 	 * 
 	 */
 	public static final String STATUS_PROPERTY_BERT_UBERON_DONE = "bert_uberon";
+	
+	
+	public static final String STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE = "bigquery_file_export";
 	public static final String STATUS_PROPERTY_TEST = "test";
 
 }
