@@ -106,6 +106,7 @@ public enum ProcessingStatusFlag {
 	 * used to mark a failed process
 	 */
 	NOOP(null);
+	TEST(DatastoreConstants.STATUS_PROPERTY_TEST),
 
 	////////////////////////////////////////////////////////////////
 	//////////////////// RELATION PROCESSING ///////////////////////

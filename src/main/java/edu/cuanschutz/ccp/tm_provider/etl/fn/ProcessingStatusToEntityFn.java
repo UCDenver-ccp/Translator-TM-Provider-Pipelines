@@ -24,6 +24,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEST;
 
 import java.io.UnsupportedEncodingException;
 
@@ -89,6 +90,8 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_PR_DONE, makeValue(status.isBertPrDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_SO_DONE, makeValue(status.isBertSoDone()).build());
 		entityBuilder.putProperties(STATUS_PROPERTY_BERT_UBERON_DONE, makeValue(status.isBertUberonDone()).build());
+		entityBuilder.putProperties(STATUS_PROPERTY_TEST,
+				makeValue(status.isTest()).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;

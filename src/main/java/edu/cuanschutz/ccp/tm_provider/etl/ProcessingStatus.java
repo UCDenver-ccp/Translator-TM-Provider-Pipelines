@@ -41,6 +41,7 @@ public class ProcessingStatus extends DoFn {
 	private boolean bertPrDone;
 	private boolean bertSoDone;
 	private boolean bertUberonDone;
+	private boolean isTest;
 
 	public ProcessingStatus(String documentId, EnumSet<ProcessingStatusFlag> flags) {
 		this.documentId = documentId;
@@ -157,6 +158,9 @@ public class ProcessingStatus extends DoFn {
 		////////////////////////////////////////////////////////////////
 
 		// FAILURE IF THE FLAG IS NOT RECOGNIZED
+		case TEST:
+			isTest = status;
+			break;
 
 		case NOOP:
 			// do nothing
