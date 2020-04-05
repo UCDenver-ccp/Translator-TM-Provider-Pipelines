@@ -42,6 +42,15 @@ public class DatastoreProcessingStatusUtil {
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
 	/**
+	 * @param dc
+	 * @return the name of the chunk_count property (in a status entity) for the
+	 *         specified document
+	 */
+	public static String getDocumentChunkCountPropertyName(DocumentCriteria dc) {
+		return DatastoreKeyUtil.getDocumentKeyName("chunks", dc);
+	}
+
+	/**
 	 * @param targetProcessStatusFlag    The flag indicating the desired (target)
 	 *                                   process to run
 	 * @param requiredProcessStatusFlags Required flags prior to running the desired
@@ -56,7 +65,7 @@ public class DatastoreProcessingStatusUtil {
 		 * 'true'
 		 */
 		PropertyFilter[] requiredProcessStatusFlagFilters = requiredProcessStatusFlags.stream()
-				.map(flag -> PropertyFilter.eq(flag.getDatastorePropertyName(), true)).collect(Collectors.toList())
+				.map(flag -> PropertyFilter.eq(flag.getDatastoreFlagPropertyName(), true)).collect(Collectors.toList())
 				.toArray(new PropertyFilter[0]);
 
 		/*
@@ -64,7 +73,7 @@ public class DatastoreProcessingStatusUtil {
 		 * required process flags to all equal true
 		 */
 		CompositeFilter filter = CompositeFilter.and(
-				PropertyFilter.eq(targetProcessStatusFlag.getDatastorePropertyName(), false),
+				PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), false),
 				requiredProcessStatusFlagFilters);
 
 		// FIXME: Note that this query could probably be converted to a key-only query
@@ -93,7 +102,7 @@ public class DatastoreProcessingStatusUtil {
 		// and therefore be more cost-effective. The document Id can be parsed from each
 		// key.
 		Query<Entity> query = Query.newEntityQueryBuilder().setKind(STATUS_KIND)
-				.setFilter(PropertyFilter.eq(targetProcessStatusFlag.getDatastorePropertyName(), true)).build();
+				.setFilter(PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), true)).build();
 
 		QueryResults<Entity> results = datastore.run(query);
 
@@ -126,7 +135,7 @@ public class DatastoreProcessingStatusUtil {
 				Builder builder = Entity.newBuilder(status);
 				statusFlags.remove(ProcessingStatusFlag.NOOP);
 				for (ProcessingStatusFlag flag : statusFlags) {
-					builder.set(flag.getDatastorePropertyName(), true);
+					builder.set(flag.getDatastoreFlagPropertyName(), true);
 				}
 				transaction.put(builder.build());
 			} else {
@@ -146,7 +155,7 @@ public class DatastoreProcessingStatusUtil {
 		Transaction transaction = datastore.newTransaction();
 		try {
 
-			int count  = 0;
+			int count = 0;
 			for (Key key : keys) {
 				if (count++ % 100 == 0) {
 					System.out.println("progress: " + count);
@@ -159,7 +168,7 @@ public class DatastoreProcessingStatusUtil {
 					Builder builder = Entity.newBuilder(statusEntity);
 					statusFlags.remove(ProcessingStatusFlag.NOOP);
 					for (ProcessingStatusFlag flag : statusFlags) {
-						builder.set(flag.getDatastorePropertyName(), status);
+						builder.set(flag.getDatastoreFlagPropertyName(), status);
 					}
 					transaction.put(builder.build());
 				} else {

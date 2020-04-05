@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
-import java.util.EnumSet;
 
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -14,6 +13,10 @@ import org.junit.Test;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 
 public class ProcessingStatusToEntityFnTest {
@@ -26,8 +29,15 @@ public class ProcessingStatusToEntityFnTest {
 		/* test creation of a processing status Cloud Datastore entity */
 		String docId = "PMC1790863";
 
-		ProcessingStatus status = new ProcessingStatus(docId,
-				EnumSet.of(ProcessingStatusFlag.TEXT_DONE, ProcessingStatusFlag.BERT_CL_DONE));
+		ProcessingStatus status = new ProcessingStatus(docId);
+
+		DocumentCriteria textDc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
+				"0.1");
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, textDc, 1);
+		DocumentCriteria bertDc = new DocumentCriteria(DocumentType.CONCEPT_CL, DocumentFormat.OGER_CONLL,
+				PipelineKey.BERT_IDS, "0.2");
+		status.enableFlag(ProcessingStatusFlag.BERT_CL_IDS_DONE, bertDc, 2);
+
 		PCollection<ProcessingStatus> input = pipeline.apply(Create.of(status));
 		PCollection<Entity> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));
 		Entity expectedEntity = ProcessingStatusToEntityFn.buildStatusEntity(status);

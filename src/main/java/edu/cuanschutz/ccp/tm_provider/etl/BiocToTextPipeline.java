@@ -1,7 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.util.List;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -22,6 +22,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
@@ -29,7 +30,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
 
-	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
+//	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
@@ -39,6 +40,11 @@ public class BiocToTextPipeline {
 		String getBiocDir();
 
 		void setBiocDir(String value);
+
+		@Description("Document collection name")
+		String getCollectionName();
+
+		void setCollectionName(String value);
 
 	}
 
@@ -76,8 +82,13 @@ public class BiocToTextPipeline {
 					}
 				}));
 
-		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, PIPELINE_KEY, pipelineVersion,
-				DocumentType.BIOC, timestamp);
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PIPELINE_KEY, pipelineVersion);
+		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
+
+		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, outputTextDocCriteria,
+				outputAnnotationDocCriteria, timestamp, options.getCollectionName());
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly
@@ -89,8 +100,8 @@ public class BiocToTextPipeline {
 		 * of each document
 		 */
 
-		PCollection<KV<String, String>> docIdToPlainText = output.get(BiocToTextFn.plainTextTag);
-		PCollection<KV<String, String>> docIdToAnnotations = output.get(BiocToTextFn.sectionAnnotationsTag);
+		PCollection<KV<String, List<String>>> docIdToPlainText = output.get(BiocToTextFn.plainTextTag);
+		PCollection<KV<String, List<String>>> docIdToAnnotations = output.get(BiocToTextFn.sectionAnnotationsTag);
 		PCollection<EtlFailureData> failures = output.get(BiocToTextFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
@@ -103,17 +114,12 @@ public class BiocToTextPipeline {
 //				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the plain text document content in Cloud Datastore */
-		docIdToPlainText
-				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
-								pipelineVersion)))
+		docIdToPlainText.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the serialized annotation document content in Cloud Datastore */
 		docIdToAnnotations
-				.apply("annotations->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.SECTIONS, DocumentFormat.BIONLP, PIPELINE_KEY,
-								pipelineVersion)))
+				.apply("annotations->document_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */

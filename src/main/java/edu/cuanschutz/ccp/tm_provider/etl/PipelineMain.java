@@ -5,6 +5,12 @@ import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,14 +30,15 @@ import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
 import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
-import com.google.datastore.v1.Value;
 
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
 
 public class PipelineMain {
 	public static void main(String[] args) {
@@ -53,6 +60,9 @@ public class PipelineMain {
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
 				break;
+			case TEXT_LOAD:
+				LoadFilesPipeline.main(pipelineArgs);
+				break;
 			case OGER:
 				OgerPipeline.main(pipelineArgs);
 				break;
@@ -68,43 +78,54 @@ public class PipelineMain {
 		}
 	}
 
-	public static PCollection<KV<String, String>> getDocId2Content(String pipelineVersion, String project, Pipeline p,
-			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags) {
-		PCollection<Entity> status = getStatusEntitiesToProcess(p, targetProcessStatusFlag, requiredProcessStatusFlags,
-				project);
+	public static PCollection<KV<String, String>> getDocId2Content(DocumentCriteria dc,
+//			String pipelineVersion, 
+			String gcpProjectId, Pipeline beamPipeline, ProcessingStatusFlag targetProcessStatusFlag,
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags) {
 
+		/*
+		 * get the status entities for documents that meet the required process status
+		 * flag critera but whose target process status flag is false
+		 */
+		PCollection<Entity> status = getStatusEntitiesToProcess(beamPipeline, targetProcessStatusFlag,
+				requiredProcessStatusFlags, gcpProjectId);
+
+		/*
+		 * then return a mapping from document id to the document content that will be
+		 * processed
+		 */
 		PCollection<KV<String, String>> docId2Content = status.apply("get document content",
 				ParDo.of(new DoFn<Entity, KV<String, String>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(@Element Entity status, OutputReceiver<KV<String, String>> out) {
-						Value value = status.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID);
-						String documentId = value.getStringValue();
+						String documentId = status.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+						long chunkCount = status.getPropertiesMap()
+								.get(DatastoreProcessingStatusUtil.getDocumentChunkCountPropertyName(dc))
+								.getIntegerValue();
 
 						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
-						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId,
-								DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT, pipelineVersion);
+						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId, dc,
+								chunkCount);
 						if (documentIdToContent != null) {
 							out.output(documentIdToContent);
 						}
-
 					}
-
 				}));
 		return docId2Content;
 	}
 
 	public static PCollection<Entity> getStatusEntitiesToProcess(Pipeline p,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String project) {
+			String gcpProjectId) {
 		List<Filter> filters = new ArrayList<Filter>();
 		for (ProcessingStatusFlag flag : requiredProcessStatusFlags) {
-			Filter filter = makeFilter(flag.getDatastorePropertyName(), PropertyFilter.Operator.EQUAL, makeValue(true))
-					.build();
+			Filter filter = makeFilter(flag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
+					makeValue(true)).build();
 			filters.add(filter);
 		}
-		filters.add(makeFilter(targetProcessStatusFlag.getDatastorePropertyName(), PropertyFilter.Operator.EQUAL,
+		filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
 				makeValue(false)).build());
 
 		Query.Builder query = Query.newBuilder();
@@ -117,8 +138,57 @@ public class PipelineMain {
 		query.setFilter(filter);
 
 		PCollection<Entity> status = p.apply("document_entity->datastore",
-				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(project));
+				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 		return status;
+	}
+
+	/**
+	 * @param input
+	 * @return the input string divided (if necessary) into chunks small enough to
+	 *         fit under the max byte threshold imposed by DataStore
+	 * @throws UnsupportedEncodingException
+	 */
+	public static List<String> chunkContent(String input) throws UnsupportedEncodingException {
+		List<String> chunks = new ArrayList<String>();
+
+		if (input.getBytes("UTF-8").length < DatastoreConstants.MAX_STRING_STORAGE_SIZE_IN_BYTES) {
+			chunks.add(input);
+		} else {
+			chunks.addAll(splitStringByByteLength(input, CharacterEncoding.UTF_8,
+					DatastoreConstants.MAX_STRING_STORAGE_SIZE_IN_BYTES));
+		}
+
+		return chunks;
+	}
+
+	/**
+	 * from:
+	 * https://stackoverflow.com/questions/48868721/splitting-a-string-with-byte-length-limits-in-java
+	 * 
+	 * @param src
+	 * @param encoding
+	 * @param maxsize
+	 * @return
+	 */
+	public static List<String> splitStringByByteLength(String src, CharacterEncoding encoding, int maxsize) {
+		Charset cs = Charset.forName(encoding.getCharacterSetName());
+		CharsetEncoder coder = cs.newEncoder();
+		ByteBuffer out = ByteBuffer.allocate(maxsize); // output buffer of required size
+		CharBuffer in = CharBuffer.wrap(src);
+		List<String> ss = new ArrayList<>(); // a list to store the chunks
+		int pos = 0;
+		while (true) {
+			CoderResult cr = coder.encode(in, out, true); // try to encode as much as possible
+			int newpos = src.length() - in.length();
+			String s = src.substring(pos, newpos);
+			ss.add(s); // add what has been encoded to the list
+			pos = newpos; // store new input position
+			out.rewind(); // and rewind output buffer
+			if (!cr.isOverflow()) {
+				break; // everything has been encoded
+			}
+		}
+		return ss;
 	}
 
 }

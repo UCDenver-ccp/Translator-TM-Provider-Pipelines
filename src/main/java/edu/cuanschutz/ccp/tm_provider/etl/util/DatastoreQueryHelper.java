@@ -1,12 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,10 +23,6 @@ import com.google.cloud.datastore.Value;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
-import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.common.file.FileUtil;
-import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
-import edu.ucdenver.ccp.common.string.StringUtil;
 
 public class DatastoreQueryHelper {
 
@@ -58,7 +52,7 @@ public class DatastoreQueryHelper {
 		}
 
 		System.out.println("IDs to update DP_DONE=true: " + idsToUpdate.size());
-		
+
 		Set<ProcessingStatusFlag> flags = CollectionsUtil.createSet(ProcessingStatusFlag.DP_DONE);
 		boolean value = true;
 
@@ -68,7 +62,6 @@ public class DatastoreQueryHelper {
 	public void printDocumentCountsBasedOnKeys() {
 		Query<Key> query = Query.newKeyQueryBuilder().setKind(DatastoreConstants.DOCUMENT_KIND).build();
 
-		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
 		Map<String, Integer> docTypeToCountMap = new HashMap<String, Integer>();
 		Map<String, Set<String>> docIdToDoneMap = new HashMap<String, Set<String>>();
 
@@ -108,8 +101,6 @@ public class DatastoreQueryHelper {
 
 	public void getStatuses() {
 		Query<Entity> query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.STATUS_KIND).build();
-
-		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
 
 		QueryResults<Entity> results = datastore.run(query);
 		int count = 0;
@@ -194,7 +185,7 @@ public class DatastoreQueryHelper {
 		com.google.cloud.datastore.KeyQuery.Builder query = Query.newKeyQueryBuilder()
 				.setKind(DatastoreConstants.STATUS_KIND);
 		query.setFilter(PropertyFilter
-				.eq(ProcessingStatusFlag.BIGQUERY_LOAD_FILE_EXPORT_DONE.getDatastorePropertyName(), true));
+				.eq(ProcessingStatusFlag.BIGQUERY_LOAD_FILE_EXPORT_DONE.getDatastoreFlagPropertyName(), true));
 		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
 		QueryResults<Key> results = datastore.run(query.build());
 		int count = 0;
@@ -215,28 +206,28 @@ public class DatastoreQueryHelper {
 		System.out.println("done.");
 	}
 
-	/**
-	 * get the list of documetn ids to update from the directory that stores the
-	 * bioc xml files
-	 * 
-	 * @param dir
-	 * @throws IOException
-	 */
-	public void addDTestStatusFieldToAstmaDocs(File pmcIdListFile) throws IOException {
-
-		Set<String> docIdsToUpdate = new HashSet<String>();
-		for (StreamLineIterator lineIter = new StreamLineIterator(pmcIdListFile, CharacterEncoding.UTF_8); lineIter
-				.hasNext();) {
-			String line = lineIter.next().getText();
-			String docId = StringUtil.removeSuffix(line, ".xml");
-			docIdsToUpdate.add(docId);
-		}
-
-		Set<ProcessingStatusFlag> flags = CollectionsUtil.createSet(ProcessingStatusFlag.TEST);
-		boolean value = true;
-
-		setStatusFlags(docIdsToUpdate, flags, value);
-	}
+//	/**
+//	 * get the list of documetn ids to update from the directory that stores the
+//	 * bioc xml files
+//	 * 
+//	 * @param dir
+//	 * @throws IOException
+//	 */
+//	public void addDTestStatusFieldToAstmaDocs(File pmcIdListFile) throws IOException {
+//
+//		Set<String> docIdsToUpdate = new HashSet<String>();
+//		for (StreamLineIterator lineIter = new StreamLineIterator(pmcIdListFile, CharacterEncoding.UTF_8); lineIter
+//				.hasNext();) {
+//			String line = lineIter.next().getText();
+//			String docId = StringUtil.removeSuffix(line, ".xml");
+//			docIdsToUpdate.add(docId);
+//		}
+//
+//		Set<ProcessingStatusFlag> flags = CollectionsUtil.createSet(ProcessingStatusFlag.TEST);
+//		boolean value = true;
+//
+//		setStatusFlags(docIdsToUpdate, flags, value);
+//	}
 
 	private void setStatusFlags(Set<String> docIdsToUpdate, Set<ProcessingStatusFlag> flags, boolean value) {
 		Query<Key> query = Query.newKeyQueryBuilder().setKind(DatastoreConstants.STATUS_KIND).build();
@@ -275,7 +266,7 @@ public class DatastoreQueryHelper {
 //				"/Users/bill/projects/ncats-translator/prototype/asthma-documents-to-add/asthma-files.list");
 //
 //		new DatastoreQueryHelper().addDTestStatusFieldToAstmaDocs(pmcIdListFile);
-		
+
 		new DatastoreQueryHelper().updateDependencyStatus();
 
 //		new DatastoreQueryHelper().printDocumentCountsBasedOnKeys();

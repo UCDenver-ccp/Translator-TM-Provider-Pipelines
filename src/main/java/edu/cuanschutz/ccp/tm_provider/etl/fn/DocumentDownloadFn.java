@@ -15,7 +15,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 
 public class DocumentDownloadFn extends DoFn<String, KV<String, Map<String, String>>> {
 
@@ -31,8 +30,8 @@ public class DocumentDownloadFn extends DoFn<String, KV<String, Map<String, Stri
 	public static TupleTag<Map<DocumentType, String>> OUTPUT_TAG_NO_DOC_ID = new TupleTag<Map<DocumentType, String>>() {
 	};
 
-	public static PCollectionTuple process(PCollection<String> documentIds, PipelineKey pipeline,
-			String pipelineVersion, com.google.cloud.Timestamp timestamp, List<DocumentCriteria> documentCriteria) {
+	public static PCollectionTuple process(PCollection<String> documentIds, com.google.cloud.Timestamp timestamp,
+			List<DocumentCriteria> documentCriteria) {
 
 		return documentIds.apply("Download files for document ID",
 				ParDo.of(new DoFn<String, KV<String, Map<DocumentType, String>>>() {
@@ -46,10 +45,10 @@ public class DocumentDownloadFn extends DoFn<String, KV<String, Map<String, Stri
 									documentCriteria);
 							out.get(OUTPUT_TAG).output(KV.of(docId, typeToContentMap));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
+							EtlFailureData failure = new EtlFailureData(documentCriteria.get(0),
 									"Failure during file download for document ID. (Document type listed is non-specific. "
 											+ "Could have been a different type that caused the error.",
-									docId, DocumentType.TEXT, t, timestamp);
+									docId, t, timestamp);
 							out.get(FAILURE_TAG).output(failure);
 						}
 
@@ -57,30 +56,30 @@ public class DocumentDownloadFn extends DoFn<String, KV<String, Map<String, Stri
 				}).withOutputTags(OUTPUT_TAG, TupleTagList.of(FAILURE_TAG)));
 	}
 
-	public static PCollectionTuple processNoTrackDocIds(PCollection<String> documentIds, PipelineKey pipeline,
-			String pipelineVersion, com.google.cloud.Timestamp timestamp, List<DocumentCriteria> documentCriteria) {
-
-		return documentIds.apply("Download files for document ID",
-				ParDo.of(new DoFn<String, Map<DocumentType, String>>() {
-					private static final long serialVersionUID = 1L;
-
-					@ProcessElement
-					public void processElement(@Element String docId, MultiOutputReceiver out) {
-						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
-						try {
-							Map<DocumentType, String> typeToContentMap = util.getDocumentTypeToContent(docId,
-									documentCriteria);
-							out.get(OUTPUT_TAG_NO_DOC_ID).output(typeToContentMap);
-						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during file download for document ID. (Document type listed is non-specific. "
-											+ "Could have been a different type that caused the error.",
-									docId, DocumentType.TEXT, t, timestamp);
-							out.get(FAILURE_TAG).output(failure);
-						}
-
-					}
-				}).withOutputTags(OUTPUT_TAG_NO_DOC_ID, TupleTagList.of(FAILURE_TAG)));
-	}
+//	public static PCollectionTuple processNoTrackDocIds(PCollection<String> documentIds, PipelineKey pipeline,
+//			String pipelineVersion, com.google.cloud.Timestamp timestamp, List<DocumentCriteria> documentCriteria) {
+//
+//		return documentIds.apply("Download files for document ID",
+//				ParDo.of(new DoFn<String, Map<DocumentType, String>>() {
+//					private static final long serialVersionUID = 1L;
+//
+//					@ProcessElement
+//					public void processElement(@Element String docId, MultiOutputReceiver out) {
+//						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
+//						try {
+//							Map<DocumentType, String> typeToContentMap = util.getDocumentTypeToContent(docId,
+//									documentCriteria);
+//							out.get(OUTPUT_TAG_NO_DOC_ID).output(typeToContentMap);
+//						} catch (Throwable t) {
+//							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
+//									"Failure during file download for document ID. (Document type listed is non-specific. "
+//											+ "Could have been a different type that caused the error.",
+//									docId, DocumentType.TEXT, t, timestamp);
+//							out.get(FAILURE_TAG).output(failure);
+//						}
+//
+//					}
+//				}).withOutputTags(OUTPUT_TAG_NO_DOC_ID, TupleTagList.of(FAILURE_TAG)));
+//	}
 
 }

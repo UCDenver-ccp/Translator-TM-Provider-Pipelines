@@ -1,6 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CHUNK_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CHUNK_TOTAL;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
@@ -9,6 +11,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
@@ -18,9 +21,7 @@ import com.google.datastore.v1.Key;
 import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import lombok.Data;
@@ -33,25 +34,25 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
+public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 
 	private static final long serialVersionUID = 1L;
-	private final DocumentType type;
-	private final DocumentFormat format;
-	private final PipelineKey pipeline;
-	private final String pipelineVersion;
+	private final DocumentCriteria dc;
 
 	@ProcessElement
-	public void processElement(@Element KV<String, String> docIdToDocContent, OutputReceiver<Entity> out)
+	public void processElement(@Element KV<String, List<String>> docIdToDocContent, OutputReceiver<Entity> out)
 			throws UnsupportedEncodingException {
 		String docId = docIdToDocContent.getKey();
-		String docContent = docIdToDocContent.getValue();
+		List<String> docContentChunks = docIdToDocContent.getValue();
 
 		/* crop document id if it is a file path */
 		docId = updateDocId(docId);
 
-		Entity entity = createEntity(docId, type, format, pipeline, pipelineVersion, docContent);
-		out.output(entity);
+		int index = 0;
+		for (String docContent : docContentChunks) {
+			Entity entity = createEntity(docId, index++, docContentChunks.size(), dc, docContent);
+			out.output(entity);
+		}
 
 	}
 
@@ -80,9 +81,9 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 		return docId;
 	}
 
-	static Entity createEntity(String docId, DocumentType type, DocumentFormat format, PipelineKey pipeline,
-			String pipelineVersion, String docContent) throws UnsupportedEncodingException {
-		Key key = DatastoreKeyUtil.createDocumentKey(docId, type, format, pipeline, pipelineVersion);
+	static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent)
+			throws UnsupportedEncodingException {
+		Key key = DatastoreKeyUtil.createDocumentKey(docId, chunkId, dc);
 
 		/*
 		 * the document content is likely too large to store as a property, so we make
@@ -92,16 +93,17 @@ public class DocumentToEntityFn extends DoFn<KV<String, String>, Entity> {
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_ID, makeValue(docId).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_CHUNK_ID, makeValue(chunkId).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_CHUNK_TOTAL, makeValue(chunkTotal).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_CONTENT,
 				makeValue(docContentBlob).setExcludeFromIndexes(true).build());
-		entityBuilder.putProperties(DOCUMENT_PROPERTY_FORMAT, makeValue(format.name()).build());
-		entityBuilder.putProperties(DOCUMENT_PROPERTY_TYPE, makeValue(type.name()).build());
-		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE_VERSION, makeValue(pipelineVersion).build());
-		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(pipeline.name()).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_FORMAT, makeValue(dc.getDocumentFormat().name()).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_TYPE, makeValue(dc.getDocumentType().name()).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE_VERSION, makeValue(dc.getPipelineVersion()).build());
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;
 	}
-
 
 }

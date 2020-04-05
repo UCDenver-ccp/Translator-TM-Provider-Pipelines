@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -14,9 +15,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
@@ -37,18 +39,17 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, String>> ANNOTATIONS_TAG = new TupleTag<KV<String, String>>() {
+	public static TupleTag<KV<String, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToText, String ogerServiceUri,
-			PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			com.google.cloud.Timestamp timestamp) {
+			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp) {
 
 		return docIdToText.apply("Identify concept annotations",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
+				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -57,15 +58,18 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 						String plainText = docIdToTextKV.getValue();
 
 						try {
-							String ogerTsv = annotate(plainText, ogerServiceUri);
-							String bionlp = convertToBioNLP(ogerTsv, docId, plainText);
-//							// if the string is empty, then no need to store it.
-//							if (!bionlp.isEmpty()) {
-								out.get(ANNOTATIONS_TAG).output(KV.of(docId, bionlp));
-//							}
+							String ogerOutput = annotate(plainText, ogerServiceUri,
+									outputDocCriteria.getDocumentFormat());
+
+							if (outputDocCriteria.getDocumentFormat() == DocumentFormat.BIONLP) {
+								ogerOutput = convertToBioNLP(ogerOutput, docId, plainText);
+							}
+
+							List<String> chunkedOgerOutput = PipelineMain.chunkContent(ogerOutput);
+							out.get(ANNOTATIONS_TAG).output(KV.of(docId, chunkedOgerOutput));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during OGER annotation.", docId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
+									"Failure during OGER annotation.", docId, t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 					}
@@ -122,9 +126,17 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	private static String annotate(String plainText, String ogerServiceUri) throws IOException {
+	private static String annotate(String plainText, String ogerServiceUri, DocumentFormat outputFormat)
+			throws IOException {
+		String formatKey = "tsv";
+		if (outputFormat == DocumentFormat.BIONLP) {
+			/* the tsv output will be converted to BioNLP format */
+			formatKey = "tsv";
+		} else if (outputFormat == DocumentFormat.OGER_CONLL) {
+			formatKey = "conll";
+		}
 		// doc id (12345) is optional -- can only be numbers
-		String targetUri = String.format("%s/upload/txt/tsv/12345", ogerServiceUri);
+		String targetUri = String.format("%s/upload/txt/%s/12345", ogerServiceUri, formatKey);
 		return new HttpPostUtil(targetUri).submit(plainText);
 	}
 

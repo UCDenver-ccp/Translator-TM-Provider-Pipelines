@@ -2,7 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -15,10 +15,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverter;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
@@ -39,11 +39,21 @@ import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
+	/**
+	 * The value in the returned KV pair is a list because it is possible that the
+	 * whole document content string is too large to store in Datastore. The list
+	 * allows it to be stored in chunks.
+	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, String>> plainTextTag = new TupleTag<KV<String, String>>() {
+	public static TupleTag<KV<String, List<String>>> plainTextTag = new TupleTag<KV<String, List<String>>>() {
 	};
+	/**
+	 * The value in the returned KV pair is a list because it is possible that the
+	 * whole document content string is too large to store in Datastore. The list
+	 * allows it to be stored in chunks.
+	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, String>> sectionAnnotationsTag = new TupleTag<KV<String, String>>() {
+	public static TupleTag<KV<String, List<String>>> sectionAnnotationsTag = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> etlFailureTag = new TupleTag<EtlFailureData>() {
@@ -52,11 +62,12 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml, PipelineKey pipeline,
-			String pipelineVersion, DocumentType documentType, com.google.cloud.Timestamp timestamp) {
+	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
+			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
+			com.google.cloud.Timestamp timestamp, String collectionName) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
+				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -75,7 +86,12 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 							for (Entry<String, TextDocument> entry : docIdToDocumentMap.entrySet()) {
 								String docId = entry.getKey();
 								String plainText = entry.getValue().getText();
-								out.get(plainTextTag).output(KV.of(docId, plainText));
+
+								/*
+								 * divide the document content into chunks if necessary so that each chunk is
+								 * under the DataStore byte length threshold
+								 */
+								List<String> chunkedPlainText = PipelineMain.chunkContent(plainText);
 
 								/* serialize the annotations into the BioNLP format */
 								BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
@@ -83,19 +99,29 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								bionlpWriter.serialize(entry.getValue(), baos, CharacterEncoding.UTF_8);
 								String serializedAnnotations = baos
 										.toString(CharacterEncoding.UTF_8.getCharacterSetName());
-								out.get(sectionAnnotationsTag).output(KV.of(docId, serializedAnnotations));
 
+								List<String> chunkedAnnotations = PipelineMain.chunkContent(serializedAnnotations);
+
+								out.get(sectionAnnotationsTag).output(KV.of(docId, chunkedAnnotations));
+								out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
 								/*
 								 * output a {@link ProcessingStatus} for the document
 								 */
-								ProcessingStatus status = new ProcessingStatus(docId,
-										EnumSet.of(ProcessingStatusFlag.TEXT_DONE));
+								ProcessingStatus status = new ProcessingStatus(docId);
+								status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputTextDocCriteria,
+										chunkedPlainText.size());
+								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria,
+										chunkedPlainText.size());
+
+								if (collectionName != null) {
+									status.addCollection(collectionName);
+								}
 								out.get(processingStatusTag).output(status);
 
 							}
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Likely failure during BioC XML parsing.", fileId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
+									"Likely failure during BioC XML parsing.", fileId, t, timestamp);
 							out.get(etlFailureTag).output(failure);
 						}
 

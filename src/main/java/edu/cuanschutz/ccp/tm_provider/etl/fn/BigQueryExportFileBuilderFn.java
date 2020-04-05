@@ -12,6 +12,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.serialization.BigQueryAnnotationSerializer.TableKey;
@@ -71,8 +72,7 @@ public class BigQueryExportFileBuilderFn extends DoFn<KV<String, Map<DocumentTyp
 	private final com.google.cloud.Timestamp timestamp;
 
 	public static PCollectionTuple process(PCollection<KV<String, Map<DocumentType, String>>> docIdToAnnotations,
-			PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			com.google.cloud.Timestamp timestamp) {
+			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp) {
 
 		return docIdToAnnotations.apply("Create BigQuery load file",
 				ParDo.of(new DoFn<KV<String, Map<DocumentType, String>>, KV<String, String>>() {
@@ -106,8 +106,8 @@ public class BigQueryExportFileBuilderFn extends DoFn<KV<String, Map<DocumentTyp
 									.output(KV.of(docId, bigQueryTables.get(TableKey.RELATION)));
 
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during file download for document ID.", docId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
+									"Failure during file download for document ID.", docId, t, timestamp);
 							out.get(FAILURE_TAG).output(failure);
 						}
 
@@ -120,8 +120,8 @@ public class BigQueryExportFileBuilderFn extends DoFn<KV<String, Map<DocumentTyp
 	}
 
 	public static PCollectionTuple processNoTrackDocIds(
-			PCollection<KV<String, Map<DocumentType, String>>> docIdToAnnotations, PipelineKey pipeline,
-			String pipelineVersion, DocumentType documentType, com.google.cloud.Timestamp timestamp) {
+			PCollection<KV<String, Map<DocumentType, String>>> docIdToAnnotations, DocumentCriteria outputDocCriteria,
+			com.google.cloud.Timestamp timestamp) {
 
 		return docIdToAnnotations.apply("Create BigQuery load file",
 				ParDo.of(new DoFn<KV<String, Map<DocumentType, String>>, String>() {
@@ -155,8 +155,8 @@ public class BigQueryExportFileBuilderFn extends DoFn<KV<String, Map<DocumentTyp
 									.output(bigQueryTables.get(TableKey.RELATION));
 
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during file download for document ID.", docId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
+									"Failure during BigQuery table file gen for document ID.", docId, t, timestamp);
 							out.get(FAILURE_TAG).output(failure);
 						}
 

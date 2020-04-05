@@ -64,8 +64,7 @@ public class BigQueryExportPipeline {
 		List<DocumentCriteria> documentCriteria = populateDocumentCriteria(pipelineVersion);
 
 		// returns map from document id to a map k=DocumentType, v=file contents
-		PCollectionTuple docIdToAnnotationTuple = DocumentDownloadFn.process(documentIds, PIPELINE_KEY, pipelineVersion,
-				timestamp, documentCriteria);
+		PCollectionTuple docIdToAnnotationTuple = DocumentDownloadFn.process(documentIds, timestamp, documentCriteria);
 
 		PCollection<KV<String, Map<DocumentType, String>>> docIdToAnnotations = docIdToAnnotationTuple
 				.get(DocumentDownloadFn.OUTPUT_TAG);
@@ -76,21 +75,11 @@ public class BigQueryExportPipeline {
 		annotationRetrievalFailures.apply("annot extract failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
 				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		PCollectionTuple bigqueryExports = BigQueryExportFileBuilderFn.processNoTrackDocIds(docIdToAnnotations,
-				PIPELINE_KEY, pipelineVersion, DocumentType.BIGQUERY, timestamp);
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.BIGQUERY, DocumentFormat.BIGQUERY,
+				PIPELINE_KEY, pipelineVersion);
 
-//		PCollection<KV<String, String>> docIdToBigQuery_annotationTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.ANNOTATION_TABLE_OUTPUT_TAG);
-//		PCollection<KV<String, String>> docIdToBigQuery_inSectionTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.IN_SECTION_TABLE_OUTPUT_TAG);
-//		PCollection<KV<String, String>> docIdToBigQuery_inParagraphTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.IN_PARAGRAPH_TABLE_OUTPUT_TAG);
-//		PCollection<KV<String, String>> docIdToBigQuery_inSentenceTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.IN_SENTENCE_TABLE_OUTPUT_TAG);
-//		PCollection<KV<String, String>> docIdToBigQuery_inConceptTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.IN_CONCEPT_TABLE_OUTPUT_TAG);
-//		PCollection<KV<String, String>> docIdToBigQuery_relationTable = bigqueryExports
-//				.get(BigQueryExportFileBuilderFn.RELATION_TABLE_OUTPUT_TAG);
+		PCollectionTuple bigqueryExports = BigQueryExportFileBuilderFn.processNoTrackDocIds(docIdToAnnotations,
+				outputDocCriteria, timestamp);
 
 		PCollection<String> docIdToBigQuery_annotationTable = bigqueryExports
 				.get(BigQueryExportFileBuilderFn.ANNOTATION_TABLE_OUTPUT_TAG_NO_TRACK_DOCID);
@@ -124,25 +113,6 @@ public class BigQueryExportPipeline {
 				TextIO.write().to(options.getOutputBucket() + "/in-concept.").withSuffix(".tsv"));
 		docIdToBigQuery_relationTable.apply("write annotation table",
 				TextIO.write().to(options.getOutputBucket() + "/relation.").withSuffix(".tsv"));
-
-//		docIdToBigQuery_annotationTable.apply(FileIO.<String, String>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".annotation.txt")));
-//		docIdToBigQuery_inSectionTable.apply(FileIO.<String, KV<String, String>>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".in-section.txt")));
-//		docIdToBigQuery_inParagraphTable.apply(FileIO.<String, KV<String, String>>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".in-paragraph.txt")));
-//		docIdToBigQuery_inSentenceTable.apply(FileIO.<String, KV<String, String>>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".in-sentence.txt")));
-//		docIdToBigQuery_inConceptTable.apply(FileIO.<String, KV<String, String>>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".in-concept.txt")));
-//		docIdToBigQuery_relationTable.apply(FileIO.<String, KV<String, String>>writeDynamic().by(KV::getKey)
-//				.withDestinationCoder(StringUtf8Coder.of()).via(Contextful.fn(KV::getValue), TextIO.sink())
-//				.to(options.getOutputBucket()).withNaming(key -> FileIO.Write.defaultNaming(key, ".relation.txt")));
 
 		PCollectionList<EtlFailureData> failureList = PCollectionList.of(annotationRetrievalFailures)
 				.and(bigqueryExportFailures);
