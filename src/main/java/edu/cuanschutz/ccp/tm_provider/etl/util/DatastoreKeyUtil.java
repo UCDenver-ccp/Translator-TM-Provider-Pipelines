@@ -32,7 +32,6 @@ public class DatastoreKeyUtil {
 				.build();
 		PathElement documentElement = builder.addPathBuilder().setKind(DOCUMENT_KIND).setName(docName).build();
 		Key key = builder.setPath(0, statusElement).setPath(1, documentElement).build();
-		LOGGER.log(Level.SEVERE, "DOC KEY: " + key.toString());
 		return key;
 	}
 
