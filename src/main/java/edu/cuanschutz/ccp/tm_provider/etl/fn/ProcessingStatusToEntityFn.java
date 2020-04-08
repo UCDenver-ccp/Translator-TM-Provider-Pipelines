@@ -19,6 +19,7 @@ import com.google.datastore.v1.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -48,8 +49,20 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(STATUS_PROPERTY_DOCUMENT_ID, makeValue(status.getDocumentId()).build());
 
+		Set<String> setFlagProperties = new HashSet<String>();
 		for (String flagProperty : status.getFlagProperties()) {
 			entityBuilder.putProperties(flagProperty, makeValue(status.getFlagPropertyValue(flagProperty)).build());
+			setFlagProperties.add(flagProperty);
+		}
+
+		// for any flag that hasn't been set, set it to false
+		for (ProcessingStatusFlag flag : ProcessingStatusFlag.values()) {
+			if (flag != ProcessingStatusFlag.NOOP) {
+				String propertyName = flag.getDatastoreFlagPropertyName();
+				if (!setFlagProperties.contains(propertyName)) {
+					entityBuilder.putProperties(propertyName, makeValue(false).build());
+				}
+			}
 		}
 
 		for (String countProperty : status.getCountProperties()) {
@@ -95,7 +108,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 						propertyName));
 			}
 		}
-		
+
 		return status;
 	}
 
