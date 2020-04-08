@@ -57,10 +57,10 @@ public class LoadFilesPipeline {
 
 		void setPipelineKey(PipelineKey value);
 
-		@Description("Document collection name")
-		String getCollectionName();
+		@Description("The document collection to process")
+		String getCollection();
 
-		void setCollectionName(String value);
+		void setCollection(String value);
 
 	}
 
@@ -90,7 +90,7 @@ public class LoadFilesPipeline {
 				options.getOutputDocumentFormat(), options.getPipelineKey(), pipelineVersion);
 
 		PCollectionTuple output = ExtractTextFn.process(fileIdAndContent, outputDocCriteria, timestamp,
-				options.getFileSuffix(), options.getCollectionName());
+				options.getFileSuffix(), options.getCollection());
 
 		PCollection<KV<String, List<String>>> docIdToPlainText = output.get(ExtractTextFn.plainTextTag);
 		PCollection<EtlFailureData> failures = output.get(ExtractTextFn.etlFailureTag);

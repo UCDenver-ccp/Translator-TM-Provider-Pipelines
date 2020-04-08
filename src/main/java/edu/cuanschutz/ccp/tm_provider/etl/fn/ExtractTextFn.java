@@ -49,7 +49,7 @@ public class ExtractTextFn extends DoFn<KV<String, String>, KV<String, String>> 
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, String fileSuffix,
-			String collectionName) {
+			String collection) {
 
 		return docIdToText.apply("Extract plain text; create status entity",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
@@ -80,8 +80,8 @@ public class ExtractTextFn extends DoFn<KV<String, String>, KV<String, String>> 
 							ProcessingStatus status = new ProcessingStatus(docId);
 							status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria,
 									chunkedPlainText.size());
-							if (collectionName != null) {
-								status.addCollection(collectionName);
+							if (collection != null) {
+								status.addCollection(collection);
 							}
 							out.get(processingStatusTag).output(status);
 

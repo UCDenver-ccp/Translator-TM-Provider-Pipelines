@@ -47,7 +47,7 @@ public class DatastoreProcessingStatusUtil {
 	 *         specified document
 	 */
 	public static String getDocumentChunkCountPropertyName(DocumentCriteria dc) {
-		return DatastoreKeyUtil.getDocumentKeyName("chunks", dc);
+		return DatastoreKeyUtil.getDocumentKeyName("chunks", dc, 0);
 	}
 
 	/**
@@ -58,23 +58,31 @@ public class DatastoreProcessingStatusUtil {
 	 * @return
 	 */
 	public List<String> getDocumentIdsInNeedOfProcessing(ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags) {
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection) {
 
 		/*
 		 * convert the required status flags into an array of PropertyFilters that match
 		 * 'true'
 		 */
-		PropertyFilter[] requiredProcessStatusFlagFilters = requiredProcessStatusFlags.stream()
-				.map(flag -> PropertyFilter.eq(flag.getDatastoreFlagPropertyName(), true)).collect(Collectors.toList())
-				.toArray(new PropertyFilter[0]);
+		List<PropertyFilter> requiredProcessStatusFlagFilters = requiredProcessStatusFlags.stream()
+				.map(flag -> PropertyFilter.eq(flag.getDatastoreFlagPropertyName(), true)).collect(Collectors.toList());
+
+		/* add a filter on the collection name if one has been provided */
+		if (collection != null) {
+//			PropertyFilter collectionFilter = PropertyFilter.eq(collection.getDatastoreFlagPropertyName(), true);
+			PropertyFilter collectionFilter = PropertyFilter.eq(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS,
+					collection);
+			requiredProcessStatusFlagFilters.add(collectionFilter);
+		}
 
 		/*
 		 * require the target process to not have run, i.e. its flag == false AND the
 		 * required process flags to all equal true
 		 */
+
 		CompositeFilter filter = CompositeFilter.and(
 				PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), false),
-				requiredProcessStatusFlagFilters);
+				requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]));
 
 		// FIXME: Note that this query could probably be converted to a key-only query
 		// and therefore be more cost-effective. The document Id can be parsed from each

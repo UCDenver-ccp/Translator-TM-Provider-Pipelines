@@ -48,9 +48,9 @@ public class ExtractTextFnTest {
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, pipelineKey,
 				pipelineVersion);
-		String collectionName = "CORD-19";
+		String collection = "CORD19";
 
-		PCollectionTuple output = ExtractTextFn.process(input, outputDocCriteria, timestamp, ".txt", collectionName);
+		PCollectionTuple output = ExtractTextFn.process(input, outputDocCriteria, timestamp, ".txt", collection);
 
 		List<String> chunks = CollectionsUtil.createList(plainText[0], plainText[1]);
 
@@ -60,7 +60,7 @@ public class ExtractTextFnTest {
 		// check that the status logged two chunks and the collection name
 		ProcessingStatus statusEntity = new ProcessingStatus(docId);
 		statusEntity.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria, 2);
-		statusEntity.addCollection(collectionName);
+		statusEntity.addCollection(collection);
 		PAssert.that(output.get(ExtractTextFn.processingStatusTag)).containsInAnyOrder(statusEntity);
 
 		pipeline.run();

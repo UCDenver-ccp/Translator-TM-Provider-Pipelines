@@ -64,7 +64,7 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collectionName) {
+			com.google.cloud.Timestamp timestamp, String collection) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
@@ -113,8 +113,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria,
 										chunkedPlainText.size());
 
-								if (collectionName != null) {
-									status.addCollection(collectionName);
+								if (collection != null) {
+									status.addCollection(collection);
 								}
 								out.get(processingStatusTag).output(status);
 

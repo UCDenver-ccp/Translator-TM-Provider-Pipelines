@@ -48,9 +48,9 @@ public class OgerPipeline {
 		void setOgerServiceUri(String value);
 
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
-		ProcessingStatusFlag getTargetProcessStatusFlag();
+		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
-		void setTargetProcessStatusFlag(ProcessingStatusFlag flag);
+		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
 
 		@Description("The targetDocumentType should also align with the concept type served by the OGER service URI; pipe-delimited list")
 		DocumentType getTargetDocumentType();
@@ -72,6 +72,11 @@ public class OgerPipeline {
 
 		void setInputPipelineVersion(String value);
 
+		@Description("The document collection to process")
+		String getCollection();
+
+		void setCollection(String value);
+
 	}
 
 	public static void main(String[] args) {
@@ -81,7 +86,7 @@ public class OgerPipeline {
 		LOGGER.log(Level.INFO, String.format("Running OGER pipeline for concept: ", options.getTargetDocumentType()));
 
 		URI ogerServiceUri = URI.create(options.getOgerServiceUri());
-		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessStatusFlag();
+		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		DocumentType targetDocumentType = options.getTargetDocumentType();
 
 		Pipeline p = Pipeline.create(options);
@@ -105,7 +110,8 @@ public class OgerPipeline {
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags);
+				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
+				options.getCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);

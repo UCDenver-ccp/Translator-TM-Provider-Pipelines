@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import static com.google.datastore.v1.client.DatastoreHelper.makeAndFilter;
 import static com.google.datastore.v1.client.DatastoreHelper.makeFilter;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
@@ -15,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.Pipeline;
@@ -24,8 +27,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
-import com.google.datastore.v1.CompositeFilter;
-import com.google.datastore.v1.CompositeFilter.Operator;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
 import com.google.datastore.v1.PropertyFilter;
@@ -41,6 +42,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 
 public class PipelineMain {
+
+	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
+
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 		PipelineKey pipeline = null;
@@ -69,6 +73,9 @@ public class PipelineMain {
 			case BIGQUERY_EXPORT:
 				BigQueryExportPipeline.main(pipelineArgs);
 				break;
+			case DRY_RUN:
+				DryRunPipeline.main(pipelineArgs);
+				break;
 			default:
 				throw new IllegalArgumentException(String.format(
 						"Valid pipeline (%s) but a code change required before it can be used. Valid choices are %s",
@@ -78,17 +85,17 @@ public class PipelineMain {
 		}
 	}
 
-	public static PCollection<KV<String, String>> getDocId2Content(DocumentCriteria dc,
+	public static PCollection<KV<String, String>> getDocId2Content(DocumentCriteria inputDocCriteria,
 //			String pipelineVersion, 
 			String gcpProjectId, Pipeline beamPipeline, ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags) {
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection) {
 
 		/*
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
 		 */
 		PCollection<Entity> status = getStatusEntitiesToProcess(beamPipeline, targetProcessStatusFlag,
-				requiredProcessStatusFlags, gcpProjectId);
+				requiredProcessStatusFlags, gcpProjectId, collection);
 
 		/*
 		 * then return a mapping from document id to the document content that will be
@@ -101,13 +108,13 @@ public class PipelineMain {
 					@ProcessElement
 					public void processElement(@Element Entity status, OutputReceiver<KV<String, String>> out) {
 						String documentId = status.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
-						long chunkCount = status.getPropertiesMap()
-								.get(DatastoreProcessingStatusUtil.getDocumentChunkCountPropertyName(dc))
-								.getIntegerValue();
+						String chunkCountPropertyName = DatastoreProcessingStatusUtil
+								.getDocumentChunkCountPropertyName(inputDocCriteria);
+						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
 
 						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
-						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId, dc,
-								chunkCount);
+						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId,
+								inputDocCriteria, chunkCount);
 						if (documentIdToContent != null) {
 							out.output(documentIdToContent);
 						}
@@ -118,7 +125,7 @@ public class PipelineMain {
 
 	public static PCollection<Entity> getStatusEntitiesToProcess(Pipeline p,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String gcpProjectId) {
+			String gcpProjectId, String collection) {
 		List<Filter> filters = new ArrayList<Filter>();
 		for (ProcessingStatusFlag flag : requiredProcessStatusFlags) {
 			Filter filter = makeFilter(flag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
@@ -128,16 +135,22 @@ public class PipelineMain {
 		filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
 				makeValue(false)).build());
 
+		/* incorporate the collection name into the query if there is one */
+		if (collection != null) {
+			filters.add(makeFilter(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS, PropertyFilter.Operator.EQUAL,
+					makeValue(collection)).build());
+		}
+
+		for (Filter filter : filters) {
+			LOGGER.log(Level.INFO, "FILTER: " + filter.toString());
+		}
+
+		Filter filter = makeAndFilter(filters).build();
 		Query.Builder query = Query.newBuilder();
 		query.addKindBuilder().setName(STATUS_KIND);
-
-		CompositeFilter.Builder compositeFilter = CompositeFilter.newBuilder();
-		compositeFilter.addAllFilters(filters);
-		compositeFilter.setOp(Operator.AND);
-		Filter filter = Filter.newBuilder().setCompositeFilter(compositeFilter).build();
 		query.setFilter(filter);
 
-		PCollection<Entity> status = p.apply("document_entity->datastore",
+		PCollection<Entity> status = p.apply("datastore->status entities to process",
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 		return status;
 	}
