@@ -19,14 +19,14 @@ public class DatastoreKeyUtil {
 	//////// DOCUMENT KEY /////////
 	///////////////////////////////
 
-	public static String getDocumentKeyName(String docId, DocumentCriteria dc) {
-		return String.format("%s.%s.%s.%s.%s", docId, dc.getDocumentType().name().toLowerCase(),
+	public static String getDocumentKeyName(String docId, DocumentCriteria dc, long chunkIndex) {
+		return String.format("%s.%d.%s.%s.%s.%s", docId, chunkIndex, dc.getDocumentType().name().toLowerCase(),
 				dc.getDocumentFormat().name().toLowerCase(), dc.getPipelineKey().name().toLowerCase(),
 				dc.getPipelineVersion());
 	}
 
 	public static Key createDocumentKey(String documentId, Long chunkId, DocumentCriteria dc) {
-		String docName = getDocumentKeyName(documentId + "." + chunkId, dc);
+		String docName = getDocumentKeyName(documentId, dc, chunkId);
 		Builder builder = Key.newBuilder();
 		PathElement statusElement = builder.addPathBuilder().setKind(STATUS_KIND).setName(getStatusKeyName(documentId))
 				.build();

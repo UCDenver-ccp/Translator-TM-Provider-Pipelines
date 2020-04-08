@@ -73,12 +73,13 @@ public class DatastoreDocumentUtil {
 		// chunk here.
 		StringBuffer content = new StringBuffer();
 		String id = null;
-		for (int i = 0; i < chunkCount; i++) {
-			Key key = createDocumentKey(documentId, docCriteria);// type, format, pipeline, pipelineVersion);
+		for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline, pipelineVersion);
+			System.out.println("DOC KEY: " + key.toString());
 			Entity entity = datastore.get(key);
 
 			if (entity == null) {
-				logger.log(Level.SEVERE, "No text document for documentID: " + documentId + " chunk id: " + i);
+				logger.log(Level.SEVERE, "No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
 				return null;
 			}
 			id = getDocumentId(entity);
@@ -116,8 +117,8 @@ public class DatastoreDocumentUtil {
 
 			// get each chunk and combine to create the document content
 			StringBuffer content = new StringBuffer();
-			for (int j = 0; j < chunkCount; j++) {
-				Key key = createDocumentKey(documentId, dc);
+			for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+				Key key = createDocumentKey(documentId, dc, chunkIndex);
 				Entity entity = datastore.get(key);
 				content.append(getDocumentContent(entity));
 			}
@@ -169,8 +170,8 @@ public class DatastoreDocumentUtil {
 	 * @param format
 	 * @return the Key for the specified document
 	 */
-	public Key createDocumentKey(String docId, DocumentCriteria docCriteria) {
-		String docName = DatastoreKeyUtil.getDocumentKeyName(docId, docCriteria);// type, format, pipeline,
+	public Key createDocumentKey(String docId, DocumentCriteria docCriteria, int chunkIndex) {
+		String docName = DatastoreKeyUtil.getDocumentKeyName(docId, docCriteria, chunkIndex);// type, format, pipeline,
 																					// pipelineVersion);
 		return datastore.newKeyFactory()
 				.addAncestor(PathElement.of(STATUS_KIND, DatastoreKeyUtil.getStatusKeyName(docId)))
