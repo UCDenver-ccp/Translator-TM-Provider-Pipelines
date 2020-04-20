@@ -22,6 +22,7 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn.OgerOutputType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -77,6 +78,12 @@ public class OgerPipeline {
 
 		void setCollection(String value);
 
+		@Description("The output type expected to be returned by the Oger service. If OGER is run without BioBert, "
+				+ "then it returns TSV, otherwise it returns PubAnnotation formatted output.")
+		OgerOutputType getOgerOutputType();
+
+		void setOgerOutputType(OgerOutputType value);
+
 	}
 
 	public static void main(String[] args) {
@@ -115,8 +122,8 @@ public class OgerPipeline {
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);
-		PCollectionTuple output = OgerFn.process(docId2Content, ogerServiceUri.toString(), outputDocCriteria,
-				timestamp);
+		PCollectionTuple output = OgerFn.process(docId2Content, ogerServiceUri.toString(), outputDocCriteria, timestamp,
+				options.getOgerOutputType());
 
 		PCollection<KV<String, List<String>>> docIdToAnnotation = output.get(OgerFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(OgerFn.ETL_FAILURE_TAG);
