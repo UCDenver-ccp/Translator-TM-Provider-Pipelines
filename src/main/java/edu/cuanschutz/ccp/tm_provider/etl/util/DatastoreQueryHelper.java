@@ -15,9 +15,11 @@ import java.util.regex.Pattern;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Value;
 
@@ -255,6 +257,59 @@ public class DatastoreQueryHelper {
 		System.out.println("done.");
 	}
 
+//	public void queryForStatusByCollection() {
+//		// get statuses where the bigquery file has already been created
+//
+//		com.google.cloud.datastore.KeyQuery.Builder query = Query.newKeyQueryBuilder()
+//				.setKind(DatastoreConstants.STATUS_KIND);
+//		CompositeFilter filter = CompositeFilter.and(
+//				PropertyFilter.eq(DatastoreConstants.STATUS_PROPERTY_IN_CORD19_COLLECTION, true),
+//				PropertyFilter.eq(ProcessingStatusFlag.TEXT_DONE.getDatastoreFlagPropertyName(), true),
+//				PropertyFilter.eq(ProcessingStatusFlag.OGER_CHEBI_DONE.getDatastoreFlagPropertyName(), false)
+//				);
+//		query.setFilter(filter);
+//		QueryResults<Key> results = datastore.run(query.build());
+//		while (results.hasNext()) {
+//			Key key = results.next();
+//			System.out.println(key.toString());
+//		}
+//	}
+
+	public void collectionStatus(String collection) {
+		// get statuses where the bigquery file has already been created
+
+		Builder query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.STATUS_KIND);
+		query.setFilter(PropertyFilter.eq(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS, collection));
+		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
+		QueryResults<Entity> results = datastore.run(query.build());
+		int count = 0;
+
+		Map<ProcessingStatusFlag, Integer> statusFlagToCountMap = new HashMap<ProcessingStatusFlag, Integer>();
+
+		while (results.hasNext()) {
+			if (count++ % 250 == 0) {
+				System.out.println("progress: " + count);
+			}
+			Entity entity = results.next();
+			Map<String, Value<?>> properties = entity.getProperties();
+
+			for (ProcessingStatusFlag flag : ProcessingStatusFlag.values()) {
+				if (properties.containsKey(flag.getDatastoreFlagPropertyName())) {
+					Boolean done = Boolean
+							.valueOf(properties.get(flag.getDatastoreFlagPropertyName()).get().toString());
+					if (done) {
+						CollectionsUtil.addToCountMap(flag, statusFlagToCountMap);
+					}
+				}
+			}
+		}
+
+		System.out.println(String.format("%s document count: %d", collection, count));
+		Map<ProcessingStatusFlag, Integer> sortedMap = CollectionsUtil.sortMapByValues(statusFlagToCountMap,
+				SortOrder.DESCENDING);
+		sortedMap.entrySet().forEach(e -> System.out.println(e.getKey() + " -- " + e.getValue()));
+	}
+
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
 //		new DatastoreQueryHelper().getStatuses();
@@ -267,9 +322,13 @@ public class DatastoreQueryHelper {
 //
 //		new DatastoreQueryHelper().addDTestStatusFieldToAstmaDocs(pmcIdListFile);
 
-		new DatastoreQueryHelper().updateDependencyStatus();
+//		new DatastoreQueryHelper().updateDependencyStatus();
+//		new DatastoreQueryHelper().queryForStatusByCollection();
 
 //		new DatastoreQueryHelper().printDocumentCountsBasedOnKeys();
+		
+		new DatastoreQueryHelper().collectionStatus("CORD19");
+		
 	}
 
 }
