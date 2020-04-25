@@ -177,56 +177,60 @@ public interface DatastoreConstants {
 	////////////////// BERT CONCEPT PROCESSING /////////////////////
 	////////////////////////////////////////////////////////////////
 
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_CHEBI_IDS_DONE = "bert_chebi_ids";
+//	public static final String STATUS_PROPERTY_BERT_CHEBI_SPANS_DONE = "bert_chebi_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_CL_IDS_DONE = "bert_cl_ids";
+//	public static final String STATUS_PROPERTY_BERT_CL_SPANS_DONE = "bert_cl_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_GO_BP_IDS_DONE = "bert_gobp_ids";
+//	public static final String STATUS_PROPERTY_BERT_GO_BP_SPANS_DONE = "bert_gobp_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_GO_CC_IDS_DONE = "bert_gocc_ids";
+//	public static final String STATUS_PROPERTY_BERT_GO_CC_SPANS_DONE = "bert_gocc_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_GO_MF_IDS_DONE = "bert_gomf_ids";
+//	public static final String STATUS_PROPERTY_BERT_GO_MF_SPANS_DONE = "bert_gomf_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_MOP_IDS_DONE = "bert_mop_ids";
+//	public static final String STATUS_PROPERTY_BERT_MOP_SPANS_DONE = "bert_mop_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_NCBITAXON_IDS_DONE = "bert_ncbitaxon_ids";
+//	public static final String STATUS_PROPERTY_BERT_NCBITAXON_SPANS_DONE = "bert_ncbitaxon_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_SO_IDS_DONE = "bert_so_ids";
+//	public static final String STATUS_PROPERTY_BERT_SO_SPANS_DONE = "bert_so_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_PR_IDS_DONE = "bert_pr_ids";
+//	public static final String STATUS_PROPERTY_BERT_PR_SPANS_DONE = "bert_pr_spans";
+//	/**
+//	 * 
+//	 */
+//	public static final String STATUS_PROPERTY_BERT_UBERON_IDS_DONE = "bert_uberon_ids";
+//	public static final String STATUS_PROPERTY_BERT_UBERON_SPANS_DONE = "bert_uberon_spans";
 	/**
 	 * 
 	 */
-	public static final String STATUS_PROPERTY_BERT_CHEBI_IDS_DONE = "bert_chebi_ids";
-	public static final String STATUS_PROPERTY_BERT_CHEBI_SPANS_DONE = "bert_chebi_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_CL_IDS_DONE = "bert_cl_ids";
-	public static final String STATUS_PROPERTY_BERT_CL_SPANS_DONE = "bert_cl_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_GO_BP_IDS_DONE = "bert_gobp_ids";
-	public static final String STATUS_PROPERTY_BERT_GO_BP_SPANS_DONE = "bert_gobp_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_GO_CC_IDS_DONE = "bert_gocc_ids";
-	public static final String STATUS_PROPERTY_BERT_GO_CC_SPANS_DONE = "bert_gocc_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_GO_MF_IDS_DONE = "bert_gomf_ids";
-	public static final String STATUS_PROPERTY_BERT_GO_MF_SPANS_DONE = "bert_gomf_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_MOP_IDS_DONE = "bert_mop_ids";
-	public static final String STATUS_PROPERTY_BERT_MOP_SPANS_DONE = "bert_mop_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_NCBITAXON_IDS_DONE = "bert_ncbitaxon_ids";
-	public static final String STATUS_PROPERTY_BERT_NCBITAXON_SPANS_DONE = "bert_ncbitaxon_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_SO_IDS_DONE = "bert_so_ids";
-	public static final String STATUS_PROPERTY_BERT_SO_SPANS_DONE = "bert_so_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_PR_IDS_DONE = "bert_pr_ids";
-	public static final String STATUS_PROPERTY_BERT_PR_SPANS_DONE = "bert_pr_spans";
-	/**
-	 * 
-	 */
-	public static final String STATUS_PROPERTY_BERT_UBERON_IDS_DONE = "bert_uberon_ids";
-	public static final String STATUS_PROPERTY_BERT_UBERON_SPANS_DONE = "bert_uberon_spans";
+	public static final String STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE = "bigquery_file_export";
 	/**
 	 * 
 	 */
@@ -241,5 +245,9 @@ public interface DatastoreConstants {
 	 * the given document belongs, e.g. CORD-19
 	 */
 	public static final String STATUS_PROPERTY_COLLECTIONS = "collections";
+
+//	public static final String STATUS_PROPERTY_IN_CORD19_COLLECTION = "in_cord19";
+//	public static final String STATUS_PROPERTY_IN_PMCOA_COLLECTION = "in_pmcoa";
+//	public static final String STATUS_PROPERTY_IN_NLM_MANUSCRIPT_COLLECTION = "in_nlm_manuscript";
 
 }

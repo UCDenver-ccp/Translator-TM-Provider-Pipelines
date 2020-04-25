@@ -20,15 +20,13 @@ public class ProcessingStatusTest {
 
 		assertEquals(documentId, status.getDocumentId());
 		assertTrue(status.getFlagPropertyValue(ProcessingStatusFlag.TEXT_DONE.getDatastoreFlagPropertyName()));
-		assertFalse(
-				status.getFlagPropertyValue(ProcessingStatusFlag.BERT_CHEBI_IDS_DONE.getDatastoreFlagPropertyName()));
+		assertFalse(status.getFlagPropertyValue(ProcessingStatusFlag.OGER_CHEBI_DONE.getDatastoreFlagPropertyName()));
 
 		// test with no flags set
 		status = new ProcessingStatus(documentId);
 		assertEquals(documentId, status.getDocumentId());
 		assertFalse(status.getFlagPropertyValue(ProcessingStatusFlag.TEXT_DONE.getDatastoreFlagPropertyName()));
-		assertFalse(
-				status.getFlagPropertyValue(ProcessingStatusFlag.BERT_CHEBI_IDS_DONE.getDatastoreFlagPropertyName()));
+		assertFalse(status.getFlagPropertyValue(ProcessingStatusFlag.OGER_CHEBI_DONE.getDatastoreFlagPropertyName()));
 	}
 
 }

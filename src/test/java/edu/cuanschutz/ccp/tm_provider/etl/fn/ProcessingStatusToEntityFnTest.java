@@ -35,8 +35,8 @@ public class ProcessingStatusToEntityFnTest {
 				"0.1");
 		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, textDc, 1);
 		DocumentCriteria bertDc = new DocumentCriteria(DocumentType.CONCEPT_CL, DocumentFormat.OGER_CONLL,
-				PipelineKey.BERT_IDS, "0.2");
-		status.enableFlag(ProcessingStatusFlag.BERT_CL_IDS_DONE, bertDc, 2);
+				PipelineKey.OGER, "0.2");
+		status.enableFlag(ProcessingStatusFlag.OGER_CL_DONE, bertDc, 2);
 
 		PCollection<ProcessingStatus> input = pipeline.apply(Create.of(status));
 		PCollection<Entity> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));
