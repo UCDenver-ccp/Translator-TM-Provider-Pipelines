@@ -41,10 +41,10 @@ public class BiocToTextPipeline {
 
 		void setBiocDir(String value);
 
-		@Description("Document collection name")
-		String getCollectionName();
+		@Description("The document collection to process")
+		String getCollection();
 
-		void setCollectionName(String value);
+		void setCollection(String value);
 
 	}
 
@@ -88,7 +88,7 @@ public class BiocToTextPipeline {
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
 		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, outputTextDocCriteria,
-				outputAnnotationDocCriteria, timestamp, options.getCollectionName());
+				outputAnnotationDocCriteria, timestamp, options.getCollection());
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly

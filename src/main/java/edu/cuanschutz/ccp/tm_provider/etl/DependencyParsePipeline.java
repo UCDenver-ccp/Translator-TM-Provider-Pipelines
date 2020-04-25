@@ -53,6 +53,11 @@ public class DependencyParsePipeline {
 
 		void setInputPipelineVersion(String value);
 
+		@Description("The document collection to process")
+		String getCollection();
+
+		void setCollection(String value);
+
 	}
 
 	public static void main(String[] args) {
@@ -77,7 +82,7 @@ public class DependencyParsePipeline {
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags);
+				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);
