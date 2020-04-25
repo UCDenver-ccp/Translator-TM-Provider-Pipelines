@@ -234,7 +234,7 @@ public interface DatastoreConstants {
 	/**
 	 * 
 	 */
-	public static final String STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE = "bigquery_file_export";
+	public static final String STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE = "pubannotation_file_export";
 //	/**
 //	 * This property is for development convenience and allows a document to be
 //	 * marked as a 'test' document. This can be helpful for testing purposes.
