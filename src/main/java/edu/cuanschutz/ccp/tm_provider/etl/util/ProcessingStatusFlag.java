@@ -15,6 +15,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SECTIONS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
 
 import lombok.Getter;
 
@@ -29,6 +30,8 @@ public enum ProcessingStatusFlag {
 	 * true if dependency parsing is complete
 	 */
 	DP_DONE(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE),
+	
+	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////

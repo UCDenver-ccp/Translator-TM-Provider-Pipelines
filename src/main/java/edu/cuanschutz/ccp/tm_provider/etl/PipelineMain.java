@@ -73,6 +73,9 @@ public class PipelineMain {
 			case BIGQUERY_EXPORT:
 				BigQueryExportPipeline.main(pipelineArgs);
 				break;
+			case SENTENCE_SEGMENTATION:
+				SentenceSegmentationPipeline.main(pipelineArgs);
+				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
 				break;

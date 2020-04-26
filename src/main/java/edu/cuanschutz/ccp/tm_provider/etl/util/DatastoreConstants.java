@@ -125,6 +125,9 @@ public interface DatastoreConstants {
 	 * true if dependency parsing is complete
 	 */
 	public static final String STATUS_PROPERTY_DEPENDENCY_PARSE_DONE = "dep";
+	
+	
+	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// public static final String STATUS_PROPERTY_OGER CONCEPT

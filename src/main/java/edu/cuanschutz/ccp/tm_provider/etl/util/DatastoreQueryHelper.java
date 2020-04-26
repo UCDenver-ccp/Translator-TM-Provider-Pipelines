@@ -310,6 +310,34 @@ public class DatastoreQueryHelper {
 		sortedMap.entrySet().forEach(e -> System.out.println(e.getKey() + " -- " + e.getValue()));
 	}
 
+	/**
+	 * Add status flag(s) for every status entity in Datastore
+	 * 
+	 * @param flags
+	 * @param initialValue
+	 */
+	public void addStatusFlag(Set<ProcessingStatusFlag> flags, boolean initialValue) {
+		Query<Key> query = Query.newKeyQueryBuilder().setKind(DatastoreConstants.STATUS_KIND).build();
+		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
+
+		QueryResults<Key> results = datastore.run(query);
+		int count = 0;
+		List<Key> keys = new ArrayList<Key>();
+		while (results.hasNext()) {
+			if (count++ % 250 == 0) {
+				System.out.println("progress: " + count);
+				util.setStatus(keys, flags, initialValue);
+				keys = new ArrayList<Key>();
+			}
+			Key key = results.next();
+			keys.add(key);
+		}
+
+		System.out.println("final setting flags...");
+		util.setStatus(keys, flags, initialValue);
+		System.out.println("done.");
+	}
+
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
 //		new DatastoreQueryHelper().getStatuses();
@@ -326,9 +354,11 @@ public class DatastoreQueryHelper {
 //		new DatastoreQueryHelper().queryForStatusByCollection();
 
 //		new DatastoreQueryHelper().printDocumentCountsBasedOnKeys();
-		
-		new DatastoreQueryHelper().collectionStatus("CORD19");
-		
+
+		new DatastoreQueryHelper().addStatusFlag(CollectionsUtil.createSet(ProcessingStatusFlag.SENTENCE_DONE), false);
+
+//		new DatastoreQueryHelper().collectionStatus("CORD19");
+
 	}
 
 }
