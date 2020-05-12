@@ -14,8 +14,9 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SECTIONS_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
 
 import lombok.Getter;
 
@@ -30,7 +31,7 @@ public enum ProcessingStatusFlag {
 	 * true if dependency parsing is complete
 	 */
 	DP_DONE(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE),
-	
+
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
 
 	////////////////////////////////////////////////////////////////
@@ -144,11 +145,13 @@ public enum ProcessingStatusFlag {
 //	ASSOC_CHEMICAL_PROTEIN_DONE
 
 	BIGQUERY_LOAD_FILE_EXPORT_DONE(STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE),
-	
+
 	/**
 	 * 
 	 */
-	PUBANNOTATION_FILE_EXPORT_DONE(STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE);
+	PUBANNOTATION_FILE_EXPORT_DONE(STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE),
+
+	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE);
 
 	@Getter
 	private final String datastoreFlagPropertyName;

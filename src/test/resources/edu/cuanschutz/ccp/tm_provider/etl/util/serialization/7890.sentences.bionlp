@@ -1,0 +1,107 @@
+T1	sentence 0 250	Absence of surface expression of feline infectious peritonitis virus (FIPV) antigens on infected cells isolated from cats with FIP Feline infectious peritonitis virus (FIPV) positive cells are present in pyogranulomas and exudates from cats with FIP.
+T2	sentence 251 312	These cells belong mainly to the monocyte/macrophage lineage.
+T3	sentence 313 365	How these cells survive in immune cats is not known.
+T4	sentence 366 585	In this study, FIPV positive cells were isolated from pyogranulomas and exudates of 12 naturally FIPV-infected cats and the presence of two immunologic targets, viral antigens and MHC I, on their surface was determined.
+T5	sentence 586 685	The majority of the infected cells were confirmed to be cells from the monocyte/macrophage lineage.
+T6	sentence 686 762	No surface expression of viral antigens was detected on FIPV positive cells.
+T7	sentence 763 823	MHC I molecules were present on all the FIPV positive cells.
+T8	sentence 824 957	After cultivation of the isolated infected cells, 52 AE 10% of the infected cells re-expressed viral antigens on the plasma membrane.
+T9	sentence 958 1194	In conclusion, it can be stated that in FIP cats, FIPV replicates in cells of the monocyte/macrophage lineage without carrying viral antigens in their plasma membrane, which could allow them to escape from antibody-dependent cell lysis.
+T10	sentence 1195 1422	# Feline infectious peritonitis (FIP) is a fatal chronic disease in cats caused by a coronavirus, feline infectious peritonitis virus (FIPV), and characterized by granulomatous lesions formed at the serosae of different organs.
+T11	sentence 1423 1454	Two forms can be distinguished.
+T12	sentence 1455 1537	Cats suffering from the wet or effusive form have exudates in their body cavities.
+T13	sentence 1538 1616	Exudate is absent in the second form, hence the name dry or non-effusive form.
+T14	sentence 1617 1826	FIPV-infected cells are detected in the pyogranulomas and, based on morphology and the granulocyte/ monocyte/macrophage marker calprotectin, defined as macrophages (Weiss and Scott, 1981; Kipar et al., 1998) .
+T15	sentence 1827 1946	Infected mononuclear cells were also isolated from exudates (Cammarata Parodi et al., 1993; Paltrinieri et al., 1999) .
+T16	sentence 1947 2063	In one way or another, these infected cells succeed in staying alive and transmitting www.elsevier.com/locate/vetmic
+T17	sentence 2064 2226	Veterinary Microbiology 121 (2007) [131] [132] [133] [134] [135] [136] [137] virus to new susceptible cells in the presence of a high concentration of antibodies.
+T18	sentence 2227 2258	How they do this, is not known.
+T19	sentence 2259 2383	Infected cells are normally eliminated by the adaptive immune system through antibody-mediated lysis or cell-mediated lysis.
+T20	sentence 2384 2619	For the antibody-mediated lysis, the presence of antigens on the surface of infected cells is important for the recognition of these cells by antibodies and the subsequent destruction by the immune system (Sissons and Oldstone, 1980) .
+T21	sentence 2620 3014	For pseudorabies virus (PRV) end equine herpesvirus-1 (EHV-1), it has been described that absence of antigens on the surface membrane of infected monocytes, due to antibody-induced internalization or lacking of expression, respectively, protects the infected cells from efficient complement-mediated lysis (van der Meulen et al., 2003 (van der Meulen et al., , 2006 Van de Walle et al., 2003) .
+T22	sentence 3015 3179	In in vitro studies with FIPV 79-1146-infected feline monocytes, it was shown that viral antigens are expressed in the plasma membrane in 50% of the infected cells.
+T23	sentence 3180 3423	In these cells, the surface expressed viral antigens are internalized after addition of antibodies, leaving the plasma membrane of the cell cleared from all visually detectable viral antigens (Dewerchin et al., 2005 (Dewerchin et al., , 2006 .
+T24	sentence 3424 3558	Besides through antibody-mediated lysis, the adaptive immune system can eliminate virus-infected cells through cell-mediated immunity.
+T25	sentence 3559 3787	Some of the newly synthesized viral proteins in infected cells are disintegrated by proteasomes, the peptides are coupled to major histocompatibility complex I (MHC I) and transported to the plasma membrane of the infected cell.
+T26	sentence 3788 3871	This complex is recognized by cytotoxic T lymphocytes which kill the infected cell.
+T27	sentence 3872 3982	Viruses have developed various ingenious ways to block the MHC I antigen presentation pathway (Hewitt, 2003) .
+T28	sentence 3983 4173	For pseudorabies virus (PRV), it has been described that during antibody-induced internalization of viral glycoproteins in infected blood monocytes, the MHC I molecules are co-internalized .
+T29	sentence 4174 4285	Absence of MHC I molecules allows PRV-infected cells to hide from the cell-mediated immunity (Favoreel, 1999) .
+T30	sentence 4286 4402	Up till now, it is not known if FIPV affects the MHC I expression on the surface of FIPV-infected cells in FIP cats.
+T31	sentence 4403 4597	In the present study, it was examined in infected monocytes/macrophages of FIP cats if viral antigens are expressed on the plasma membrane and if the expression of MHC I molecules was inhibited.
+T32	sentence 4598 4750	Twelve cats strongly suspected of FIP by clinicians (based on cat profile, clinical signs and blood and/or exudate examination) were used in this study.
+T33	sentence 4751 4858	The sex, age, breed, FCoV antibody titre and type of FIP (effusive or non-effusive) are listed in Table 1 .
+T34	sentence 4860 5033	Monospecific, polyclonal antibodies originating from cats infected with serotype II FIPV 79-1146 were kindly provided by Dr. Egberinck (Utrecht University, The Netherlands).
+T35	sentence 5034 5139	Polyclonal antibodies against FIPV serotype I were isolated from a cat infected with a serotype I strain.
+T36	sentence 5140 5232	Immunoblotting showed strong reaction with the spike protein of the serotype I strain Black.
+T37	sentence 5233 5402	Both polyclonal antibodies against serotypes I and II were purified and biotinylated according to manufacturer's instructions (Amersham Bioscience, Buckinghamshire, UK).
+T38	sentence 5403 5517	A mixture of both biotinylated antibodies was used in the immunofluorescent stainings (biotinylated anti-FIPV Ab).
+T39	sentence 5518 5658	It was confirmed that the mixture of biotinylated antibodies was able to stain surface expression of both serotype I as serotype II viruses.
+T40	sentence 5659 5977	Feline polyclonal fluorescein-conjugated antibodies detecting both serotypes I and II (anti-FIPV-FITC Ab), a major histocompatibility complex I (MHC I) marker (CF298A) and a monocyte-macrophagegranulocyte marker (DH59B) were purchased from Veterinary Medical Research and Development (VMRD) (Pullman, Washington, USA).
+T41	sentence 5978 6196	Cats were euthanized using 1 ml/1.5 kg Na-pentobarbital (Kela, Hoogstraten, Belgium) and exudates were collected and diluted 1:1 with phosphate-buffered saline (PBS) containing 15 U/ml heparin (Leo, Zaventem, Belgium).
+T42	sentence 6197 6289	Cells present in the exudate were collected by centrifugation at 400 Â g for 10 min at 4 8C.
+T43	sentence 6290 6344	Afterwards, tissues with pyogranulomas were collected.
+T44	sentence 6345 6477	Small blocks containing almost just the pyogranulomas were immediately placed in RPMI-1640 at 37 8C (Gibco BRL, Merelbeke, Belgium).
+T45	sentence 6478 6575	For isolation of individual cells the small blocks were mechanically separated using two needles.
+T46	sentence 6576 6647	The cell suspension was then centrifuged at 400 Â g for 10 min at 4 8C.
+T47	sentence 6648 6822	The obtained cell suspensions from the exudates and the tissues with pyogranulomas were each divided in three parts on which different stainings in suspension were performed.
+T48	sentence 6823 6903	The cells from the pyogranulomas and the exudate of cat 2 were stained together.
+T49	sentence 6904 7026	The first staining was performed to determine the viability and the monocyte/macrophage nature of the FIPV positive cells.
+T50	sentence 7027 7240	Since the marker DH59B also detects granulocytes, besides macrophages and monocytes, the morphology of the nucleus was taken into account to determine whether the cells belonged to the monocyte/macrophage lineage.
+T51	sentence 7241 7354	The second staining was performed to detect if viral antigens were present on the surface of FIPV positive cells.
+T52	sentence 7355 7506	The third staining was performed to determine the presence of MHC I on the surface of FIPV positive cells and the effect on the viability of the cells.
+T53	sentence 7507 7569	The latter staining was only performed for cats 6, 7, 8 and 9.
+T54	sentence 7570 7656	The different staining steps and used antibodies and conjugates are given in Table 2 .
+T55	sentence 7657 7930	After staining, cells were mounted on microscope slides using glycerin-PBS solution (0.9/0.1, v/v) with 2.5% 1,4-diazabicyclo(2,2,2)octane (Janssen Chimica, Beerse, Belgium) and analyzed by a Leica DM RBE fluorescence microscope (Leica Microsystems GmbH, Wetzlar, Germany).
+T56	sentence 7931 8048	The isolated cells from cats 10, 11 and 12 were cultured in a 24-well plate on a glass coverslip for 0, 2, 4 and 6 h.
+T57	sentence 8049 8178	At each time point, the immunofluorescence staining for detection of surface expressed viral antigens was performed (staining 2).
+T58	sentence 8179 8290	After staining, the glass coverslips were mounted on microscope slides and analyzed by fluorescence microscopy.
+T59	sentence 8291 8349	Results were analyzed with the Wilcoxon signed ranks test.
+T60	sentence 8350 8437	Statistical analyses were performed with SPSS 11.0 (SPSS Inc., Chicago, Illinois, USA).
+T61	sentence 8438 8533	FIPV positive cells were found in cell suspensions from exudates and pyogranulomas in all cats.
+T62	sentence 8534 8605	The percentage of FIPV positive cells varied from <1 to 10% (Table 3 ).
+T63	sentence 8606 8752	The majority of the FIPV positive cells (95 AE 5%) belonged to the monocyte/macrophage lineage (mononuclear and DH59B positive) (Fig. 1 , lane A).
+T64	sentence 8753 8828	Less than 1% of the FIPV positive cells showed a polymorphonuclear nucleus.
+T65	sentence 8829 8944	Staining 2 revealed that no infected cells showed expression of viral antigens on their surface (Fig. 1,  lane B) .
+T66	sentence 8945 9075	After cultivation of the FIPV positive cells, viral antigens were re-expressed on the plasma membrane as soon as 2 h post-seeding.
+T67	sentence 9076 9145	Re-expression only occurred in 52 AE 10% of infected cells (Fig. 2) .
+T68	sentence 9146 9383	The results of the MHC I staining (staining 3) in isolated cells of cats 6, 7, 8 and 9 showed that MHC I expression was present on 98 AE 3% of the FIPV positive cells (Fig. 1, of MHC I expression was observed between live and dead cells.
+T69	sentence 9384 9457	The results of the viability staining (staining 1) are given in Table 3 .
+T70	sentence 9458 9747	This staining showed that the percentage of dead FIPV positive monocytes in pyogranulomas was significantly higher than the control cells (FIPV negative, DH95B positive cells) ( p < 0.1), whereas no difference was observed in exudates between FIPV positive monocytes and the control cells.
+T71	sentence 9748 9877	In this study, it was shown that FIPV positive monocytes in cats with FIP express MHC I on their surface, but not viral antigens.
+T72	sentence 9878 10035	The presence of viral antigens on the cell surface of infected cells is important for the recognition and elimination of infected cells by the immune system.
+T73	sentence 10036 10283	Binding of virus-specific antibodies to viral proteins present on the surface, makes infected cells recognizable for the classical complement pathway, phagocytes and natural killer cells, which will lead to lysis of infected cells (Harper, 1994) .
+T74	sentence 10284 10403	In this study, viral antigens were not detected on the surface of FIPV positive cells isolated from nine cats with FIP.
+T75	sentence 10404 10579	This could implicate that the FIPV positive cells may remain ''invisible'' for the humoral immune system and continue the production of progeny virus without being eliminated.
+T76	sentence 10580 10672	It is not known which mechanism lies behind the absence of surface expressed viral antigens.
+T77	sentence 10673 10828	The results of the cultivation experiment demonstrated that about half of the infected cells are not capable of expressing viral antigens on their surface.
+T78	sentence 10829 10915	This observation is consistent with the in vitro findings of Dewerchin et al. (2005) .
+T79	sentence 10916 11025	They showed that 50% of FIPV 79-1146 infected monocytes do not express viral antigens on the plasma membrane.
+T80	sentence 11026 11303	The absence of viral antigens on the surface of FIPV positive cells isolated from FIP cats that seem to be capable of expressing viral antigens, can be due to the fact that virus-specific antibodies bind to the antigens and as a consequence the viral antigens are internalized.
+T81	sentence 11304 11398	Another possibility is antibody-induced capping of viral antigens and extrusion from the cell.
+T82	sentence 11399 11600	Since the antibody-induced internalization has been described in in vitro infected monocytes that do show surface expressed viral antigens, it most likely occurs also in vivo (Dewerchin et al., 2006) .
+T83	sentence 11601 11806	The fact that viral antigens could not be demonstrated with the used staining is not the result of antibodies present in the cat that already bound to these antigens and hinder binding of other antibodies.
+T84	sentence 11807 12027	This hindering is not likely to occur since in FIPVinfected Crandell feline kidney cells, surface expressed FIPV antigens covered by strain specific antibodies were still accessible for other antibodies (data not shown).
+T85	sentence 12028 12164	Besides antibody-mediated elimination of virusinfected cells, cytotoxic T lymphocytes (CTLs) are also capable of killing infected cells.
+T86	sentence 12165 12270	During an infection, viral peptides are loaded on MHC I molecules and transported to the plasma membrane.
+T87	sentence 12271 12354	This complex may be recognized by CTLs which leads to killing of the infected cell.
+T88	sentence 12355 12428	In this study, the presence of MHC I on FIPV positive cells was analyzed.
+T89	sentence 12429 12550	On all FIPV positive cells MHC I was present, showing that no internalization or retention of the MHC I molecules occurs.
+T90	sentence 12551 12724	However, with the used techniques, it was not possible to quantify the number of MHC I molecules and to determine whether the MHC I molecules were loaded with FIPV peptides.
+T91	sentence 12725 12830	With the exception of two cats, higher cell death in infected cells seems to be present in pyogranulomas.
+T92	sentence 12831 12874	In exudates, this observation was not made.
+T93	sentence 12875 12952	The cause of this difference between pyogranulomas and exudates is not clear.
+T94	sentence 12953 13063	The increased cell death may be due to infection or to the response of the immune system on the infected cell.
+T95	sentence 13064 13183	Since no viral antigens are present on the plasma membrane, it can be stated that antibody-mediated lysis is inhibited.
+T96	sentence 13184 13359	The expression of MHC I is not inhibited in infected cells, indicating that the cellular immunity may still be able to lyse the infected cell, if viral peptides are presented.
+T97	sentence 13360 13526	It is generally accepted that a strong cellular immunity enables the cat to overcome infection (Pedersen and Black, 1983; Hayashi et al., 1982; Weiss and Cox, 1989) .
+T98	sentence 13527 13787	However, it has also been postulated that, during a chronic FIPV infection, the cell-mediated lysis is inhibited due to apoptosis and T-cell depletion caused by soluble mediators released during infection (Haagmans et al., 1996; de Groot-Mijnes et al., 2005) .
+T99	sentence 13788 13950	Taking into account all these observations, it becomes clear that the outcome of a FIPV infection is a complicated interaction of the immune system and the virus.
+T100	sentence 13951 14098	One thing is sure, the humoral immune response is not able to protect the cat against progression of viral replication and consequently of disease.
+T101	sentence 14099 14195	The precise role of the cellular immune response in protection needs to be further investigated.
+T102	sentence 14196 14380	In conclusion, it can be stated that cytoplasmic FIPV-infected cells do not show surface expressed viral antigens in vivo which may make them invisible for the humoral immune response.
+T103	sentence 14381 14450	In contrast, MHC I molecules are abundantly present on their surface.
+T104	sentence 14451 14618	Surface expression of the monocyte marker (A); absence of surface expression of viral proteins (B); surface expression of MHC I (C) on cytoplasmic FIPV positive cells.
+T105	sentence 14619 14816	Re-expression of viral proteins on the plasma membrane after cultivation of FIPV positive cells isolated from three cats with naturally occurring FIP: immunofluorescence pictures (A); kinetics (B).
+T106	sentence 14817 15189	Breed, age, sex, FCoV antibody titre and pathological form of FIP from the cats enclosed in this study Quantification, identification and determination of viability of FIPV positive cells isolated from pyogranulomas and exudates of 9 FIP cats Antibodies and conjugates used in the different staining steps for the identification of macrophage/monocytic cells and viability
+

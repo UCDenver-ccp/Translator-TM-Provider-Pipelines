@@ -125,8 +125,7 @@ public interface DatastoreConstants {
 	 * true if dependency parsing is complete
 	 */
 	public static final String STATUS_PROPERTY_DEPENDENCY_PARSE_DONE = "dep";
-	
-	
+
 	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
 
 	////////////////////////////////////////////////////////////////
@@ -238,6 +237,9 @@ public interface DatastoreConstants {
 	 * 
 	 */
 	public static final String STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE = "pubannotation_file_export";
+
+	public static final String STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE = "sent_cooccur_export";
+
 //	/**
 //	 * This property is for development convenience and allows a document to be
 //	 * marked as a 'test' document. This can be helpful for testing purposes.

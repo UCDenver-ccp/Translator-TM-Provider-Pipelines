@@ -44,7 +44,7 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 public class PipelineMain {
 
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
-
+	
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 		PipelineKey pipeline = null;
@@ -75,6 +75,9 @@ public class PipelineMain {
 				break;
 			case SENTENCE_SEGMENTATION:
 				SentenceSegmentationPipeline.main(pipelineArgs);
+				break;
+			case SENTENCE_COOCCURRENCE_EXPORT:
+				SentenceCooccurrencePipeline.main(pipelineArgs);
 				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
@@ -111,9 +114,15 @@ public class PipelineMain {
 					@ProcessElement
 					public void processElement(@Element Entity status, OutputReceiver<KV<String, String>> out) {
 						String documentId = status.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
-						String chunkCountPropertyName = DatastoreProcessingStatusUtil
-								.getDocumentChunkCountPropertyName(inputDocCriteria);
-						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
+						
+						
+						// TODO: This needs to be fixed -- this chunk count field is only present for the text document right now
+//						String chunkCountPropertyName = DatastoreProcessingStatusUtil
+//								.getDocumentChunkCountPropertyName(inputDocCriteria);
+//						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
+						
+						long chunkCount = 7; // this is the max chunk count in the CORD 19 data
+						
 
 						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
 						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId,
