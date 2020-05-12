@@ -29,6 +29,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentDownloadFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PubAnnotationExportFileBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -56,6 +57,11 @@ public class PubAnnotationExportPipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous runs")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
+
 	}
 
 	public static void main(String[] args) {
@@ -65,7 +71,7 @@ public class PubAnnotationExportPipeline {
 		LOGGER.log(Level.INFO, String.format("Running PubAnnontation export pipeline"));
 
 		Pipeline p = Pipeline.create(options);
-		PCollection<String> documentIds = getDocumentIdsToProcess(p, options.getCollection());
+		PCollection<String> documentIds = getDocumentIdsToProcess(p, options.getCollection(), options.getOverwrite());
 		List<DocumentCriteria> documentCriteria = populateDocumentCriteria(pipelineVersion);
 
 		// returns map from document id to a map k=DocumentType, v=file contents
@@ -144,7 +150,8 @@ public class PubAnnotationExportPipeline {
 		return documentCriteria;
 	}
 
-	private static PCollection<String> getDocumentIdsToProcess(Pipeline p, String collection) {
+	private static PCollection<String> getDocumentIdsToProcess(Pipeline p, String collection,
+			OverwriteOutput overwrite) {
 		// we want to find documents that need BigQuery export
 		ProcessingStatusFlag targetProcessStatusFlag = ProcessingStatusFlag.BIGQUERY_LOAD_FILE_EXPORT_DONE;
 		// require that the documents be fully processed
@@ -158,7 +165,7 @@ public class PubAnnotationExportPipeline {
 		// query Cloud Datastore to find document IDs in need of processing
 		DatastoreProcessingStatusUtil statusUtil = new DatastoreProcessingStatusUtil();
 		List<String> documentIdsToProcess = statusUtil.getDocumentIdsInNeedOfProcessing(targetProcessStatusFlag,
-				requiredProcessStatusFlags, collection);
+				requiredProcessStatusFlags, collection, overwrite);
 
 //		documentIdsToProcess = documentIdsToProcess.subList(0, 10);
 

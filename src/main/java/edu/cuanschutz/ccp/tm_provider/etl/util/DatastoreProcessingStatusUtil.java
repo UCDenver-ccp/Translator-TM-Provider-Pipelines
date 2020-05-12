@@ -38,6 +38,13 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.UpdateStatusFn;
  */
 public class DatastoreProcessingStatusUtil {
 
+	public enum OverwriteOutput {
+		/**
+		 * If yes, this flag indicates to
+		 */
+		YES, NO
+	}
+
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
@@ -58,7 +65,7 @@ public class DatastoreProcessingStatusUtil {
 	 * @return
 	 */
 	public List<String> getDocumentIdsInNeedOfProcessing(ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection) {
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection, OverwriteOutput overwrite) {
 
 		/*
 		 * convert the required status flags into an array of PropertyFilters that match
@@ -79,10 +86,17 @@ public class DatastoreProcessingStatusUtil {
 		 * require the target process to not have run, i.e. its flag == false AND the
 		 * required process flags to all equal true
 		 */
-
-		CompositeFilter filter = CompositeFilter.and(
-				PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), false),
-				requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]));
+		CompositeFilter filter;
+		if (overwrite == OverwriteOutput.NO) {
+			filter = CompositeFilter.and(
+					PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), false),
+					requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]));
+		} else {
+			PropertyFilter first = requiredProcessStatusFlagFilters.get(0);
+			requiredProcessStatusFlagFilters.remove(0);
+			PropertyFilter[] rest = requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]);
+			filter = CompositeFilter.and(first, rest);
+		}
 
 		// FIXME: Note that this query could probably be converted to a key-only query
 		// and therefore be more cost-effective. The document Id can be parsed from each
