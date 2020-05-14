@@ -26,6 +26,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline processes documents with the OpenNLP sentence
@@ -53,6 +54,11 @@ public class SentenceSegmentationPipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous runs")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
+
 	}
 
 	public static void main(String[] args) {
@@ -72,7 +78,8 @@ public class SentenceSegmentationPipeline {
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection());
+				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+				options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);

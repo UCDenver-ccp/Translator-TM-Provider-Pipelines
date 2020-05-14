@@ -19,6 +19,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline is useful for testing pipeline input arguments. It
@@ -65,6 +66,11 @@ public class DryRunPipeline {
 
 		void setOutputDirectory(String value);
 
+		@Description("Overwrite any previous runs")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
+
 	}
 
 	public static void main(String[] args) {
@@ -87,7 +93,7 @@ public class DryRunPipeline {
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
 				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-				options.getCollection());
+				options.getCollection(), options.getOverwrite());
 
 		docId2Content.apply(Keys.<String>create()).apply("write ids file",
 				TextIO.write().to(options.getOutputDirectory() + "/annotation.").withSuffix(".txt"));

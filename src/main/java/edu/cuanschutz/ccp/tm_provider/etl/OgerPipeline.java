@@ -30,6 +30,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline processes documents with the OGER concept
@@ -83,6 +84,11 @@ public class OgerPipeline {
 		OgerOutputType getOgerOutputType();
 
 		void setOgerOutputType(OgerOutputType value);
+		
+		@Description("Overwrite any previous runs")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
 
 	}
 
@@ -118,7 +124,7 @@ public class OgerPipeline {
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
 				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-				options.getCollection());
+				options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);

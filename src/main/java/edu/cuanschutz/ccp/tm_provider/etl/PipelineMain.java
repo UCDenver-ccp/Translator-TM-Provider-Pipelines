@@ -34,7 +34,7 @@ import com.google.datastore.v1.Query;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
@@ -44,7 +44,7 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 public class PipelineMain {
 
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
-	
+
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 		PipelineKey pipeline = null;
@@ -94,14 +94,14 @@ public class PipelineMain {
 	public static PCollection<KV<String, String>> getDocId2Content(DocumentCriteria inputDocCriteria,
 //			String pipelineVersion, 
 			String gcpProjectId, Pipeline beamPipeline, ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection) {
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection, OverwriteOutput overwriteOutput) {
 
 		/*
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
 		 */
 		PCollection<Entity> status = getStatusEntitiesToProcess(beamPipeline, targetProcessStatusFlag,
-				requiredProcessStatusFlags, gcpProjectId, collection);
+				requiredProcessStatusFlags, gcpProjectId, collection, overwriteOutput);
 
 		/*
 		 * then return a mapping from document id to the document content that will be
@@ -136,15 +136,18 @@ public class PipelineMain {
 
 	public static PCollection<Entity> getStatusEntitiesToProcess(Pipeline p,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String gcpProjectId, String collection) {
+			String gcpProjectId, String collection, OverwriteOutput overwriteOutput) {
 		List<Filter> filters = new ArrayList<Filter>();
 		for (ProcessingStatusFlag flag : requiredProcessStatusFlags) {
 			Filter filter = makeFilter(flag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
 					makeValue(true)).build();
 			filters.add(filter);
 		}
-		filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
-				makeValue(false)).build());
+
+		if (overwriteOutput == OverwriteOutput.NO) {
+			filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(),
+					PropertyFilter.Operator.EQUAL, makeValue(false)).build());
+		}
 
 		/* incorporate the collection name into the query if there is one */
 		if (collection != null) {

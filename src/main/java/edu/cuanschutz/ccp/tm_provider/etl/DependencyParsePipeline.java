@@ -26,6 +26,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline processes documents with a dependency parser
@@ -58,6 +59,11 @@ public class DependencyParsePipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous runs")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
+
 	}
 
 	public static void main(String[] args) {
@@ -82,7 +88,8 @@ public class DependencyParsePipeline {
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection());
+				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+				options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);
