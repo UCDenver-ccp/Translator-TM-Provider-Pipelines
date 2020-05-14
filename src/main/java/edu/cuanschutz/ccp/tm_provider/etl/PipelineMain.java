@@ -114,15 +114,14 @@ public class PipelineMain {
 					@ProcessElement
 					public void processElement(@Element Entity status, OutputReceiver<KV<String, String>> out) {
 						String documentId = status.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
-						
-						
-						// TODO: This needs to be fixed -- this chunk count field is only present for the text document right now
+
+						// TODO: This needs to be fixed -- this chunk count field is only present for
+						// the text document right now
 //						String chunkCountPropertyName = DatastoreProcessingStatusUtil
 //								.getDocumentChunkCountPropertyName(inputDocCriteria);
 //						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
-						
+
 						long chunkCount = 7; // this is the max chunk count in the CORD 19 data
-						
 
 						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
 						KV<String, String> documentIdToContent = util.getDocumentIdToContent(documentId,

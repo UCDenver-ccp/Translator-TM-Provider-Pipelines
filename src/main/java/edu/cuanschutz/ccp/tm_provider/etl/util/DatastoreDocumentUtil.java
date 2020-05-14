@@ -73,17 +73,35 @@ public class DatastoreDocumentUtil {
 		// chunk here.
 		StringBuffer content = new StringBuffer();
 		String id = null;
+
+		// TODO: Workaround for missing chunk count fields -- max chunk count in CORD19
+		// is 6
+		chunkCount = 7;
+
 		for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline, pipelineVersion);
-			System.out.println("DOC KEY: " + key.toString());
+			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline,
+																				// pipelineVersion);
+//			System.out.println("DOC KEY: " + key.toString());
+
+//			try {
 			Entity entity = datastore.get(key);
 
-			if (entity == null) {
-				logger.log(Level.SEVERE, "No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
-				return null;
+			if (entity != null) {
+//					logger.log(Level.SEVERE,
+//							"No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
+//					return null;
+				id = getDocumentId(entity);
+				content.append(getDocumentContent(entity));
+			} else {
+				// we assume that all chunks have been retrieved.
+				break;
 			}
-			id = getDocumentId(entity);
-			content.append(getDocumentContent(entity));
+
+//			} catch (Exception e) {
+//				// TODO: Workaround for missing chunk count fields -- if there is an error while
+//				// retrieving the chunk then we assume that we have all chunks alread
+//				break;
+//			}
 		}
 
 		return KV.of(id, content.toString());
@@ -113,14 +131,23 @@ public class DatastoreDocumentUtil {
 
 		for (DocumentCriteria dc : documentCriteria) {
 
-			int chunkCount = getChunkCount(statusEntity, dc);
-
+			// TODO: Workaround - there are max 7 chunks in the CORD data, so we try to grab
+			// as many as there are
+			// the chunkCount fields are not in the status entity for some reason
+			// int chunkCount = getChunkCount(statusEntity, dc);
+			int chunkCount = 7;
 			// get each chunk and combine to create the document content
 			StringBuffer content = new StringBuffer();
 			for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-				Key key = createDocumentKey(documentId, dc, chunkIndex);
-				Entity entity = datastore.get(key);
-				content.append(getDocumentContent(entity));
+				try {
+					Key key = createDocumentKey(documentId, dc, chunkIndex);
+					Entity entity = datastore.get(key);
+					content.append(getDocumentContent(entity));
+				} catch (Exception e) {
+					// TODO: this is part of the workaround - if an exception is thrown then we
+					// assume that we have all of the chunks
+					break;
+				}
 			}
 
 			typeToContentMap.put(dc.getDocumentType(), content.toString());
@@ -172,7 +199,7 @@ public class DatastoreDocumentUtil {
 	 */
 	public Key createDocumentKey(String docId, DocumentCriteria docCriteria, int chunkIndex) {
 		String docName = DatastoreKeyUtil.getDocumentKeyName(docId, docCriteria, chunkIndex);// type, format, pipeline,
-																					// pipelineVersion);
+		// pipelineVersion);
 		return datastore.newKeyFactory()
 				.addAncestor(PathElement.of(STATUS_KIND, DatastoreKeyUtil.getStatusKeyName(docId)))
 				.setKind(DOCUMENT_KIND).newKey(docName);
