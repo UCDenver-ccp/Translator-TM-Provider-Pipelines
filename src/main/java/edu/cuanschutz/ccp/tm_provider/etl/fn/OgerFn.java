@@ -19,11 +19,13 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SpanValidator;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.file.conversion.pubannotation.PubAnnotationDocumentReader;
+import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
@@ -128,6 +130,19 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 		// writer doesn't complain
 		if (td.getAnnotations() == null) {
 			td.setAnnotations(new ArrayList<TextAnnotation>());
+		}
+
+		/*
+		 * Validate the annotation spans, ensuring that the annotation covered text
+		 * matches the document text
+		 */
+		for (TextAnnotation ta : td.getAnnotations()) {
+			if (!SpanValidator.validate(ta.getSpans(), ta.getCoveredText(), docText)) {
+				throw new IllegalStateException(
+						String.format("OGER span mismatch detected. doc_id: %s span: %s expected_text: %s observed_text: %s",
+								docId, ta.getSpans().toString(), ta.getCoveredText(),
+								SpanUtils.getCoveredText(ta.getSpans(), docText)));
+			}
 		}
 
 		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
