@@ -64,7 +64,7 @@ public class PipelineMain {
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
 				break;
-			case TEXT_LOAD:
+			case FILE_LOAD:
 				LoadFilesPipeline.main(pipelineArgs);
 				break;
 			case OGER:

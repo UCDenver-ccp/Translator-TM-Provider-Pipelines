@@ -16,6 +16,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.string.StringUtil;
 
@@ -31,14 +32,14 @@ import edu.ucdenver.ccp.common.string.StringUtil;
  * </ul>
  *
  */
-public class ExtractTextFn extends DoFn<KV<String, String>, KV<String, String>> {
+public class ExtractContentFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
 
-	private final static Logger LOGGER = Logger.getLogger(ExtractTextFn.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(ExtractContentFn.class.getName());
 
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, List<String>>> plainTextTag = new TupleTag<KV<String, List<String>>>() {
+	public static TupleTag<KV<String, List<String>>> contentTag = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> etlFailureTag = new TupleTag<EtlFailureData>() {
@@ -49,16 +50,16 @@ public class ExtractTextFn extends DoFn<KV<String, String>, KV<String, String>> 
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, String fileSuffix,
-			String collection) {
+			String collection, ProcessingStatusFlag targetProcessingStatusFlag) {
 
-		return docIdToText.apply("Extract plain text; create status entity",
+		return docIdToText.apply("Extract file content; create status if TEXT",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(@Element KV<String, String> docIdToContent, MultiOutputReceiver out) {
 						String fileId = docIdToContent.getKey();
-						String plainText = docIdToContent.getValue();
+						String content = docIdToContent.getValue();
 
 						try {
 							// the document id is parsed from the file name
@@ -70,31 +71,36 @@ public class ExtractTextFn extends DoFn<KV<String, String>, KV<String, String>> 
 							 * divide the document content into chunks if necessary so that each chunk is
 							 * under the DataStore byte length threshold
 							 */
-							List<String> chunkedPlainText = PipelineMain.chunkContent(plainText);
-//							LOGGER.log(Level.SEVERE, String.format("Chunks: %s" , chunkedPlainText.toString()));
-							out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
+							List<String> chunkedContent = PipelineMain.chunkContent(content);
+							out.get(contentTag).output(KV.of(docId, chunkedContent));
 
-							/*
-							 * output a {@link ProcessingStatus} for the document
-							 */
-							ProcessingStatus status = new ProcessingStatus(docId);
-							status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria,
-									chunkedPlainText.size());
-							if (collection != null) {
-								status.addCollection(collection);
+							if (targetProcessingStatusFlag == ProcessingStatusFlag.TEXT_DONE) {
+								/*
+								 * output a new {@link ProcessingStatus} for the document if the target
+								 * processing status flag is TEXT_DONE. If it is TEXT_DONE we assume this to be
+								 * a new document being added for further processing. Alternatively this is
+								 * content related to a document that (presumably) is already in the Datastore,
+								 * e.g. a section annotations file for a document that was previously loaded.
+								 */
+								ProcessingStatus status = new ProcessingStatus(docId);
+								status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria,
+										chunkedContent.size());
+								if (collection != null) {
+									status.addCollection(collection);
+								}
+								out.get(processingStatusTag).output(status);
 							}
-							out.get(processingStatusTag).output(status);
 
 						} catch (Throwable t) {
-							LOGGER.log(Level.SEVERE, "Error while extracting text.", t);
+							LOGGER.log(Level.SEVERE, "Error while extracting content.", t);
 							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
-									"Failure saving text file. Likely encoding issue with input document.", fileId, t,
+									"Failure saving file. Likely encoding issue with input document.", fileId, t,
 									timestamp);
 							out.get(etlFailureTag).output(failure);
 						}
 
 					}
-				}).withOutputTags(plainTextTag, TupleTagList.of(etlFailureTag).and(processingStatusTag)));
+				}).withOutputTags(contentTag, TupleTagList.of(etlFailureTag).and(processingStatusTag)));
 	}
 
 }

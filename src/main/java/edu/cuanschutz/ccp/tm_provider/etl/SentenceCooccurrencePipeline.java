@@ -123,7 +123,7 @@ public class SentenceCooccurrencePipeline {
 
 	private static List<DocumentCriteria> populateDocumentCriteria(String pipelineVersion) {
 		List<DocumentCriteria> documentCriteria = Arrays.asList(
-				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.TEXT_LOAD, pipelineVersion),
+				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.FILE_LOAD, pipelineVersion),
 				new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP, PipelineKey.SENTENCE_SEGMENTATION,
 						pipelineVersion),
 				new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP, PipelineKey.OGER,

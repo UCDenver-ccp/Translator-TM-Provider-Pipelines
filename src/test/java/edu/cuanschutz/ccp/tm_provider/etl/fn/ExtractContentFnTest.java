@@ -26,7 +26,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
-public class ExtractTextFnTest {
+public class ExtractContentFnTest {
 
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
@@ -34,7 +34,7 @@ public class ExtractTextFnTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test() throws UnsupportedEncodingException {
-		PipelineKey pipelineKey = PipelineKey.TEXT_LOAD;
+		PipelineKey pipelineKey = PipelineKey.FILE_LOAD;
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
@@ -50,18 +50,18 @@ public class ExtractTextFnTest {
 				pipelineVersion);
 		String collection = "CORD19";
 
-		PCollectionTuple output = ExtractTextFn.process(input, outputDocCriteria, timestamp, ".txt", collection);
+		PCollectionTuple output = ExtractContentFn.process(input, outputDocCriteria, timestamp, ".txt", collection, ProcessingStatusFlag.TEXT_DONE);
 
 		List<String> chunks = CollectionsUtil.createList(plainText[0], plainText[1]);
 
 		// check that there are 2 chunks
-		PAssert.that(output.get(ExtractTextFn.plainTextTag)).containsInAnyOrder(KV.of(docId, chunks));
+		PAssert.that(output.get(ExtractContentFn.contentTag)).containsInAnyOrder(KV.of(docId, chunks));
 
 		// check that the status logged two chunks and the collection name
 		ProcessingStatus statusEntity = new ProcessingStatus(docId);
 		statusEntity.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria, 2);
 		statusEntity.addCollection(collection);
-		PAssert.that(output.get(ExtractTextFn.processingStatusTag)).containsInAnyOrder(statusEntity);
+		PAssert.that(output.get(ExtractContentFn.processingStatusTag)).containsInAnyOrder(statusEntity);
 
 		pipeline.run();
 	}
