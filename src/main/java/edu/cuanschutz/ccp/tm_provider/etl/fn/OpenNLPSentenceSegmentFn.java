@@ -66,7 +66,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 						String plainText = docIdToText.getValue();
 
 						try {
-							String bionlp = segmentSentences(plainText);
+							String bionlp = getSentencesAsBioNLP(plainText);
 
 							/*
 							 * divide the document content into chunks if necessary so that each chunk is
@@ -92,35 +92,76 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	 * @return
 	 * @throws IOException
 	 */
-	private static String segmentSentences(String plainText) throws IOException {
+	private static String getSentencesAsBioNLP(String plainText) throws IOException {
 
+		TextDocument td = segmentSentences(plainText);
+
+		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		writer.serialize(td, outStream, CharacterEncoding.UTF_8);
+		String bionlp = outStream.toString(CharacterEncoding.UTF_8.getCharacterSetName());
+
+		return bionlp;
+	}
+
+	static TextDocument segmentSentences(String plainText) throws IOException {
 		InputStream modelStream = ClassPathUtil.getResourceStreamFromClasspath(OpenNLPSentenceSegmentFn.class,
 				"/de/tudarmstadt/ukp/dkpro/core/opennlp/lib/sentence-en-maxent.bin");
-			SentenceModel model = new SentenceModel(modelStream);
-			SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);
-		
+		SentenceModel model = new SentenceModel(modelStream);
+		SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);
+
 		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
 		Span[] spans = sentenceDetector.sentPosDetect(plainText);
 		for (Span span : spans) {
 			span.getStart();
 			span.getEnd();
 			span.getType();
-			DefaultTextAnnotation annot = new DefaultTextAnnotation(span.getStart(), span.getEnd());
-			annot.setCoveredText(span.getCoveredText(plainText).toString());
-			DefaultClassMention cm = new DefaultClassMention("sentence");
-			annot.setClassMention(cm);
-			annot.setAnnotator(new Annotator(null, "OpenNLP", "OpenNLP"));
+			TextAnnotation annot = createSentenceAnnot(span.getStart(), span.getEnd(),
+					span.getCoveredText(plainText).toString());
 			annots.add(annot);
 		}
 
+		/*
+		 * divide any sentences with line breaks into multiple sentences, splitting at
+		 * the line breaks
+		 */
+		List<TextAnnotation> toKeep = new ArrayList<TextAnnotation>();
+		for (TextAnnotation annot : annots) {
+			String coveredText = annot.getCoveredText();
+			if (coveredText.contains("\n")) {
+				String[] sentences = coveredText.split("\\n");
+				int index = annot.getAnnotationSpanStart();
+				for (String s : sentences) {
+					if (!s.isEmpty()) {
+						TextAnnotation sentAnnot = createSentenceAnnot(index, index + s.length(), s);
+						index = index + s.length() + 1;
+						toKeep.add(sentAnnot);
+					} else {
+						index++;
+					}
+				}
+				// validate - span end of more recently added sentence should be equal to the
+				// span end of the original annot
+				int originalSpanEnd = annot.getAnnotationSpanEnd();
+				int end = toKeep.get(toKeep.size() - 1).getAnnotationSpanEnd();
+				assert end == originalSpanEnd;
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
 		TextDocument td = new TextDocument("12345", "unknown", plainText);
-		td.addAnnotations(annots);
+		td.addAnnotations(toKeep);
+		return td;
+	}
 
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
-		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		writer.serialize(td, outStream, CharacterEncoding.UTF_8);
-		return outStream.toString(CharacterEncoding.UTF_8.getCharacterSetName());
-
+	private static TextAnnotation createSentenceAnnot(int spanStart, int spanEnd, String coveredText) {
+		DefaultTextAnnotation annot = new DefaultTextAnnotation(spanStart, spanEnd);
+		annot.setCoveredText(coveredText);
+		DefaultClassMention cm = new DefaultClassMention("sentence");
+		annot.setClassMention(cm);
+		annot.setAnnotator(new Annotator(null, "OpenNLP", "OpenNLP"));
+		return annot;
 	}
 
 }

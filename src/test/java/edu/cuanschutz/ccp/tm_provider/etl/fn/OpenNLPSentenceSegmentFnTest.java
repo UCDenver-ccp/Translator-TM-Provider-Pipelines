@@ -1,6 +1,9 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -21,6 +24,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class OpenNLPSentenceSegmentFnTest {
 
@@ -29,7 +34,7 @@ public class OpenNLPSentenceSegmentFnTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testBiocToTextConversionFn() throws IOException {
+	public void testSentenceSegmentation() throws IOException {
 		PipelineKey pipelineKey = PipelineKey.SENTENCE_SEGMENTATION;
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
@@ -56,4 +61,39 @@ public class OpenNLPSentenceSegmentFnTest {
 		pipeline.run();
 	}
 
+	
+	@Test
+	public void testSegmentSentences() throws IOException {
+		String s = "This is a sentence. Here is another sentence.";
+		TextDocument td = OpenNLPSentenceSegmentFn.segmentSentences(s);
+		
+		List<TextAnnotation> sentences = td.getAnnotations();
+		
+		assertEquals(2, sentences.size());
+		
+	}
+	
+	@Test
+	public void testSegmentSentencesWithLineBreak() throws IOException {
+		String s = "This is a sentence\n Here is another sentence.";
+		TextDocument td = OpenNLPSentenceSegmentFn.segmentSentences(s);
+		
+		List<TextAnnotation> sentences = td.getAnnotations();
+		
+		assertEquals(2, sentences.size());
+		
+	}
+	
+	@Test
+	public void testSegmentSentencesWithMultipleLineBreaks() throws IOException {
+		String s = "This is a sentence\n\n\n\n Here is another sentence.";
+		TextDocument td = OpenNLPSentenceSegmentFn.segmentSentences(s);
+		
+		List<TextAnnotation> sentences = td.getAnnotations();
+		
+		assertEquals(2, sentences.size());
+		
+	}
+	
+	
 }
