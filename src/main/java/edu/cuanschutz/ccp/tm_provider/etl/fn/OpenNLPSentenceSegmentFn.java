@@ -17,11 +17,13 @@ import org.apache.beam.sdk.values.TupleTagList;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SpanValidator;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Annotator;
+import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.impl.DefaultTextAnnotation;
 import edu.ucdenver.ccp.nlp.core.mention.impl.DefaultClassMention;
@@ -66,7 +68,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 						String plainText = docIdToText.getValue();
 
 						try {
-							String bionlp = getSentencesAsBioNLP(plainText);
+							String bionlp = getSentencesAsBioNLP(docId, plainText);
 
 							/*
 							 * divide the document content into chunks if necessary so that each chunk is
@@ -92,9 +94,19 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	 * @return
 	 * @throws IOException
 	 */
-	private static String getSentencesAsBioNLP(String plainText) throws IOException {
+	private static String getSentencesAsBioNLP(String docId, String docText) throws IOException {
 
-		TextDocument td = segmentSentences(plainText);
+		TextDocument td = segmentSentences(docText);
+		
+		// validate spans match document text
+		for (TextAnnotation ta : td.getAnnotations()) {
+			if (!SpanValidator.validate(ta.getSpans(), ta.getCoveredText(), docText)) {
+				throw new IllegalStateException(String.format(
+						"OGER span mismatch detected. doc_id: %s span: %s expected_text: %s observed_text: %s", docId,
+						ta.getSpans().toString(), ta.getCoveredText(),
+						SpanUtils.getCoveredText(ta.getSpans(), docText)));
+			}
+		}
 
 		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
@@ -121,6 +133,14 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 			annots.add(annot);
 		}
 
+		List<TextAnnotation> toKeep = splitSentencesOnLineBreaks(annots);
+
+		TextDocument td = new TextDocument("12345", "unknown", plainText);
+		td.addAnnotations(toKeep);
+		return td;
+	}
+
+	private static List<TextAnnotation> splitSentencesOnLineBreaks(List<TextAnnotation> annots) {
 		/*
 		 * divide any sentences with line breaks into multiple sentences, splitting at
 		 * the line breaks
@@ -149,10 +169,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 				toKeep.add(annot);
 			}
 		}
-
-		TextDocument td = new TextDocument("12345", "unknown", plainText);
-		td.addAnnotations(toKeep);
-		return td;
+		return toKeep;
 	}
 
 	private static TextAnnotation createSentenceAnnot(int spanStart, int spanEnd, String coveredText) {
