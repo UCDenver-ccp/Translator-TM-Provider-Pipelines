@@ -1,0 +1,567 @@
+12345	chemical	96	108	Benzotriazol	benzotriazoles	CHEBI:48912		S1	CHEBI_EXT
+12345	chemical	96	108	Benzotriazol	benzotriazole	CHEBI:75331		S1	CHEBI_EXT
+12345	chemical	115	124	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S1	CHEBI_EXT
+12345	chemical	115	124	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S1	CHEBI_EXT
+12345	chemical	115	124	guanosine	guanosines	CHEBI:24458		S1	CHEBI_EXT
+12345	chemical	185	190	allyl	allyl group	CHEBI:30361		S1	CHEBI_EXT
+12345	chemical	266	271	azido	azido group	CHEBI:36825		S1	CHEBI_EXT
+12345	chemical	317	324	solvent	solvent	CHEBI_EXT:46787		S2	CHEBI_EXT
+12345	chemical	335	340	azide	azide anion	CHEBI:40910		S2	CHEBI_EXT
+12345	chemical	335	340	azide	azide	CHEBI:22680		S2	CHEBI_EXT
+12345	chemical	341	350	tetrazole	tetrazole	CHEBI:35598		S2	CHEBI_EXT
+12345	chemical	341	350	tetrazole	tetrazoles	CHEBI:35689		S2	CHEBI_EXT
+12345	chemical	382	393	nucleosides	nucleoside	CHEBI:33838		S2	CHEBI_EXT
+12345	chemical	430	435	allyl	allyl group	CHEBI:30361		S2	CHEBI_EXT
+12345	chemical	440	445	azido	azido group	CHEBI:36825		S2	CHEBI_EXT
+12345	chemical	446	457	nucleosides	nucleoside	CHEBI:33838		S2	CHEBI_EXT
+12345	chemical	495	500	azido	azido group	CHEBI:36825		S2	CHEBI_EXT
+12345	chemical	533	540	solvent	solvent	CHEBI_EXT:46787		S2	CHEBI_EXT
+12345	chemical	589	598	tetrazole	tetrazole	CHEBI:35598		S3	CHEBI_EXT
+12345	chemical	589	598	tetrazole	tetrazoles	CHEBI:35689		S3	CHEBI_EXT
+12345	chemical	661	666	azido	azido group	CHEBI:36825		S4	CHEBI_EXT
+12345	chemical	696	701	azide	azide anion	CHEBI:40910		S4	CHEBI_EXT
+12345	chemical	696	701	azide	azide	CHEBI:22680		S4	CHEBI_EXT
+12345	chemical	800	805	azido	azido group	CHEBI:36825		S5	CHEBI_EXT
+12345	chemical	806	817	nucleosides	nucleoside	CHEBI:33838		S5	CHEBI_EXT
+12345	chemical	823	830	alkynes	alkyne	CHEBI:22339		S5	CHEBI_EXT
+12345	chemical	906	917	nucleosides	nucleoside	CHEBI:33838		S5	CHEBI_EXT
+12345	chemical	951	963	silyl groups	silyl group	CHEBI:30541		S6	CHEBI_EXT
+12345	chemical	1063	1074	nucleosides	nucleoside	CHEBI:33838		S6	CHEBI_EXT
+12345	chemical	1133	1145	benzotriazol	benzotriazoles	CHEBI:48912		S7	CHEBI_EXT
+12345	chemical	1133	1145	benzotriazol	benzotriazole	CHEBI:75331		S7	CHEBI_EXT
+12345	chemical	1152	1170	purine nucleosides	purine nucleoside	CHEBI:26394		S7	CHEBI_EXT
+12345	chemical	1229	1238	adenosine	adenosines	CHEBI:22260		S7	CHEBI_EXT
+12345	chemical	1229	1238	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S7	CHEBI_EXT
+12345	chemical	1229	1238	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S7	CHEBI_EXT
+12345	chemical	1327	1337	biological	biological process, quality or role	CHEBI_GO_EXT:biological_process_or_quality_or_role		S8CHEBI_EXT
+12345	chemical	1368	1377	adenosine	adenosines	CHEBI:22260		S9	CHEBI_EXT
+12345	chemical	1368	1377	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S9	CHEBI_EXT
+12345	chemical	1368	1377	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S9	CHEBI_EXT
+12345	chemical	1562	1565	DNA	DNA	CHEBI_SO_EXT:DNA		S10	CHEBI_EXT
+12345	chemical	1570	1573	RNA	RNA	CHEBI_SO_EXT:RNA		S10	CHEBI_EXT
+12345	chemical	1739	1744	azide	azide anion	CHEBI:40910		S11	CHEBI_EXT
+12345	chemical	1739	1744	azide	azide	CHEBI:22680		S11	CHEBI_EXT
+12345	chemical	1745	1751	alkyne	alkyne	CHEBI:22339		S11	CHEBI_EXT
+12345	chemical	1782	1786	atom	atom	CHEBI:33250		S11	CHEBI_EXT
+12345	chemical	1874	1879	azide	azide anion	CHEBI:40910		S12	CHEBI_EXT
+12345	chemical	1874	1879	azide	azide	CHEBI:22680		S12	CHEBI_EXT
+12345	chemical	1880	1886	alkyne	alkyne	CHEBI:22339		S12	CHEBI_EXT
+12345	chemical	1991	2002	nucleosides	nucleoside	CHEBI:33838		S12	CHEBI_EXT
+12345	chemical	2080	2091	nucleosides	nucleoside	CHEBI:33838		S13	CHEBI_EXT
+12345	chemical	2244	2249	azide	azide anion	CHEBI:40910		S14	CHEBI_EXT
+12345	chemical	2244	2249	azide	azide	CHEBI:22680		S14	CHEBI_EXT
+12345	chemical	2250	2256	alkyne	alkyne	CHEBI:22339		S14	CHEBI_EXT
+12345	chemical	2345	2356	nucleosides	nucleoside	CHEBI:33838		S14	CHEBI_EXT
+12345	chemical	2361	2364	DNA	DNA	CHEBI_SO_EXT:DNA		S14	CHEBI_EXT
+12345	chemical	2459	2470	nucleosides	nucleoside	CHEBI:33838		S15	CHEBI_EXT
+12345	chemical	2535	2553	purine nucleosides	purine nucleoside	CHEBI:26394		S15	CHEBI_EXT
+12345	chemical	2619	2630	nucleosides	nucleoside	CHEBI:33838		S16	CHEBI_EXT
+12345	chemical	2667	2676	adenosine	adenosines	CHEBI:22260		S16	CHEBI_EXT
+12345	chemical	2667	2676	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S16	CHEBI_EXT
+12345	chemical	2667	2676	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S16	CHEBI_EXT
+12345	chemical	2881	2886	azido	azido group	CHEBI:36825		S17	CHEBI_EXT
+12345	chemical	2887	2896	adenosine	adenosines	CHEBI:22260		S17	CHEBI_EXT
+12345	chemical	2887	2896	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S17	CHEBI_EXT
+12345	chemical	2887	2896	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S17	CHEBI_EXT
+12345	chemical	2944	2949	amino	amino group	CHEBI:46882		S18	CHEBI_EXT
+12345	chemical	2952	2961	hydrazino	hydrazino group	CHEBI:30092		S18	CHEBI_EXT
+12345	chemical	2987	2999	nitrous acid	nitrous acid	CHEBI:25567		S18	CHEBI_EXT
+12345	chemical	3033	3042	azidation	azide anion	CHEBI:40910		S18	CHEBI_EXT
+12345	chemical	3033	3042	azidation	azide	CHEBI:22680		S18	CHEBI_EXT
+12345	chemical	3052	3057	silyl	silyl	CHEBI:30560		S18	CHEBI_EXT
+12345	chemical	3052	3057	silyl	silyl group	CHEBI:30541		S18	CHEBI_EXT
+12345	chemical	3060	3065	amino	amino group	CHEBI:46882		S18	CHEBI_EXT
+12345	chemical	3068	3072	iodo	iodo group	CHEBI:43448		S18	CHEBI_EXT
+12345	chemical	3134	3143	azidation	azide anion	CHEBI:40910		S18	CHEBI_EXT
+12345	chemical	3134	3143	azidation	azide	CHEBI:22680		S18	CHEBI_EXT
+12345	chemical	3153	3159	acetyl	acetyl	CHEBI:46887		S18	CHEBI_EXT
+12345	chemical	3153	3159	acetyl	acetyl group	CHEBI:40574		S18	CHEBI_EXT
+12345	chemical	3161	3166	amino	amino group	CHEBI:46882		S18	CHEBI_EXT
+12345	chemical	3275	3283	chloride	chloride	CHEBI:17996		S18	CHEBI_EXT
+12345	chemical	3292	3303	amino group	amino groups	CHEBI:51142		S18	CHEBI_EXT
+12345	chemical	3292	3303	amino group	amino group	CHEBI:46882		S18	CHEBI_EXT
+12345	chemical	3503	3512	adenosine	adenosines	CHEBI:22260		S20	CHEBI_EXT
+12345	chemical	3503	3512	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S20	CHEBI_EXT
+12345	chemical	3503	3512	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S20	CHEBI_EXT
+12345	chemical	3553	3557	acid	acid	CHEBI_EXT:37527		S21	CHEBI_EXT
+12345	chemical	3694	3698	acid	acid	CHEBI_EXT:37527		S21	CHEBI_EXT
+12345	chemical	3728	3734	fluoro	fluoro group	CHEBI:42645		S22	CHEBI_EXT
+12345	chemical	3735	3750	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S22	CHEBI_EXT
+12345	chemical	3831	3836	azido	azido group	CHEBI:36825		S22	CHEBI_EXT
+12345	chemical	3872	3875	DNA	DNA	CHEBI_SO_EXT:DNA		S22	CHEBI_EXT
+12345	chemical	3966	3971	azido	azido group	CHEBI:36825		S23	CHEBI_EXT
+12345	chemical	3972	3987	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S23	CHEBI_EXT
+12345	chemical	4195	4207	1,2,3triazol	1,2,3-triazole	CHEBI:35562		S25	CHEBI_EXT
+12345	chemical	4215	4222	inosine	inosine	CHEBI_SO_EXT:inosine		S25	CHEBI_EXT
+12345	chemical	4215	4222	inosine	inosines	CHEBI:24844		S25	CHEBI_EXT
+12345	chemical	4227	4242	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S25	CHEBI_EXT
+12345	chemical	4376	4385	adenosine	adenosines	CHEBI:22260		S26	CHEBI_EXT
+12345	chemical	4376	4385	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S26	CHEBI_EXT
+12345	chemical	4376	4385	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S26	CHEBI_EXT
+12345	chemical	4412	4424	benzotriazol	benzotriazoles	CHEBI:48912		S26	CHEBI_EXT
+12345	chemical	4412	4424	benzotriazol	benzotriazole	CHEBI:75331		S26	CHEBI_EXT
+12345	chemical	4493	4498	azido	azido group	CHEBI:36825		S26	CHEBI_EXT
+12345	chemical	4505	4517	benzotriazol	benzotriazoles	CHEBI:48912		S26	CHEBI_EXT
+12345	chemical	4505	4517	benzotriazol	benzotriazole	CHEBI:75331		S26	CHEBI_EXT
+12345	chemical	4524	4545	purine ribonucleoside	purine ribonucleoside	CHEBI:26399		S26	CHEBI_EXT
+12345	chemical	4584	4596	benzotriazol	benzotriazoles	CHEBI:48912		S27	CHEBI_EXT
+12345	chemical	4584	4596	benzotriazol	benzotriazole	CHEBI:75331		S27	CHEBI_EXT
+12345	chemical	4603	4610	inosine	inosine	CHEBI_SO_EXT:inosine		S27	CHEBI_EXT
+12345	chemical	4603	4610	inosine	inosines	CHEBI:24844		S27	CHEBI_EXT
+12345	chemical	4615	4624	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S27	CHEBI_EXT
+12345	chemical	4615	4624	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S27	CHEBI_EXT
+12345	chemical	4615	4624	guanosine	guanosines	CHEBI:24458		S27	CHEBI_EXT
+12345	chemical	4715	4723	reagents	reagent	CHEBI_EXT:33893		S27	CHEBI_EXT
+12345	chemical	4790	4808	purine nucleosides	purine nucleoside	CHEBI:26394		S27	CHEBI_EXT
+12345	chemical	4907	4924	2′-deoxyguanosine	2'-deoxyguanosine	CHEBI:17172		S28	CHEBI_EXT
+12345	chemical	5028	5034	chloro	chloro group	CHEBI:47853		S29	CHEBI_EXT
+12345	chemical	5072	5087	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S29	CHEBI_EXT
+12345	chemical	5101	5106	allyl	allyl group	CHEBI:30361		S29	CHEBI_EXT
+12345	chemical	5107	5123	2′deoxyguanosine	2'-deoxyguanosine	CHEBI:17172		S29	CHEBI_EXT
+12345	chemical	5175	5179	acid	acid	CHEBI_EXT:37527		S29	CHEBI_EXT
+12345	chemical	5339	5350	azido group	azido group	CHEBI:36825		S30	CHEBI_EXT
+12345	chemical	5395	5406	amino group	amino groups	CHEBI:51142		S30	CHEBI_EXT
+12345	chemical	5395	5406	amino group	amino group	CHEBI:46882		S30	CHEBI_EXT
+12345	chemical	5439	5444	Silyl	silyl	CHEBI:30560		S31	CHEBI_EXT
+12345	chemical	5439	5444	Silyl	silyl group	CHEBI:30541		S31	CHEBI_EXT
+12345	chemical	5460	5465	allyl	allyl group	CHEBI:30361		S31	CHEBI_EXT
+12345	chemical	5495	5510	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S31	CHEBI_EXT
+12345	chemical	5588	5593	azido	azido group	CHEBI:36825		S33	CHEBI_EXT
+12345	chemical	5609	5616	purines	purines	CHEBI_EXT:purine		S33	CHEBI_EXT
+12345	chemical	5609	5616	purines	purine	CHEBI_EXT:purine		S33	CHEBI_EXT
+12345	chemical	5628	5646	purine nucleosides	purine nucleoside	CHEBI:26394		S33	CHEBI_EXT
+12345	chemical	5830	5843	nitrogen atom	nitrogen atom	CHEBI_EXT:nitrogen		S34	CHEBI_EXT
+12345	chemical	5851	5857	purine	purines	CHEBI_EXT:purine		S34	CHEBI_EXT
+12345	chemical	5851	5857	purine	purine	CHEBI_EXT:purine		S34	CHEBI_EXT
+12345	chemical	5890	5895	azide	azide anion	CHEBI:40910		S35	CHEBI_EXT
+12345	chemical	5890	5895	azide	azide	CHEBI:22680		S35	CHEBI_EXT
+12345	chemical	5938	5946	triflate	triflate	CHEBI:48547		S35	CHEBI_EXT
+12345	chemical	6029	6038	tetrazole	tetrazole	CHEBI:35598		S35	CHEBI_EXT
+12345	chemical	6029	6038	tetrazole	tetrazoles	CHEBI:35689		S35	CHEBI_EXT
+12345	chemical	6144	6149	azide	azide anion	CHEBI:40910		S36	CHEBI_EXT
+12345	chemical	6144	6149	azide	azide	CHEBI:22680		S36	CHEBI_EXT
+12345	chemical	6185	6196	acetone-d 6	acetone d6	CHEBI:78217		S36	CHEBI_EXT
+12345	chemical	6472	6479	solvent	solvent	CHEBI_EXT:46787		S39	CHEBI_EXT
+12345	chemical	6555	6560	azide	azide anion	CHEBI:40910		S39	CHEBI_EXT
+12345	chemical	6555	6560	azide	azide	CHEBI:22680		S39	CHEBI_EXT
+12345	chemical	6561	6570	tetrazole	tetrazole	CHEBI:35598		S39	CHEBI_EXT
+12345	chemical	6561	6570	tetrazole	tetrazoles	CHEBI:35689		S39	CHEBI_EXT
+12345	chemical	6612	6620	electron	electron	CHEBI:10545		S40	CHEBI_EXT
+12345	chemical	6686	6691	azide	azide anion	CHEBI:40910		S40	CHEBI_EXT
+12345	chemical	6686	6691	azide	azide	CHEBI:22680		S40	CHEBI_EXT
+12345	chemical	6790	6795	azido	azido group	CHEBI:36825		S41	CHEBI_EXT
+12345	chemical	7020	7031	nucleosides	nucleoside	CHEBI:33838		S42	CHEBI_EXT
+12345	chemical	7078	7083	azido	azido group	CHEBI:36825		S43	CHEBI_EXT
+12345	chemical	7170	7177	alkynes	alkyne	CHEBI:22339		S43	CHEBI_EXT
+12345	chemical	7240	7251	nucleosides	nucleoside	CHEBI:33838		S44	CHEBI_EXT
+12345	chemical	7291	7296	azide	azide anion	CHEBI:40910		S44	CHEBI_EXT
+12345	chemical	7291	7296	azide	azide	CHEBI:22680		S44	CHEBI_EXT
+12345	chemical	7304	7309	amine	amine	CHEBI:32952		S44	CHEBI_EXT
+12345	chemical	7304	7309	amine	aminal	CHEBI:35412		S44	CHEBI_EXT
+12345	chemical	7410	7415	azide	azide anion	CHEBI:40910		S44	CHEBI_EXT
+12345	chemical	7410	7415	azide	azide	CHEBI:22680		S44	CHEBI_EXT
+12345	chemical	7416	7422	alkyne	alkyne	CHEBI:22339		S44	CHEBI_EXT
+12345	chemical	7551	7558	solvent	solvent	CHEBI_EXT:46787		S46	CHEBI_EXT
+12345	chemical	7620	7643	thiophene-2-carboxylate	thiophene-2-carboxylate	CHEBI:71237		S47	CHEBI_EXT
+12345	chemical	7651	7659	catalyst	catalyst	CHEBI_EXT:35223		S47	CHEBI_EXT
+12345	chemical	7834	7839	azide	azide anion	CHEBI:40910		S48	CHEBI_EXT
+12345	chemical	7834	7839	azide	azide	CHEBI:22680		S48	CHEBI_EXT
+12345	chemical	7840	7846	alkyne	alkyne	CHEBI:22339		S48	CHEBI_EXT
+12345	chemical	7903	7920	ribose derivative	ribose derivative	CHEBI:74864		S48	CHEBI_EXT
+12345	chemical	8077	8092	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S50	CHEBI_EXT
+12345	chemical	8239	8250	allyl group	allylic group	CHEBI:33451		S51	CHEBI_EXT
+12345	chemical	8239	8250	allyl group	allyl group	CHEBI:30361		S51	CHEBI_EXT
+12345	chemical	8402	8412	nucleoside	nucleoside	CHEBI:33838		S53	CHEBI_EXT
+12345	chemical	8432	8437	amine	amine	CHEBI:32952		S53	CHEBI_EXT
+12345	chemical	8432	8437	amine	aminal	CHEBI:35412		S53	CHEBI_EXT
+12345	chemical	8463	8471	fluoride	fluoride	CHEBI:17051		S53	CHEBI_EXT
+12345	chemical	8838	8848	morpholine	morpholines	CHEBI:38785		S56	CHEBI_EXT
+12345	chemical	8838	8848	morpholine	morpholine	CHEBI:34856		S56	CHEBI_EXT
+12345	chemical	8945	8951	sodium	sodium	CHEBI_EXT:sodium		S56	CHEBI_EXT
+12345	chemical	8945	8951	sodium	sodium atom	CHEBI_EXT:sodium		S56	CHEBI_EXT
+12345	chemical	8952	8968	benzenesulfinate	benzenesulfinate	CHEBI:38100		S56	CHEBI_EXT
+12345	chemical	9209	9224	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S59	CHEBI_EXT
+12345	chemical	9277	9284	guanine	guanine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S59	CHEBI_EXT
+12345	chemical	9277	9284	guanine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S59	CHEBI_EXT
+12345	chemical	9285	9296	nucleosides	nucleoside	CHEBI:33838		S59	CHEBI_EXT
+12345	chemical	9318	9331	nitrogen atom	nitrogen atom	CHEBI_EXT:nitrogen		S59	CHEBI_EXT
+12345	chemical	9432	9449	2,6-diaminopurine	2,6-diaminopurine	CHEBI:38001		S59	CHEBI_EXT
+12345	chemical	9450	9461	nucleosides	nucleoside	CHEBI:33838		S59	CHEBI_EXT
+12345	chemical	9541	9546	amide	azanide	CHEBI:29337		S60	CHEBI_EXT
+12345	chemical	9541	9546	amide	amide	CHEBI:32988		S60	CHEBI_EXT
+12345	chemical	9570	9582	benzotriazol	benzotriazoles	CHEBI:48912		S60	CHEBI_EXT
+12345	chemical	9570	9582	benzotriazol	benzotriazole	CHEBI:75331		S60	CHEBI_EXT
+12345	chemical	9779	9794	1H-benzotriazol	benzotriazole	CHEBI:75331		S61	CHEBI_EXT
+12345	chemical	9821	9832	phosphonium	phosphonium	CHEBI:30282		S61	CHEBI_EXT
+12345	chemical	10014	10024	morpholine	morpholines	CHEBI:38785		S62	CHEBI_EXT
+12345	chemical	10014	10024	morpholine	morpholine	CHEBI:34856		S62	CHEBI_EXT
+12345	chemical	10029	10035	benzyl	benzyl group	CHEBI:22744		S62	CHEBI_EXT
+12345	chemical	10036	10041	amine	amine	CHEBI:32952		S62	CHEBI_EXT
+12345	chemical	10036	10041	amine	aminal	CHEBI:35412		S62	CHEBI_EXT
+12345	chemical	10060	10078	1,2dimethoxyethane	1,2-dimethoxyethane	CHEBI:42263		S62	CHEBI_EXT
+12345	chemical	10098	10107	adenosine	adenosines	CHEBI:22260		S62	CHEBI_EXT
+12345	chemical	10098	10107	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S62	CHEBI_EXT
+12345	chemical	10098	10107	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S62	CHEBI_EXT
+12345	chemical	10229	10238	adenosine	adenosines	CHEBI:22260		S63	CHEBI_EXT
+12345	chemical	10229	10238	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S63	CHEBI_EXT
+12345	chemical	10229	10238	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S63	CHEBI_EXT
+12345	chemical	10306	10311	azide	azide anion	CHEBI:40910		S64	CHEBI_EXT
+12345	chemical	10306	10311	azide	azide	CHEBI:22680		S64	CHEBI_EXT
+12345	chemical	10312	10318	alkyne	alkyne	CHEBI:22339		S64	CHEBI_EXT
+12345	chemical	10386	10406	nucleoside analogues	nucleoside analogue	CHEBI:60783		S64	CHEBI_EXT
+12345	chemical	10460	10472	benzotriazol	benzotriazoles	CHEBI:48912		S65	CHEBI_EXT
+12345	chemical	10460	10472	benzotriazol	benzotriazole	CHEBI:75331		S65	CHEBI_EXT
+12345	chemical	10479	10497	purine nucleosides	purine nucleoside	CHEBI:26394		S65	CHEBI_EXT
+12345	chemical	10576	10582	purine	purines	CHEBI_EXT:purine		S65	CHEBI_EXT
+12345	chemical	10576	10582	purine	purine	CHEBI_EXT:purine		S65	CHEBI_EXT
+12345	chemical	10679	10696	purine nucleoside	purine nucleoside	CHEBI:26394		S66	CHEBI_EXT
+12345	chemical	10759	10764	azido	azido group	CHEBI:36825		S67	CHEBI_EXT
+12345	chemical	10771	10783	benzotriazol	benzotriazoles	CHEBI:48912		S67	CHEBI_EXT
+12345	chemical	10771	10783	benzotriazol	benzotriazole	CHEBI:75331		S67	CHEBI_EXT
+12345	chemical	10790	10807	purine nucleoside	purine nucleoside	CHEBI:26394		S67	CHEBI_EXT
+12345	chemical	10942	10951	azidation	azide anion	CHEBI:40910		S68	CHEBI_EXT
+12345	chemical	10942	10951	azidation	azide	CHEBI:22680		S68	CHEBI_EXT
+12345	chemical	11006	11017	nucleosides	nucleoside	CHEBI:33838		S68	CHEBI_EXT
+12345	chemical	11087	11093	purine	purines	CHEBI_EXT:purine		S68	CHEBI_EXT
+12345	chemical	11087	11093	purine	purine	CHEBI_EXT:purine		S68	CHEBI_EXT
+12345	chemical	11112	11120	hydroxyl	hydroxyl	CHEBI:29191		S69	CHEBI_EXT
+12345	chemical	11152	11161	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S69	CHEBI_EXT
+12345	chemical	11152	11161	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S69	CHEBI_EXT
+12345	chemical	11152	11161	guanosine	guanosines	CHEBI:24458		S69	CHEBI_EXT
+12345	chemical	11225	11243	purine nucleosides	purine nucleoside	CHEBI:26394		S69	CHEBI_EXT
+12345	chemical	11276	11288	benzotriazol	benzotriazoles	CHEBI:48912		S70	CHEBI_EXT
+12345	chemical	11276	11288	benzotriazol	benzotriazole	CHEBI:75331		S70	CHEBI_EXT
+12345	chemical	11335	11344	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S70	CHEBI_EXT
+12345	chemical	11335	11344	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S70	CHEBI_EXT
+12345	chemical	11335	11344	guanosine	guanosines	CHEBI:24458		S70	CHEBI_EXT
+12345	chemical	11538	11550	benzotriazol	benzotriazoles	CHEBI:48912		S71	CHEBI_EXT
+12345	chemical	11538	11550	benzotriazol	benzotriazole	CHEBI:75331		S71	CHEBI_EXT
+12345	chemical	11558	11563	group	group	CHEBI:24433		S71	CHEBI_EXT
+12345	chemical	11690	11695	azide	azide anion	CHEBI:40910		S72	CHEBI_EXT
+12345	chemical	11690	11695	azide	azide	CHEBI:22680		S72	CHEBI_EXT
+12345	chemical	12604	12607	DNA	DNA	CHEBI_SO_EXT:DNA		S80	CHEBI_EXT
+12345	chemical	12612	12615	RNA	RNA	CHEBI_SO_EXT:RNA		S80	CHEBI_EXT
+12345	chemical	12814	12821	inosine	inosine	CHEBI_SO_EXT:inosine		S82	CHEBI_EXT
+12345	chemical	12814	12821	inosine	inosines	CHEBI:24844		S82	CHEBI_EXT
+12345	chemical	13033	13040	inosine	inosine	CHEBI_SO_EXT:inosine		S83	CHEBI_EXT
+12345	chemical	13033	13040	inosine	inosines	CHEBI:24844		S83	CHEBI_EXT
+12345	chemical	13925	13931	canine	Canin	CHEBI:3356		S87	CHEBI_EXT
+12345	chemical	14077	14084	inosine	inosine	CHEBI_SO_EXT:inosine		S88	CHEBI_EXT
+12345	chemical	14077	14084	inosine	inosines	CHEBI:24844		S88	CHEBI_EXT
+12345	chemical	14107	14122	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S88	CHEBI_EXT
+12345	chemical	14473	14491	ribose derivatives	ribose derivative	CHEBI:74864		S91	CHEBI_EXT
+12345	chemical	14707	14716	adenosine	adenosines	CHEBI:22260		S93	CHEBI_EXT
+12345	chemical	14707	14716	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S93	CHEBI_EXT
+12345	chemical	14707	14716	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S93	CHEBI_EXT
+12345	chemical	14849	14869	nucleoside analogues	nucleoside analogue	CHEBI:60783		S94	CHEBI_EXT
+12345	chemical	14971	14981	paclitaxel	paclitaxel	CHEBI:45863		S94	CHEBI_EXT
+12345	chemical	15200	15209	Adenosine	adenosines	CHEBI:22260		S96	CHEBI_EXT
+12345	chemical	15200	15209	Adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S96	CHEBI_EXT
+12345	chemical	15200	15209	Adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S96	CHEBI_EXT
+12345	chemical	15314	15319	group	group	CHEBI:24433		S96	CHEBI_EXT
+12345	chemical	15354	15361	Inosine	inosine	CHEBI_SO_EXT:inosine		S97	CHEBI_EXT
+12345	chemical	15354	15361	Inosine	inosines	CHEBI:24844		S97	CHEBI_EXT
+12345	chemical	15635	15644	adenosine	adenosines	CHEBI:22260		S99	CHEBI_EXT
+12345	chemical	15635	15644	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S99	CHEBI_EXT
+12345	chemical	15635	15644	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S99	CHEBI_EXT
+12345	chemical	15837	15842	allyl	allyl group	CHEBI:30361		S100	CHEBI_EXT
+12345	chemical	15862	15877	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S100	CHEBI_EXT
+12345	chemical	15959	15970	nucleosides	nucleoside	CHEBI:33838		S101	CHEBI_EXT
+12345	chemical	15982	15988	azides	azide anion	CHEBI:40910		S101	CHEBI_EXT
+12345	chemical	15982	15988	azides	azide	CHEBI:22680		S101	CHEBI_EXT
+12345	chemical	16016	16021	azide	azide anion	CHEBI:40910		S101	CHEBI_EXT
+12345	chemical	16016	16021	azide	azide	CHEBI:22680		S101	CHEBI_EXT
+12345	chemical	16022	16031	tetrazole	tetrazole	CHEBI:35598		S101	CHEBI_EXT
+12345	chemical	16022	16031	tetrazole	tetrazoles	CHEBI:35689		S101	CHEBI_EXT
+12345	chemical	16053	16058	azido	azido group	CHEBI:36825		S101	CHEBI_EXT
+12345	chemical	16250	16255	group	group	CHEBI:24433		S103	CHEBI_EXT
+12345	chemical	16843	16854	nucleosides	nucleoside	CHEBI:33838		S107	CHEBI_EXT
+12345	chemical	16892	16899	guanine	guanine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S107	CHEBI_EXT
+12345	chemical	16892	16899	guanine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S107	CHEBI_EXT
+12345	chemical	16944	16956	benzotriazol	benzotriazoles	CHEBI:48912		S107	CHEBI_EXT
+12345	chemical	16944	16956	benzotriazol	benzotriazole	CHEBI:75331		S107	CHEBI_EXT
+12345	chemical	17022	17027	group	group	CHEBI:24433		S108	CHEBI_EXT
+12345	chemical	17033	17039	amines	amine	CHEBI:32952		S108	CHEBI_EXT
+12345	chemical	17033	17039	amines	aminal	CHEBI:35412		S108	CHEBI_EXT
+12345	chemical	17069	17078	adenosine	adenosines	CHEBI:22260		S108	CHEBI_EXT
+12345	chemical	17069	17078	adenosine	adenosine	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S108	CHEBI_EXT
+12345	chemical	17069	17078	adenosine	adenine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:adenine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S108	CHEBI_EXT
+12345	chemical	17121	17126	silyl	silyl	CHEBI:30560		S109	CHEBI_EXT
+12345	chemical	17121	17126	silyl	silyl group	CHEBI:30541		S109	CHEBI_EXT
+12345	chemical	17143	17155	benzotriazol	benzotriazoles	CHEBI:48912		S109	CHEBI_EXT
+12345	chemical	17143	17155	benzotriazol	benzotriazole	CHEBI:75331		S109	CHEBI_EXT
+12345	chemical	17161	17170	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S109	CHEBI_EXT
+12345	chemical	17161	17170	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S109	CHEBI_EXT
+12345	chemical	17161	17170	guanosine	guanosines	CHEBI:24458		S109	CHEBI_EXT
+12345	chemical	17194	17199	azido	azido group	CHEBI:36825		S109	CHEBI_EXT
+12345	chemical	17206	17218	benzotriazol	benzotriazoles	CHEBI:48912		S109	CHEBI_EXT
+12345	chemical	17206	17218	benzotriazol	benzotriazole	CHEBI:75331		S109	CHEBI_EXT
+12345	chemical	17225	17242	purine nucleoside	purine nucleoside	CHEBI:26394		S109	CHEBI_EXT
+12345	chemical	17336	17341	azide	azide anion	CHEBI:40910		S110	CHEBI_EXT
+12345	chemical	17336	17341	azide	azide	CHEBI:22680		S110	CHEBI_EXT
+12345	chemical	17375	17385	nucleoside	nucleoside	CHEBI:33838		S111	CHEBI_EXT
+12345	chemical	17516	17533	purine nucleoside	purine nucleoside	CHEBI:26394		S111	CHEBI_EXT
+12345	chemical	17860	17868	reagents	reagent	CHEBI_EXT:33893		S114	CHEBI_EXT
+12345	chemical	17983	17991	solvents	solvent	CHEBI_EXT:46787		S115	CHEBI_EXT
+12345	chemical	18025	18033	residual	residue	CHEBI_EXT:residue		S115	CHEBI_EXT
+12345	chemical	18034	18044	protonated	proton	CHEBI:24636		S115	CHEBI_EXT
+12345	chemical	18045	18052	solvent	solvent	CHEBI_EXT:46787		S115	CHEBI_EXT
+12345	chemical	18110	18118	solvents	solvent	CHEBI_EXT:46787		S116	CHEBI_EXT
+12345	chemical	18155	18162	solvent	solvent	CHEBI_EXT:46787		S116	CHEBI_EXT
+12345	chemical	18445	18452	mixture	mixture	CHEBI:60004		S120	CHEBI_EXT
+12345	chemical	18561	18568	mixture	mixture	CHEBI:60004		S121	CHEBI_EXT
+12345	chemical	18710	18715	water	water	CHEBI:15377		S122	CHEBI_EXT
+12345	chemical	18746	18753	solvent	solvent	CHEBI_EXT:46787		S123	CHEBI_EXT
+12345	chemical	18828	18835	acetone	acetone	CHEBI:15347		S123	CHEBI_EXT
+12345	chemical	18839	18846	hexanes	hexane	CHEBI:29021		S123	CHEBI_EXT
+12345	chemical	18958	18965	mixture	mixture	CHEBI:60004		S125	CHEBI_EXT
+12345	chemical	19009	19014	water	water	CHEBI:15377		S125	CHEBI_EXT
+12345	chemical	19189	19196	hexanes	hexane	CHEBI:29021		S127	CHEBI_EXT
+12345	chemical	19279	19286	hexanes	hexane	CHEBI:29021		S128	CHEBI_EXT
+12345	chemical	19437	19445	solution	solution	CHEBI:75958		S130	CHEBI_EXT
+12345	chemical	19511	19518	mixture	mixture	CHEBI:60004		S130	CHEBI_EXT
+12345	chemical	19565	19572	mixture	mixture	CHEBI:60004		S131	CHEBI_EXT
+12345	chemical	19606	19614	nitrogen	nitrogen	CHEBI_EXT:nitrogen		S131	CHEBI_EXT
+12345	chemical	19606	19614	nitrogen	nitrogen atom	CHEBI_EXT:nitrogen		S131	CHEBI_EXT
+12345	chemical	21093	21103	Morpholine	morpholines	CHEBI:38785		S135	CHEBI_EXT
+12345	chemical	21093	21103	Morpholine	morpholine	CHEBI:34856		S135	CHEBI_EXT
+12345	chemical	21150	21157	mixture	mixture	CHEBI:60004		S135	CHEBI_EXT
+12345	chemical	21175	21183	nitrogen	nitrogen	CHEBI_EXT:nitrogen		S135	CHEBI_EXT
+12345	chemical	21175	21183	nitrogen	nitrogen atom	CHEBI_EXT:nitrogen		S135	CHEBI_EXT
+12345	chemical	21251	21258	mixture	mixture	CHEBI:60004		S136	CHEBI_EXT
+12345	chemical	21279	21286	residue	residue	CHEBI_EXT:residue		S136	CHEBI_EXT
+12345	chemical	21326	21331	water	water	CHEBI:15377		S136	CHEBI_EXT
+12345	chemical	21599	21606	hexanes	hexane	CHEBI:29021		S139	CHEBI_EXT
+12345	chemical	21684	21691	hexanes	hexane	CHEBI:29021		S140	CHEBI_EXT
+12345	chemical	23120	23128	solution	solution	CHEBI:75958		S149	CHEBI_EXT
+12345	chemical	23132	23142	paclitaxel	paclitaxel	CHEBI:45863		S149	CHEBI_EXT
+12345	chemical	23329	23333	drug	drug	CHEBI_EXT:23888		S150	CHEBI_EXT
+12345	chemical	23415	23425	phenol red	phenol red	CHEBI:31991		S151	CHEBI_EXT
+12345	chemical	23488	23502	carbon dioxide	carbon dioxide	CHEBI:16526		S151	CHEBI_EXT
+12345	chemical	23604	23613	verapamil	verapamil	CHEBI:9948		S152	CHEBI_EXT
+12345	chemical	23927	23935	solution	solution	CHEBI:75958		S155	CHEBI_EXT
+12345	chemical	24238	24245	reagent	reagent	CHEBI_EXT:33893		S158	CHEBI_EXT
+12345	chemical	24730	24737	mixture	mixture	CHEBI:60004		S163	CHEBI_EXT
+12345	chemical	24826	24831	allyl	allyl group	CHEBI:30361		S163	CHEBI_EXT
+12345	chemical	24842	24852	nucleoside	nucleoside	CHEBI:33838		S163	CHEBI_EXT
+12345	chemical	26372	26379	mixture	mixture	CHEBI:60004		S169	CHEBI_EXT
+12345	chemical	26467	26472	allyl	allyl group	CHEBI:30361		S169	CHEBI_EXT
+12345	chemical	26483	26493	nucleoside	nucleoside	CHEBI:33838		S169	CHEBI_EXT
+12345	chemical	27408	27413	butyl	Butylate	CHEBI:34594		S174	CHEBI_EXT
+12345	chemical	27408	27413	butyl	butyl group	CHEBI:41264		S174	CHEBI_EXT
+12345	chemical	27451	27456	butyl	Butylate	CHEBI:34594		S174	CHEBI_EXT
+12345	chemical	27451	27456	butyl	butyl group	CHEBI:41264		S174	CHEBI_EXT
+12345	chemical	27495	27500	butyl	Butylate	CHEBI:34594		S174	CHEBI_EXT
+12345	chemical	27495	27500	butyl	butyl group	CHEBI:41264		S174	CHEBI_EXT
+12345	chemical	27534	27539	butyl	Butylate	CHEBI:34594		S174	CHEBI_EXT
+12345	chemical	27534	27539	butyl	butyl group	CHEBI:41264		S174	CHEBI_EXT
+12345	chemical	27916	27923	mixture	mixture	CHEBI:60004		S176	CHEBI_EXT
+12345	chemical	28012	28017	allyl	allyl group	CHEBI:30361		S176	CHEBI_EXT
+12345	chemical	28028	28038	nucleoside	nucleoside	CHEBI:33838		S176	CHEBI_EXT
+12345	chemical	29073	29080	mixture	mixture	CHEBI:60004		S181	CHEBI_EXT
+12345	chemical	29169	29174	allyl	allyl group	CHEBI:30361		S181	CHEBI_EXT
+12345	chemical	29185	29195	nucleoside	nucleoside	CHEBI:33838		S181	CHEBI_EXT
+12345	chemical	29800	29803	ddd	DDD	CHEBI:27841		S183	CHEBI_EXT
+12345	chemical	30214	30219	Allyl	allyl group	CHEBI:30361		S186	CHEBI_EXT
+12345	chemical	30222	30227	azido	azido group	CHEBI:36825		S186	CHEBI_EXT
+12345	chemical	30265	30280	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S186	CHEBI_EXT
+12345	chemical	30542	30549	hexanes	hexane	CHEBI:29021		S187	CHEBI_EXT
+12345	chemical	30635	30642	hexanes	hexane	CHEBI:29021		S188	CHEBI_EXT
+12345	chemical	31113	31116	ddd	DDD	CHEBI:27841		S190	CHEBI_EXT
+12345	chemical	32254	32259	Allyl	allyl group	CHEBI:30361		S196	CHEBI_EXT
+12345	chemical	32265	32271	phenyl	phenyl group	CHEBI:30396		S196	CHEBI_EXT
+12345	chemical	32272	32285	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S196	CHEBI_EXT
+12345	chemical	32333	32340	inosine	inosine	CHEBI_SO_EXT:inosine		S196	CHEBI_EXT
+12345	chemical	32333	32340	inosine	inosines	CHEBI:24844		S196	CHEBI_EXT
+12345	chemical	32346	32351	Azide	azide anion	CHEBI:40910		S196	CHEBI_EXT
+12345	chemical	32346	32351	Azide	azide	CHEBI:22680		S196	CHEBI_EXT
+12345	chemical	32467	32474	mixture	mixture	CHEBI:60004		S197	CHEBI_EXT
+12345	chemical	32492	32500	nitrogen	nitrogen	CHEBI_EXT:nitrogen		S197	CHEBI_EXT
+12345	chemical	32492	32500	nitrogen	nitrogen atom	CHEBI_EXT:nitrogen		S197	CHEBI_EXT
+12345	chemical	32506	32512	Phenyl	phenyl group	CHEBI:30396		S198	CHEBI_EXT
+12345	chemical	32513	32522	acetylene	acetylenes	CHEBI:33644		S198	CHEBI_EXT
+12345	chemical	32513	32522	acetylene	acetylene	CHEBI:27518		S198	CHEBI_EXT
+12345	chemical	32575	32582	mixture	mixture	CHEBI:60004		S198	CHEBI_EXT
+12345	chemical	32864	32871	mixture	mixture	CHEBI:60004		S199	CHEBI_EXT
+12345	chemical	32960	32965	allyl	allyl group	CHEBI:30361		S199	CHEBI_EXT
+12345	chemical	32976	32986	nucleoside	nucleoside	CHEBI:33838		S199	CHEBI_EXT
+12345	chemical	33570	33573	ddd	DDD	CHEBI:27841		S201	CHEBI_EXT
+12345	chemical	34494	34499	Allyl	allyl group	CHEBI:30361		S207	CHEBI_EXT
+12345	chemical	34506	34520	4-methylphenyl	p-tolyl group	CHEBI:52556		S207	CHEBI_EXT
+12345	chemical	34522	34535	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S207	CHEBI_EXT
+12345	chemical	34582	34589	inosine	inosine	CHEBI_SO_EXT:inosine		S207	CHEBI_EXT
+12345	chemical	34582	34589	inosine	inosines	CHEBI:24844		S207	CHEBI_EXT
+12345	chemical	34716	34723	mixture	mixture	CHEBI:60004		S208	CHEBI_EXT
+12345	chemical	34766	34773	hexanes	hexane	CHEBI:29021		S208	CHEBI_EXT
+12345	chemical	34858	34865	hexanes	hexane	CHEBI:29021		S209	CHEBI_EXT
+12345	chemical	35499	35504	Allyl	allyl group	CHEBI:30361		S210	CHEBI_EXT
+12345	chemical	35545	35554	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S210	CHEBI_EXT
+12345	chemical	35545	35554	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S210	CHEBI_EXT
+12345	chemical	35545	35554	guanosine	guanosines	CHEBI:24458		S210	CHEBI_EXT
+12345	chemical	35654	35666	benzotriazol	benzotriazoles	CHEBI:48912		S210	CHEBI_EXT
+12345	chemical	35654	35666	benzotriazol	benzotriazole	CHEBI:75331		S210	CHEBI_EXT
+12345	chemical	35713	35722	guanosine	guanosine	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S210	CHEBI_EXT
+12345	chemical	35713	35722	guanosine	guanine nucleobase/nucleoside/nucleotide molecular entity or group	CHEBI_EXT:guanine_nucleobase_or_nucleoside_or_nucleotide_molecular_entity_or_group		S210	CHEBI_EXT
+12345	chemical	35713	35722	guanosine	guanosines	CHEBI:24458		S210	CHEBI_EXT
+12345	chemical	35745	35758	allyl alcohol	allyl alcohol	CHEBI:16605		S210	CHEBI_EXT
+12345	chemical	35815	35822	mixture	mixture	CHEBI:60004		S211	CHEBI_EXT
+12345	chemical	35840	35848	nitrogen	nitrogen	CHEBI_EXT:nitrogen		S211	CHEBI_EXT
+12345	chemical	35840	35848	nitrogen	nitrogen atom	CHEBI_EXT:nitrogen		S211	CHEBI_EXT
+12345	chemical	35909	35916	mixture	mixture	CHEBI:60004		S211	CHEBI_EXT
+12345	chemical	36037	36044	hexanes	hexane	CHEBI:29021		S212	CHEBI_EXT
+12345	chemical	36121	36128	hexanes	hexane	CHEBI:29021		S213	CHEBI_EXT
+12345	chemical	36828	36835	mixture	mixture	CHEBI:60004		S215	CHEBI_EXT
+12345	chemical	36924	36929	allyl	allyl group	CHEBI:30361		S215	CHEBI_EXT
+12345	chemical	36940	36950	nucleoside	nucleoside	CHEBI:33838		S215	CHEBI_EXT
+12345	chemical	37118	37123	Allyl	allyl group	CHEBI:30361		S217	CHEBI_EXT
+12345	chemical	37161	37178	2′-deoxyguanosine	2'-deoxyguanosine	CHEBI:17172		S217	CHEBI_EXT
+12345	chemical	37275	37287	benzotriazol	benzotriazoles	CHEBI:48912		S217	CHEBI_EXT
+12345	chemical	37275	37287	benzotriazol	benzotriazole	CHEBI:75331		S217	CHEBI_EXT
+12345	chemical	37331	37348	2′-deoxyguanosine	2'-deoxyguanosine	CHEBI:17172		S217	CHEBI_EXT
+12345	chemical	37372	37385	allyl alcohol	allyl alcohol	CHEBI:16605		S217	CHEBI_EXT
+12345	chemical	37522	37529	hexanes	hexane	CHEBI:29021		S218	CHEBI_EXT
+12345	chemical	37607	37614	hexanes	hexane	CHEBI:29021		S219	CHEBI_EXT
+12345	chemical	38056	38059	ddd	DDD	CHEBI:27841		S219	CHEBI_EXT
+12345	chemical	38354	38361	mixture	mixture	CHEBI:60004		S220	CHEBI_EXT
+12345	chemical	38450	38455	allyl	allyl group	CHEBI:30361		S220	CHEBI_EXT
+12345	chemical	38466	38476	nucleoside	nucleoside	CHEBI:33838		S220	CHEBI_EXT
+12345	chemical	39073	39076	ddd	DDD	CHEBI:27841		S222	CHEBI_EXT
+12345	chemical	39124	39129	Allyl	allyl group	CHEBI:30361		S222	CHEBI_EXT
+12345	chemical	39132	39137	azido	azido group	CHEBI:36825		S222	CHEBI_EXT
+12345	chemical	39178	39185	inosine	inosine	CHEBI_SO_EXT:inosine		S222	CHEBI_EXT
+12345	chemical	39178	39185	inosine	inosines	CHEBI:24844		S222	CHEBI_EXT
+12345	chemical	39196	39204	solution	solution	CHEBI:75958		S222	CHEBI_EXT
+12345	chemical	39444	39451	mixture	mixture	CHEBI:60004		S223	CHEBI_EXT
+12345	chemical	39539	39544	allyl	allyl group	CHEBI:30361		S223	CHEBI_EXT
+12345	chemical	39555	39565	nucleoside	nucleoside	CHEBI:33838		S223	CHEBI_EXT
+12345	chemical	40147	40150	ddd	DDD	CHEBI:27841		S225	CHEBI_EXT
+12345	chemical	40979	40989	paclitaxel	paclitaxel	CHEBI:45863		S229	CHEBI_EXT
+12345	chemical	42321	42328	mixture	mixture	CHEBI:60004		S232	CHEBI_EXT
+12345	chemical	42416	42421	allyl	allyl group	CHEBI:30361		S232	CHEBI_EXT
+12345	chemical	42432	42442	nucleoside	nucleoside	CHEBI:33838		S232	CHEBI_EXT
+12345	chemical	42699	42704	butyl	Butylate	CHEBI:34594		S233	CHEBI_EXT
+12345	chemical	42699	42704	butyl	butyl group	CHEBI:41264		S233	CHEBI_EXT
+12345	chemical	42738	42743	butyl	Butylate	CHEBI:34594		S233	CHEBI_EXT
+12345	chemical	42738	42743	butyl	butyl group	CHEBI:41264		S233	CHEBI_EXT
+12345	chemical	43434	43439	group	group	CHEBI:24433		S238	CHEBI_EXT
+12345	chemical	43529	43535	phenyl	phenyl group	CHEBI:30396		S238	CHEBI_EXT
+12345	chemical	43537	43550	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S238	CHEBI_EXT
+12345	chemical	43598	43605	inosine	inosine	CHEBI_SO_EXT:inosine		S238	CHEBI_EXT
+12345	chemical	43598	43605	inosine	inosines	CHEBI:24844		S238	CHEBI_EXT
+12345	chemical	43740	43747	mixture	mixture	CHEBI:60004		S239	CHEBI_EXT
+12345	chemical	43765	43773	nitrogen	nitrogen	CHEBI_EXT:nitrogen		S239	CHEBI_EXT
+12345	chemical	43765	43773	nitrogen	nitrogen atom	CHEBI_EXT:nitrogen		S239	CHEBI_EXT
+12345	chemical	43872	43879	mixture	mixture	CHEBI:60004		S240	CHEBI_EXT
+12345	chemical	43919	43924	water	water	CHEBI:15377		S240	CHEBI_EXT
+12345	chemical	44192	44199	hexanes	hexane	CHEBI:29021		S242	CHEBI_EXT
+12345	chemical	44278	44285	hexanes	hexane	CHEBI:29021		S243	CHEBI_EXT
+12345	chemical	45290	45297	mixture	mixture	CHEBI:60004		S247	CHEBI_EXT
+12345	chemical	45386	45391	allyl	allyl group	CHEBI:30361		S247	CHEBI_EXT
+12345	chemical	45402	45412	nucleoside	nucleoside	CHEBI:33838		S247	CHEBI_EXT
+12345	chemical	46159	46162	ddd	DDD	CHEBI:27841		S251	CHEBI_EXT
+12345	chemical	46219	46224	Allyl	allyl group	CHEBI:30361		S253	CHEBI_EXT
+12345	chemical	46248	46261	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S253	CHEBI_EXT
+12345	chemical	46308	46315	inosine	inosine	CHEBI_SO_EXT:inosine		S253	CHEBI_EXT
+12345	chemical	46308	46315	inosine	inosines	CHEBI:24844		S253	CHEBI_EXT
+12345	chemical	46442	46449	mixture	mixture	CHEBI:60004		S254	CHEBI_EXT
+12345	chemical	46492	46499	hexanes	hexane	CHEBI:29021		S254	CHEBI_EXT
+12345	chemical	46584	46591	hexanes	hexane	CHEBI:29021		S255	CHEBI_EXT
+12345	chemical	47009	47014	Allyl	allyl group	CHEBI:30361		S256	CHEBI_EXT
+12345	chemical	47021	47034	hydroxymethyl	hydroxymethyl group	CHEBI:24712		S256	CHEBI_EXT
+12345	chemical	47035	47048	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S256	CHEBI_EXT
+12345	chemical	47095	47102	inosine	inosine	CHEBI_SO_EXT:inosine		S256	CHEBI_EXT
+12345	chemical	47095	47102	inosine	inosines	CHEBI:24844		S256	CHEBI_EXT
+12345	chemical	47165	47172	alcohol	alcohol	CHEBI:30879		S256	CHEBI_EXT
+12345	chemical	47230	47237	mixture	mixture	CHEBI:60004		S257	CHEBI_EXT
+12345	chemical	47280	47287	hexanes	hexane	CHEBI:29021		S257	CHEBI_EXT
+12345	chemical	47352	47357	Allyl	allyl group	CHEBI:30361		S257	CHEBI_EXT
+12345	chemical	47385	47398	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S257	CHEBI_EXT
+12345	chemical	47445	47452	inosine	inosine	CHEBI_SO_EXT:inosine		S257	CHEBI_EXT
+12345	chemical	47445	47452	inosine	inosines	CHEBI:24844		S257	CHEBI_EXT
+12345	chemical	47514	47525	phthalimide	phthalimide	CHEBI:38817		S257	CHEBI_EXT
+12345	chemical	47514	47525	phthalimide	phthalimides	CHEBI:82851		S257	CHEBI_EXT
+12345	chemical	47586	47593	mixture	mixture	CHEBI:60004		S258	CHEBI_EXT
+12345	chemical	47636	47643	hexanes	hexane	CHEBI:29021		S258	CHEBI_EXT
+12345	chemical	47733	47740	hexanes	hexane	CHEBI:29021		S259	CHEBI_EXT
+12345	chemical	47898	47903	Allyl	allyl group	CHEBI:30361		S259	CHEBI_EXT
+12345	chemical	47911	47916	butyl	Butylate	CHEBI:34594		S259	CHEBI_EXT
+12345	chemical	47911	47916	butyl	butyl group	CHEBI:41264		S259	CHEBI_EXT
+12345	chemical	47917	47930	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S259	CHEBI_EXT
+12345	chemical	47978	47985	inosine	inosine	CHEBI_SO_EXT:inosine		S259	CHEBI_EXT
+12345	chemical	47978	47985	inosine	inosines	CHEBI:24844		S259	CHEBI_EXT
+12345	chemical	48048	48055	alcohol	alcohol	CHEBI:30879		S259	CHEBI_EXT
+12345	chemical	48114	48121	mixture	mixture	CHEBI:60004		S260	CHEBI_EXT
+12345	chemical	48164	48171	hexanes	hexane	CHEBI:29021		S260	CHEBI_EXT
+12345	chemical	48411	48416	butyl	Butylate	CHEBI:34594		S261	CHEBI_EXT
+12345	chemical	48411	48416	butyl	butyl group	CHEBI:41264		S261	CHEBI_EXT
+12345	chemical	48740	48745	Allyl	allyl group	CHEBI:30361		S262	CHEBI_EXT
+12345	chemical	48762	48775	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S262	CHEBI_EXT
+12345	chemical	48822	48829	inosine	inosine	CHEBI_SO_EXT:inosine		S262	CHEBI_EXT
+12345	chemical	48822	48829	inosine	inosines	CHEBI:24844		S262	CHEBI_EXT
+12345	chemical	48959	48966	mixture	mixture	CHEBI:60004		S263	CHEBI_EXT
+12345	chemical	49009	49016	hexanes	hexane	CHEBI:29021		S263	CHEBI_EXT
+12345	chemical	49101	49108	hexanes	hexane	CHEBI:29021		S264	CHEBI_EXT
+12345	chemical	49977	49980	FeN	iron(0)	CHEBI:82664		S266	CHEBI_EXT
+12345	chemical	50075	50082	hexanes	hexane	CHEBI:29021		S267	CHEBI_EXT
+12345	chemical	50915	50920	Allyl	allyl group	CHEBI:30361		S269	CHEBI_EXT
+12345	chemical	50928	50933	butyl	Butylate	CHEBI:34594		S269	CHEBI_EXT
+12345	chemical	50928	50933	butyl	butyl group	CHEBI:41264		S269	CHEBI_EXT
+12345	chemical	50934	50947	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S269	CHEBI_EXT
+12345	chemical	50992	51006	2′deoxyinosine	2'-deoxyinosine	CHEBI:28997		S269	CHEBI_EXT
+12345	chemical	51127	51134	mixture	mixture	CHEBI:60004		S270	CHEBI_EXT
+12345	chemical	51177	51184	hexanes	hexane	CHEBI:29021		S270	CHEBI_EXT
+12345	chemical	51257	51262	Allyl	allyl group	CHEBI:30361		S270	CHEBI_EXT
+12345	chemical	51279	51292	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S270	CHEBI_EXT
+12345	chemical	51337	51351	2′deoxyinosine	2'-deoxyinosine	CHEBI:28997		S270	CHEBI_EXT
+12345	chemical	51479	51486	mixture	mixture	CHEBI:60004		S271	CHEBI_EXT
+12345	chemical	51529	51536	hexanes	hexane	CHEBI:29021		S271	CHEBI_EXT
+12345	chemical	51630	51637	hexanes	hexane	CHEBI:29021		S272	CHEBI_EXT
+12345	chemical	52344	52351	mixture	mixture	CHEBI:60004		S274	CHEBI_EXT
+12345	chemical	52440	52445	allyl	allyl group	CHEBI:30361		S274	CHEBI_EXT
+12345	chemical	52456	52466	nucleoside	nucleoside	CHEBI:33838		S274	CHEBI_EXT
+12345	chemical	53085	53090	allyl	allyl group	CHEBI:30361		S276	CHEBI_EXT
+12345	chemical	53101	53111	nucleoside	nucleoside	CHEBI:33838		S276	CHEBI_EXT
+12345	chemical	53678	53681	ddd	DDD	CHEBI:27841		S278	CHEBI_EXT
+12345	chemical	53723	53726	ddd	DDD	CHEBI:27841		S278	CHEBI_EXT
+12345	chemical	53762	53770	solution	solution	CHEBI:75958		S278	CHEBI_EXT
+12345	chemical	54007	54014	mixture	mixture	CHEBI:60004		S279	CHEBI_EXT
+12345	chemical	54117	54124	mixture	mixture	CHEBI:60004		S280	CHEBI_EXT
+12345	chemical	54722	54727	Allyl	allyl group	CHEBI:30361		S282	CHEBI_EXT
+12345	chemical	54733	54739	phenyl	phenyl group	CHEBI:30396		S282	CHEBI_EXT
+12345	chemical	54740	54753	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S282	CHEBI_EXT
+12345	chemical	54798	54812	2′deoxyinosine	2'-deoxyinosine	CHEBI:28997		S282	CHEBI_EXT
+12345	chemical	54866	54872	phenyl	phenyl group	CHEBI:30396		S282	CHEBI_EXT
+12345	chemical	54873	54882	acetylene	acetylenes	CHEBI:33644		S282	CHEBI_EXT
+12345	chemical	54873	54882	acetylene	acetylene	CHEBI:27518		S282	CHEBI_EXT
+12345	chemical	54941	54948	mixture	mixture	CHEBI:60004		S283	CHEBI_EXT
+12345	chemical	54991	54998	hexanes	hexane	CHEBI:29021		S283	CHEBI_EXT
+12345	chemical	55089	55096	hexanes	hexane	CHEBI:29021		S284	CHEBI_EXT
+12345	chemical	55732	55737	Allyl	allyl group	CHEBI:30361		S286	CHEBI_EXT
+12345	chemical	55760	55773	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S286	CHEBI_EXT
+12345	chemical	55820	55827	inosine	inosine	CHEBI_SO_EXT:inosine		S286	CHEBI_EXT
+12345	chemical	55820	55827	inosine	inosines	CHEBI:24844		S286	CHEBI_EXT
+12345	chemical	55961	55968	mixture	mixture	CHEBI:60004		S287	CHEBI_EXT
+12345	chemical	56011	56018	hexanes	hexane	CHEBI:29021		S287	CHEBI_EXT
+12345	chemical	56109	56116	hexanes	hexane	CHEBI:29021		S288	CHEBI_EXT
+12345	chemical	56219	56224	Allyl	allyl group	CHEBI:30361		S289	CHEBI_EXT
+12345	chemical	56252	56265	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S289	CHEBI_EXT
+12345	chemical	56309	56324	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S289	CHEBI_EXT
+12345	chemical	56390	56401	phthalimide	phthalimide	CHEBI:38817		S289	CHEBI_EXT
+12345	chemical	56390	56401	phthalimide	phthalimides	CHEBI:82851		S289	CHEBI_EXT
+12345	chemical	56460	56467	mixture	mixture	CHEBI:60004		S290	CHEBI_EXT
+12345	chemical	56510	56517	hexanes	hexane	CHEBI:29021		S290	CHEBI_EXT
+12345	chemical	56603	56610	hexanes	hexane	CHEBI:29021		S291	CHEBI_EXT
+12345	chemical	57160	57163	ddd	DDD	CHEBI:27841		S292	CHEBI_EXT
+12345	chemical	57342	57347	Allyl	allyl group	CHEBI:30361		S294	CHEBI_EXT
+12345	chemical	57371	57384	1,2,3-triazol	1,2,3-triazole	CHEBI:35562		S294	CHEBI_EXT
+12345	chemical	57428	57443	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S294	CHEBI_EXT
+12345	chemical	57572	57579	mixture	mixture	CHEBI:60004		S295	CHEBI_EXT
+12345	chemical	57622	57629	hexanes	hexane	CHEBI:29021		S295	CHEBI_EXT
+12345	chemical	57720	57727	hexanes	hexane	CHEBI:29021		S296	CHEBI_EXT
+12345	chemical	58407	58414	triazol	triazole	CHEBI:38597		S298	CHEBI_EXT
+12345	chemical	58407	58414	triazol	triazoles	CHEBI:35727		S298	CHEBI_EXT
+12345	chemical	58458	58473	2′-deoxyinosine	2'-deoxyinosine	CHEBI:28997		S298	CHEBI_EXT
+12345	chemical	58537	58544	alcohol	alcohol	CHEBI:30879		S298	CHEBI_EXT
+12345	chemical	58603	58610	mixture	mixture	CHEBI:60004		S299	CHEBI_EXT
+12345	chemical	58653	58660	hexanes	hexane	CHEBI:29021		S299	CHEBI_EXT
+12345	chemical	58746	58753	hexanes	hexane	CHEBI:29021		S300	CHEBI_EXT

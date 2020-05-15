@@ -83,5 +83,18 @@ public class OgerFnTest {
 	}
 	
 	
+	@Test
+	public void testSpanValidation5() throws IOException {
+		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
+				"0863gwzz.concept_chebi.oger.tsv", CharacterEncoding.UTF_8);
+		
+		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "0863gwzz.txt",
+				CharacterEncoding.UTF_8);
+		
+		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		
+	}
+	
+	
 
 }

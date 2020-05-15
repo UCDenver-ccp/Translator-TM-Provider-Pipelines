@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
@@ -16,7 +17,22 @@ public class SpanValidator {
 	public static boolean validate(List<Span> spans, String annotationCoveredText, String documentText) {
 		String coveredTextFromDocument = SpanUtils.getCoveredText(spans, documentText);
 
-		return annotationCoveredText.replaceAll("\\n", " ").equals(coveredTextFromDocument.replaceAll("\\n", " "));
+		return validateForceUtf8(annotationCoveredText, coveredTextFromDocument);
+	}
+
+	static boolean validateForceUtf8(String annotationCoveredText, String coveredTextFromDocument) {
+		// make sure both strings are encoded as UTF-8
+		byte[] bytes1 = coveredTextFromDocument.replaceAll("\\n", " ").getBytes(StandardCharsets.UTF_8);
+		byte[] bytes2 = annotationCoveredText.replaceAll("\\n", " ").getBytes(StandardCharsets.UTF_8);
+
+		String utf8EncodedString1 = new String(bytes1, StandardCharsets.UTF_8);
+		String utf8EncodedString2 = new String(bytes2, StandardCharsets.UTF_8);
+		
+		System.out.println("STR1: " + utf8EncodedString1);
+		System.out.println("STR2: " + utf8EncodedString2);
+		
+
+		return utf8EncodedString1.equals(utf8EncodedString2);
 	}
 
 }
