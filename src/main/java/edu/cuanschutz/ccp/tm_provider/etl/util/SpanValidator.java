@@ -17,22 +17,28 @@ public class SpanValidator {
 	public static boolean validate(List<Span> spans, String annotationCoveredText, String documentText) {
 		String coveredTextFromDocument = SpanUtils.getCoveredText(spans, documentText);
 
-		return validateForceUtf8(annotationCoveredText, coveredTextFromDocument);
+		return validateForceAscii(annotationCoveredText, coveredTextFromDocument);
 	}
 
-	static boolean validateForceUtf8(String annotationCoveredText, String coveredTextFromDocument) {
+	/**
+	 * Convert the strings to their ASCII representations prior to comparing them.
+	 * This was needed in order to get the validation to work when run in the cloud.
+	 * UTF-8 characters were not matching each other correctly, or for some reason
+	 * the character encoding was incorrect.
+	 * 
+	 * @param annotationCoveredText
+	 * @param coveredTextFromDocument
+	 * @return
+	 */
+	static boolean validateForceAscii(String annotationCoveredText, String coveredTextFromDocument) {
 		// make sure both strings are encoded as UTF-8
-		byte[] bytes1 = coveredTextFromDocument.replaceAll("\\n", " ").getBytes(StandardCharsets.UTF_8);
-		byte[] bytes2 = annotationCoveredText.replaceAll("\\n", " ").getBytes(StandardCharsets.UTF_8);
+		byte[] bytes1 = coveredTextFromDocument.replaceAll("\\n", " ").getBytes(StandardCharsets.US_ASCII);
+		byte[] bytes2 = annotationCoveredText.replaceAll("\\n", " ").getBytes(StandardCharsets.US_ASCII);
 
-		String utf8EncodedString1 = new String(bytes1, StandardCharsets.UTF_8);
-		String utf8EncodedString2 = new String(bytes2, StandardCharsets.UTF_8);
-		
-		System.out.println("STR1: " + utf8EncodedString1);
-		System.out.println("STR2: " + utf8EncodedString2);
-		
+		String asciiEncodedString1 = new String(bytes1, StandardCharsets.US_ASCII);
+		String asciiEncodedString2 = new String(bytes2, StandardCharsets.US_ASCII);
 
-		return utf8EncodedString1.equals(utf8EncodedString2);
+		return asciiEncodedString1.equals(asciiEncodedString2);
 	}
 
 }
