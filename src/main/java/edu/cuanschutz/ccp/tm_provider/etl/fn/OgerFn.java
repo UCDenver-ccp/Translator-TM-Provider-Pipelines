@@ -101,7 +101,7 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	static String convertToBioNLP(String ogerSystemOutput, String docId, String docText, OgerOutputType ogerOutputType)
+	public static String convertToBioNLP(String ogerSystemOutput, String docId, String docText, OgerOutputType ogerOutputType)
 			throws IOException {
 
 		TextDocument td = null;
@@ -159,7 +159,7 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	static String annotate(String plainText, String ogerServiceUri, OgerOutputType ogerOutputType) throws IOException {
+	public static String annotate(String plainText, String ogerServiceUri, OgerOutputType ogerOutputType) throws IOException {
 
 		String targetUri = null;
 

@@ -255,7 +255,7 @@ public class SentenceCooccurrenceBuilder implements Serializable {
 		return td;
 	}
 
-	private static void convertFromByteToCharOffset(TextAnnotation ta, String text) {
+	public static void convertFromByteToCharOffset(TextAnnotation ta, String text) {
 
 		// sometimes the conversion is needed, sometimes it doesn't appear to be needed
 		// -- need to look into this much more thoroughly

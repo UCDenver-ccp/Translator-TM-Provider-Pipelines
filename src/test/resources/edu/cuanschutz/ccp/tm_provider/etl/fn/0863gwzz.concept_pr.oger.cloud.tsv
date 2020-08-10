@@ -1,0 +1,607 @@
+12345	gene/protein	969	973	Et 3	endothelin-3	PR_EXT:000006899		S6	PR_EXT
+12345	gene/protein	3046	3049	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S18	PR_EXT
+12345	gene/protein	3147	3150	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S18	PR_EXT
+12345	gene/protein	3563	3566	NaN	sodium channel protein type 11 subunit alpha (mouse)	PR_EXT:Q9R053		S21	PR_EXT
+12345	gene/protein	3563	3566	NaN	sodium channel protein type 11 subunit alpha	PR_EXT:000002097		S21	PR_EXT
+12345	gene/protein	3563	3566	NaN	sodium channel protein type 11 subunit alpha (rat)	PR_EXT:O88457		S21	PR_EXT
+12345	gene/protein	5038	5043	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S29	PR_EXT
+12345	gene/protein	5047	5051	tert	telomerase reverse transcriptase	PR_EXT:000016238		S29	PR_EXT
+12345	gene/protein	5124	5133	precursor	TGF-beta 1 isoform 1	PR_EXT:000000397		S29	PR_EXT
+12345	gene/protein	5124	5133	precursor	cartilage oligomeric matrix protein isoform 1	PR_EXT:000000230		S29	PR_EXT
+12345	gene/protein	5124	5133	precursor	nodal protein isoform 1	PR_EXT:000000291		S29	PR_EXT
+12345	gene/protein	5189	5192	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S29	PR_EXT
+12345	gene/protein	5671	5674	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S33	PR_EXT
+12345	gene/protein	5750	5753	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S34	PR_EXT
+12345	gene/protein	6083	6086	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S36	PR_EXT
+12345	gene/protein	8307	8311	Et 3	endothelin-3	PR_EXT:000006899		S52	PR_EXT
+12345	gene/protein	8451	8454	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S53	PR_EXT
+12345	gene/protein	8509	8512	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S53	PR_EXT
+12345	gene/protein	8755	8758	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S55	PR_EXT
+12345	gene/protein	8809	8813	Pd 2	RNA polymerase II-associated factor 1	PR_EXT:000012226		S56	PR_EXT
+12345	gene/protein	8857	8861	Pd 2	RNA polymerase II-associated factor 1	PR_EXT:000012226		S56	PR_EXT
+12345	gene/protein	8886	8890	Et 2	endothelin-2	PR_EXT:000006898		S56	PR_EXT
+12345	gene/protein	8916	8920	Cl 2	adhesion G protein-coupled receptor L2 (rat)	PR_EXT:O88923		S56	PR_EXT
+12345	gene/protein	8916	8920	Cl 2	collectin-11 (chicken)	PR_EXT:Q2LK94		S56	PR_EXT
+12345	gene/protein	9242	9245	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S59	PR_EXT
+12345	gene/protein	9854	9857	BOP	histone-lysine N-methyltransferase SMYD1	PR_EXT:000015306		S61	PR_EXT
+12345	gene/protein	9854	9857	BOP	short-wave-sensitive opsin 1	PR_EXT:000001195		S61	PR_EXT
+12345	gene/protein	9854	9857	BOP	histone-lysine N-methyltransferase Smyd1 (mouse)	PR_EXT:P97443		S61	PR_EXT
+12345	gene/protein	9865	9869	Pr 2	vomeronasal type-1 receptor A2	PR_EXT:000017231		S61	PR_EXT
+12345	gene/protein	11023	11026	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S68	PR_EXT
+12345	gene/protein	11304	11307	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S70	PR_EXT
+12345	gene/protein	11311	11315	tert	telomerase reverse transcriptase	PR_EXT:000016238		S70	PR_EXT
+12345	gene/protein	11609	11612	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S72	PR_EXT
+12345	gene/protein	11793	11796	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S73	PR_EXT
+12345	gene/protein	12062	12065	δ 4	delta-like protein 4	PR_EXT:000006525		S75	PR_EXT
+12345	gene/protein	12370	12373	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S78	PR_EXT
+12345	gene/protein	12666	12669	see	staphylococcal enterotoxin E	PR_EXT:000002226		S81	PR_EXT
+12345	gene/protein	12873	12882	embryonic	histone H3.3C	PR_EXT:000029532		S82	PR_EXT
+12345	gene/protein	12889	12892	HEL	DEAD-box ATP-dependent RNA helicase 50 (Arabidopsis thaliana)	PR_EXT:Q8GUG7		S82	PR_EXT
+12345	gene/protein	12889	12892	HEL	ATP-dependent RNA helicase WM6 (fruit fly)	PR_EXT:Q27268		S82	PR_EXT
+12345	gene/protein	12900	12905	at an	C-terminal binding protein AN (Arabidopsis thaliana)	PR_EXT:O23702		S82	PR_EXT
+12345	gene/protein	13238	13247	embryonic	histone H3.3C	PR_EXT:000029532		S84	PR_EXT
+12345	gene/protein	13254	13257	HEL	DEAD-box ATP-dependent RNA helicase 50 (Arabidopsis thaliana)	PR_EXT:Q8GUG7		S84	PR_EXT
+12345	gene/protein	13254	13257	HEL	ATP-dependent RNA helicase WM6 (fruit fly)	PR_EXT:Q27268		S84	PR_EXT
+12345	gene/protein	13385	13388	HEL	DEAD-box ATP-dependent RNA helicase 50 (Arabidopsis thaliana)	PR_EXT:Q8GUG7		S85	PR_EXT
+12345	gene/protein	13385	13388	HEL	ATP-dependent RNA helicase WM6 (fruit fly)	PR_EXT:Q27268		S85	PR_EXT
+12345	gene/protein	13534	13537	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S86	PR_EXT
+12345	gene/protein	13904	13907	MCC	colorectal mutant cancer protein	PR_EXT:000010232		S87	PR_EXT
+12345	gene/protein	13939	13943	MDCK	deoxycytidine kinase (mouse)	PR_EXT:P43346		S87	PR_EXT
+12345	gene/protein	15050	15053	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S94	PR_EXT
+12345	gene/protein	15458	15461	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S98	PR_EXT
+12345	gene/protein	15549	15552	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S98	PR_EXT
+12345	gene/protein	15556	15559	p53	peroxidase 53 (Arabidopsis thaliana)	PR_EXT:Q42578		S98	PR_EXT
+12345	gene/protein	15556	15559	p53	cellular tumor antigen p53	PR_EXT:000003035		S98	PR_EXT
+12345	gene/protein	15556	15559	p53	cellular tumor antigen p53 (mouse)	PR_EXT:P02340		S98	PR_EXT
+12345	gene/protein	15556	15559	p53	cellular tumor antigen p53 (rat)	PR_EXT:P10361		S98	PR_EXT
+12345	gene/protein	15753	15756	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S99	PR_EXT
+12345	gene/protein	15765	15768	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S99	PR_EXT
+12345	gene/protein	15772	15775	p53	peroxidase 53 (Arabidopsis thaliana)	PR_EXT:Q42578		S99	PR_EXT
+12345	gene/protein	15772	15775	p53	cellular tumor antigen p53	PR_EXT:000003035		S99	PR_EXT
+12345	gene/protein	15772	15775	p53	cellular tumor antigen p53 (mouse)	PR_EXT:P02340		S99	PR_EXT
+12345	gene/protein	15772	15775	p53	cellular tumor antigen p53 (rat)	PR_EXT:P10361		S99	PR_EXT
+12345	gene/protein	16862	16865	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S107	PR_EXT
+12345	gene/protein	17157	17160	Hyl	megakaryocyte-associated tyrosine-protein kinase	PR_EXT:000010204		S109	PR_EXT
+12345	gene/protein	17285	17288	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S110	PR_EXT
+12345	gene/protein	17404	17407	can	carbonic anhydrase 2	PR_EXT:carbonic_anhydrase_2		S111	PR_EXT
+12345	gene/protein	17742	17746	Cl 2	adhesion G protein-coupled receptor L2 (rat)	PR_EXT:O88923		S113	PR_EXT
+12345	gene/protein	17742	17746	Cl 2	collectin-11 (chicken)	PR_EXT:Q2LK94		S113	PR_EXT
+12345	gene/protein	17938	17941	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S115	PR_EXT
+12345	gene/protein	18069	18072	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S116	PR_EXT
+12345	gene/protein	18206	18209	ESI	elafin	PR_EXT:000012680		S117	PR_EXT
+12345	gene/protein	18658	18662	Cl 2	adhesion G protein-coupled receptor L2 (rat)	PR_EXT:O88923		S121	PR_EXT
+12345	gene/protein	18658	18662	Cl 2	collectin-11 (chicken)	PR_EXT:Q2LK94		S121	PR_EXT
+12345	gene/protein	18988	18992	Cl 2	adhesion G protein-coupled receptor L2 (rat)	PR_EXT:O88923		S125	PR_EXT
+12345	gene/protein	18988	18992	Cl 2	collectin-11 (chicken)	PR_EXT:Q2LK94		S125	PR_EXT
+12345	gene/protein	19344	19349	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S129	PR_EXT
+12345	gene/protein	19391	19395	Et 3	endothelin-3	PR_EXT:000006899		S130	PR_EXT
+12345	gene/protein	19476	19479	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S130	PR_EXT
+12345	gene/protein	19900	19904	Et 3	endothelin-3	PR_EXT:000006899		S133	PR_EXT
+12345	gene/protein	20073	20077	Et 3	endothelin-3	PR_EXT:000006899		S133	PR_EXT
+12345	gene/protein	20223	20227	Et 3	endothelin-3	PR_EXT:000006899		S133	PR_EXT
+12345	gene/protein	20991	20994	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S134	PR_EXT
+12345	gene/protein	21034	21037	bar	UbiA prenyltransferase domain-containing protein 1 (zebrafish)	PR_EXT:E7FB98		S134	PR_EXT
+12345	gene/protein	21077	21080	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S134	PR_EXT
+12345	gene/protein	23106	23110	A 10	D-3-phosphoglycerate dehydrogenase	PR_EXT:000012656		S149	PR_EXT
+12345	gene/protein	23390	23394	RPMI	50S ribosomal protein L35	PR_EXT:000023841		S151	PR_EXT
+12345	gene/protein	23722	23725	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S154	PR_EXT
+12345	gene/protein	23733	23736	p53	peroxidase 53 (Arabidopsis thaliana)	PR_EXT:Q42578		S154	PR_EXT
+12345	gene/protein	23733	23736	p53	cellular tumor antigen p53	PR_EXT:000003035		S154	PR_EXT
+12345	gene/protein	23733	23736	p53	cellular tumor antigen p53 (mouse)	PR_EXT:P02340		S154	PR_EXT
+12345	gene/protein	23733	23736	p53	cellular tumor antigen p53 (rat)	PR_EXT:P10361		S154	PR_EXT
+12345	gene/protein	24498	24502	grid	GRB2-related adapter protein 2	PR_EXT:000008220		S160	PR_EXT
+12345	gene/protein	24498	24502	grid	GRB2-related adaptor protein 2 (mouse)	PR_EXT:O89100		S160	PR_EXT
+12345	gene/protein	24909	24912	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S165	PR_EXT
+12345	gene/protein	24974	24979	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S165	PR_EXT
+12345	gene/protein	25012	25017	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S165	PR_EXT
+12345	gene/protein	25189	25192	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S165	PR_EXT
+12345	gene/protein	25189	25192	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S165	PR_EXT
+12345	gene/protein	25189	25192	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S165	PR_EXT
+12345	gene/protein	25245	25250	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S165	PR_EXT
+12345	gene/protein	25331	25334	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25331	25334	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25331	25334	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25349	25352	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25349	25352	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25349	25352	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25370	25373	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25370	25373	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25370	25373	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25389	25392	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25389	25392	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25389	25392	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25410	25413	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25410	25413	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25410	25413	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25429	25432	app	amyloid beta A4 protein	PR_EXT:000004168		S165	PR_EXT
+12345	gene/protein	25429	25432	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S165	PR_EXT
+12345	gene/protein	25429	25432	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S165	PR_EXT
+12345	gene/protein	25775	25778	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S168	PR_EXT
+12345	gene/protein	25840	25845	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S168	PR_EXT
+12345	gene/protein	25879	25884	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S168	PR_EXT
+12345	gene/protein	26061	26064	app	amyloid beta A4 protein	PR_EXT:000004168		S168	PR_EXT
+12345	gene/protein	26061	26064	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S168	PR_EXT
+12345	gene/protein	26061	26064	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S168	PR_EXT
+12345	gene/protein	26080	26083	app	amyloid beta A4 protein	PR_EXT:000004168		S168	PR_EXT
+12345	gene/protein	26080	26083	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S168	PR_EXT
+12345	gene/protein	26080	26083	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S168	PR_EXT
+12345	gene/protein	26101	26104	app	amyloid beta A4 protein	PR_EXT:000004168		S168	PR_EXT
+12345	gene/protein	26101	26104	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S168	PR_EXT
+12345	gene/protein	26101	26104	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S168	PR_EXT
+12345	gene/protein	26120	26123	app	amyloid beta A4 protein	PR_EXT:000004168		S168	PR_EXT
+12345	gene/protein	26120	26123	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S168	PR_EXT
+12345	gene/protein	26120	26123	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S168	PR_EXT
+12345	gene/protein	26141	26144	app	amyloid beta A4 protein	PR_EXT:000004168		S168	PR_EXT
+12345	gene/protein	26141	26144	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S168	PR_EXT
+12345	gene/protein	26141	26144	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S168	PR_EXT
+12345	gene/protein	26160	26167	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S168	PR_EXT
+12345	gene/protein	26303	26307	Et 3	endothelin-3	PR_EXT:000006899		S168	PR_EXT
+12345	gene/protein	26562	26565	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S171	PR_EXT
+12345	gene/protein	26701	26706	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S171	PR_EXT
+12345	gene/protein	26746	26751	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S171	PR_EXT
+12345	gene/protein	26758	26761	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S171	PR_EXT
+12345	gene/protein	26758	26761	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S171	PR_EXT
+12345	gene/protein	26758	26761	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S171	PR_EXT
+12345	gene/protein	27044	27047	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S174	PR_EXT
+12345	gene/protein	27231	27234	app	amyloid beta A4 protein	PR_EXT:000004168		S174	PR_EXT
+12345	gene/protein	27231	27234	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S174	PR_EXT
+12345	gene/protein	27231	27234	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S174	PR_EXT
+12345	gene/protein	27250	27253	app	amyloid beta A4 protein	PR_EXT:000004168		S174	PR_EXT
+12345	gene/protein	27250	27253	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S174	PR_EXT
+12345	gene/protein	27250	27253	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S174	PR_EXT
+12345	gene/protein	27271	27274	app	amyloid beta A4 protein	PR_EXT:000004168		S174	PR_EXT
+12345	gene/protein	27271	27274	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S174	PR_EXT
+12345	gene/protein	27271	27274	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S174	PR_EXT
+12345	gene/protein	27290	27293	app	amyloid beta A4 protein	PR_EXT:000004168		S174	PR_EXT
+12345	gene/protein	27290	27293	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S174	PR_EXT
+12345	gene/protein	27290	27293	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S174	PR_EXT
+12345	gene/protein	27311	27314	app	amyloid beta A4 protein	PR_EXT:000004168		S174	PR_EXT
+12345	gene/protein	27311	27314	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S174	PR_EXT
+12345	gene/protein	27311	27314	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S174	PR_EXT
+12345	gene/protein	27330	27337	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S174	PR_EXT
+12345	gene/protein	27564	27567	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S174	PR_EXT
+12345	gene/protein	27711	27715	H 21	A-kinase anchor protein 5	PR_EXT:000003892		S175	PR_EXT
+12345	gene/protein	27847	27851	Et 3	endothelin-3	PR_EXT:000006899		S175	PR_EXT
+12345	gene/protein	28106	28109	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S178	PR_EXT
+12345	gene/protein	28301	28304	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S178	PR_EXT
+12345	gene/protein	28301	28304	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S178	PR_EXT
+12345	gene/protein	28301	28304	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S178	PR_EXT
+12345	gene/protein	28345	28350	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S178	PR_EXT
+12345	gene/protein	28642	28647	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S178	PR_EXT
+12345	gene/protein	29004	29008	Et 3	endothelin-3	PR_EXT:000006899		S180	PR_EXT
+12345	gene/protein	29265	29268	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S183	PR_EXT
+12345	gene/protein	29333	29338	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S183	PR_EXT
+12345	gene/protein	29368	29373	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S183	PR_EXT
+12345	gene/protein	29536	29539	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S183	PR_EXT
+12345	gene/protein	29536	29539	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S183	PR_EXT
+12345	gene/protein	29536	29539	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S183	PR_EXT
+12345	gene/protein	29562	29567	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S183	PR_EXT
+12345	gene/protein	29756	29759	app	amyloid beta A4 protein	PR_EXT:000004168		S183	PR_EXT
+12345	gene/protein	29756	29759	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S183	PR_EXT
+12345	gene/protein	29756	29759	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S183	PR_EXT
+12345	gene/protein	29779	29782	app	amyloid beta A4 protein	PR_EXT:000004168		S183	PR_EXT
+12345	gene/protein	29779	29782	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S183	PR_EXT
+12345	gene/protein	29779	29782	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S183	PR_EXT
+12345	gene/protein	29800	29803	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S183	PR_EXT
+12345	gene/protein	30125	30128	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S186	PR_EXT
+12345	gene/protein	30190	30195	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S186	PR_EXT
+12345	gene/protein	30231	30236	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S186	PR_EXT
+12345	gene/protein	30240	30244	tert	telomerase reverse transcriptase	PR_EXT:000016238		S186	PR_EXT
+12345	gene/protein	30705	30708	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S190	PR_EXT
+12345	gene/protein	30804	30809	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S190	PR_EXT
+12345	gene/protein	30849	30854	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S190	PR_EXT
+12345	gene/protein	30861	30864	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S190	PR_EXT
+12345	gene/protein	30861	30864	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S190	PR_EXT
+12345	gene/protein	30861	30864	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S190	PR_EXT
+12345	gene/protein	30892	30897	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S190	PR_EXT
+12345	gene/protein	30951	30954	app	amyloid beta A4 protein	PR_EXT:000004168		S190	PR_EXT
+12345	gene/protein	30951	30954	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S190	PR_EXT
+12345	gene/protein	30951	30954	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S190	PR_EXT
+12345	gene/protein	30970	30977	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S190	PR_EXT
+12345	gene/protein	30991	30996	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S190	PR_EXT
+12345	gene/protein	31030	31035	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S190	PR_EXT
+12345	gene/protein	31069	31072	app	amyloid beta A4 protein	PR_EXT:000004168		S190	PR_EXT
+12345	gene/protein	31069	31072	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S190	PR_EXT
+12345	gene/protein	31069	31072	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S190	PR_EXT
+12345	gene/protein	31092	31095	app	amyloid beta A4 protein	PR_EXT:000004168		S190	PR_EXT
+12345	gene/protein	31092	31095	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S190	PR_EXT
+12345	gene/protein	31092	31095	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S190	PR_EXT
+12345	gene/protein	31113	31116	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S190	PR_EXT
+12345	gene/protein	31168	31173	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S190	PR_EXT
+12345	gene/protein	31189	31194	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S190	PR_EXT
+12345	gene/protein	31326	31329	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S192	PR_EXT
+12345	gene/protein	31473	31476	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S193	PR_EXT
+12345	gene/protein	31624	31627	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S193	PR_EXT
+12345	gene/protein	31624	31627	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S193	PR_EXT
+12345	gene/protein	31624	31627	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S193	PR_EXT
+12345	gene/protein	31650	31655	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S193	PR_EXT
+12345	gene/protein	31736	31741	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S193	PR_EXT
+12345	gene/protein	31775	31780	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S193	PR_EXT
+12345	gene/protein	31814	31817	app	amyloid beta A4 protein	PR_EXT:000004168		S193	PR_EXT
+12345	gene/protein	31814	31817	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S193	PR_EXT
+12345	gene/protein	31814	31817	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S193	PR_EXT
+12345	gene/protein	31837	31840	app	amyloid beta A4 protein	PR_EXT:000004168		S193	PR_EXT
+12345	gene/protein	31837	31840	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S193	PR_EXT
+12345	gene/protein	31837	31840	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S193	PR_EXT
+12345	gene/protein	31858	31863	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S193	PR_EXT
+12345	gene/protein	31907	31912	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S193	PR_EXT
+12345	gene/protein	31947	31952	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S193	PR_EXT
+12345	gene/protein	32056	32061	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S194	PR_EXT
+12345	gene/protein	32095	32100	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S194	PR_EXT
+12345	gene/protein	32302	32305	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S196	PR_EXT
+12345	gene/protein	32309	32313	tert	telomerase reverse transcriptase	PR_EXT:000016238		S196	PR_EXT
+12345	gene/protein	32621	32624	TLC	lipocalin-1	PR_EXT:000009721		S198	PR_EXT
+12345	gene/protein	32656	32659	see	staphylococcal enterotoxin E	PR_EXT:000002226		S198	PR_EXT
+12345	gene/protein	32795	32799	Et 3	endothelin-3	PR_EXT:000006899		S198	PR_EXT
+12345	gene/protein	33055	33058	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S201	PR_EXT
+12345	gene/protein	33262	33265	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S201	PR_EXT
+12345	gene/protein	33262	33265	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S201	PR_EXT
+12345	gene/protein	33262	33265	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S201	PR_EXT
+12345	gene/protein	33318	33323	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S201	PR_EXT
+12345	gene/protein	33382	33387	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S201	PR_EXT
+12345	gene/protein	33435	33438	app	amyloid beta A4 protein	PR_EXT:000004168		S201	PR_EXT
+12345	gene/protein	33435	33438	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S201	PR_EXT
+12345	gene/protein	33435	33438	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S201	PR_EXT
+12345	gene/protein	33454	33461	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S201	PR_EXT
+12345	gene/protein	33525	33528	app	amyloid beta A4 protein	PR_EXT:000004168		S201	PR_EXT
+12345	gene/protein	33525	33528	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S201	PR_EXT
+12345	gene/protein	33525	33528	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S201	PR_EXT
+12345	gene/protein	33549	33552	app	amyloid beta A4 protein	PR_EXT:000004168		S201	PR_EXT
+12345	gene/protein	33549	33552	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S201	PR_EXT
+12345	gene/protein	33549	33552	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S201	PR_EXT
+12345	gene/protein	33570	33573	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S201	PR_EXT
+12345	gene/protein	33896	33899	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S205	PR_EXT
+12345	gene/protein	34083	34088	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S205	PR_EXT
+12345	gene/protein	34212	34215	app	amyloid beta A4 protein	PR_EXT:000004168		S205	PR_EXT
+12345	gene/protein	34212	34215	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S205	PR_EXT
+12345	gene/protein	34212	34215	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S205	PR_EXT
+12345	gene/protein	34235	34238	app	amyloid beta A4 protein	PR_EXT:000004168		S205	PR_EXT
+12345	gene/protein	34235	34238	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S205	PR_EXT
+12345	gene/protein	34235	34238	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S205	PR_EXT
+12345	gene/protein	34259	34264	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S205	PR_EXT
+12345	gene/protein	34297	34300	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S206	PR_EXT
+12345	gene/protein	34552	34555	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S207	PR_EXT
+12345	gene/protein	34879	34882	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S210	PR_EXT
+12345	gene/protein	34942	34947	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S210	PR_EXT
+12345	gene/protein	34974	34979	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S210	PR_EXT
+12345	gene/protein	35062	35067	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S210	PR_EXT
+12345	gene/protein	35107	35112	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S210	PR_EXT
+12345	gene/protein	35119	35122	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S210	PR_EXT
+12345	gene/protein	35119	35122	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S210	PR_EXT
+12345	gene/protein	35119	35122	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S210	PR_EXT
+12345	gene/protein	35150	35155	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S210	PR_EXT
+12345	gene/protein	35275	35278	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S210	PR_EXT
+12345	gene/protein	35338	35343	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S210	PR_EXT
+12345	gene/protein	35514	35517	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S210	PR_EXT
+12345	gene/protein	35521	35525	tert	telomerase reverse transcriptase	PR_EXT:000016238		S210	PR_EXT
+12345	gene/protein	35575	35578	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S210	PR_EXT
+12345	gene/protein	35632	35635	bar	UbiA prenyltransferase domain-containing protein 1 (zebrafish)	PR_EXT:E7FB98		S210	PR_EXT
+12345	gene/protein	35668	35671	Hyl	megakaryocyte-associated tyrosine-protein kinase	PR_EXT:000010204		S210	PR_EXT
+12345	gene/protein	35682	35685	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S210	PR_EXT
+12345	gene/protein	35689	35693	tert	telomerase reverse transcriptase	PR_EXT:000016238		S210	PR_EXT
+12345	gene/protein	35771	35775	Cs 2	calsyntenin-2 (mouse)	PR_EXT:Q9ER65		S210	PR_EXT
+12345	gene/protein	35771	35775	Cs 2	calsyntenin-2	PR_EXT:000005610		S210	PR_EXT
+12345	gene/protein	35771	35775	Cs 2	calsyntenin-2 (rat)	PR_EXT:Q8VDA1		S210	PR_EXT
+12345	gene/protein	36141	36144	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S213	PR_EXT
+12345	gene/protein	36240	36245	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S213	PR_EXT
+12345	gene/protein	36285	36290	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S213	PR_EXT
+12345	gene/protein	36297	36300	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S213	PR_EXT
+12345	gene/protein	36297	36300	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S213	PR_EXT
+12345	gene/protein	36297	36300	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S213	PR_EXT
+12345	gene/protein	36349	36354	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S213	PR_EXT
+12345	gene/protein	36447	36450	app	amyloid beta A4 protein	PR_EXT:000004168		S213	PR_EXT
+12345	gene/protein	36447	36450	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S213	PR_EXT
+12345	gene/protein	36447	36450	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S213	PR_EXT
+12345	gene/protein	36466	36473	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S213	PR_EXT
+12345	gene/protein	36487	36492	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S213	PR_EXT
+12345	gene/protein	36526	36531	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S213	PR_EXT
+12345	gene/protein	36640	36645	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S213	PR_EXT
+12345	gene/protein	36663	36666	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S214	PR_EXT
+12345	gene/protein	36759	36763	Et 3	endothelin-3	PR_EXT:000006899		S214	PR_EXT
+12345	gene/protein	37019	37022	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S217	PR_EXT
+12345	gene/protein	37051	37055	Ar-2	NADPH--cytochrome P450 reductase 2 (Arabidopsis thaliana)	PR_EXT:Q9SUM3		S217	PR_EXT
+12345	gene/protein	37073	37078	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S217	PR_EXT
+12345	gene/protein	37127	37132	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S217	PR_EXT
+12345	gene/protein	37136	37140	tert	telomerase reverse transcriptase	PR_EXT:000016238		S217	PR_EXT
+12345	gene/protein	37298	37303	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S217	PR_EXT
+12345	gene/protein	37306	37310	tert	telomerase reverse transcriptase	PR_EXT:000016238		S217	PR_EXT
+12345	gene/protein	37398	37402	Cs 2	calsyntenin-2 (mouse)	PR_EXT:Q9ER65		S217	PR_EXT
+12345	gene/protein	37398	37402	Cs 2	calsyntenin-2	PR_EXT:000005610		S217	PR_EXT
+12345	gene/protein	37398	37402	Cs 2	calsyntenin-2 (rat)	PR_EXT:Q8VDA1		S217	PR_EXT
+12345	gene/protein	37414	37419	g, 17	pre-B-cell leukemia transcription factor 2	PR_EXT:000012327		S217	PR_EXT
+12345	gene/protein	37414	37419	g, 17	sodium-coupled neutral amino acid transporter 3	PR_EXT:000015120		S217	PR_EXT
+12345	gene/protein	37627	37630	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S219	PR_EXT
+12345	gene/protein	37726	37731	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S219	PR_EXT
+12345	gene/protein	37771	37776	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S219	PR_EXT
+12345	gene/protein	37783	37786	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S219	PR_EXT
+12345	gene/protein	37783	37786	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S219	PR_EXT
+12345	gene/protein	37783	37786	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S219	PR_EXT
+12345	gene/protein	37814	37819	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S219	PR_EXT
+12345	gene/protein	37894	37897	app	amyloid beta A4 protein	PR_EXT:000004168		S219	PR_EXT
+12345	gene/protein	37894	37897	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S219	PR_EXT
+12345	gene/protein	37894	37897	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S219	PR_EXT
+12345	gene/protein	37913	37920	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S219	PR_EXT
+12345	gene/protein	37934	37939	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S219	PR_EXT
+12345	gene/protein	37973	37978	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S219	PR_EXT
+12345	gene/protein	38012	38015	app	amyloid beta A4 protein	PR_EXT:000004168		S219	PR_EXT
+12345	gene/protein	38012	38015	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S219	PR_EXT
+12345	gene/protein	38012	38015	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S219	PR_EXT
+12345	gene/protein	38035	38038	app	amyloid beta A4 protein	PR_EXT:000004168		S219	PR_EXT
+12345	gene/protein	38035	38038	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S219	PR_EXT
+12345	gene/protein	38035	38038	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S219	PR_EXT
+12345	gene/protein	38056	38059	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S219	PR_EXT
+12345	gene/protein	38101	38106	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S219	PR_EXT
+12345	gene/protein	38132	38137	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S219	PR_EXT
+12345	gene/protein	38284	38288	Et 3	endothelin-3	PR_EXT:000006899		S219	PR_EXT
+12345	gene/protein	38545	38548	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S222	PR_EXT
+12345	gene/protein	38609	38614	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S222	PR_EXT
+12345	gene/protein	38641	38646	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S222	PR_EXT
+12345	gene/protein	38809	38812	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S222	PR_EXT
+12345	gene/protein	38809	38812	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S222	PR_EXT
+12345	gene/protein	38809	38812	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S222	PR_EXT
+12345	gene/protein	38835	38840	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S222	PR_EXT
+12345	gene/protein	39029	39032	app	amyloid beta A4 protein	PR_EXT:000004168		S222	PR_EXT
+12345	gene/protein	39029	39032	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S222	PR_EXT
+12345	gene/protein	39029	39032	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S222	PR_EXT
+12345	gene/protein	39052	39055	app	amyloid beta A4 protein	PR_EXT:000004168		S222	PR_EXT
+12345	gene/protein	39052	39055	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S222	PR_EXT
+12345	gene/protein	39052	39055	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S222	PR_EXT
+12345	gene/protein	39073	39076	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S222	PR_EXT
+12345	gene/protein	39147	39150	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S222	PR_EXT
+12345	gene/protein	39154	39158	tert	telomerase reverse transcriptase	PR_EXT:000016238		S222	PR_EXT
+12345	gene/protein	39216	39222	g, 4.5	tafazzin	PR_EXT:000016092		S222	PR_EXT
+12345	gene/protein	39232	39235	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S222	PR_EXT
+12345	gene/protein	39241	39245	Cl 2	adhesion G protein-coupled receptor L2 (rat)	PR_EXT:O88923		S222	PR_EXT
+12345	gene/protein	39241	39245	Cl 2	collectin-11 (chicken)	PR_EXT:Q2LK94		S222	PR_EXT
+12345	gene/protein	39375	39379	Et 3	endothelin-3	PR_EXT:000006899		S222	PR_EXT
+12345	gene/protein	39634	39637	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S225	PR_EXT
+12345	gene/protein	39699	39704	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S225	PR_EXT
+12345	gene/protein	39907	39910	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S225	PR_EXT
+12345	gene/protein	39907	39910	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S225	PR_EXT
+12345	gene/protein	39907	39910	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S225	PR_EXT
+12345	gene/protein	39933	39938	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S225	PR_EXT
+12345	gene/protein	40025	40030	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S225	PR_EXT
+12345	gene/protein	40064	40069	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S225	PR_EXT
+12345	gene/protein	40103	40106	app	amyloid beta A4 protein	PR_EXT:000004168		S225	PR_EXT
+12345	gene/protein	40103	40106	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S225	PR_EXT
+12345	gene/protein	40103	40106	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S225	PR_EXT
+12345	gene/protein	40126	40129	app	amyloid beta A4 protein	PR_EXT:000004168		S225	PR_EXT
+12345	gene/protein	40126	40129	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S225	PR_EXT
+12345	gene/protein	40126	40129	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S225	PR_EXT
+12345	gene/protein	40147	40150	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S225	PR_EXT
+12345	gene/protein	40190	40193	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S226	PR_EXT
+12345	gene/protein	40499	40502	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S229	PR_EXT
+12345	gene/protein	40564	40569	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S229	PR_EXT
+12345	gene/protein	40830	40833	app	amyloid beta A4 protein	PR_EXT:000004168		S229	PR_EXT
+12345	gene/protein	40830	40833	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S229	PR_EXT
+12345	gene/protein	40830	40833	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S229	PR_EXT
+12345	gene/protein	40853	40856	app	amyloid beta A4 protein	PR_EXT:000004168		S229	PR_EXT
+12345	gene/protein	40853	40856	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S229	PR_EXT
+12345	gene/protein	40853	40856	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S229	PR_EXT
+12345	gene/protein	40876	40881	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S229	PR_EXT
+12345	gene/protein	41039	41042	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S229	PR_EXT
+12345	gene/protein	41052	41055	p53	peroxidase 53 (Arabidopsis thaliana)	PR_EXT:Q42578		S229	PR_EXT
+12345	gene/protein	41052	41055	p53	cellular tumor antigen p53	PR_EXT:000003035		S229	PR_EXT
+12345	gene/protein	41052	41055	p53	cellular tumor antigen p53 (mouse)	PR_EXT:P02340		S229	PR_EXT
+12345	gene/protein	41052	41055	p53	cellular tumor antigen p53 (rat)	PR_EXT:P10361		S229	PR_EXT
+12345	gene/protein	41058	41061	HCT	shikimate O-hydroxycinnamoyltransferase (Arabidopsis thaliana)	PR_EXT:Q9FI78		S229	PR_EXT
+12345	gene/protein	41231	41234	HEL	DEAD-box ATP-dependent RNA helicase 50 (Arabidopsis thaliana)	PR_EXT:Q8GUG7		S229	PR_EXT
+12345	gene/protein	41231	41234	HEL	ATP-dependent RNA helicase WM6 (fruit fly)	PR_EXT:Q27268		S229	PR_EXT
+12345	gene/protein	41265	41270	HSV-1	autophagy-related protein 21 (yeast)	PR_EXT:Q02887		S229	PR_EXT
+12345	gene/protein	41537	41541	MDCK	deoxycytidine kinase (mouse)	PR_EXT:P43346		S229	PR_EXT
+12345	gene/protein	42252	42256	Et 3	endothelin-3	PR_EXT:000006899		S231	PR_EXT
+12345	gene/protein	42510	42513	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S233	PR_EXT
+12345	gene/protein	42682	42685	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S233	PR_EXT
+12345	gene/protein	42682	42685	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S233	PR_EXT
+12345	gene/protein	42682	42685	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S233	PR_EXT
+12345	gene/protein	42769	42772	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S234	PR_EXT
+12345	gene/protein	42915	42919	H 21	A-kinase anchor protein 5	PR_EXT:000003892		S235	PR_EXT
+12345	gene/protein	43453	43456	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S238	PR_EXT
+12345	gene/protein	43503	43506	bar	UbiA prenyltransferase domain-containing protein 1 (zebrafish)	PR_EXT:E7FB98		S238	PR_EXT
+12345	gene/protein	43567	43570	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S238	PR_EXT
+12345	gene/protein	43574	43578	tert	telomerase reverse transcriptase	PR_EXT:000016238		S238	PR_EXT
+12345	gene/protein	43643	43646	BOP	histone-lysine N-methyltransferase SMYD1	PR_EXT:000015306		S238	PR_EXT
+12345	gene/protein	43643	43646	BOP	short-wave-sensitive opsin 1	PR_EXT:000001195		S238	PR_EXT
+12345	gene/protein	43643	43646	BOP	histone-lysine N-methyltransferase Smyd1 (mouse)	PR_EXT:P97443		S238	PR_EXT
+12345	gene/protein	43677	43681	Pr 2	vomeronasal type-1 receptor A2	PR_EXT:000017231		S238	PR_EXT
+12345	gene/protein	43709	43712	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S238	PR_EXT
+12345	gene/protein	43835	43838	TLC	lipocalin-1	PR_EXT:000009721		S239	PR_EXT
+12345	gene/protein	44299	44302	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S244	PR_EXT
+12345	gene/protein	44396	44401	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S244	PR_EXT
+12345	gene/protein	44508	44513	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S244	PR_EXT
+12345	gene/protein	44530	44533	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S244	PR_EXT
+12345	gene/protein	44790	44794	N 10	nuclear receptor subfamily 4 group A member 1	PR_EXT:000011408		S245	PR_EXT
+12345	gene/protein	44790	44794	N 10	nuclear receptor subfamily 4 group A member 1 (mouse)	PR_EXT:P12813		S245	PR_EXT
+12345	gene/protein	44864	44867	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S245	PR_EXT
+12345	gene/protein	45016	45020	C 21	DnaJ protein ERDJ2A (Arabidopsis thaliana)	PR_EXT:Q0WT48		S246	PR_EXT
+12345	gene/protein	45221	45225	Et 3	endothelin-3	PR_EXT:000006899		S246	PR_EXT
+12345	gene/protein	45766	45769	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S251	PR_EXT
+12345	gene/protein	46115	46118	app	amyloid beta A4 protein	PR_EXT:000004168		S251	PR_EXT
+12345	gene/protein	46115	46118	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S251	PR_EXT
+12345	gene/protein	46115	46118	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S251	PR_EXT
+12345	gene/protein	46138	46141	app	amyloid beta A4 protein	PR_EXT:000004168		S251	PR_EXT
+12345	gene/protein	46138	46141	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S251	PR_EXT
+12345	gene/protein	46138	46141	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S251	PR_EXT
+12345	gene/protein	46159	46162	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S251	PR_EXT
+12345	gene/protein	46203	46206	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S253	PR_EXT
+12345	gene/protein	46278	46281	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S253	PR_EXT
+12345	gene/protein	46605	46608	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S256	PR_EXT
+12345	gene/protein	46668	46673	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S256	PR_EXT
+12345	gene/protein	46700	46705	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S256	PR_EXT
+12345	gene/protein	46833	46836	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S256	PR_EXT
+12345	gene/protein	46833	46836	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S256	PR_EXT
+12345	gene/protein	46833	46836	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S256	PR_EXT
+12345	gene/protein	46859	46864	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S256	PR_EXT
+12345	gene/protein	46983	46988	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S256	PR_EXT
+12345	gene/protein	47065	47068	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S256	PR_EXT
+12345	gene/protein	47415	47418	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S257	PR_EXT
+12345	gene/protein	47871	47874	TLC	lipocalin-1	PR_EXT:000009721		S259	PR_EXT
+12345	gene/protein	47947	47950	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S259	PR_EXT
+12345	gene/protein	47954	47958	tert	telomerase reverse transcriptase	PR_EXT:000016238		S259	PR_EXT
+12345	gene/protein	48286	48289	app	amyloid beta A4 protein	PR_EXT:000004168		S261	PR_EXT
+12345	gene/protein	48286	48289	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S261	PR_EXT
+12345	gene/protein	48286	48289	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S261	PR_EXT
+12345	gene/protein	48305	48312	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S261	PR_EXT
+12345	gene/protein	48326	48331	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S261	PR_EXT
+12345	gene/protein	48365	48370	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S261	PR_EXT
+12345	gene/protein	48432	48435	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S261	PR_EXT
+12345	gene/protein	48792	48795	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S262	PR_EXT
+12345	gene/protein	49122	49125	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S265	PR_EXT
+12345	gene/protein	49297	49300	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S265	PR_EXT
+12345	gene/protein	49297	49300	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S265	PR_EXT
+12345	gene/protein	49297	49300	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S265	PR_EXT
+12345	gene/protein	49323	49328	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S265	PR_EXT
+12345	gene/protein	49357	49360	app	amyloid beta A4 protein	PR_EXT:000004168		S265	PR_EXT
+12345	gene/protein	49357	49360	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S265	PR_EXT
+12345	gene/protein	49357	49360	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S265	PR_EXT
+12345	gene/protein	49384	49391	app ~ 1	polyadenylate-binding protein 4	PR_EXT:000012208		S265	PR_EXT
+12345	gene/protein	49405	49408	app	amyloid beta A4 protein	PR_EXT:000004168		S265	PR_EXT
+12345	gene/protein	49405	49408	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S265	PR_EXT
+12345	gene/protein	49405	49408	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S265	PR_EXT
+12345	gene/protein	49432	49437	app 1	polyadenylate-binding protein 4	PR_EXT:000012208		S265	PR_EXT
+12345	gene/protein	49482	49487	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S265	PR_EXT
+12345	gene/protein	49605	49610	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S265	PR_EXT
+12345	gene/protein	49644	49649	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S265	PR_EXT
+12345	gene/protein	49729	49732	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S265	PR_EXT
+12345	gene/protein	50095	50098	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S267	PR_EXT
+12345	gene/protein	50214	50219	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S267	PR_EXT
+12345	gene/protein	50259	50264	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S267	PR_EXT
+12345	gene/protein	50271	50274	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S267	PR_EXT
+12345	gene/protein	50271	50274	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S267	PR_EXT
+12345	gene/protein	50271	50274	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S267	PR_EXT
+12345	gene/protein	50302	50307	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S267	PR_EXT
+12345	gene/protein	50453	50458	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S267	PR_EXT
+12345	gene/protein	50492	50497	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S267	PR_EXT
+12345	gene/protein	50605	50610	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S267	PR_EXT
+12345	gene/protein	50628	50631	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S268	PR_EXT
+12345	gene/protein	50958	50963	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S269	PR_EXT
+12345	gene/protein	50967	50971	tert	telomerase reverse transcriptase	PR_EXT:000016238		S269	PR_EXT
+12345	gene/protein	51303	51308	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S270	PR_EXT
+12345	gene/protein	51312	51316	tert	telomerase reverse transcriptase	PR_EXT:000016238		S270	PR_EXT
+12345	gene/protein	51651	51654	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S273	PR_EXT
+12345	gene/protein	51809	51812	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S273	PR_EXT
+12345	gene/protein	51809	51812	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S273	PR_EXT
+12345	gene/protein	51809	51812	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S273	PR_EXT
+12345	gene/protein	51998	52003	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S273	PR_EXT
+12345	gene/protein	52037	52042	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S273	PR_EXT
+12345	gene/protein	52114	52119	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S273	PR_EXT
+12345	gene/protein	52275	52279	Et 3	endothelin-3	PR_EXT:000006899		S273	PR_EXT
+12345	gene/protein	52534	52537	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S276	PR_EXT
+12345	gene/protein	52599	52604	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S276	PR_EXT
+12345	gene/protein	52631	52636	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S276	PR_EXT
+12345	gene/protein	52719	52724	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S276	PR_EXT
+12345	gene/protein	52764	52769	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S276	PR_EXT
+12345	gene/protein	52776	52779	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S276	PR_EXT
+12345	gene/protein	52776	52779	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S276	PR_EXT
+12345	gene/protein	52776	52779	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S276	PR_EXT
+12345	gene/protein	52807	52812	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S276	PR_EXT
+12345	gene/protein	52873	52876	app	amyloid beta A4 protein	PR_EXT:000004168		S276	PR_EXT
+12345	gene/protein	52873	52876	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S276	PR_EXT
+12345	gene/protein	52873	52876	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S276	PR_EXT
+12345	gene/protein	52892	52895	app	amyloid beta A4 protein	PR_EXT:000004168		S276	PR_EXT
+12345	gene/protein	52892	52895	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S276	PR_EXT
+12345	gene/protein	52892	52895	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S276	PR_EXT
+12345	gene/protein	52913	52916	app	amyloid beta A4 protein	PR_EXT:000004168		S276	PR_EXT
+12345	gene/protein	52913	52916	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S276	PR_EXT
+12345	gene/protein	52913	52916	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S276	PR_EXT
+12345	gene/protein	52932	52939	app ~ 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S276	PR_EXT
+12345	gene/protein	52972	52977	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S276	PR_EXT
+12345	gene/protein	53011	53016	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S276	PR_EXT
+12345	gene/protein	53186	53189	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S278	PR_EXT
+12345	gene/protein	53251	53256	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S278	PR_EXT
+12345	gene/protein	53424	53429	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S278	PR_EXT
+12345	gene/protein	53483	53486	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S278	PR_EXT
+12345	gene/protein	53483	53486	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S278	PR_EXT
+12345	gene/protein	53483	53486	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S278	PR_EXT
+12345	gene/protein	53530	53535	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S278	PR_EXT
+12345	gene/protein	53640	53643	app	amyloid beta A4 protein	PR_EXT:000004168		S278	PR_EXT
+12345	gene/protein	53640	53643	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S278	PR_EXT
+12345	gene/protein	53640	53643	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S278	PR_EXT
+12345	gene/protein	53659	53664	app 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S278	PR_EXT
+12345	gene/protein	53678	53681	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S278	PR_EXT
+12345	gene/protein	53723	53726	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S278	PR_EXT
+12345	gene/protein	53955	53958	dry	ryanodine receptor (fruit fly)	PR_EXT:Q24498		S278	PR_EXT
+12345	gene/protein	54069	54072	TLC	lipocalin-1	PR_EXT:000009721		S279	PR_EXT
+12345	gene/protein	54273	54276	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S282	PR_EXT
+12345	gene/protein	54338	54343	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S282	PR_EXT
+12345	gene/protein	54556	54559	app	amyloid beta A4 protein	PR_EXT:000004168		S282	PR_EXT
+12345	gene/protein	54556	54559	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S282	PR_EXT
+12345	gene/protein	54556	54559	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S282	PR_EXT
+12345	gene/protein	54575	54578	app	amyloid beta A4 protein	PR_EXT:000004168		S282	PR_EXT
+12345	gene/protein	54575	54578	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S282	PR_EXT
+12345	gene/protein	54575	54578	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S282	PR_EXT
+12345	gene/protein	54596	54599	app	amyloid beta A4 protein	PR_EXT:000004168		S282	PR_EXT
+12345	gene/protein	54596	54599	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S282	PR_EXT
+12345	gene/protein	54596	54599	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S282	PR_EXT
+12345	gene/protein	54615	54618	app	amyloid beta A4 protein	PR_EXT:000004168		S282	PR_EXT
+12345	gene/protein	54615	54618	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S282	PR_EXT
+12345	gene/protein	54615	54618	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S282	PR_EXT
+12345	gene/protein	54764	54769	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S282	PR_EXT
+12345	gene/protein	54773	54777	tert	telomerase reverse transcriptase	PR_EXT:000016238		S282	PR_EXT
+12345	gene/protein	55110	55113	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S285	PR_EXT
+12345	gene/protein	55173	55178	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S285	PR_EXT
+12345	gene/protein	55375	55378	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S285	PR_EXT
+12345	gene/protein	55375	55378	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S285	PR_EXT
+12345	gene/protein	55375	55378	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S285	PR_EXT
+12345	gene/protein	55401	55406	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S285	PR_EXT
+12345	gene/protein	55550	55553	app	amyloid beta A4 protein	PR_EXT:000004168		S285	PR_EXT
+12345	gene/protein	55550	55553	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S285	PR_EXT
+12345	gene/protein	55550	55553	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S285	PR_EXT
+12345	gene/protein	55573	55576	app	amyloid beta A4 protein	PR_EXT:000004168		S285	PR_EXT
+12345	gene/protein	55573	55576	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S285	PR_EXT
+12345	gene/protein	55573	55576	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S285	PR_EXT
+12345	gene/protein	55619	55624	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S285	PR_EXT
+12345	gene/protein	55640	55645	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S285	PR_EXT
+12345	gene/protein	55663	55666	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S286	PR_EXT
+12345	gene/protein	55790	55793	tri	VQ motif-containing protein 10 (Arabidopsis thaliana)	PR_EXT:Q8VYI5		S286	PR_EXT
+12345	gene/protein	56130	56133	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S289	PR_EXT
+12345	gene/protein	56193	56198	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S289	PR_EXT
+12345	gene/protein	56276	56281	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S289	PR_EXT
+12345	gene/protein	56624	56627	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S292	PR_EXT
+12345	gene/protein	56687	56692	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S292	PR_EXT
+12345	gene/protein	56725	56730	dd, 2	aldo-keto reductase family 1 member C2	PR_EXT:000003904		S292	PR_EXT
+12345	gene/protein	56819	56824	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S292	PR_EXT
+12345	gene/protein	56864	56869	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S292	PR_EXT
+12345	gene/protein	56876	56879	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S292	PR_EXT
+12345	gene/protein	56876	56879	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S292	PR_EXT
+12345	gene/protein	56876	56879	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S292	PR_EXT
+12345	gene/protein	56907	56912	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S292	PR_EXT
+12345	gene/protein	56963	56966	app	amyloid beta A4 protein	PR_EXT:000004168		S292	PR_EXT
+12345	gene/protein	56963	56966	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S292	PR_EXT
+12345	gene/protein	56963	56966	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S292	PR_EXT
+12345	gene/protein	56982	56985	app	amyloid beta A4 protein	PR_EXT:000004168		S292	PR_EXT
+12345	gene/protein	56982	56985	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S292	PR_EXT
+12345	gene/protein	56982	56985	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S292	PR_EXT
+12345	gene/protein	57000	57003	app	amyloid beta A4 protein	PR_EXT:000004168		S292	PR_EXT
+12345	gene/protein	57000	57003	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S292	PR_EXT
+12345	gene/protein	57000	57003	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S292	PR_EXT
+12345	gene/protein	57019	57024	app 3	Xaa-Pro aminopeptidase 3	PR_EXT:000031424		S292	PR_EXT
+12345	gene/protein	57038	57043	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S292	PR_EXT
+12345	gene/protein	57077	57082	dd, 1	aldo-keto reductase family 1 member C21	PR_EXT:000004561		S292	PR_EXT
+12345	gene/protein	57116	57119	app	amyloid beta A4 protein	PR_EXT:000004168		S292	PR_EXT
+12345	gene/protein	57116	57119	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S292	PR_EXT
+12345	gene/protein	57116	57119	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S292	PR_EXT
+12345	gene/protein	57139	57142	app	amyloid beta A4 protein	PR_EXT:000004168		S292	PR_EXT
+12345	gene/protein	57139	57142	app	poly [ADP-ribose] polymerase 2 (Arabidopsis thaliana)	PR_EXT:Q11207		S292	PR_EXT
+12345	gene/protein	57139	57142	app	Xaa-Pro aminopeptidase 1 (rat)	PR_EXT:O54975		S292	PR_EXT
+12345	gene/protein	57160	57163	ddd	protein vein (fruit fly)	PR_EXT:Q94918		S292	PR_EXT
+12345	gene/protein	57215	57220	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S292	PR_EXT
+12345	gene/protein	57246	57251	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S292	PR_EXT
+12345	gene/protein	57269	57272	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S293	PR_EXT
+12345	gene/protein	57395	57400	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S294	PR_EXT
+12345	gene/protein	57741	57744	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S297	PR_EXT
+12345	gene/protein	57804	57809	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S297	PR_EXT
+12345	gene/protein	57836	57841	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S297	PR_EXT
+12345	gene/protein	57963	57966	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S297	PR_EXT
+12345	gene/protein	57963	57966	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S297	PR_EXT
+12345	gene/protein	57963	57966	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S297	PR_EXT
+12345	gene/protein	57992	57997	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S297	PR_EXT
+12345	gene/protein	58193	58198	s, 18	chorion protein S18 (fruit fly)	PR_EXT:P07184		S297	PR_EXT
+12345	gene/protein	58214	58219	s, 12	5-hydroxytryptamine receptor 1B	PR_EXT:000001162		S297	PR_EXT
+12345	gene/protein	58237	58240	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S298	PR_EXT
+12345	gene/protein	58425	58430	5′-di	type I iodothyronine deiodinase	PR_EXT:000006480		S298	PR_EXT
+12345	gene/protein	58767	58770	NMR	glutamate [NMDA] receptor subunit 1 (fruit fly)	PR_EXT:Q24418		S301	PR_EXT
+12345	gene/protein	58936	58939	cis	cytokine-inducible SH2-containing protein (chicken)	PR_EXT:Q9PW70		S301	PR_EXT
+12345	gene/protein	58936	58939	cis	cytokine-inducible SH2-containing protein (mouse)	PR_EXT:Q62225		S301	PR_EXT
+12345	gene/protein	58936	58939	cis	cytokine-inducible SH2-containing protein	PR_EXT:000005503		S301	PR_EXT
+12345	gene/protein	58962	58967	d, 2H	neutral and basic amino acid transport protein rBAT	PR_EXT:000015137		S301	PR_EXT
