@@ -1,39 +1,25 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CHEBI_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_CL_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_BP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_CC_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_GO_MF_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_MOP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_NCBITAXON_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_PR_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_SO_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BERT_UBERON_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_COLLECTIONS;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_BP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_CC_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_MF_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_MOP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_NCBITAXON_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_PR_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_SO_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_UBERON_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
+import com.google.datastore.v1.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -62,36 +48,68 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(STATUS_PROPERTY_DOCUMENT_ID, makeValue(status.getDocumentId()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_TEXT_DONE, makeValue(status.isTextDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE,
-				makeValue(status.isDependencyParseDone()).build());
-		// OGER concept processing status
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_CHEBI_DONE, makeValue(status.isOgerChebiDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_CL_DONE, makeValue(status.isOgerClDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_BP_DONE, makeValue(status.isOgerGoBpDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_CC_DONE, makeValue(status.isOgerGoCcDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_GO_MF_DONE, makeValue(status.isOgerGoMfDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_MOP_DONE, makeValue(status.isOgerMopDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_NCBITAXON_DONE,
-				makeValue(status.isOgerNcbiTaxonDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_PR_DONE, makeValue(status.isOgerPrDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_SO_DONE, makeValue(status.isOgerSoDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_OGER_UBERON_DONE, makeValue(status.isOgerUberonDone()).build());
-		// BERT concept processing status
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_CHEBI_DONE, makeValue(status.isBertChebiDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_CL_DONE, makeValue(status.isBertClDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_GO_BP_DONE, makeValue(status.isBertGoBpDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_GO_CC_DONE, makeValue(status.isBertGoCcDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_GO_MF_DONE, makeValue(status.isBertGoMfDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_MOP_DONE, makeValue(status.isBertMopDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_NCBITAXON_DONE,
-				makeValue(status.isBertNcbiTaxonDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_PR_DONE, makeValue(status.isBertPrDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_SO_DONE, makeValue(status.isBertSoDone()).build());
-		entityBuilder.putProperties(STATUS_PROPERTY_BERT_UBERON_DONE, makeValue(status.isBertUberonDone()).build());
+
+		Set<String> setFlagProperties = new HashSet<String>();
+		for (String flagProperty : status.getFlagProperties()) {
+			entityBuilder.putProperties(flagProperty, makeValue(status.getFlagPropertyValue(flagProperty)).build());
+			setFlagProperties.add(flagProperty);
+		}
+
+		// for any flag that hasn't been set, set it to false
+		for (ProcessingStatusFlag flag : ProcessingStatusFlag.values()) {
+			if (flag != ProcessingStatusFlag.NOOP) {
+				String propertyName = flag.getDatastoreFlagPropertyName();
+				if (!setFlagProperties.contains(propertyName)) {
+					entityBuilder.putProperties(propertyName, makeValue(false).build());
+				}
+			}
+		}
+
+		for (String countProperty : status.getCountProperties()) {
+			entityBuilder.putProperties(countProperty, makeValue(status.getCountPropertyValue(countProperty)).build());
+		}
+
+		// store document collection indicators
+		Set<Value> collectionValues = new HashSet<Value>();
+		if (status.getCollections() != null) {
+			for (String collection : status.getCollections()) {
+				collectionValues.add(makeValue(collection).build());
+			}
+		}
+		entityBuilder.putProperties(STATUS_PROPERTY_COLLECTIONS, makeValue(collectionValues).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;
+	}
+
+	static ProcessingStatus getStatus(Entity entity) {
+
+		Map<String, Value> propertiesMap = entity.getPropertiesMap();
+		String documentId = propertiesMap.get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+		ProcessingStatus status = new ProcessingStatus(documentId);
+
+		propertiesMap.remove(STATUS_PROPERTY_DOCUMENT_ID);
+		for (Entry<String, Value> entry : propertiesMap.entrySet()) {
+			String propertyName = entry.getKey();
+			if (propertyName.endsWith("_DONE")) {
+				boolean booleanValue = entry.getValue().getBooleanValue();
+				status.setFlagProperty(propertyName, booleanValue);
+			} else if (propertyName.endsWith("_COUNT")) {
+				long countValue = entry.getValue().getIntegerValue();
+				status.setCountProperty(propertyName, countValue);
+			} else if (propertyName.equals(STATUS_PROPERTY_COLLECTIONS)) {
+				List<Value> valuesList = entry.getValue().getArrayValue().getValuesList();
+				for (Value v : valuesList) {
+					status.addCollection(v.getStringValue());
+				}
+			} else {
+				throw new IllegalArgumentException(String.format(
+						"Encountered unexptected status property: %s. Unable to create ProcessingStatus from Datastore entity.",
+						propertyName));
+			}
+		}
+
+		return status;
 	}
 
 }

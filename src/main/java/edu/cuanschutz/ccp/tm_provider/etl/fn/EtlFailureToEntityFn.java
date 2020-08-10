@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
@@ -19,6 +20,8 @@ import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -38,24 +41,25 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		String docId = failure.getDocumentId();
 		String message = failure.getMessage();
 		String stackTrace = failure.getStackTrace();
-		PipelineKey pipeline = failure.getPipeline();
-		String pipelineVersion = failure.getPipelineVersion();
-		DocumentType documentType = failure.getDocumentType();
+		PipelineKey pipeline = failure.getDocumentCriteria().getPipelineKey();
+		String pipelineVersion = failure.getDocumentCriteria().getPipelineVersion();
+		DocumentType documentType = failure.getDocumentCriteria().getDocumentType();
+		DocumentFormat documentFormat = failure.getDocumentCriteria().getDocumentFormat();
 		com.google.cloud.Timestamp timestamp = failure.getTimestamp();
 
 		/* crop document id if it is a file path */
 		docId = DocumentToEntityFn.updateDocId(docId);
 
-		Entity entity = buildFailureEntity(pipeline, pipelineVersion, documentType, docId, message, stackTrace,
-				timestamp);
+		DocumentCriteria dc = new DocumentCriteria(documentType, documentFormat, pipeline, pipelineVersion);
+
+		Entity entity = buildFailureEntity(dc, docId, message, stackTrace, timestamp);
 		out.output(entity);
 
 	}
 
-	static Entity buildFailureEntity(PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			String docId, String message, String stackTrace, com.google.cloud.Timestamp timestamp)
-			throws UnsupportedEncodingException {
-		Key key = DatastoreKeyUtil.createFailureKey(pipeline, pipelineVersion, documentType, docId);
+	static Entity buildFailureEntity(DocumentCriteria dc, String docId, String message, String stackTrace,
+			com.google.cloud.Timestamp timestamp) throws UnsupportedEncodingException {
+		Key key = DatastoreKeyUtil.createFailureKey(docId, dc);
 
 		/*
 		 * the stacktrace is likely too large to store as a property, so we make it a
@@ -64,9 +68,10 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		ByteString stackTraceBlob = ByteString.copyFrom(stackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
-		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(pipeline.name()).build());
-		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE_VERSION, makeValue(pipelineVersion).build());
-		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_TYPE, makeValue(documentType.name()).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE_VERSION, makeValue(dc.getPipelineVersion()).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_TYPE, makeValue(dc.getDocumentType().name()).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_FORMAT, makeValue(dc.getDocumentFormat().name()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_DOCUMENT_ID, makeValue(docId).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_TIMESTAMP, makeValue(timestamp.toString()).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_MESSAGE, makeValue(message).build());

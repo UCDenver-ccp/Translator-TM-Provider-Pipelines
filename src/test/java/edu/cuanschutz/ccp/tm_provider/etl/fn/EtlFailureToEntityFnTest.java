@@ -14,6 +14,8 @@ import org.junit.Test;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 
@@ -41,15 +43,18 @@ public class EtlFailureToEntityFnTest {
 			stacktrace = Arrays.toString(e.getStackTrace());
 		}
 
-		EtlFailureData failure = new EtlFailureData(pipelineKey, pipelineVersion,
-				"(This is a intential error made for testing)", docId, DocumentType.BIOC, t, timestamp);
+		DocumentCriteria dc = new DocumentCriteria(DocumentType.BIOC, DocumentFormat.BIOCXML, pipelineKey,
+				pipelineVersion);
+
+		EtlFailureData failure = new EtlFailureData(dc, "(This is a intential error made for testing)", docId, t,
+				timestamp);
 
 		PCollection<EtlFailureData> input = pipeline.apply(Create.of(failure));
 
 		EtlFailureToEntityFn fn = new EtlFailureToEntityFn();
 		PCollection<Entity> output = input.apply(ParDo.of(fn));
-		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(pipelineKey, pipelineVersion, DocumentType.BIOC,
-				docId, expectedMessage, stacktrace, timestamp);
+		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(dc, docId, expectedMessage, stacktrace,
+				timestamp);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
 		pipeline.run();

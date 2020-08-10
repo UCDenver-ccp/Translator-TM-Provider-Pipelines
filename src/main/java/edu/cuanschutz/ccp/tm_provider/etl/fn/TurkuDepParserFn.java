@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -11,9 +12,9 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 
 /**
  * This function submits plain text to the Turku neural dependency parser
@@ -27,19 +28,23 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
+	/**
+	 * The value in the returned KV pair is a list because it is possible that the
+	 * whole CoNLLU string is too large to store in Datastore. The list allows it to
+	 * be stored in chunks.
+	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, String>> CONLLU_TAG = new TupleTag<KV<String, String>>() {
+	public static TupleTag<KV<String, List<String>>> CONLLU_TAG = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
-			String dependencyParserServiceUri, PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			com.google.cloud.Timestamp timestamp) {
+			String dependencyParserServiceUri, DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
 		return docIdToBiocXml.apply("Compute dependency parse",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
+				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -58,10 +63,16 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 
 						try {
 							String conllu = parseText(plainTextWithBreaks, dependencyParserServiceUri);
-							out.get(CONLLU_TAG).output(KV.of(docId, conllu));
+
+							/*
+							 * divide the document content into chunks if necessary so that each chunk is
+							 * under the DataStore byte length threshold
+							 */
+							List<String> chunkedConllu = PipelineMain.chunkContent(conllu);
+							out.get(CONLLU_TAG).output(KV.of(docId, chunkedConllu));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during dependency parsing.", docId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(dc, "Failure during dependency parsing.", docId,
+									t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 					}

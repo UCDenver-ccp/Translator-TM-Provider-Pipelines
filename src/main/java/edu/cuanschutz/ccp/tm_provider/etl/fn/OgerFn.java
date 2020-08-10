@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -14,13 +15,17 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SpanValidator;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
+import edu.ucdenver.ccp.file.conversion.pubannotation.PubAnnotationDocumentReader;
+import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
@@ -35,20 +40,26 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
  */
 public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
+	public enum OgerOutputType {
+		/**
+		 * OGER used by itself (without BioBERT) can return
+		 */
+		TSV, PUBANNOTATION
+	}
+
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, String>> ANNOTATIONS_TAG = new TupleTag<KV<String, String>>() {
+	public static TupleTag<KV<String, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToText, String ogerServiceUri,
-			PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			com.google.cloud.Timestamp timestamp) {
+			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, OgerOutputType ogerOutputType) {
 
 		return docIdToText.apply("Identify concept annotations",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
+				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -57,15 +68,17 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 						String plainText = docIdToTextKV.getValue();
 
 						try {
-							String ogerTsv = annotate(plainText, ogerServiceUri);
-							String bionlp = convertToBioNLP(ogerTsv, docId, plainText);
-//							// if the string is empty, then no need to store it.
-							if (!bionlp.isEmpty()) {
-								out.get(ANNOTATIONS_TAG).output(KV.of(docId, bionlp));
+							String ogerOutput = annotate(plainText, ogerServiceUri, ogerOutputType);
+
+							if (outputDocCriteria.getDocumentFormat() == DocumentFormat.BIONLP) {
+								ogerOutput = convertToBioNLP(ogerOutput, docId, plainText, ogerOutputType);
 							}
+
+							List<String> chunkedOgerOutput = PipelineMain.chunkContent(ogerOutput);
+							out.get(ANNOTATIONS_TAG).output(KV.of(docId, chunkedOgerOutput));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(pipeline, pipelineVersion,
-									"Failure during OGER annotation.", docId, documentType, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
+									"Failure during OGER annotation.", docId, t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 					}
@@ -74,7 +87,8 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	}
 
 	/**
-	 * Converts from the OGER TSV annotation format to the BioNLP annotation format
+	 * Expected OGER system output is either TSV or PubAnnotation. TSV is output by
+	 * the OGER system when it is not paired with BioBERT, PubAnnotation when it is.
 	 * 
 	 * OGER TSV:
 	 * 
@@ -87,25 +101,48 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	private static String convertToBioNLP(String ogerTsv, String docId, String docText) throws IOException {
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
-		TextDocument td = new TextDocument(docId, "sourcedb", docText);
+	public static String convertToBioNLP(String ogerSystemOutput, String docId, String docText, OgerOutputType ogerOutputType)
+			throws IOException {
 
-		for (StreamLineIterator lineIter = new StreamLineIterator(new ByteArrayInputStream(ogerTsv.getBytes()),
-				CharacterEncoding.UTF_8, null); lineIter.hasNext();) {
-			String line = lineIter.next().getText();
-			String[] cols = line.split("\\t");
-			int spanStart = Integer.parseInt(cols[2]);
-			int spanEnd = Integer.parseInt(cols[3]);
-			String coveredText = cols[4];
-			String id = cols[6];
-			td.addAnnotation(factory.createAnnotation(spanStart, spanEnd, coveredText, id));
+		TextDocument td = null;
+
+		if (ogerOutputType == OgerOutputType.TSV) {
+			TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+			td = new TextDocument(docId, "sourcedb", docText);
+
+			for (StreamLineIterator lineIter = new StreamLineIterator(
+					new ByteArrayInputStream(ogerSystemOutput.getBytes()), CharacterEncoding.UTF_8, null); lineIter
+							.hasNext();) {
+				String line = lineIter.next().getText();
+				String[] cols = line.split("\\t");
+				int spanStart = Integer.parseInt(cols[2]);
+				int spanEnd = Integer.parseInt(cols[3]);
+				String coveredText = cols[4];
+				String id = cols[6];
+				td.addAnnotation(factory.createAnnotation(spanStart, spanEnd, coveredText, id));
+			}
+		} else if (ogerOutputType == OgerOutputType.PUBANNOTATION) {
+			PubAnnotationDocumentReader docReader = new PubAnnotationDocumentReader();
+			td = docReader.readDocument(docId, "unknown_source", new ByteArrayInputStream(ogerSystemOutput.getBytes()),
+					new ByteArrayInputStream(docText.getBytes()), CharacterEncoding.UTF_8);
 		}
-
 		// if there aren't any annotations, then just initialize the field so that the
 		// writer doesn't complain
 		if (td.getAnnotations() == null) {
 			td.setAnnotations(new ArrayList<TextAnnotation>());
+		}
+
+		/*
+		 * Validate the annotation spans, ensuring that the annotation covered text
+		 * matches the document text
+		 */
+		for (TextAnnotation ta : td.getAnnotations()) {
+			if (!SpanValidator.validate(ta.getSpans(), ta.getCoveredText(), docText)) {
+				throw new IllegalStateException(
+						String.format("OGER span mismatch detected. doc_id: %s span: %s expected_text: %s observed_text: %s",
+								docId, ta.getSpans().toString(), ta.getCoveredText(),
+								SpanUtils.getCoveredText(ta.getSpans(), docText)));
+			}
 		}
 
 		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
@@ -115,16 +152,26 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	}
 
 	/**
-	 * Invoke the OGER service returns results in a tab-delimited format.
+	 * Invoke the OGER service returns results in CoNLL format
 	 * 
 	 * @param plainTextWithBreaks
 	 * @param dependencyParserServiceUri
 	 * @return
 	 * @throws IOException
 	 */
-	private static String annotate(String plainText, String ogerServiceUri) throws IOException {
-		// doc id (12345) is optional -- can only be numbers
-		String targetUri = String.format("%s/upload/txt/tsv/12345", ogerServiceUri);
+	public static String annotate(String plainText, String ogerServiceUri, OgerOutputType ogerOutputType) throws IOException {
+
+		String targetUri = null;
+
+		if (ogerOutputType == OgerOutputType.TSV) {
+			String formatKey = "tsv";
+			// doc id (12345) is optional -- can only be numbers
+			targetUri = String.format("%s/upload/txt/%s/12345", ogerServiceUri, formatKey);
+
+		} else if (ogerOutputType == OgerOutputType.PUBANNOTATION) {
+			targetUri = String.format("%s/oger", ogerServiceUri);
+		}
+
 		return new HttpPostUtil(targetUri).submit(plainText);
 	}
 

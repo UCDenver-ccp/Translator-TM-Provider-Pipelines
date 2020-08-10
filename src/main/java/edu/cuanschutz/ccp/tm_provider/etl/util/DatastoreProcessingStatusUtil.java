@@ -38,8 +38,24 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.UpdateStatusFn;
  */
 public class DatastoreProcessingStatusUtil {
 
+	public enum OverwriteOutput {
+		/**
+		 * If yes, this flag indicates to
+		 */
+		YES, NO
+	}
+
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+
+	/**
+	 * @param dc
+	 * @return the name of the chunk_count property (in a status entity) for the
+	 *         specified document
+	 */
+	public static String getDocumentChunkCountPropertyName(DocumentCriteria dc) {
+		return DatastoreKeyUtil.getDocumentKeyName("chunks", dc, 0);
+	}
 
 	/**
 	 * @param targetProcessStatusFlag    The flag indicating the desired (target)
@@ -49,28 +65,66 @@ public class DatastoreProcessingStatusUtil {
 	 * @return
 	 */
 	public List<String> getDocumentIdsInNeedOfProcessing(ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags) {
+			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection, OverwriteOutput overwrite) {
 
 		/*
 		 * convert the required status flags into an array of PropertyFilters that match
 		 * 'true'
 		 */
-		PropertyFilter[] requiredProcessStatusFlagFilters = requiredProcessStatusFlags.stream()
-				.map(flag -> PropertyFilter.eq(flag.getDatastorePropertyName(), true)).collect(Collectors.toList())
-				.toArray(new PropertyFilter[0]);
+		List<PropertyFilter> requiredProcessStatusFlagFilters = requiredProcessStatusFlags.stream()
+				.map(flag -> PropertyFilter.eq(flag.getDatastoreFlagPropertyName(), true)).collect(Collectors.toList());
+
+		/* add a filter on the collection name if one has been provided */
+		if (collection != null) {
+//			PropertyFilter collectionFilter = PropertyFilter.eq(collection.getDatastoreFlagPropertyName(), true);
+			PropertyFilter collectionFilter = PropertyFilter.eq(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS,
+					collection);
+			requiredProcessStatusFlagFilters.add(collectionFilter);
+		}
 
 		/*
 		 * require the target process to not have run, i.e. its flag == false AND the
 		 * required process flags to all equal true
 		 */
-		CompositeFilter filter = CompositeFilter.and(
-				PropertyFilter.eq(targetProcessStatusFlag.getDatastorePropertyName(), false),
-				requiredProcessStatusFlagFilters);
+		CompositeFilter filter;
+		if (overwrite == OverwriteOutput.NO) {
+			filter = CompositeFilter.and(
+					PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), false),
+					requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]));
+		} else {
+			PropertyFilter first = requiredProcessStatusFlagFilters.get(0);
+			requiredProcessStatusFlagFilters.remove(0);
+			PropertyFilter[] rest = requiredProcessStatusFlagFilters.toArray(new PropertyFilter[0]);
+			filter = CompositeFilter.and(first, rest);
+		}
 
 		// FIXME: Note that this query could probably be converted to a key-only query
 		// and therefore be more cost-effective. The document Id can be parsed from each
 		// key.
 		Query<Entity> query = Query.newEntityQueryBuilder().setKind(STATUS_KIND).setFilter(filter).build();
+
+		QueryResults<Entity> results = datastore.run(query);
+
+		/* convert the query results into a list of document IDs */
+		List<String> documentIds = Streams.stream(results)
+				.map(entity -> entity.getString(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID))
+				.collect(Collectors.toList());
+
+		return documentIds;
+	}
+
+	/**
+	 * @param targetProcessStatusFlag
+	 * @return a list of document IDs where the specified ProcessingStatusFlag ==
+	 *         true
+	 */
+	public List<String> getDocumentIdsAlreadyProcessed(ProcessingStatusFlag targetProcessStatusFlag) {
+
+		// FIXME: Note that this query could probably be converted to a key-only query
+		// and therefore be more cost-effective. The document Id can be parsed from each
+		// key.
+		Query<Entity> query = Query.newEntityQueryBuilder().setKind(STATUS_KIND)
+				.setFilter(PropertyFilter.eq(targetProcessStatusFlag.getDatastoreFlagPropertyName(), true)).build();
 
 		QueryResults<Entity> results = datastore.run(query);
 
@@ -103,13 +157,47 @@ public class DatastoreProcessingStatusUtil {
 				Builder builder = Entity.newBuilder(status);
 				statusFlags.remove(ProcessingStatusFlag.NOOP);
 				for (ProcessingStatusFlag flag : statusFlags) {
-					builder.set(flag.getDatastorePropertyName(), true);
+					builder.set(flag.getDatastoreFlagPropertyName(), true);
 				}
 				transaction.put(builder.build());
 			} else {
 				throw new IllegalArgumentException(
 						String.format("Unable to find status for key %s. Cannot update status for tasks:%s.", keyName,
 								statusFlags.toString()));
+			}
+			transaction.commit();
+		} finally {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+		}
+	}
+
+	public void setStatus(List<Key> keys, Set<ProcessingStatusFlag> statusFlags, boolean status) {
+		Transaction transaction = datastore.newTransaction();
+		try {
+
+			int count = 0;
+			for (Key key : keys) {
+				if (count++ % 100 == 0) {
+					System.out.println("progress: " + count);
+				}
+//				String keyName = DatastoreKeyUtil.getStatusKeyName(docId);
+//				Key key = datastore.newKeyFactory().setKind(STATUS_KIND).newKey(keyName);
+
+				Entity statusEntity = transaction.get(key);
+				if (statusEntity != null) {
+					Builder builder = Entity.newBuilder(statusEntity);
+					statusFlags.remove(ProcessingStatusFlag.NOOP);
+					for (ProcessingStatusFlag flag : statusFlags) {
+						builder.set(flag.getDatastoreFlagPropertyName(), status);
+					}
+					transaction.put(builder.build());
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Unable to find status for key %s. Cannot update status for tasks:%s.",
+									key.toString(), statusFlags.toString()));
+				}
 			}
 			transaction.commit();
 		} finally {
@@ -180,7 +268,6 @@ public class DatastoreProcessingStatusUtil {
 
 		KeyedPCollectionTuple<String> collectionTuple = KeyedPCollectionTuple.of(tags.get(0), statusList.get(0));
 		for (int i = 1; i < statusList.size(); i++) {
-			System.out.println("Adding next tag...");
 			collectionTuple = collectionTuple.and(tags.get(i), statusList.get(i));
 		}
 		PCollection<KV<String, CoGbkResult>> mergedStatus = collectionTuple.apply("merge status by document",

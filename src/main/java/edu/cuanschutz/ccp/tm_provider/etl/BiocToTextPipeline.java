@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -21,12 +22,15 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
+
+//	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
@@ -37,6 +41,11 @@ public class BiocToTextPipeline {
 
 		void setBiocDir(String value);
 
+		@Description("The document collection to process")
+		String getCollection();
+
+		void setCollection(String value);
+
 	}
 
 	public static void main(String[] args) {
@@ -44,6 +53,15 @@ public class BiocToTextPipeline {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+
+		// TODO figure out how to exclude files that have already been processed
+//		DatastoreProcessingStatusUtil statusUtil = new DatastoreProcessingStatusUtil();
+//		// query Cloud Datastore to find document IDs that have already been processed
+//		// so that they can be skipped
+//		List<String> documentIdsAlreadyProcessed = statusUtil
+//				.getDocumentIdsAlreadyProcessed(ProcessingStatusFlag.TEXT_DONE);
+//		LOGGER.log(Level.INFO, String.format("Pipeline: %s, %d documents have ALREADY BEEN processed...",
+//				PIPELINE_KEY.name(), documentIdsAlreadyProcessed.size()));
 
 		Pipeline p = Pipeline.create(options);
 
@@ -53,6 +71,7 @@ public class BiocToTextPipeline {
 
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		/* Note: bioc files will be downloaded as xml */
+		// TODO: figure out how to exclude files that have already been downloaded
 		String biocFilePattern = options.getBiocDir() + "/*.xml";
 		PCollection<KV<String, String>> fileIdAndContent = p.apply(FileIO.match().filepattern(biocFilePattern))
 				.apply(FileIO.readMatches()).apply(MapElements.into(td).via((ReadableFile f) -> {
@@ -63,8 +82,13 @@ public class BiocToTextPipeline {
 					}
 				}));
 
-		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, PIPELINE_KEY, pipelineVersion,
-				DocumentType.BIOC, timestamp);
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PIPELINE_KEY, pipelineVersion);
+		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
+
+		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, outputTextDocCriteria,
+				outputAnnotationDocCriteria, timestamp, options.getCollection());
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly
@@ -76,30 +100,26 @@ public class BiocToTextPipeline {
 		 * of each document
 		 */
 
-		PCollection<KV<String, String>> docIdToPlainText = output.get(BiocToTextFn.plainTextTag);
-		PCollection<KV<String, String>> docIdToAnnotations = output.get(BiocToTextFn.sectionAnnotationsTag);
+		PCollection<KV<String, List<String>>> docIdToPlainText = output.get(BiocToTextFn.plainTextTag);
+		PCollection<KV<String, List<String>>> docIdToAnnotations = output.get(BiocToTextFn.sectionAnnotationsTag);
 		PCollection<EtlFailureData> failures = output.get(BiocToTextFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
 		/* store the bioc document content in Cloud Datastore */
-		fileIdAndContent
-				.apply("biocxml->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
-								"na")))
-				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		// TODO: revisit this. Not storing the original BioC for now to conserve space
+//		fileIdAndContent
+//				.apply("biocxml->document_entity",
+//						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
+//								"na")))
+//				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the plain text document content in Cloud Datastore */
-		docIdToPlainText
-				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
-								pipelineVersion)))
+		docIdToPlainText.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the serialized annotation document content in Cloud Datastore */
 		docIdToAnnotations
-				.apply("annotations->document_entity",
-						ParDo.of(new DocumentToEntityFn(DocumentType.SECTIONS, DocumentFormat.BIONLP, PIPELINE_KEY,
-								pipelineVersion)))
+				.apply("annotations->document_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/* store the failures for this pipeline in Cloud Datastore */

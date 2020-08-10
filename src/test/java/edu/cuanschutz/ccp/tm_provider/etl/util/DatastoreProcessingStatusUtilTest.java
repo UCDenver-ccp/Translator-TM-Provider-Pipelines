@@ -92,8 +92,9 @@ public class DatastoreProcessingStatusUtilTest {
 			t = e;
 		}
 
-		EtlFailureData failure = new EtlFailureData(PipelineKey.OGER, "0.1.0", "custom message", docId2,
-				DocumentType.CONCEPT_CHEBI, t, timestamp);
+		DocumentCriteria dc = new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP, PipelineKey.OGER,
+				"0.1.0");
+		EtlFailureData failure = new EtlFailureData(dc, "custom message", docId2, t, timestamp);
 
 		PCollection<EtlFailureData> failures = pipeline.apply("create failures", Create.of(failure));
 		PCollection<String> processedDocIds = pipeline.apply("create doc ids", Create.of(docId1, docId2, docId3));

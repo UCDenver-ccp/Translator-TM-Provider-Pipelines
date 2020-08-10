@@ -1,0 +1,67 @@
+12345	chemical	76	84	antigens	antigen	CHEBI_EXT:59132		S1	CHEBI_EXT
+12345	chemical	533	541	antigens	antigen	CHEBI_EXT:59132		S4	CHEBI_EXT
+12345	chemical	717	725	antigens	antigen	CHEBI_EXT:59132		S6	CHEBI_EXT
+12345	chemical	925	933	antigens	antigen	CHEBI_EXT:59132		S8	CHEBI_EXT
+12345	chemical	1091	1099	antigens	antigen	CHEBI_EXT:59132		S9	CHEBI_EXT
+12345	chemical	2433	2441	antigens	antigen	CHEBI_EXT:59132		S19	CHEBI_EXT
+12345	chemical	2721	2729	antigens	antigen	CHEBI_EXT:59132		S20	CHEBI_EXT
+12345	chemical	3104	3112	antigens	antigen	CHEBI_EXT:59132		S21	CHEBI_EXT
+12345	chemical	3224	3232	antigens	antigen	CHEBI_EXT:59132		S22	CHEBI_EXT
+12345	chemical	3363	3371	antigens	antigen	CHEBI_EXT:59132		S22	CHEBI_EXT
+12345	chemical	3595	3603	proteins	protein	CHEBI_PR_EXT:protein		S24	CHEBI_EXT
+12345	chemical	3660	3668	peptides	peptide	CHEBI_SO_EXT:peptide_or_peptide_region		S24	CHEBI_EXT
+12345	chemical	3660	3668	peptides	peptide or peptide region	CHEBI_SO_EXT:peptide_or_peptide_region		S24	CHEBI_EXT
+12345	chemical	3937	3944	antigen	antigen	CHEBI_EXT:59132		S26	CHEBI_EXT
+12345	chemical	4089	4102	glycoproteins	glycoprotein	CHEBI:17089		S27	CHEBI_EXT
+12345	chemical	4496	4504	antigens	antigen	CHEBI_EXT:59132		S30	CHEBI_EXT
+12345	chemical	5193	5200	protein	protein	CHEBI_PR_EXT:protein		S36	CHEBI_EXT
+12345	chemical	5405	5412	mixture	mixture	CHEBI:60004		S38	CHEBI_EXT
+12345	chemical	5544	5551	mixture	mixture	CHEBI:60004		S39	CHEBI_EXT
+12345	chemical	5677	5688	fluorescein	fluorescein	CHEBI:31624		S40	CHEBI_EXT
+12345	chemical	6020	6033	pentobarbital	pentobarbital	CHEBI:7983		S41	CHEBI_EXT
+12345	chemical	6112	6121	phosphate	phosphate	CHEBI_EXT:phosphate		S41	CHEBI_EXT
+12345	chemical	6112	6121	phosphate	phosphate(3-)	CHEBI:18367		S41	CHEBI_EXT
+12345	chemical	6122	6130	buffered	buffer process	CHEBI_CHMO_EXT:buffer_process		S41	CHEBI_EXT
+12345	chemical	6122	6130	buffered	buffer solution	CHEBI_CHMO_EXT:buffer_solution		S41	CHEBI_EXT
+12345	chemical	6122	6130	buffered	buffer	CHEBI_EXT:35225		S41	CHEBI_EXT
+12345	chemical	6131	6137	saline	saline solution	CHEBI_EXT:saline_solution		S41	CHEBI_EXT
+12345	chemical	6163	6170	heparin	heparin	CHEBI:28304		S41	CHEBI_EXT
+12345	chemical	6163	6170	heparin	heparins	CHEBI:24505		S41	CHEBI_EXT
+12345	chemical	7134	7141	nucleus	atomic nucleus	CHEBI:33252		S50	CHEBI_EXT
+12345	chemical	7294	7302	antigens	antigen	CHEBI_EXT:59132		S51	CHEBI_EXT
+12345	chemical	7732	7740	solution	solution	CHEBI:75958		S55	CHEBI_EXT
+12345	chemical	7789	7795	octane	octanal	CHEBI:17935		S55	CHEBI_EXT
+12345	chemical	7789	7795	octane	octane	CHEBI:17590		S55	CHEBI_EXT
+12345	chemical	8142	8150	antigens	antigen	CHEBI_EXT:59132		S57	CHEBI_EXT
+12345	chemical	8820	8827	nucleus	atomic nucleus	CHEBI:33252		S65	CHEBI_EXT
+12345	chemical	8899	8907	antigens	antigen	CHEBI_EXT:59132		S66	CHEBI_EXT
+12345	chemical	8997	9005	antigens	antigen	CHEBI_EXT:59132		S68	CHEBI_EXT
+12345	chemical	9868	9876	antigens	antigen	CHEBI_EXT:59132		S75	CHEBI_EXT
+12345	chemical	9900	9908	antigens	antigen	CHEBI_EXT:59132		S76	CHEBI_EXT
+12345	chemical	10082	10090	proteins	protein	CHEBI_PR_EXT:protein		S77	CHEBI_EXT
+12345	chemical	10235	10239	lead	lead	CHEBI_EXT:lead		S77	CHEBI_EXT
+12345	chemical	10235	10239	lead	lead atom	CHEBI_EXT:lead		S77	CHEBI_EXT
+12345	chemical	10235	10239	lead	lead(0)	CHEBI:27889		S77	CHEBI_EXT
+12345	chemical	10305	10313	antigens	antigen	CHEBI_EXT:59132		S78	CHEBI_EXT
+12345	chemical	10663	10671	antigens	antigen	CHEBI_EXT:59132		S80	CHEBI_EXT
+12345	chemical	10802	10810	antigens	antigen	CHEBI_EXT:59132		S81	CHEBI_EXT
+12345	chemical	10993	11001	antigens	antigen	CHEBI_EXT:59132		S84	CHEBI_EXT
+12345	chemical	11047	11055	antigens	antigen	CHEBI_EXT:59132		S85	CHEBI_EXT
+12345	chemical	11161	11169	antigens	antigen	CHEBI_EXT:59132		S85	CHEBI_EXT
+12345	chemical	11237	11245	antigens	antigen	CHEBI_EXT:59132		S85	CHEBI_EXT
+12345	chemical	11277	11285	antigens	antigen	CHEBI_EXT:59132		S85	CHEBI_EXT
+12345	chemical	11361	11369	antigens	antigen	CHEBI_EXT:59132		S86	CHEBI_EXT
+12345	chemical	11529	11537	antigens	antigen	CHEBI_EXT:59132		S87	CHEBI_EXT
+12345	chemical	11621	11629	antigens	antigen	CHEBI_EXT:59132		S88	CHEBI_EXT
+12345	chemical	11758	11766	antigens	antigen	CHEBI_EXT:59132		S88	CHEBI_EXT
+12345	chemical	11920	11928	antigens	antigen	CHEBI_EXT:59132		S89	CHEBI_EXT
+12345	chemical	12192	12200	peptides	peptide	CHEBI_SO_EXT:peptide_or_peptide_region		S91	CHEBI_EXT
+12345	chemical	12192	12200	peptides	peptide or peptide region	CHEBI_SO_EXT:peptide_or_peptide_region		S91	CHEBI_EXT
+12345	chemical	12715	12723	peptides	peptide	CHEBI_SO_EXT:peptide_or_peptide_region		S95	CHEBI_EXT
+12345	chemical	12715	12723	peptides	peptide or peptide region	CHEBI_SO_EXT:peptide_or_peptide_region		S95	CHEBI_EXT
+12345	chemical	13079	13087	antigens	antigen	CHEBI_EXT:59132		S100	CHEBI_EXT
+12345	chemical	13336	13344	peptides	peptide	CHEBI_SO_EXT:peptide_or_peptide_region		S101	CHEBI_EXT
+12345	chemical	13336	13344	peptides	peptide or peptide region	CHEBI_SO_EXT:peptide_or_peptide_region		S101	CHEBI_EXT
+12345	chemical	14301	14309	antigens	antigen	CHEBI_EXT:59132		S107	CHEBI_EXT
+12345	chemical	14537	14545	proteins	protein	CHEBI_PR_EXT:protein		S109	CHEBI_EXT
+12345	chemical	14642	14650	proteins	protein	CHEBI_PR_EXT:protein		S110	CHEBI_EXT

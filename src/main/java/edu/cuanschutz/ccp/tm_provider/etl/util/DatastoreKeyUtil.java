@@ -4,25 +4,29 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Key.Builder;
 import com.google.datastore.v1.Key.PathElement;
 
 public class DatastoreKeyUtil {
+	
+	private final static Logger LOGGER = Logger.getLogger(DatastoreKeyUtil.class.getName());
 
 	///////////////////////////////
 	//////// DOCUMENT KEY /////////
 	///////////////////////////////
 
-	public static String getDocumentKeyName(String docId, DocumentType type, DocumentFormat format,
-			PipelineKey pipeline, String version) {
-		return String.format("%s.%s.%s.%s.%s", docId, type.name().toLowerCase(), format.name().toLowerCase(),
-				pipeline.name().toLowerCase(), version);
+	public static String getDocumentKeyName(String docId, DocumentCriteria dc, long chunkIndex) {
+		return String.format("%s.%d.%s.%s.%s.%s", docId, chunkIndex, dc.getDocumentType().name().toLowerCase(),
+				dc.getDocumentFormat().name().toLowerCase(), dc.getPipelineKey().name().toLowerCase(),
+				dc.getPipelineVersion());
 	}
 
-	public static Key createDocumentKey(String documentId, DocumentType type, DocumentFormat format,
-			PipelineKey pipeline, String pipelineVersion) {
-		String docName = getDocumentKeyName(documentId, type, format, pipeline, pipelineVersion);
+	public static Key createDocumentKey(String documentId, Long chunkId, DocumentCriteria dc) {
+		String docName = getDocumentKeyName(documentId, dc, chunkId);
 		Builder builder = Key.newBuilder();
 		PathElement statusElement = builder.addPathBuilder().setKind(STATUS_KIND).setName(getStatusKeyName(documentId))
 				.build();
@@ -51,10 +55,9 @@ public class DatastoreKeyUtil {
 	//////// FAILURE KEY /////////
 	///////////////////////////////
 
-	public static Key createFailureKey(PipelineKey pipeline, String pipelineVersion, DocumentType documentType,
-			String docId) {
-		String docName = String.format("%s.%s.%s.%s", docId, pipeline.name().toLowerCase(), pipelineVersion,
-				documentType.name());
+	public static Key createFailureKey(String docId, DocumentCriteria dc) {
+		String docName = String.format("%s.%s.%s.%s.%s", docId, dc.getPipelineKey().name().toLowerCase(),
+				dc.getPipelineVersion(), dc.getDocumentType().name(), dc.getDocumentFormat().name());
 		Builder builder = Key.newBuilder();
 		PathElement pathElement = builder.addPathBuilder().setKind(FAILURE_KIND).setName(docName).build();
 		Key key = builder.setPath(0, pathElement).build();

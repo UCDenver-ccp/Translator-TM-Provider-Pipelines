@@ -14,8 +14,11 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 
@@ -38,12 +41,18 @@ public class BiocToTextFnTest {
 		PCollection<KV<String, String>> input = pipeline.apply(
 				Create.of(KV.of(docId, biocXml)).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
-		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, DocumentType.BIOC,
-				timestamp);
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				pipelineKey, pipelineVersion);
+		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+		String collection = null;
+		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+				timestamp, collection);
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
-		PAssert.that(output.get(BiocToTextFn.plainTextTag)).containsInAnyOrder(KV.of(docId, expectedText));
+		PAssert.that(output.get(BiocToTextFn.plainTextTag))
+				.containsInAnyOrder(KV.of(docId, CollectionsUtil.createList(expectedText)));
 
 		// looks correct, not sure why this doesn't pass
 //		String expectedSectionAnnotationsInBioNLPFormat = ClassPathUtil.getContentsFromClasspathResource(
@@ -67,8 +76,13 @@ public class BiocToTextFnTest {
 		PCollection<KV<String, String>> input = pipeline.apply(
 				Create.of(KV.of(docId, biocXml)).withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
 
-		PCollectionTuple output = BiocToTextFn.process(input, pipelineKey, pipelineVersion, DocumentType.BIOC,
-				timestamp);
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				pipelineKey, pipelineVersion);
+		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+		String collection = null;
+		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+				timestamp, collection);
 
 		PAssert.that(output.get(BiocToTextFn.plainTextTag)).empty();
 		PAssert.that(output.get(BiocToTextFn.sectionAnnotationsTag)).empty();
