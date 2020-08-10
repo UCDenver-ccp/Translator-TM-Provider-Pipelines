@@ -1,8 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util.serialization;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -14,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.serialization.BigQueryAnnotationSerializer.Layer;
@@ -101,11 +96,6 @@ public class BigQueryLoadBuilder implements Serializable {
 		}
 	}
 
-//	private Map<String, Set<String>> populateSectionIdToNormalizedTypeMap() {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
 	/**
 	 * Extract all annotations from the annotation files that have accompanied the
 	 * document. Some assumptions are made regarding annotator names to assign.
@@ -133,6 +123,22 @@ public class BigQueryLoadBuilder implements Serializable {
 
 				td.addAnnotations(doc.getAnnotations());
 
+			}
+			// only bring in sentences if the dependency parse does not exist so that we
+			// prefer the dependency parse sentence segmentation if there is one (and so
+			// that we don't end up with multiple sentence annotations)
+			else if (entry.getKey() == DocumentType.SENTENCE
+					&& !docTypeToContent.containsKey(DocumentType.DEPENDENCY_PARSE)) {
+				BioNLPDocumentReader reader = new BioNLPDocumentReader();
+				TextDocument doc = reader.readDocument(docId, sourceStrContainsYear,
+						new ByteArrayInputStream(entry.getValue().trim().getBytes()),
+						new ByteArrayInputStream(td.getText().trim().getBytes()), CharacterEncoding.UTF_8);
+
+				for (TextAnnotation ta : doc.getAnnotations()) {
+					ta.setAnnotator(new Annotator(null, "opennlp", null));
+				}
+
+				td.addAnnotations(doc.getAnnotations());
 			} else if (entry.getKey() == DocumentType.SECTIONS) {
 				BioNLPDocumentReader reader = new BioNLPDocumentReader();
 				TextDocument doc = reader.readDocument(docId, sourceStrContainsYear,
@@ -150,26 +156,12 @@ public class BigQueryLoadBuilder implements Serializable {
 						new ByteArrayInputStream(entry.getValue().trim().getBytes()),
 						new ByteArrayInputStream(td.getText().trim().getBytes()), CharacterEncoding.UTF_8);
 
-				// TODO: revisit this -- filter out EXT annotations
-				List<TextAnnotation> keep = new ArrayList<TextAnnotation>();
+				// TODO: this should not be needed -- all offsets in Datastore should be assumed to be correct
 				for (TextAnnotation ta : doc.getAnnotations()) {
+					SentenceCooccurrenceBuilder.convertFromByteToCharOffset(ta, text);
 					ta.setAnnotator(new Annotator(null, "oger", null));
-					// exclude if contains EXT and if the part after the colon is not numbers,
-					// otherwise, remove the _EXT and keep. Many of the PR and SO concepts follow
-					// this pattern
-					if (!ta.getClassMention().getMentionName().contains("EXT")) {
-						keep.add(ta);
-					} else {
-						String[] toks = ta.getClassMention().getMentionName().split(":");
-						if (toks[1].matches("\\d+")) {
-							String updatedMentionName = ta.getClassMention().getMentionName().replace("_EXT", "");
-							ta.getClassMention().setMentionName(updatedMentionName);
-							keep.add(ta);
-						}
-					}
 				}
-
-				td.addAnnotations(keep);
+				td.addAnnotations(doc.getAnnotations());
 			}
 		}
 
@@ -201,26 +193,9 @@ public class BigQueryLoadBuilder implements Serializable {
 				annotationIdToRelationMap);
 
 		String documentId = td.getSourceid();
-//		Integer yearPublished = parseYearFromSourceStr(td.getSourcedb());
 
 		return new BigQueryAnnotationSerializer(documentId, sectionSpanToId, paragraphSpanToId, sentenceSpanToId,
 				conceptSpanToId, annotationIdToRelationMap);
-	}
-
-	/**
-	 * for convenience, we will store the publication year as part of the source
-	 * string in the text document
-	 * 
-	 * @param sourcedb
-	 * @return
-	 */
-	private Integer parseYearFromSourceStr(String sourcedb) {
-		Pattern p = Pattern.compile("year=(\\d\\d\\d\\d)");
-		Matcher m = p.matcher(sourcedb);
-		if (m.find()) {
-			return Integer.parseInt(m.group(1));
-		}
-		return null;
 	}
 
 	/**
@@ -238,7 +213,6 @@ public class BigQueryLoadBuilder implements Serializable {
 		for (TextAnnotation annot : td.getAnnotations()) {
 			Layer layer = BigQueryAnnotationSerializer.determineLayer(annot);
 			Span span = annot.getAggregateSpan();
-//			String id = BigQueryUtil.getAnnotationIdentifier(annot, layer);
 			String id = BigQueryUtil.getAnnotationIdentifier(td.getSourceid(), annot.getAggregateSpan().getSpanStart(),
 					SpanUtils.getCoveredText(annot.getSpans(), td.getText()), layer,
 					Arrays.asList(annot.getClassMention().getMentionName()));

@@ -94,16 +94,24 @@ public class BigQueryExportFileBuilderFn extends DoFn<KV<String, Map<DocumentTyp
 
 							out.get(ANNOTATION_TABLE_OUTPUT_TAG)
 									.output(KV.of(docId, bigQueryTables.get(TableKey.ANNOTATION)));
-							out.get(IN_SECTION_TABLE_OUTPUT_TAG)
-									.output(KV.of(docId, bigQueryTables.get(TableKey.IN_SECTION)));
-							out.get(IN_PARAGRAPH_TABLE_OUTPUT_TAG)
-									.output(KV.of(docId, bigQueryTables.get(TableKey.IN_PARAGRAPH)));
 							out.get(IN_SENTENCE_TABLE_OUTPUT_TAG)
 									.output(KV.of(docId, bigQueryTables.get(TableKey.IN_SENTENCE)));
-							out.get(IN_CONCEPT_TABLE_OUTPUT_TAG)
-									.output(KV.of(docId, bigQueryTables.get(TableKey.IN_CONCEPT)));
-							out.get(RELATION_TABLE_OUTPUT_TAG)
-									.output(KV.of(docId, bigQueryTables.get(TableKey.RELATION)));
+							if (bigQueryTables.containsKey(TableKey.IN_SECTION)) {
+								out.get(IN_SECTION_TABLE_OUTPUT_TAG)
+										.output(KV.of(docId, bigQueryTables.get(TableKey.IN_SECTION)));
+							}
+							if (bigQueryTables.containsKey(TableKey.IN_PARAGRAPH)) {
+								out.get(IN_PARAGRAPH_TABLE_OUTPUT_TAG)
+										.output(KV.of(docId, bigQueryTables.get(TableKey.IN_PARAGRAPH)));
+							}
+							if (bigQueryTables.containsKey(TableKey.IN_CONCEPT)) {
+								out.get(IN_CONCEPT_TABLE_OUTPUT_TAG)
+										.output(KV.of(docId, bigQueryTables.get(TableKey.IN_CONCEPT)));
+							}
+							if (bigQueryTables.containsKey(TableKey.RELATION)) {
+								out.get(RELATION_TABLE_OUTPUT_TAG)
+										.output(KV.of(docId, bigQueryTables.get(TableKey.RELATION)));
+							}
 
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputDocCriteria,

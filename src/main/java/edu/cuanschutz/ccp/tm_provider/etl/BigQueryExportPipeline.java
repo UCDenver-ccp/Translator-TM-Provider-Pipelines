@@ -143,6 +143,8 @@ public class BigQueryExportPipeline {
 	private static List<DocumentCriteria> populateDocumentCriteria(String pipelineVersion) {
 		List<DocumentCriteria> documentCriteria = Arrays.asList(
 				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT, pipelineVersion),
+				new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP, PipelineKey.SENTENCE_SEGMENTATION,
+						pipelineVersion),
 				new DocumentCriteria(DocumentType.SECTIONS, DocumentFormat.BIONLP, PipelineKey.BIOC_TO_TEXT,
 						pipelineVersion),
 				new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU, PipelineKey.DEPENDENCY_PARSE,
@@ -176,8 +178,10 @@ public class BigQueryExportPipeline {
 		// we want to find documents that need BigQuery export
 		ProcessingStatusFlag targetProcessStatusFlag = ProcessingStatusFlag.BIGQUERY_LOAD_FILE_EXPORT_DONE;
 		// require that the documents be fully processed
-		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE,
-				ProcessingStatusFlag.DP_DONE);
+		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
+		
+//		,
+//				ProcessingStatusFlag.DP_DONE);
 //				,
 //				
 //				ProcessingStatusFlag.OGER_CHEBI_DONE, ProcessingStatusFlag.OGER_CL_DONE,

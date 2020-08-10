@@ -73,8 +73,7 @@ public class BigQueryAnnotationSerializer implements Serializable {
 		this.paragraphSpanToIdMap = CollectionsUtil.sortMapByKeys(paragraphSpanToIdMap, SortOrder.ASCENDING);
 		this.sentenceSpanToIdMap = CollectionsUtil.sortMapByKeys(sentenceSpanToIdMap, SortOrder.ASCENDING);
 		this.conceptSpanToIdMap = CollectionsUtil.sortMapByKeys(inputConceptSpanToIdMap, SortOrder.ASCENDING);
-		
-		
+
 	}
 
 	public Map<TableKey, Set<String>> toString(TextAnnotation ta, String documentText) {
@@ -165,6 +164,10 @@ public class BigQueryAnnotationSerializer implements Serializable {
 				return Layer.SENTENCE;
 			} else {
 				return Layer.TOKEN;
+			}
+		} else if (annotatorName.equalsIgnoreCase("opennlp")) {
+			if (type.equalsIgnoreCase("sentence")) {
+				return Layer.SENTENCE;
 			}
 		} else if (annotatorName.equalsIgnoreCase("oger")) {
 			return Layer.CONCEPT;
@@ -261,8 +264,9 @@ public class BigQueryAnnotationSerializer implements Serializable {
 		if (spanStart != spanEnd) {
 			coveredText = coveredText.replaceAll("\\n", " ");
 			coveredText = coveredText.replaceAll("\\t", " ");
-			
-			// if there is a double quote in the covered text, then we escape it with another double quote
+
+			// if there is a double quote in the covered text, then we escape it with
+			// another double quote
 			coveredText = coveredText.replaceAll("\"", "\"\"");
 
 			String docId = documentId;
