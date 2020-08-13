@@ -1,22 +1,23 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.io.xml.XmlIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.medline.PubmedArticle;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -36,7 +37,7 @@ public class MedlineXmlToTextPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
-		@Default.String("gs://translator-tm-provider-datastore-staging-stage/medline2020/baseline/*")
+		@Default.String("gs://translator-tm-provider-datastore-staging-stage/medline2020/baseline")
 		String getMedlineXmlDir();
 
 		void setMedlineXmlDir(String value);
@@ -45,16 +46,6 @@ public class MedlineXmlToTextPipeline {
 		String getCollection();
 
 		void setCollection(String value);
-
-		@Description("The base file path (in bucket) where the text files will be stored.")
-		String getTextOutputPath();
-
-		void setTextOutputPath(String value);
-
-		@Description("The base file path (in bucket) where the annotation files will be stored.")
-		String getAnnotationOutputPath();
-
-		void setAnnotationOutputPath(String value);
 
 	}
 
@@ -71,21 +62,31 @@ public class MedlineXmlToTextPipeline {
 
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		String medlineXmlFilePattern = options.getMedlineXmlDir() + "/*.xml.gz";
-		PCollection<KV<String, String>> fileIdAndContent = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
-				.apply(FileIO.readMatches()).apply(MapElements.into(td).via((ReadableFile f) -> {
-					try {
-						return KV.of(f.getMetadata().resourceId().toString(), f.readFullyAsUTF8String());
-					} catch (IOException e) {
-						throw new RuntimeException("Error while importing Medline XML files from file system.", e);
-					}
-				}));
+//		PCollection<KV<String, String>> fileIdAndContent = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
+//				.apply(FileIO.readMatches()).apply(MapElements.into(td).via((ReadableFile f) -> {
+//					try {
+//						return KV.of(f.getMetadata().resourceId().toString(), f.readFullyAsUTF8String());
+//					} catch (IOException e) {
+//						throw new RuntimeException("Error while importing Medline XML files from file system.", e);
+//					}
+//				}));
+		
+		
+		PCollection<ReadableFile> files = p
+			     .apply(FileIO.match().filepattern(medlineXmlFilePattern))
+			     .apply(FileIO.readMatches().withCompression(Compression.GZIP));
 
+		PCollection<PubmedArticle> pubmedArticles= files.apply(XmlIO.<PubmedArticle>readFiles()
+	             .withRootElement("PubmedArticleSet")
+	             .withRecordElement("PubmedArticle")
+	             .withRecordClass(PubmedArticle.class));
+		
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				PIPELINE_KEY, pipelineVersion);
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(fileIdAndContent, outputTextDocCriteria,
+		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria,
 				outputAnnotationDocCriteria, timestamp, options.getCollection());
 
 		/*

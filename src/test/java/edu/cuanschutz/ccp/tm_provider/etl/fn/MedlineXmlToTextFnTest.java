@@ -5,29 +5,33 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLResolver;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
-import org.apache.beam.sdk.coders.KvCoder;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.io.xml.JAXBCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.medline.PubmedArticle;
+import org.medline.PubmedArticleSet;
 import org.xml.sax.SAXException;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn.PubmedSaxHandler;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn.PubmedSaxHandlerPlugin;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -36,7 +40,6 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
-import lombok.Getter;
 
 public class MedlineXmlToTextFnTest {
 
@@ -44,105 +47,128 @@ public class MedlineXmlToTextFnTest {
 	public final transient TestPipeline pipeline = TestPipeline.create();
 
 	@Test
-	public void testPubmedSaxHandler() throws ParserConfigurationException, SAXException, IOException {
-		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+	public void testTextDocumentConstruction()
+			throws ParserConfigurationException, SAXException, IOException, JAXBException, XMLStreamException {
+		List<PubmedArticle> articles = getSamplePubmedArticles();
+		assertEquals("document count not as expected.", 3, articles.size());
+		for (PubmedArticle article : articles) {
+			TextDocument td = MedlineXmlToTextFn.buildDocument(article);
+			validateDocument(td);
+		}
+	}
+
+	/**
+	 * This method thanks to:
+	 * https://stackoverflow.com/questions/10685668/how-to-load-a-relative-system-dtd-into-a-stax-parser
+	 * 
+	 * @return
+	 */
+	private static XMLResolver getXmlResolver() {
+		return new XMLResolver() {
+
+			@Override
+			public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace)
+					throws XMLStreamException {
+
+				/*
+				 * The systemID argument is the same dtd file specified in the xml file header.
+				 * For example, if the xml header is <!DOCTYPE dblp SYSTEM "dblp.dtd">, then
+				 * systemID will be "dblp.dtd".
+				 * 
+				 */
+				return Thread.currentThread().getContextClassLoader().getResourceAsStream("pubmed/pubmed_190101.dtd");
+
+			}
+		};
+	}
+
+	private List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
+		List<PubmedArticle> articles = new ArrayList<PubmedArticle>();
 		InputStream is = new GZIPInputStream(ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class,
 				"sample-pubmed20n0001.xml.gz"));
-		SAXParser saxParser = saxParserFactory.newSAXParser();
-		PubmedTestPlugin handlerPlugin = new PubmedTestPlugin();
-		PubmedSaxHandler<PubmedTestPlugin> handler = new PubmedSaxHandler<PubmedTestPlugin>(handlerPlugin);
-		saxParser.parse(is, handler);
-		// there should have been three documents parsed from the sample XML
-		assertEquals("document count not as expected.", 3, handlerPlugin.getCount());
+
+		XMLInputFactory xif = XMLInputFactory.newFactory();
+		xif.setXMLResolver(getXmlResolver());
+		XMLStreamReader xsr = xif.createXMLStreamReader(is);
+
+		JAXBContext jaxbContext = JAXBContext.newInstance(PubmedArticleSet.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		PubmedArticleSet articleSet = (PubmedArticleSet) jaxbUnmarshaller.unmarshal(xsr);
+
+		for (Object article : articleSet.getPubmedArticleOrPubmedBookArticle()) {
+			if (article instanceof PubmedArticle) {
+				articles.add((PubmedArticle) article);
+			} else {
+				fail(String.format("Expected only PubmedArticle objects, but observed: %s",
+						article.getClass().getName()));
+			}
+		}
+		return articles;
 	}
 
-	static class PubmedTestPlugin implements PubmedSaxHandlerPlugin {
+	private void validateDocument(TextDocument td) throws IOException {
+		String docId = td.getSourceid();
+		String docText = td.getText();
+		List<TextAnnotation> annotations = td.getAnnotations();
 
-		@Getter
-		private int count = 0;
+		String expectedText = null;
+		switch (docId) {
+		case "1":
+			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class, "PMID1.txt",
+					CharacterEncoding.UTF_8);
+			assertEquals("should have a single title annotation", 1, annotations.size());
 
-		@Override
-		public void handlePubmedDocument(TextDocument td) throws SAXException {
-			count++;
-
-			String docId = td.getSourceid();
-			String docText = td.getText();
-			List<TextAnnotation> annotations = td.getAnnotations();
-
-			try {
-				String expectedText = null;
-				switch (docId) {
-				case "1":
-					expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-							"PMID1.txt", CharacterEncoding.UTF_8);
-					assertEquals("should have a single title annotation", 1, annotations.size());
-
-					for (TextAnnotation annot : annotations) {
-						String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
-								annot.getAnnotationSpanEnd());
-						String coveredText = annot.getCoveredText();
-						assertEquals("covered text not the same as spans in document text.", expectedCoveredText,
-								coveredText);
-					}
-
-					break;
-
-				case "31839728":
-					expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-							"PMID31839728.txt", CharacterEncoding.UTF_8);
-					assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
-
-					for (TextAnnotation annot : annotations) {
-						String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
-								annot.getAnnotationSpanEnd());
-						String coveredText = annot.getCoveredText();
-						assertEquals("covered text not the same as spans in document text.", expectedCoveredText,
-								coveredText);
-					}
-					break;
-
-				case "31839729":
-					expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-							"PMID31839729.txt", CharacterEncoding.UTF_8);
-					assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
-
-					for (TextAnnotation annot : annotations) {
-						String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
-								annot.getAnnotationSpanEnd());
-						String coveredText = annot.getCoveredText();
-						assertEquals("covered text not the same as spans in document text.", expectedCoveredText,
-								coveredText);
-					}
-					break;
-
-				default:
-					fail("unexpected document id: " + docId);
-				}
-				assertEquals(String.format("document text not as expected for document id: %s", docId), expectedText,
-						docText);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			for (TextAnnotation annot : annotations) {
+				String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
+						annot.getAnnotationSpanEnd());
+				String coveredText = annot.getCoveredText();
+				assertEquals("covered text not the same as spans in document text.", expectedCoveredText, coveredText);
 			}
 
+			break;
+
+		case "31839728":
+			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+					"PMID31839728.txt", CharacterEncoding.UTF_8);
+			assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
+
+			for (TextAnnotation annot : annotations) {
+				String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
+						annot.getAnnotationSpanEnd());
+				String coveredText = annot.getCoveredText();
+				assertEquals("covered text not the same as spans in document text.", expectedCoveredText, coveredText);
+			}
+			break;
+
+		case "31839729":
+			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+					"PMID31839729.txt", CharacterEncoding.UTF_8);
+			assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
+
+			for (TextAnnotation annot : annotations) {
+				String expectedCoveredText = docText.substring(annot.getAnnotationSpanStart(),
+						annot.getAnnotationSpanEnd());
+				String coveredText = annot.getCoveredText();
+				assertEquals("covered text not the same as spans in document text.", expectedCoveredText, coveredText);
+			}
+			break;
+
+		default:
+			fail("unexpected document id: " + docId);
 		}
+		assertEquals(String.format("document text not as expected for document id: %s", docId), expectedText, docText);
 
 	}
 
-	@Ignore("Seems like this test should pass. It is unclear why it doesn't.")
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testMedlineXmlToTextConversionFn_testPlainText() throws IOException {
+	public void testMedlineXmlToTextConversionFn_testPlainText() throws IOException, JAXBException, XMLStreamException {
 		PipelineKey pipelineKey = PipelineKey.MEDLINE_XML_TO_TEXT;
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		String medlineXml = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-				"sample-pubmed20n0001.xml.gz", CharacterEncoding.UTF_8);
-		String fileName = "sample-pubmed20n0001.xml.gz";
-
-		PCollection<KV<String, String>> input = pipeline.apply(Create.of(KV.of(fileName, medlineXml))
-				.withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
+		PCollection<PubmedArticle> input = pipeline
+				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
@@ -172,20 +198,16 @@ public class MedlineXmlToTextFnTest {
 		pipeline.run();
 	}
 
-	@Ignore("Seems like this test should pass. It is unclear why it doesn't.")
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testMedlineXmlToTextConversionFn_testSerializedAnnotations() throws IOException {
+	public void testMedlineXmlToTextConversionFn_testSerializedAnnotations()
+			throws IOException, JAXBException, XMLStreamException {
 		PipelineKey pipelineKey = PipelineKey.MEDLINE_XML_TO_TEXT;
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		String medlineXml = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-				"sample-pubmed20n0001.xml.gz", CharacterEncoding.UTF_8);
-		String fileName = "sample-pubmed20n0001.xml.gz";
-
-		PCollection<KV<String, String>> input = pipeline.apply(Create.of(KV.of(fileName, medlineXml))
-				.withCoder(KvCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())));
+		PCollection<PubmedArticle> input = pipeline
+				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);

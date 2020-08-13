@@ -1,14 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -17,9 +11,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import org.medline.Abstract;
+import org.medline.AbstractText;
+import org.medline.PubmedArticle;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -31,7 +25,6 @@ import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
-import lombok.Data;
 
 /**
  * Outputs four {@link PCollection} objects
@@ -63,31 +56,22 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToMedlineXml,
+	public static PCollectionTuple process(PCollection<PubmedArticle> pubmedArticles,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
 			com.google.cloud.Timestamp timestamp, String collection) {
 
-		return docIdToMedlineXml.apply("Convert Medline XML to plain text -- reserve section annotations",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
+		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
+				ParDo.of(new DoFn<PubmedArticle, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<String, String> docIdToMedlineXml, MultiOutputReceiver out) {
-						String fileId = docIdToMedlineXml.getKey();
-						String medlineXml = docIdToMedlineXml.getValue();
-
+					public void processElement(@Element PubmedArticle pubmedArticle, MultiOutputReceiver out) {
+						TextDocument td = buildDocument(pubmedArticle);
 						try {
-							SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
-							InputStream is = new GZIPInputStream(new ByteArrayInputStream(medlineXml.getBytes()));
-							SAXParser saxParser = saxParserFactory.newSAXParser();
-							BeamExporterPlugin handlerPlugin = new BeamExporterPlugin(out, outputTextDocCriteria,
-									outputAnnotationDocCriteria, collection);
-							PubmedSaxHandler<BeamExporterPlugin> handler = new PubmedSaxHandler<BeamExporterPlugin>(handlerPlugin);
-							saxParser.parse(is, handler);
-
+							outputDocument(out, td, outputTextDocCriteria, outputAnnotationDocCriteria, collection);
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
-									"Likely failure during Medline XML parsing.", fileId, t, timestamp);
+									"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
 							out.get(etlFailureTag).output(failure);
 						}
 
@@ -96,172 +80,86 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
 	}
 
-	private static class BeamExporterPlugin implements PubmedSaxHandlerPlugin {
+	/**
+	 * @param pubmedArticle
+	 * @return a {@link TextDocument} containing the title/abstract text and
+	 *         corresponding section annotations
+	 */
+	static TextDocument buildDocument(PubmedArticle pubmedArticle) {
+		String pmid = pubmedArticle.getMedlineCitation().getPMID().getvalue();
+		String title = pubmedArticle.getMedlineCitation().getArticle().getArticleTitle().getvalue();
+		String abstractText = getAbstractText(pubmedArticle);
+		String documentText = (abstractText == null || abstractText.isEmpty()) ? title
+				: String.format("%s\n\n%s", title, abstractText);
 
-		private final MultiOutputReceiver out;
-
-		private final DocumentCriteria outputTextDocCriteria;
-
-		private final DocumentCriteria outputAnnotationDocCriteria;
-
-		private final String collection;
-
-		public BeamExporterPlugin(MultiOutputReceiver out, DocumentCriteria outputTextDocCriteria,
-				DocumentCriteria outputAnnotationDocCriteria, String collection) {
-			this.out = out;
-			this.outputTextDocCriteria = outputTextDocCriteria;
-			this.outputAnnotationDocCriteria = outputAnnotationDocCriteria;
-			this.collection = collection;
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
+		TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
+		TextAnnotation abstractAnnotation = null;
+		if (abstractText != null && !abstractText.isEmpty()) {
+			int abstractStart = title.length() + 2;
+			int abstractEnd = abstractStart + abstractText.length();
+			abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
 		}
 
-		@Override
-		public void handlePubmedDocument(TextDocument td) throws SAXException {
-			String docId = td.getSourceid();
-			String plainText = td.getText();
-
-			/* serialize the annotations into the BioNLP format */
-			BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try {
-				bionlpWriter.serialize(td, baos, CharacterEncoding.UTF_8);
-				String serializedAnnotations = baos.toString(CharacterEncoding.UTF_8.getCharacterSetName());
-				
-				/*
-				 * divide the document content into chunks if necessary so that each chunk is
-				 * under the DataStore byte length threshold
-				 */
-				List<String> chunkedPlainText = PipelineMain.chunkContent(plainText);
-				List<String> chunkedAnnotations = PipelineMain.chunkContent(serializedAnnotations);
-				
-				out.get(sectionAnnotationsTag).output(KV.of(docId, chunkedAnnotations));
-				out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
-				/*
-				 * output a {@link ProcessingStatus} for the document
-				 */
-				ProcessingStatus status = new ProcessingStatus(docId);
-				status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputTextDocCriteria, 1);
-				status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria, 1);
-
-				if (collection != null) {
-					status.addCollection(collection);
-				}
-				out.get(processingStatusTag).output(status);
-			} catch (IOException e) {
-				throw new SAXException(String.format(
-						"Error while exporting document %s. Most likely a BioNLP format serialization issue.",
-						td.getSourceid()), e);
-			}
-
+		TextDocument td = new TextDocument(pmid, "PubMed", documentText);
+		td.addAnnotation(titleAnnotation);
+		if (abstractAnnotation != null) {
+			td.addAnnotation(abstractAnnotation);
 		}
-
+		return td;
 	}
 
-	static interface PubmedSaxHandlerPlugin {
-		public void handlePubmedDocument(TextDocument td) throws SAXException;
+	/**
+	 * @param pubmedArticle
+	 * @return the abstract text compiled from the {@link PubmedArticle}
+	 */
+	static String getAbstractText(PubmedArticle pubmedArticle) {
+		Abstract theAbstract = pubmedArticle.getMedlineCitation().getArticle().getAbstract();
+		if (theAbstract == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (AbstractText text : theAbstract.getAbstractText()) {
+			if (sb.length() == 0) {
+				sb.append(text.getvalue());
+			} else {
+				sb.append("\n" + text.getvalue());
+			}
+		}
+		return sb.toString();
 	}
 
-	static class PubmedSaxHandler<T extends PubmedSaxHandlerPlugin> extends DefaultHandler {
+	private static void outputDocument(MultiOutputReceiver out, TextDocument td, DocumentCriteria outputTextDocCriteria,
+			DocumentCriteria outputAnnotationDocCriteria, String collection) throws IOException {
+		String docId = td.getSourceid();
+		String plainText = td.getText();
 
-		private PubmedRecord record = null;
+		/* serialize the annotations into the BioNLP format */
+		BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		bionlpWriter.serialize(td, baos, CharacterEncoding.UTF_8);
+		String serializedAnnotations = baos.toString(CharacterEncoding.UTF_8.getCharacterSetName());
 
-		private boolean inPmid;
-		private boolean inTitle;
-		private boolean inAbstract;
+		/*
+		 * divide the document content into chunks if necessary so that each chunk is
+		 * under the DataStore byte length threshold
+		 */
+		List<String> chunkedPlainText = PipelineMain.chunkContent(plainText);
+		List<String> chunkedAnnotations = PipelineMain.chunkContent(serializedAnnotations);
 
-		private final T handlerPlugin;
+		out.get(sectionAnnotationsTag).output(KV.of(docId, chunkedAnnotations));
+		out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
+		/*
+		 * output a {@link ProcessingStatus} for the document
+		 */
+		ProcessingStatus status = new ProcessingStatus(docId);
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputTextDocCriteria, 1);
+		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria, 1);
 
-		public PubmedSaxHandler(T handlerPlugin) {
-			this.handlerPlugin = handlerPlugin;
+		if (collection != null) {
+			status.addCollection(collection);
 		}
-
-		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
-
-			if (qName.equalsIgnoreCase("MedlineCitation")) {
-				if (record != null) {
-					throw new IllegalStateException("record should be null");
-				}
-				record = new PubmedRecord();
-			} else if (qName.equalsIgnoreCase("PMID")) {
-				inPmid = true;
-			} else if (qName.equalsIgnoreCase("ArticleTitle")) {
-				inTitle = true;
-			} else if (qName.equalsIgnoreCase("AbstractText")) {
-				inAbstract = true;
-				// adds a line break unless this is the first abstract text encountered
-				record.addAbstractLineBreak();
-			}
-
-		}
-
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-			if (qName.equalsIgnoreCase("MedlineCitation")) {
-				String documentText = (record.getAbstractText().isEmpty()) ? record.getTitle()
-						: String.format("%s\n\n%s", record.getTitle(), record.getAbstractText());
-
-				TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(record.getPmid());
-				TextAnnotation titleAnnotation = factory.createAnnotation(0, record.getTitle().length(),
-						record.getTitle(), "title");
-				TextAnnotation abstractAnnotation = null;
-				if (!record.getAbstractText().isEmpty()) {
-					int abstractStart = record.getTitle().length() + 2;
-					int abstractEnd = abstractStart + record.getAbstractText().length();
-					abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, record.getAbstractText(),
-							"abstract");
-				}
-
-				TextDocument td = new TextDocument(record.getPmid(), "PubMed", documentText);
-				td.addAnnotation(titleAnnotation);
-				if (abstractAnnotation != null) {
-					td.addAnnotation(abstractAnnotation);
-				}
-
-				handlerPlugin.handlePubmedDocument(td);
-				record = null;
-			} else if (qName.equalsIgnoreCase("PMID")) {
-				inPmid = false;
-			} else if (qName.equalsIgnoreCase("ArticleTitle")) {
-				inTitle = false;
-			} else if (qName.equalsIgnoreCase("AbstractText")) {
-				inAbstract = false;
-			}
-		}
-
-		@Override
-		public void characters(char ch[], int start, int length) throws SAXException {
-			if (inPmid) {
-				record.setPmid(new String(ch, start, length));
-			} else if (inTitle) {
-				record.setTitle(new String(ch, start, length));
-			} else if (inAbstract) {
-				String text = new String(ch, start, length);
-				record.addAbstractText(text);
-			}
-		}
-
-	}
-
-	@Data
-	static class PubmedRecord {
-		private String pmid;
-		private String title;
-		private StringBuilder abstractText = new StringBuilder();
-
-		public void addAbstractText(String text) {
-				abstractText.append(text);
-		}
-		
-		public void addAbstractLineBreak() {
-			if (abstractText.length() > 0) {
-				abstractText.append("\n");
-			}
-		}
-		
-		public String getAbstractText() {
-			return abstractText.toString();
-		}
+		out.get(processingStatusTag).output(status);
 	}
 
 }
