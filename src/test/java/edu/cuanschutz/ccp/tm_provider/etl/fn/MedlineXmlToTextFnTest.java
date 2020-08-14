@@ -113,7 +113,7 @@ public class MedlineXmlToTextFnTest {
 
 		String expectedText = null;
 		switch (docId) {
-		case "1":
+		case "PMID:1":
 			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class, "PMID1.txt",
 					CharacterEncoding.UTF_8);
 			assertEquals("should have a single title annotation", 1, annotations.size());
@@ -127,7 +127,7 @@ public class MedlineXmlToTextFnTest {
 
 			break;
 
-		case "31839728":
+		case "PMID:31839728":
 			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
 					"PMID31839728.txt", CharacterEncoding.UTF_8);
 			assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
@@ -140,7 +140,7 @@ public class MedlineXmlToTextFnTest {
 			}
 			break;
 
-		case "31839729":
+		case "PMID:31839729":
 			expectedText = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
 					"PMID31839729.txt", CharacterEncoding.UTF_8);
 			assertEquals("should have a two annotations (title + abstract)", 2, annotations.size());
@@ -178,15 +178,15 @@ public class MedlineXmlToTextFnTest {
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
 				timestamp, collection);
 
-		String expectedPmid_1 = "1";
+		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
 				"PMID1.txt", CharacterEncoding.UTF_8);
 
-		String expectedPmid_2 = "31839728";
+		String expectedPmid_2 = "PMID:31839728";
 		String expectedText_2 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
 				"PMID31839728.txt", CharacterEncoding.UTF_8);
 
-		String expectedPmid_3 = "31839729";
+		String expectedPmid_3 = "PMID:31839729";
 		String expectedText_3 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
 				"PMID31839729.txt", CharacterEncoding.UTF_8);
 
@@ -217,9 +217,9 @@ public class MedlineXmlToTextFnTest {
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
 				timestamp, collection);
 
-		String expectedPmid_1 = "1";
-		String expectedPmid_2 = "31839728";
-		String expectedPmid_3 = "31839729";
+		String expectedPmid_1 = "PMID:1";
+		String expectedPmid_2 = "PMID:31839728";
+		String expectedPmid_3 = "PMID:31839729";
 
 		// looks correct, not sure why this doesn't pass
 		String expectedSerializedAnnots_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,

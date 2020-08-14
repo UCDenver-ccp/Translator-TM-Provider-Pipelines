@@ -86,7 +86,7 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 	 *         corresponding section annotations
 	 */
 	static TextDocument buildDocument(PubmedArticle pubmedArticle) {
-		String pmid = pubmedArticle.getMedlineCitation().getPMID().getvalue();
+		String pmid = "PMID:" + pubmedArticle.getMedlineCitation().getPMID().getvalue();
 		String title = pubmedArticle.getMedlineCitation().getArticle().getArticleTitle().getvalue();
 		String abstractText = getAbstractText(pubmedArticle);
 		String documentText = (abstractText == null || abstractText.isEmpty()) ? title
