@@ -13,6 +13,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE
 import java.io.UnsupportedEncodingException;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
@@ -31,12 +32,12 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
  * PCollection containing Google Cloud Datastore Entities
  *
  */
-public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
+public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity>> {
 
 	private static final long serialVersionUID = 1L;
 
 	@ProcessElement
-	public void processElement(@Element EtlFailureData failure, OutputReceiver<Entity> out)
+	public void processElement(@Element EtlFailureData failure, OutputReceiver<KV<String, Entity>> out)
 			throws UnsupportedEncodingException {
 		String docId = failure.getDocumentId();
 		String message = failure.getMessage();
@@ -53,7 +54,7 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, Entity> {
 		DocumentCriteria dc = new DocumentCriteria(documentType, documentFormat, pipeline, pipelineVersion);
 
 		Entity entity = buildFailureEntity(dc, docId, message, stackTrace, timestamp);
-		out.output(entity);
+		out.output(KV.of(entity.getKey().toString(), entity));
 
 	}
 

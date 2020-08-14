@@ -16,6 +16,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.TurkuDepParserFn;
@@ -107,12 +109,22 @@ public class DependencyParsePipeline {
 		PCollection<KV<String, List<String>>> docIdToConllu = output.get(TurkuDepParserFn.CONLLU_TAG);
 		PCollection<EtlFailureData> failures = output.get(TurkuDepParserFn.ETL_FAILURE_TAG);
 
-		/* store the serialized CoNLL-U document content in Cloud Datastore */
-		docIdToConllu.apply("conllu->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		/*
+		 * store the CoNLL-U document content in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain.deduplicateDocuments(docIdToConllu);
+		nonredundantPlainText.apply("conllu->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		// update the status for documents that were successfully processed

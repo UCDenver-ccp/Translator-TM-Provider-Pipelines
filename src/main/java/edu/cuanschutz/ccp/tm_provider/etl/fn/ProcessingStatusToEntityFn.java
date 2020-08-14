@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
@@ -30,15 +31,15 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, Entity> {
+public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String, Entity>> {
 
 	private static final long serialVersionUID = 1L;
 
 	@ProcessElement
-	public void processElement(@Element ProcessingStatus status, OutputReceiver<Entity> out)
+	public void processElement(@Element ProcessingStatus status, OutputReceiver<KV<String,Entity>> out)
 			throws UnsupportedEncodingException {
 		Entity entity = buildStatusEntity(status);
-		out.output(entity);
+		out.output(KV.of(entity.getKey().toString(), entity));
 
 	}
 

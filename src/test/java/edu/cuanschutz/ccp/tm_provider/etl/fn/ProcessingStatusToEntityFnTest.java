@@ -6,6 +6,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,9 +40,9 @@ public class ProcessingStatusToEntityFnTest {
 		status.enableFlag(ProcessingStatusFlag.OGER_CL_DONE, bertDc, 2);
 
 		PCollection<ProcessingStatus> input = pipeline.apply(Create.of(status));
-		PCollection<Entity> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));
+		PCollection<KV<String,Entity>> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));
 		Entity expectedEntity = ProcessingStatusToEntityFn.buildStatusEntity(status);
-		PAssert.that(output).containsInAnyOrder(expectedEntity);
+		PAssert.that(output).containsInAnyOrder(KV.of(expectedEntity.getKey().toString(), expectedEntity));
 
 		pipeline.run();
 	}

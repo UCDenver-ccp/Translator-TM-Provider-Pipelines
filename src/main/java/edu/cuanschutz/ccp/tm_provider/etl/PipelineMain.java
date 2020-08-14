@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -219,6 +220,49 @@ public class PipelineMain {
 			}
 		}
 		return ss;
+	}
+
+	/**
+	 * @param statusEntities
+	 * @return a non-redundant collection of the input entities filtered based on
+	 *         the entity keys (the String in the KV pair)
+	 */
+	public static PCollection<Entity> deduplicateEntities(PCollection<KV<String, Entity>> statusEntities) {
+		// remove any duplicates
+		PCollection<KV<String, Iterable<Entity>>> idToEntities = statusEntities
+				.apply(GroupByKey.<String, Entity>create());
+		PCollection<Entity> nonredundantStatusEntities = idToEntities
+				.apply(ParDo.of(new DoFn<KV<String, Iterable<Entity>>, Entity>() {
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						Iterable<Entity> entities = c.element().getValue();
+						// if there are more than one entity, we just return one
+						c.output(entities.iterator().next());
+					}
+				}));
+		return nonredundantStatusEntities;
+	}
+
+	/**
+	 * @param docIdToPlainText
+	 * @return a non-redundant collection of document-id/document-content pairings
+	 *         filtered using the document-ids (the String in the KV pair)
+	 */
+	public static PCollection<KV<String, List<String>>> deduplicateDocuments(
+			PCollection<KV<String, List<String>>> docIdToPlainText) {
+		PCollection<KV<String, Iterable<List<String>>>> idToPlainText = docIdToPlainText
+				.apply(GroupByKey.<String, List<String>>create());
+		PCollection<KV<String, List<String>>> nonredundantPlainText = idToPlainText
+				.apply(ParDo.of(new DoFn<KV<String, Iterable<List<String>>>, KV<String, List<String>>>() {
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						Iterable<List<String>> texts = c.element().getValue();
+						String key = c.element().getKey();
+						// if there are more than one entity, we just return one
+						c.output(KV.of(key, texts.iterator().next()));
+					}
+				}));
+		return nonredundantPlainText;
 	}
 
 }

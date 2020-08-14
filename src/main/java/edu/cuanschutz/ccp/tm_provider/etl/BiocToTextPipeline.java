@@ -18,6 +18,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -105,30 +107,45 @@ public class BiocToTextPipeline {
 		PCollection<EtlFailureData> failures = output.get(BiocToTextFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
-		/* store the bioc document content in Cloud Datastore */
-		// TODO: revisit this. Not storing the original BioC for now to conserve space
-//		fileIdAndContent
-//				.apply("biocxml->document_entity",
-//						ParDo.of(new DocumentToEntityFn(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
-//								"na")))
-//				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		/* store the plain text document content in Cloud Datastore */
-		docIdToPlainText.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
+		/*
+		 * store the plain text document content in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
+				.deduplicateDocuments(docIdToPlainText);
+		nonredundantPlainText
+				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the serialized annotation document content in Cloud Datastore */
-		docIdToAnnotations
-				.apply("annotations->document_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
-				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the serialized annotation document content in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
+				.deduplicateDocuments(docIdToAnnotations);
+		nonredundantAnnotations
+				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
+				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the processing status document for this pipeline in Cloud Datastore */
-		status.apply("status->status_entity", ParDo.of(new ProcessingStatusToEntityFn()))
-				.apply("status_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn()));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntities(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		p.run().waitUntilFinish();
 

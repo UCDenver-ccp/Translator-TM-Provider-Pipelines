@@ -7,6 +7,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,10 +53,10 @@ public class EtlFailureToEntityFnTest {
 		PCollection<EtlFailureData> input = pipeline.apply(Create.of(failure));
 
 		EtlFailureToEntityFn fn = new EtlFailureToEntityFn();
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
+		PCollection<KV<String, Entity>> output = input.apply(ParDo.of(fn));
 		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(dc, docId, expectedMessage, stacktrace,
 				timestamp);
-		PAssert.that(output).containsInAnyOrder(expectedEntity);
+		PAssert.that(output).containsInAnyOrder(KV.of(expectedEntity.getKey().toString(), expectedEntity));
 
 		pipeline.run();
 	}
