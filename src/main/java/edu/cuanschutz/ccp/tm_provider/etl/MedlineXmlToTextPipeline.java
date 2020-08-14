@@ -49,16 +49,6 @@ public class MedlineXmlToTextPipeline {
 
 		void setCollection(String value);
 
-		@Description("The path where the title/abstract text files will be created")
-		String getTextOutputPath();
-
-		void setTextOutputPath(String value);
-
-		@Description("The path where the title/abstract annotation files will be created")
-		String getAnnotationOutputPath();
-
-		void setAnnotationOutputPath(String value);
-
 	}
 
 	public static void main(String[] args) {
