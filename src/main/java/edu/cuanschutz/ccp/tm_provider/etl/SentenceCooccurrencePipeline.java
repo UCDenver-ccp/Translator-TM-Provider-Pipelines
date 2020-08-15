@@ -24,6 +24,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentDownloadFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceCooccurrenceFileBuilderFn;
@@ -57,8 +59,7 @@ public class SentenceCooccurrencePipeline {
 		String getCollection();
 
 		void setCollection(String value);
-		
-		
+
 		@Description("Overwrite any previous runs")
 		OverwriteOutput getOverwrite();
 
@@ -83,9 +84,15 @@ public class SentenceCooccurrencePipeline {
 		PCollection<EtlFailureData> annotationRetrievalFailures = docIdToAnnotationTuple
 				.get(DocumentDownloadFn.FAILURE_TAG);
 
-		// log any failures
-		annotationRetrievalFailures.apply("annot extract failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> failureEntities = annotationRetrievalFailures
+				.apply("sent_cooccur_annot_failures->datastore", ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.SENTENCE_COOCCURRENCE,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
@@ -98,9 +105,15 @@ public class SentenceCooccurrencePipeline {
 		PCollection<EtlFailureData> sentenceCooccurExportFailures = bigqueryExports
 				.get(SentenceCooccurrenceFileBuilderFn.FAILURE_TAG);
 
-		// log any failures
-		sentenceCooccurExportFailures.apply("bq export failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		failureEntities = sentenceCooccurExportFailures.apply("sent_cooccur_export_failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		// write the output
 		sentenceCooccurrences.apply("write annotation table",
@@ -146,7 +159,8 @@ public class SentenceCooccurrencePipeline {
 		return documentCriteria;
 	}
 
-	private static PCollection<String> getDocumentIdsToProcess(Pipeline p, String collection, OverwriteOutput overwrite) {
+	private static PCollection<String> getDocumentIdsToProcess(Pipeline p, String collection,
+			OverwriteOutput overwrite) {
 		// we want to find documents that need BigQuery export
 		ProcessingStatusFlag targetProcessStatusFlag = ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE;
 		// require that the documents be fully processed

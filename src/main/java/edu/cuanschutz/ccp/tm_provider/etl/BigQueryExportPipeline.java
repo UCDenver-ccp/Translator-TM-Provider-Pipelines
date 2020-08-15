@@ -24,6 +24,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.fn.BigQueryExportFileBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentDownloadFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -82,9 +84,15 @@ public class BigQueryExportPipeline {
 		PCollection<EtlFailureData> annotationRetrievalFailures = docIdToAnnotationTuple
 				.get(DocumentDownloadFn.FAILURE_TAG);
 
-		// log any failures
-		annotationRetrievalFailures.apply("annot extract failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> failureEntities = annotationRetrievalFailures
+				.apply("annot_extract_failures->datastore", ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("annot_extract_failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.BIGQUERY, DocumentFormat.BIGQUERY,
 				PIPELINE_KEY, pipelineVersion);
@@ -107,9 +115,15 @@ public class BigQueryExportPipeline {
 		PCollection<EtlFailureData> bigqueryExportFailures = bigqueryExports
 				.get(BigQueryExportFileBuilderFn.FAILURE_TAG);
 
-		// log any failures
-		bigqueryExportFailures.apply("bq export failures->datastore", ParDo.of(new EtlFailureToEntityFn()))
-				.apply("failure_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		failureEntities = bigqueryExportFailures.apply("bq_export_failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("bq_export_failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		// write the output
 		docIdToBigQuery_annotationTable.apply("write annotation table",
@@ -179,7 +193,7 @@ public class BigQueryExportPipeline {
 		ProcessingStatusFlag targetProcessStatusFlag = ProcessingStatusFlag.BIGQUERY_LOAD_FILE_EXPORT_DONE;
 		// require that the documents be fully processed
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
-		
+
 //		,
 //				ProcessingStatusFlag.DP_DONE);
 //				,

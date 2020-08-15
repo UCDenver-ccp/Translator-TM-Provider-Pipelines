@@ -19,6 +19,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractContentFn;
@@ -105,18 +107,33 @@ public class LoadFilesPipeline {
 		PCollection<EtlFailureData> failures = output.get(ExtractContentFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(ExtractContentFn.processingStatusTag);
 
-		/* store the bioc document content in Cloud Datastore */
-		/* store the plain text document content in Cloud Datastore */
-		docIdToContent.apply("content->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		/*
+		 * store the document content in Cloud Datastore - deduplication is necessary to
+		 * avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantContent = PipelineMain.deduplicateDocuments(docIdToContent);
+		nonredundantContent.apply("content->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the failures for this pipeline in Cloud Datastore */
-		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
+		/*
+		 * store the failures for this pipeline in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/* store the processing status document for this pipeline in Cloud Datastore */
-		status.apply("status->status_entity", ParDo.of(new ProcessingStatusToEntityFn()))
-				.apply("status_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn()));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntities(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * if the target process is TEXT_DONE, then we don't need to update the status

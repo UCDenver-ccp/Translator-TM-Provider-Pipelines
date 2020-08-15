@@ -129,51 +129,36 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
 
 	////////////////////////////////////////////////////////////////
-	/////////////////// public static final String STATUS_PROPERTY_OGER CONCEPT
-	//////////////////////////////////////////////////////////////// PROCESSING
-	//////////////////////////////////////////////////////////////// ////////////////////
+	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
 
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_GO_BP_DONE = "oger_gobp";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_GO_CC_DONE = "oger_gocc";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_GO_MF_DONE = "oger_gomf";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_MOP_DONE = "oger_mop";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_NCBITAXON_DONE = "oger_ncbitaxon";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_SO_DONE = "oger_so";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_PR_DONE = "oger_pr";
-	/**
-	 * 
-	 */
 	public static final String STATUS_PROPERTY_OGER_UBERON_DONE = "oger_uberon";
+	
+	////////////////////////////////////////////////////////////////
+	/////////////////// CRF CONCEPT PROCESSING /////////////////////
+	////////////////////////////////////////////////////////////////
+
+	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
+	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
+	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
+	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
+	public static final String STATUS_PROPERTY_CRF_GO_MF_DONE = "crf_gomf";
+	public static final String STATUS_PROPERTY_CRF_MOP_DONE = "crf_mop";
+	public static final String STATUS_PROPERTY_CRF_NCBITAXON_DONE = "crf_ncbitaxon";
+	public static final String STATUS_PROPERTY_CRF_SO_DONE = "crf_so";
+	public static final String STATUS_PROPERTY_CRF_PR_DONE = "crf_pr";
+	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
+	
+	
 
 	////////////////////////////////////////////////////////////////
 	////////////////// BERT CONCEPT PROCESSING /////////////////////
