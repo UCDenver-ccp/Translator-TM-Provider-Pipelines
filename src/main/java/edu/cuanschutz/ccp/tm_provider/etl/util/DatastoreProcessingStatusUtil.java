@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,11 @@ public class DatastoreProcessingStatusUtil {
 
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+
+	
+	public static String getDocumentId(com.google.datastore.v1.Entity statusEntity) {
+		return statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+	}
 
 	/**
 	 * @param dc
@@ -213,7 +219,9 @@ public class DatastoreProcessingStatusUtil {
 	 * 
 	 * @param docIdToOutputDoc
 	 * @param failures
-	 * @return
+	 * @return returns KV pairs mapping document ID to the
+	 *         {@link ProcessingStatusFlag} for the document IDs that were
+	 *         successfully processed.
 	 */
 	public static PCollection<KV<String, String>> getSuccessStatus(PCollection<String> processedDocIds,
 			PCollection<EtlFailureData> failures, ProcessingStatusFlag processingStatusFlag) {

@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -25,14 +24,13 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn.OgerOutputType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline processes documents with the OGER concept
@@ -124,26 +122,37 @@ public class OgerPipeline {
 		 */
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
+		PCollection<KV<Entity, String>> statusEntity2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
 				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
 				options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);
-		PCollectionTuple output = OgerFn.process(docId2Content, ogerServiceUri.toString(), outputDocCriteria, timestamp,
-				options.getOgerOutputType());
+		PCollectionTuple output = OgerFn.process(statusEntity2Content, ogerServiceUri.toString(), outputDocCriteria,
+				timestamp, options.getOgerOutputType());
 
-		PCollection<KV<String, List<String>>> docIdToAnnotation = output.get(OgerFn.ANNOTATIONS_TAG);
+		PCollection<KV<Entity, List<String>>> statusEntityToAnnotation = output.get(OgerFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(OgerFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store the serialized annotation document content in Cloud Datastore -
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
-		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
-				.deduplicateDocuments(docIdToAnnotation);
-		nonredundantAnnotations.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToAnnotation);
+		nonredundantDocIdToAnnotations
+				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/*
+		 * update the status entities to reflect the work completed, and store in
+		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
+		 */
+		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+				statusEntityToAnnotation.apply(Keys.<Entity>create()), targetProcessingStatusFlag);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is
@@ -151,56 +160,11 @@ public class OgerPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		PCollection<KV<String, String>> successStatus = DatastoreProcessingStatusUtil
-				.getSuccessStatus(docId2Content.apply(Keys.<String>create()), failures, targetProcessingStatusFlag);
-
-		List<PCollection<KV<String, String>>> statusList = new ArrayList<PCollection<KV<String, String>>>();
-		statusList.add(successStatus);
-		DatastoreProcessingStatusUtil.performStatusUpdatesInBatch(statusList);
-
 		p.run().waitUntilFinish();
 	}
-
-//	/**
-//	 * Store the annotation files, any failures, and update the
-//	 * targetProcessingStatusFlag to true for those documents that did not result in
-//	 * a failure.
-//	 * 
-//	 * @param pipelineVersion
-//	 * @param options
-//	 * @param targetProcessStatusFlag
-//	 * @param documentType
-//	 * @param output
-//	 * @param processedDocIds
-//	 * @return
-//	 */
-//
-//	private static PCollection<KV<String, String>> logResults(PCollection<String> processedDocIds,
-//			String pipelineVersion, String projectId, ProcessingStatusFlag targetProcessStatusFlag, DocumentCriteria dc,
-//			PCollectionTuple output) {
-//		/*
-//		 * Processing of the plain text with OGER results in 1) a PCollection mapping
-//		 * document ID to the extracted annotations serialized in BioNLP format. 2) a
-//		 * PCollection logging any errors encountered during the concept recognition
-//		 * process.
-//		 */
-//
-//		PCollection<KV<String, List<String>>> docIdToAnnotation = output.get(OgerFn.ANNOTATIONS_TAG);
-//		PCollection<EtlFailureData> failures = output.get(OgerFn.ETL_FAILURE_TAG);
-//
-//		/* store the serialized annotation document in Cloud Datastore */
-//		docIdToAnnotation.apply("annotation->document_entity", ParDo.of(new DocumentToEntityFn(dc)))
-//				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(projectId));
-//
-//		/* store the failures for this pipeline in Cloud Datastore */
-//		failures.apply("failures->datastore", ParDo.of(new EtlFailureToEntityFn())).apply("failure_entity->datastore",
-//				DatastoreIO.v1().write().withProjectId(projectId));
-//
-//		return DatastoreProcessingStatusUtil.getSuccessStatus(processedDocIds, failures, targetProcessStatusFlag);
-//	}
 
 }

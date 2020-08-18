@@ -10,16 +10,21 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
+import com.google.datastore.v1.Entity;
+
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline is useful for testing pipeline input arguments. It
@@ -74,8 +79,6 @@ public class DryRunPipeline {
 	}
 
 	public static void main(String[] args) {
-//		String pipelineVersion = Version.getProjectVersion();
-//		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		LOGGER.log(Level.INFO, String.format("Running OGER pipeline for concept: ", options.getTargetDocumentType()));
 
@@ -91,11 +94,21 @@ public class DryRunPipeline {
 
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
+		PCollection<KV<Entity, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
 				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
 				options.getCollection(), options.getOverwrite());
 
-		docId2Content.apply(Keys.<String>create()).apply("write ids file",
+		docId2Content.apply(Keys.<Entity>create()).apply("extract-doc-id", ParDo.of(new DoFn<Entity, String>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(ProcessContext c) {
+				Entity statusEntity = c.element();
+				String documentId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+				// if there are more than one entity, we just return one
+				c.output(documentId);
+			}
+		})).apply("write ids file",
 				TextIO.write().to(options.getOutputDirectory() + "/annotation.").withSuffix(".txt"));
 
 		p.run().waitUntilFinish();

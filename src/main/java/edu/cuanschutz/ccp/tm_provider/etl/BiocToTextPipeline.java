@@ -112,7 +112,7 @@ public class BiocToTextPipeline {
 		 * necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
-				.deduplicateDocuments(docIdToPlainText);
+				.deduplicateDocumentsByStringKey(docIdToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
@@ -122,7 +122,7 @@ public class BiocToTextPipeline {
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
-				.deduplicateDocuments(docIdToAnnotations);
+				.deduplicateDocumentsByStringKey(docIdToAnnotations);
 		nonredundantAnnotations
 				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
@@ -133,7 +133,7 @@ public class BiocToTextPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -143,7 +143,7 @@ public class BiocToTextPipeline {
 		 */
 		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
 				ParDo.of(new ProcessingStatusToEntityFn()));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntities(statusEntities);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 

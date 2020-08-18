@@ -90,19 +90,19 @@ public class SentenceCooccurrencePipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = annotationRetrievalFailures
 				.apply("sent_cooccur_annot_failures->datastore", ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.SENTENCE_COOCCURRENCE,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		PCollectionTuple bigqueryExports = SentenceCooccurrenceFileBuilderFn.process(docIdToAnnotations,
-				outputDocCriteria, timestamp);
+		PCollectionTuple exports = SentenceCooccurrenceFileBuilderFn.process(docIdToAnnotations, outputDocCriteria,
+				timestamp);
 
-		PCollection<String> sentenceCooccurrences = bigqueryExports
+		PCollection<String> sentenceCooccurrences = exports
 				.get(SentenceCooccurrenceFileBuilderFn.SENTENCE_COOCCUR_OUTPUT_TAG);
-		PCollection<EtlFailureData> sentenceCooccurExportFailures = bigqueryExports
+		PCollection<EtlFailureData> sentenceCooccurExportFailures = exports
 				.get(SentenceCooccurrenceFileBuilderFn.FAILURE_TAG);
 
 		/*
@@ -111,7 +111,7 @@ public class SentenceCooccurrencePipeline {
 		 */
 		failureEntities = sentenceCooccurExportFailures.apply("sent_cooccur_export_failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 

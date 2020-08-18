@@ -5,11 +5,11 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.beam.sdk.values.KV;
@@ -67,44 +67,52 @@ public class DatastoreDocumentUtil {
 	 *                        spliced in order to return the full content
 	 * @return
 	 */
-	public KV<String, String> getDocumentIdToContent(String documentId, DocumentCriteria docCriteria, long chunkCount) {
-
+	public KV<com.google.datastore.v1.Entity, String> getDocumentIdToContent(com.google.datastore.v1.Entity statusEntity, DocumentCriteria docCriteria) {
+		String documentId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+		
 		// documents can be stored in chunks depending on their size. Query for each
 		// chunk here.
 		StringBuffer content = new StringBuffer();
-		String id = null;
 
-		// TODO: Workaround for missing chunk count fields -- max chunk count in CORD19
-		// is 6
-		chunkCount = 7;
+		int chunkIndex = 0;
+		Key key = createDocumentKey(documentId, docCriteria, chunkIndex++);
+		Entity entity = datastore.get(key);
 
-		for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline,
-																				// pipelineVersion);
-//			System.out.println("DOC KEY: " + key.toString());
-
-//			try {
-			Entity entity = datastore.get(key);
-
-			if (entity != null) {
-//					logger.log(Level.SEVERE,
-//							"No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
-//					return null;
-				id = getDocumentId(entity);
-				content.append(getDocumentContent(entity));
-			} else {
-				// we assume that all chunks have been retrieved.
-				break;
-			}
-
-//			} catch (Exception e) {
-//				// TODO: Workaround for missing chunk count fields -- if there is an error while
-//				// retrieving the chunk then we assume that we have all chunks alread
-//				break;
-//			}
+		while (entity != null) {
+			content.append(getDocumentContent(entity));
+			key = createDocumentKey(documentId, docCriteria, chunkIndex++);
+			entity = datastore.get(key);
 		}
 
-		return KV.of(id, content.toString());
+		return (content.length() > 0) ? KV.of(statusEntity, content.toString()) : null;
+
+//		for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+//			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline,
+//																				// pipelineVersion);
+////			System.out.println("DOC KEY: " + key.toString());
+//
+////			try {
+//			Entity entity = datastore.get(key);
+//
+//			if (entity != null) {
+////					logger.log(Level.SEVERE,
+////							"No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
+////					return null;
+//				id = getDocumentId(entity);
+//				content.append(getDocumentContent(entity));
+//			} else {
+//				// we assume that all chunks have been retrieved.
+//				break;
+//			}
+//
+////			} catch (Exception e) {
+////				// TODO: Workaround for missing chunk count fields -- if there is an error while
+////				// retrieving the chunk then we assume that we have all chunks alread
+////				break;
+////			}
+//		}
+//
+//		return KV.of(id, content.toString());
 	}
 
 	/**

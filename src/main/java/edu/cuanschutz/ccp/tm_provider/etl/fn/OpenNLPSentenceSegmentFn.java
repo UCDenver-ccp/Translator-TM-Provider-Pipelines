@@ -1,5 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+
+import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -49,23 +53,26 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	 * list allows it to be stored in chunks.
 	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, List<String>>> SENTENCE_ANNOT_TAG = new TupleTag<KV<String, List<String>>>() {
+	public static TupleTag<KV<Entity, List<String>>> SENTENCE_ANNOT_TAG = new TupleTag<KV<Entity, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToInputText, DocumentCriteria dc,
-			com.google.cloud.Timestamp timestamp) {
+	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToInputText,
+			 DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
-		return docIdToInputText.apply("Segment sentences",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
+		return statusEntityToInputText.apply("Segment sentences",
+				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<String, String> docIdToText, MultiOutputReceiver out) {
-						String docId = docIdToText.getKey();
-						String plainText = docIdToText.getValue();
+					public void processElement(@Element KV<Entity, String> statusEntityToText,
+							MultiOutputReceiver out) {
+						Entity statusEntity = statusEntityToText.getKey();
+						String docId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID)
+								.getStringValue();
+						String plainText = statusEntityToText.getValue();
 
 						try {
 							String bionlp = getSentencesAsBioNLP(docId, plainText);
@@ -75,7 +82,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 							 * under the DataStore byte length threshold
 							 */
 							List<String> chunkedConllu = PipelineMain.chunkContent(bionlp);
-							out.get(SENTENCE_ANNOT_TAG).output(KV.of(docId, chunkedConllu));
+							out.get(SENTENCE_ANNOT_TAG).output(KV.of(statusEntity, chunkedConllu));
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(dc, "Failure during sentence segmentation.",
 									docId, t, timestamp);
@@ -97,7 +104,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	private static String getSentencesAsBioNLP(String docId, String docText) throws IOException {
 
 		TextDocument td = segmentSentences(docText);
-		
+
 		// validate spans match document text
 		for (TextAnnotation ta : td.getAnnotations()) {
 			if (!SpanValidator.validate(ta.getSpans(), ta.getCoveredText(), docText)) {

@@ -14,8 +14,11 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
@@ -49,23 +52,25 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<String, List<String>>>() {
+	public static TupleTag<KV<Entity, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<Entity, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToText, String ogerServiceUri,
+	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToText, String ogerServiceUri,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, OgerOutputType ogerOutputType) {
 
-		return docIdToText.apply("Identify concept annotations",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
+		return statusEntityToText.apply("Identify concept annotations",
+				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<String, String> docIdToTextKV, MultiOutputReceiver out) {
-						String docId = docIdToTextKV.getKey();
-						String plainText = docIdToTextKV.getValue();
+					public void processElement(@Element KV<Entity, String> statusEntityToText,
+							MultiOutputReceiver out) {
+						Entity statusEntity = statusEntityToText.getKey();
+						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+						String plainText = statusEntityToText.getValue();
 
 						try {
 							String ogerOutput = annotate(plainText, ogerServiceUri, ogerOutputType);
@@ -75,7 +80,7 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 							}
 
 							List<String> chunkedOgerOutput = PipelineMain.chunkContent(ogerOutput);
-							out.get(ANNOTATIONS_TAG).output(KV.of(docId, chunkedOgerOutput));
+							out.get(ANNOTATIONS_TAG).output(KV.of(statusEntity, chunkedOgerOutput));
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
 									"Failure during OGER annotation.", docId, t, timestamp);
@@ -101,8 +106,8 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String convertToBioNLP(String ogerSystemOutput, String docId, String docText, OgerOutputType ogerOutputType)
-			throws IOException {
+	public static String convertToBioNLP(String ogerSystemOutput, String docId, String docText,
+			OgerOutputType ogerOutputType) throws IOException {
 
 		TextDocument td = null;
 
@@ -138,10 +143,10 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 		 */
 		for (TextAnnotation ta : td.getAnnotations()) {
 			if (!SpanValidator.validate(ta.getSpans(), ta.getCoveredText(), docText)) {
-				throw new IllegalStateException(
-						String.format("OGER span mismatch detected. doc_id: %s span: %s expected_text: %s observed_text: %s",
-								docId, ta.getSpans().toString(), ta.getCoveredText(),
-								SpanUtils.getCoveredText(ta.getSpans(), docText)));
+				throw new IllegalStateException(String.format(
+						"OGER span mismatch detected. doc_id: %s span: %s expected_text: %s observed_text: %s", docId,
+						ta.getSpans().toString(), ta.getCoveredText(),
+						SpanUtils.getCoveredText(ta.getSpans(), docText)));
 			}
 		}
 
@@ -159,7 +164,8 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String annotate(String plainText, String ogerServiceUri, OgerOutputType ogerOutputType) throws IOException {
+	public static String annotate(String plainText, String ogerServiceUri, OgerOutputType ogerOutputType)
+			throws IOException {
 
 		String targetUri = null;
 

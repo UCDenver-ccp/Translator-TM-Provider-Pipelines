@@ -22,11 +22,13 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.serialization.SentenceCooccurrenceBuilderTest;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -47,15 +49,16 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 	@Before
 	public void setUp() throws IOException {
 		docTypeToContent = new HashMap<DocumentType, String>();
-		conceptChebi = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.concept_chebi.bionlp",
+		conceptChebi = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
+				"12345.concept_chebi.bionlp", CharacterEncoding.UTF_8);
+		conceptCl = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
+				"12345.concept_cl.bionlp", CharacterEncoding.UTF_8);
+		dependency = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
+				"12345.dependency.conllu", CharacterEncoding.UTF_8);
+		sentences = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
+				"12345.sentence.bionlp", CharacterEncoding.UTF_8);
+		text = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.txt",
 				CharacterEncoding.UTF_8);
-		conceptCl = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.concept_cl.bionlp",
-				CharacterEncoding.UTF_8);
-		dependency = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.dependency.conllu",
-				CharacterEncoding.UTF_8);
-		sentences = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.sentence.bionlp",
-				CharacterEncoding.UTF_8);
-		text = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.txt", CharacterEncoding.UTF_8);
 
 		docTypeToContent.put(DocumentType.TEXT, text);
 		docTypeToContent.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
@@ -122,8 +125,8 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 				// drop final tab
 				int l = decode.length();
 				decode = decode.substring(0, decode.length() - 1);
-				
-				if (decode.length()!= (l-1)) {
+
+				if (decode.length() != (l - 1)) {
 					throw new RuntimeException("substring wrong");
 				}
 
@@ -148,14 +151,15 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.BIONLP,
 				pipelineKey, pipelineVersion);
-		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
-				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+
 		PCollectionTuple output = SentenceCooccurrenceFileBuilderFn.process(input, outputTextDocCriteria, timestamp);
 
 		String expectedBioNlp = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863-sentences.bionlp", CharacterEncoding.UTF_8);
 		PAssert.that(output.get(OpenNLPSentenceSegmentFn.SENTENCE_ANNOT_TAG))
-				.containsInAnyOrder(KV.of(docId, CollectionsUtil.createList(expectedBioNlp)));
+				.containsInAnyOrder(KV.of(
+						PipelineTestUtil.createEntity(docId, ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE),
+						CollectionsUtil.createList(expectedBioNlp)));
 
 		pipeline.run();
 	}
