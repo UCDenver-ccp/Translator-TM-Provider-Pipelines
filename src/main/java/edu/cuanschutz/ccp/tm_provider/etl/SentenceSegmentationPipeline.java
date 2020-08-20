@@ -1,6 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -21,14 +20,13 @@ import com.google.datastore.v1.Entity;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OpenNLPSentenceSegmentFn;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 
 /**
  * This Apache Beam pipeline processes documents with the OpenNLP sentence
@@ -72,22 +70,22 @@ public class SentenceSegmentationPipeline {
 		Pipeline p = Pipeline.create(options);
 
 		// we want to find documents that need dependency parsing
-		ProcessingStatusFlag targetProcessStatusFlag = ProcessingStatusFlag.SENTENCE_DONE;
+		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.SENTENCE_DONE;
 		// we require that the documents have a plain text version
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 
-		PCollection<KV<String, String>> docId2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-				options.getOverwrite());
+		PCollection<KV<Entity, String>> statusEntity2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
+				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
+				options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
 
 		/* initialize to load the sentence segmentation model */
-		PCollectionTuple output = OpenNLPSentenceSegmentFn.process(docId2Content, outputDocCriteria, timestamp);
+		PCollectionTuple output = OpenNLPSentenceSegmentFn.process(statusEntity2Content, outputDocCriteria, timestamp);
 
 		/*
 		 * Processing of the plain text by the OpenNLP sentence segmenter 1) a
@@ -96,7 +94,7 @@ public class SentenceSegmentationPipeline {
 		 * segmentation processing.
 		 */
 
-		PCollection<KV<String, List<String>>> docIdToSentenceBioNLP = output
+		PCollection<KV<Entity, List<String>>> statusEntityToSentenceBioNLP = output
 				.get(OpenNLPSentenceSegmentFn.SENTENCE_ANNOT_TAG);
 		PCollection<EtlFailureData> failures = output.get(OpenNLPSentenceSegmentFn.ETL_FAILURE_TAG);
 
@@ -104,10 +102,21 @@ public class SentenceSegmentationPipeline {
 		 * store the serialized annotation document content in Cloud Datastore -
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
-		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
-				.deduplicateDocuments(docIdToSentenceBioNLP);
-		nonredundantAnnotations.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToSentenceBioNLP);
+		nonredundantDocIdToAnnotations
+				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/*
+		 * update the status entities to reflect the work completed, and store in
+		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
+		 */
+		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+				statusEntityToSentenceBioNLP.apply(Keys.<Entity>create()), targetProcessingStatusFlag);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is
@@ -115,16 +124,9 @@ public class SentenceSegmentationPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		// update the status for documents that were successfully processed
-		PCollection<KV<String, String>> successStatus = DatastoreProcessingStatusUtil.getSuccessStatus(
-				docId2Content.apply(Keys.<String>create()), failures, ProcessingStatusFlag.SENTENCE_DONE);
-		List<PCollection<KV<String, String>>> statusList = new ArrayList<PCollection<KV<String, String>>>();
-		statusList.add(successStatus);
-		DatastoreProcessingStatusUtil.performStatusUpdatesInBatch(statusList);
 
 		p.run().waitUntilFinish();
 	}

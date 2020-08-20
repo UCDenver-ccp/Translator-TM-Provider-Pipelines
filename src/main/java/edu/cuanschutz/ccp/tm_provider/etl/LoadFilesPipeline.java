@@ -111,7 +111,8 @@ public class LoadFilesPipeline {
 		 * store the document content in Cloud Datastore - deduplication is necessary to
 		 * avoid Datastore non-transactional commit errors
 		 */
-		PCollection<KV<String, List<String>>> nonredundantContent = PipelineMain.deduplicateDocuments(docIdToContent);
+		PCollection<KV<String, List<String>>> nonredundantContent = PipelineMain
+				.deduplicateDocumentsByStringKey(docIdToContent);
 		nonredundantContent.apply("content->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -121,7 +122,7 @@ public class LoadFilesPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -131,7 +132,7 @@ public class LoadFilesPipeline {
 		 */
 		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
 				ParDo.of(new ProcessingStatusToEntityFn()));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntities(statusEntities);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 

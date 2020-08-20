@@ -90,7 +90,7 @@ public class BigQueryExportPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = annotationRetrievalFailures
 				.apply("annot_extract_failures->datastore", ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("annot_extract_failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -121,7 +121,7 @@ public class BigQueryExportPipeline {
 		 */
 		failureEntities = bigqueryExportFailures.apply("bq_export_failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("bq_export_failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 

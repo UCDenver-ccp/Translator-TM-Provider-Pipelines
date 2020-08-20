@@ -16,7 +16,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.medline.PubmedArticle;
 
 import com.google.datastore.v1.Entity;
@@ -58,21 +57,8 @@ public class MedlineXmlToTextPipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		TypeDescriptor<KV<String, String>> td = new TypeDescriptor<KV<String, String>>() {
-			private static final long serialVersionUID = 1L;
-		};
-
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		String medlineXmlFilePattern = options.getMedlineXmlDir() + "/*.xml.gz";
-//		PCollection<KV<String, String>> fileIdAndContent = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
-//				.apply(FileIO.readMatches()).apply(MapElements.into(td).via((ReadableFile f) -> {
-//					try {
-//						return KV.of(f.getMetadata().resourceId().toString(), f.readFullyAsUTF8String());
-//					} catch (IOException e) {
-//						throw new RuntimeException("Error while importing Medline XML files from file system.", e);
-//					}
-//				}));
-
 		PCollection<ReadableFile> files = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
 				.apply(FileIO.readMatches().withCompression(Compression.GZIP));
 
@@ -99,8 +85,9 @@ public class MedlineXmlToTextPipeline {
 		 * processing status of each document
 		 */
 
-		PCollection<KV<String, List<String>>> docIdToPlainText = output.get(MedlineXmlToTextFn.plainTextTag);
-		PCollection<KV<String, List<String>>> docIdToAnnotations = output.get(MedlineXmlToTextFn.sectionAnnotationsTag);
+		PCollection<KV<String, List<String>>> statusEntityToPlainText = output.get(MedlineXmlToTextFn.plainTextTag);
+		PCollection<KV<String, List<String>>> statusEntityToAnnotation = output
+				.get(MedlineXmlToTextFn.sectionAnnotationsTag);
 		PCollection<EtlFailureData> failures = output.get(MedlineXmlToTextFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(MedlineXmlToTextFn.processingStatusTag);
 
@@ -109,7 +96,7 @@ public class MedlineXmlToTextPipeline {
 		 * necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
-				.deduplicateDocuments(docIdToPlainText);
+				.deduplicateDocumentsByStringKey(statusEntityToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
@@ -118,9 +105,9 @@ public class MedlineXmlToTextPipeline {
 		 * store the serialized annotation document content in Cloud Datastore -
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
-		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
-				.deduplicateDocuments(docIdToAnnotations);
-		nonredundantAnnotations
+		PCollection<KV<String, List<String>>> nonredundantStatusEntityToAnnotations = PipelineMain
+				.deduplicateDocumentsByStringKey(statusEntityToAnnotation);
+		nonredundantStatusEntityToAnnotations
 				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -130,7 +117,7 @@ public class MedlineXmlToTextPipeline {
 		 */
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
-		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntities(failureEntities);
+		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
@@ -140,7 +127,7 @@ public class MedlineXmlToTextPipeline {
 		 */
 		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
 				ParDo.of(new ProcessingStatusToEntityFn()));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntities(statusEntities);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 

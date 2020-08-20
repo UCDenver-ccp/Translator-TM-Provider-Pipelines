@@ -11,8 +11,11 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
+import com.google.datastore.v1.Entity;
+
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
 
@@ -34,23 +37,25 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 	 * be stored in chunks.
 	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, List<String>>> CONLLU_TAG = new TupleTag<KV<String, List<String>>>() {
+	public static TupleTag<KV<Entity, List<String>>> CONLLU_TAG = new TupleTag<KV<Entity, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
+	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToText,
 			String dependencyParserServiceUri, DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
-		return docIdToBiocXml.apply("Compute dependency parse",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
+		return statusEntityToText.apply("Compute dependency parse",
+				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<String, String> docIdToText, MultiOutputReceiver out) {
-						String docId = docIdToText.getKey();
-						String plainText = docIdToText.getValue();
+					public void processElement(@Element KV<Entity, String> statusEntityToText,
+							MultiOutputReceiver out) {
+						Entity statusEntity = statusEntityToText.getKey();
+						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+						String plainText = statusEntityToText.getValue();
 
 						/*
 						 * the turku parser treats blank lines as section separators. Single line breaks
@@ -69,7 +74,7 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 							 * under the DataStore byte length threshold
 							 */
 							List<String> chunkedConllu = PipelineMain.chunkContent(conllu);
-							out.get(CONLLU_TAG).output(KV.of(docId, chunkedConllu));
+							out.get(CONLLU_TAG).output(KV.of(statusEntity, chunkedConllu));
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(dc, "Failure during dependency parsing.", docId,
 									t, timestamp);
