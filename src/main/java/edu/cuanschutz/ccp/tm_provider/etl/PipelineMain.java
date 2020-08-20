@@ -28,6 +28,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
 import com.google.datastore.v1.Key;
@@ -287,7 +288,7 @@ public class PipelineMain {
 	 * @return a non-redundant collection of document-id/document-content pairings
 	 *         filtered using the document-ids (the String in the KV pair)
 	 */
-	static PCollection<KV<String, List<String>>> deduplicateDocumentsByStringKey(
+	public static PCollection<KV<String, List<String>>> deduplicateDocumentsByStringKey(
 			PCollection<KV<String, List<String>>> docIdToPlainText) {
 
 		PCollection<KV<String, Iterable<List<String>>>> idToPlainText = docIdToPlainText.apply("group-by-document-id",
@@ -314,7 +315,8 @@ public class PipelineMain {
 	 * @return an updated version of the input {@link Entity} with the specified
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
-	static Entity updateStatusEntity(Entity origEntity, ProcessingStatusFlag... flagsToActivate) {
+	@VisibleForTesting
+	private static Entity updateStatusEntity(Entity origEntity, ProcessingStatusFlag... flagsToActivate) {
 		Key key = origEntity.getKey();
 
 		Entity.Builder entityBuilder = Entity.newBuilder();

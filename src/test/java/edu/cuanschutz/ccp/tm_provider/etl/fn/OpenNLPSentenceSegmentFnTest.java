@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.SerializableCoder;
@@ -86,10 +87,7 @@ public class OpenNLPSentenceSegmentFnTest {
 
 		@Override
 		public Void apply(Iterable<T> input) {
-			int count = 0;
-			for (T item : input) {
-				count++;
-			}
+			long count = StreamSupport.stream(input.spliterator(), false).count();
 			assertEquals(String.format("There should only be %d items in the PCollection", expectedCount),
 					expectedCount, count);
 			return null;

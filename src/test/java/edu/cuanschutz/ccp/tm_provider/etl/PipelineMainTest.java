@@ -5,7 +5,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -67,11 +69,7 @@ public class PipelineMainTest {
 
 		@Override
 		public Void apply(Iterable<T> input) {
-			int count = 0;
-			for (T kv : input) {
-				count++;
-//				System.out.println(kv.getValue().toString());
-			}
+			long count = StreamSupport.stream(input.spliterator(), false).count();
 			assertEquals(String.format("There should only be %d items in the PCollection", expectedCount),
 					expectedCount, count);
 			return null;
@@ -87,11 +85,16 @@ public class PipelineMainTest {
 		String docId3 = "PMID:3";
 		String docId4 = "PMID:4";
 
-		PCollection<KV<String, List<String>>> statusEntityToDocContent = pipeline
-				.apply(Create.of(KV.of(docId1, Arrays.asList("doc1 text")), KV.of(docId2, Arrays.asList("doc2 text")),
-						KV.of(docId3, Arrays.asList("doc3 text")), KV.of(docId4, Arrays.asList("doc4 text")),
-						KV.of(docId1, Arrays.asList("doc1 text")), KV.of(docId1, Arrays.asList("doc1 text")),
-						KV.of(docId2, Arrays.asList("doc2 text")), KV.of(docId2, Arrays.asList("doc2 text"))));
+		List<KV<String, List<String>>> input = Arrays.asList(KV.of(docId1, Arrays.asList("doc1 text")),
+				KV.of(docId2, Arrays.asList("doc2 text")), KV.of(docId3, Arrays.asList("doc3 text")),
+				KV.of(docId4, Arrays.asList("doc4 text")), KV.of(docId1, Arrays.asList("doc1 text")),
+				KV.of(docId1, Arrays.asList("doc1 text")), KV.of(docId2, Arrays.asList("doc2 text")),
+				KV.of(docId2, Arrays.asList("doc2 text")));
+
+		assertEquals("there should only be 4 unique entries in the input", 4,
+				new HashSet<KV<String, List<String>>>(input).size());
+
+		PCollection<KV<String, List<String>>> statusEntityToDocContent = pipeline.apply(Create.of(input));
 		PCollection<KV<String, List<String>>> nonredundantStatusEntityToDocContent = PipelineMain
 				.deduplicateDocumentsByStringKey(statusEntityToDocContent);
 
@@ -115,11 +118,16 @@ public class PipelineMainTest {
 		Entity entity3 = createEntity(docId3, ProcessingStatusFlag.TEXT_DONE);
 		Entity entity4 = createEntity(docId4, ProcessingStatusFlag.TEXT_DONE);
 
-		PCollection<KV<Entity, List<String>>> statusEntityToDocContent = pipeline
-				.apply(Create.of(KV.of(entity1, Arrays.asList("doc1 text")), KV.of(entity2, Arrays.asList("doc2 text")),
-						KV.of(entity3, Arrays.asList("doc3 text")), KV.of(entity4, Arrays.asList("doc4 text")),
-						KV.of(entity1, Arrays.asList("doc1 text")), KV.of(entity1, Arrays.asList("doc1 text")),
-						KV.of(entity2, Arrays.asList("doc2 text")), KV.of(entity2, Arrays.asList("doc2 text"))));
+		List<KV<Entity, List<String>>> input = Arrays.asList(KV.of(entity1, Arrays.asList("doc1 text")),
+				KV.of(entity2, Arrays.asList("doc2 text")), KV.of(entity3, Arrays.asList("doc3 text")),
+				KV.of(entity4, Arrays.asList("doc4 text")), KV.of(entity1, Arrays.asList("doc1 text")),
+				KV.of(entity1, Arrays.asList("doc1 text")), KV.of(entity2, Arrays.asList("doc2 text")),
+				KV.of(entity2, Arrays.asList("doc2 text")));
+
+		assertEquals("there should only be 4 unique entries in the input", 4,
+				new HashSet<KV<Entity, List<String>>>(input).size());
+
+		PCollection<KV<Entity, List<String>>> statusEntityToDocContent = pipeline.apply(Create.of(input));
 		PCollection<KV<String, List<String>>> nonredundantStatusEntityToDocContent = PipelineMain
 				.deduplicateDocuments(statusEntityToDocContent);
 
@@ -145,7 +153,11 @@ public class PipelineMainTest {
 		Entity entity3 = createEntity(docId3, ProcessingStatusFlag.TEXT_DONE);
 		Entity entity4 = createEntity(docId4, ProcessingStatusFlag.TEXT_DONE);
 
-		PCollection<Entity> statusEntities = pipeline.apply(Create.of(entity1, entity2, entity3, entity4));
+		List<Entity> input = Arrays.asList(entity1, entity2, entity3, entity4, entity1, entity3, entity4);
+
+		assertEquals("there should only be 4 unique entries in the input", 4, new HashSet<Entity>(input).size());
+
+		PCollection<Entity> statusEntities = pipeline.apply(Create.of(input));
 
 		PCollection<Entity> nonredundantEntities = PipelineMain.deduplicateStatusEntities(statusEntities);
 
