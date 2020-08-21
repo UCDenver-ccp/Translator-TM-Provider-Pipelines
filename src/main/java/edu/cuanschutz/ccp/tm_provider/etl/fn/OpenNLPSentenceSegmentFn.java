@@ -1,7 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +18,7 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SpanValidator;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -59,8 +58,8 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToInputText,
-			 DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
+	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToInputText, DocumentCriteria dc,
+			com.google.cloud.Timestamp timestamp) {
 
 		return statusEntityToInputText.apply("Segment sentences",
 				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
@@ -70,8 +69,7 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 					public void processElement(@Element KV<Entity, String> statusEntityToText,
 							MultiOutputReceiver out) {
 						Entity statusEntity = statusEntityToText.getKey();
-						String docId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID)
-								.getStringValue();
+						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
 						String plainText = statusEntityToText.getValue();
 
 						try {
@@ -124,6 +122,11 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	}
 
 	static TextDocument segmentSentences(String plainText) throws IOException {
+		// TODO: Note that this is **incredibly** inefficient as the model is getting loaded
+		// for every document processed. This is because the SentenceDetectorME class is
+		// not Serializable. This should be investigated and/or this should be converted
+		// into a service that is hosted in the K8s cluster and is queried from this
+		// class instead.
 		InputStream modelStream = ClassPathUtil.getResourceStreamFromClasspath(OpenNLPSentenceSegmentFn.class,
 				"/de/tudarmstadt/ukp/dkpro/core/opennlp/lib/sentence-en-maxent.bin");
 		SentenceModel model = new SentenceModel(modelStream);
