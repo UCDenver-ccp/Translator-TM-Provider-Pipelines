@@ -87,7 +87,7 @@ public class MedlineXmlToTextFnTest {
 		InputStream is = new GZIPInputStream(ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class,
 				"sample-pubmed20n0001.xml.gz"));
 
-		XMLInputFactory xif = XMLInputFactory.newFactory();
+		XMLInputFactory xif = XMLInputFactory.newInstance();
 		xif.setXMLResolver(getXmlResolver());
 		XMLStreamReader xsr = xif.createXMLStreamReader(is);
 
