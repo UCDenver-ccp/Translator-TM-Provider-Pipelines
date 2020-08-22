@@ -92,6 +92,11 @@ public class OgerPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("Limit on the number of documents to process")
+		Integer getQueryLimit();
+
+		void setQueryLimit(Integer value);
+
 	}
 
 	public static void main(String[] args) {
@@ -124,9 +129,10 @@ public class OgerPipeline {
 		 */
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria),
-				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-				options.getCollection(), options.getOverwrite());
+		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
+				.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria), options.getProject(), p,
+						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+						options.getOverwrite(), options.getQueryLimit());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);

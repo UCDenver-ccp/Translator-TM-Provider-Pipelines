@@ -61,6 +61,11 @@ public class SentenceSegmentationPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("Limit on the number of documents to process")
+		Integer getQueryLimit();
+
+		void setQueryLimit(Integer value);
+
 	}
 
 	public static void main(String[] args) {
@@ -82,7 +87,7 @@ public class SentenceSegmentationPipeline {
 		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite());
+						options.getOverwrite(), options.getQueryLimit());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
