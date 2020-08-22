@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -58,19 +59,20 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToText, String ogerServiceUri,
+	public static PCollectionTuple process(PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToText, String ogerServiceUri,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, OgerOutputType ogerOutputType) {
 
 		return statusEntityToText.apply("Identify concept annotations",
-				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
+				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<Entity, String> statusEntityToText,
+					public void processElement(@Element KV<Entity, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
 						Entity statusEntity = statusEntityToText.getKey();
 						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
-						String plainText = statusEntityToText.getValue();
+						// there is only one entry in the input map and it is the plain text of the input document
+						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 
 						try {
 							String ogerOutput = annotate(plainText, ogerServiceUri, ogerOutputType);

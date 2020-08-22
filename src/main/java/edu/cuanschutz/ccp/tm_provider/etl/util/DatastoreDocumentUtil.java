@@ -30,89 +30,40 @@ public class DatastoreDocumentUtil {
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
-//	/**
-//	 * @param documentIds
-//	 * @param type
-//	 * @param format
-//	 * @return a list of document ID/content pairs queried from Cloud Datastore
-//	 */
-//	public List<KV<String, String>> getDocumentIdToContentList(List<String> documentIds, DocumentType type,
-//			DocumentFormat format, PipelineKey pipeline, String pipelineVersion, int maxNumToProcess) {
-//
-//		// from the input list of document IDs, create an array of corresponding
-//		// document @{link Key} objects
-//		Key[] keys = documentIds.stream().map(id -> createDocumentKey(id, type, format, pipeline, pipelineVersion))
-//				.collect(Collectors.toList()).toArray(new Key[0]);
-//
-//		// can't request more than 1000 keys - so limit to 999 here
-//		Key[] keysToUse = keys;
-//		if (keys.length > maxNumToProcess) {
-//			keysToUse = Arrays.copyOfRange(keys, 0, maxNumToProcess);
-//		}
-//
-//		// Batch query for the entities corresponding to the {@link Key} objects, and
-//		// populate a list of document id/content KV pairs
-//		List<KV<String, String>> docIdToContentPairs = Streams.stream(datastore.get(keysToUse))
-//				.map(entity -> KV.of(getDocumentId(entity), getDocumentContent(entity))).collect(Collectors.toList());
-//		return docIdToContentPairs;
-//	}
-
 	/**
-	 * @param documentId
-	 * @param type
-	 * @param format
-	 * @param pipeline
-	 * @param pipelineVersion
-	 * @param chunkCount      - this is required so it knows how many pieces must be
-	 *                        spliced in order to return the full content
-	 * @return
+	 * @param statusEntity
+	 * @param documentCriteria
+	 * @return a mapping from the status entity (just passing it through) to a
+	 *         mapping from each document criteria to the document content extracted
+	 *         from Datastore
 	 */
-	public KV<com.google.datastore.v1.Entity, String> getDocumentIdToContent(com.google.datastore.v1.Entity statusEntity, DocumentCriteria docCriteria) {
+	public KV<com.google.datastore.v1.Entity, Map<DocumentCriteria, String>> getStatusEntityToContent(
+			com.google.datastore.v1.Entity statusEntity, List<DocumentCriteria> documentCriteria) {
 		String documentId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
-		
-		// documents can be stored in chunks depending on their size. Query for each
-		// chunk here.
-		StringBuffer content = new StringBuffer();
 
-		int chunkIndex = 0;
-		Key key = createDocumentKey(documentId, docCriteria, chunkIndex++);
-		Entity entity = datastore.get(key);
+		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
 
-		while (entity != null) {
-			content.append(getDocumentContent(entity));
-			key = createDocumentKey(documentId, docCriteria, chunkIndex++);
-			entity = datastore.get(key);
+		for (DocumentCriteria docCriteria : documentCriteria) {
+			// documents can be stored in chunks depending on their size. Query for each
+			// chunk here.
+			StringBuffer content = new StringBuffer();
+
+			int chunkIndex = 0;
+			Key key = createDocumentKey(documentId, docCriteria, chunkIndex++);
+			Entity entity = datastore.get(key);
+
+			while (entity != null) {
+				content.append(getDocumentContent(entity));
+				key = createDocumentKey(documentId, docCriteria, chunkIndex++);
+				entity = datastore.get(key);
+			}
+
+			map.put(docCriteria, content.toString());
+
 		}
 
-		return (content.length() > 0) ? KV.of(statusEntity, content.toString()) : null;
+		return KV.of(statusEntity, map);
 
-//		for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-//			Key key = createDocumentKey(documentId, docCriteria, chunkIndex);// type, format, pipeline,
-//																				// pipelineVersion);
-////			System.out.println("DOC KEY: " + key.toString());
-//
-////			try {
-//			Entity entity = datastore.get(key);
-//
-//			if (entity != null) {
-////					logger.log(Level.SEVERE,
-////							"No text document for documentID: " + documentId + " chunk id: " + chunkIndex);
-////					return null;
-//				id = getDocumentId(entity);
-//				content.append(getDocumentContent(entity));
-//			} else {
-//				// we assume that all chunks have been retrieved.
-//				break;
-//			}
-//
-////			} catch (Exception e) {
-////				// TODO: Workaround for missing chunk count fields -- if there is an error while
-////				// retrieving the chunk then we assume that we have all chunks alread
-////				break;
-////			}
-//		}
-//
-//		return KV.of(id, content.toString());
 	}
 
 	/**

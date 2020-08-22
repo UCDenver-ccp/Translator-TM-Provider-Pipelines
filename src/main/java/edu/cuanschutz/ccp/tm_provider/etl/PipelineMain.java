@@ -14,6 +14,7 @@ import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
@@ -99,10 +100,21 @@ public class PipelineMain {
 		}
 	}
 
-	public static PCollection<KV<Entity, String>> getDocId2Content(DocumentCriteria inputDocCriteria,
-//			String pipelineVersion, 
-			String gcpProjectId, Pipeline beamPipeline, ProcessingStatusFlag targetProcessStatusFlag,
-			Set<ProcessingStatusFlag> requiredProcessStatusFlags, String collection, OverwriteOutput overwriteOutput) {
+	/**
+	 * @param inputDocCriteria
+	 * @param gcpProjectId
+	 * @param beamPipeline
+	 * @param targetProcessStatusFlag
+	 * @param requiredProcessStatusFlags
+	 * @param collection
+	 * @param overwriteOutput
+	 * @return a mapping from the status entity to various document content (a
+	 *         mapping from the document criteria to the document content)
+	 */
+	public static PCollection<KV<Entity, Map<DocumentCriteria, String>>> getStatusEntity2Content(
+			List<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
+			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
+			String collection, OverwriteOutput overwriteOutput) {
 
 		/*
 		 * get the status entities for documents that meet the required process status
@@ -115,12 +127,13 @@ public class PipelineMain {
 		 * then return a mapping from document id to the document content that will be
 		 * processed
 		 */
-		PCollection<KV<Entity, String>> docId2Content = status.apply("get document content",
-				ParDo.of(new DoFn<Entity, KV<Entity, String>>() {
+		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = status
+				.apply("get document content", ParDo.of(new DoFn<Entity, KV<Entity, Map<DocumentCriteria, String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element Entity statusEntity, OutputReceiver<KV<Entity, String>> out) {
+					public void processElement(@Element Entity statusEntity,
+							OutputReceiver<KV<Entity, Map<DocumentCriteria, String>>> out) {
 //						String documentId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
 
 						// TODO: This needs to be fixed -- this chunk count field is only present for
@@ -130,14 +143,14 @@ public class PipelineMain {
 //						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
 
 						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
-						KV<Entity, String> documentIdToContent = util.getDocumentIdToContent(statusEntity,
-								inputDocCriteria);
+						KV<Entity, Map<DocumentCriteria, String>> documentIdToContent = util
+								.getStatusEntityToContent(statusEntity, inputDocCriteria);
 						if (documentIdToContent != null) {
 							out.output(documentIdToContent);
 						}
 					}
 				}));
-		return docId2Content;
+		return statusEntity2Content;
 	}
 
 	public static PCollection<Entity> getStatusEntitiesToProcess(Pipeline p,

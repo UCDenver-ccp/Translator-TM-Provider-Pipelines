@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -58,19 +59,22 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToInputText, DocumentCriteria dc,
+	public static PCollectionTuple process(
+			PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToInputText, DocumentCriteria dc,
 			com.google.cloud.Timestamp timestamp) {
 
 		return statusEntityToInputText.apply("Segment sentences",
-				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
+				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<Entity, String> statusEntityToText,
+					public void processElement(@Element KV<Entity, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
 						Entity statusEntity = statusEntityToText.getKey();
 						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
-						String plainText = statusEntityToText.getValue();
+						// there is only one entry in the input map and it is the plain text of the
+						// input document
+						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 
 						try {
 							String bionlp = getSentencesAsBioNLP(docId, plainText);
@@ -122,7 +126,8 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 	}
 
 	static TextDocument segmentSentences(String plainText) throws IOException {
-		// TODO: Note that this is **incredibly** inefficient as the model is getting loaded
+		// TODO: Note that this is **incredibly** inefficient as the model is getting
+		// loaded
 		// for every document processed. This is because the SentenceDetectorME class is
 		// not Serializable. This should be investigated and/or this should be converted
 		// into a service that is hosted in the K8s cluster and is queried from this
