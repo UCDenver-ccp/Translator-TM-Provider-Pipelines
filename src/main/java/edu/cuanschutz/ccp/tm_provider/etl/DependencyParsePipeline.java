@@ -1,7 +1,9 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -64,6 +66,11 @@ public class DependencyParsePipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("Limit on the number of documents to process")
+		Integer getQueryLimit();
+
+		void setQueryLimit(Integer value);
+
 	}
 
 	public static void main(String[] args) {
@@ -87,9 +94,10 @@ public class DependencyParsePipeline {
 		 */
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<Entity, String>> statusEntity2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-				options.getCollection(), options.getOverwrite());
+		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
+				.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria), options.getProject(), p,
+						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+						options.getOverwrite(), options.getQueryLimit());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);

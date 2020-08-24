@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -43,19 +44,20 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, String>> statusEntityToText,
+	public static PCollectionTuple process(PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToText,
 			String dependencyParserServiceUri, DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
 		return statusEntityToText.apply("Compute dependency parse",
-				ParDo.of(new DoFn<KV<Entity, String>, KV<Entity, List<String>>>() {
+				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<Entity, String> statusEntityToText,
+					public void processElement(@Element KV<Entity, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
 						Entity statusEntity = statusEntityToText.getKey();
 						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
-						String plainText = statusEntityToText.getValue();
+						// there is only one entry in the input map and it is the plain text of the input document
+						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 
 						/*
 						 * the turku parser treats blank lines as section separators. Single line breaks

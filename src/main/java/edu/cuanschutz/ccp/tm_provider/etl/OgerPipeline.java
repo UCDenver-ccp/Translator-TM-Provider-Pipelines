@@ -1,8 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,6 +92,11 @@ public class OgerPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("Limit on the number of documents to process")
+		Integer getQueryLimit();
+
+		void setQueryLimit(Integer value);
+
 	}
 
 	public static void main(String[] args) {
@@ -122,9 +129,10 @@ public class OgerPipeline {
 		 */
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<Entity, String>> statusEntity2Content = PipelineMain.getDocId2Content(inputTextDocCriteria,
-				options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-				options.getCollection(), options.getOverwrite());
+		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
+				.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria), options.getProject(), p,
+						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+						options.getOverwrite(), options.getQueryLimit());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);

@@ -4,10 +4,13 @@ import static edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil.createEntity;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import org.apache.beam.sdk.coders.KvCoder;
+import org.apache.beam.sdk.coders.MapCoder;
 import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
@@ -49,16 +52,20 @@ public class OpenNLPSentenceSegmentFnTest {
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
+		DocumentCriteria inputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.FILE_LOAD, "v0.1.3");
 		String documentText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
 		String docId = "PMC1790863";
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.SENTENCE_DONE;
 		Entity expectedEntity = createEntity(docId, targetProcessingStatusFlag);
 
-		PCollection<KV<Entity, String>> input = pipeline.apply(Create.of(KV.of(expectedEntity, documentText))
-				.withCoder(KvCoder.of(SerializableCoder.of(Entity.class), StringUtf8Coder.of())));
+		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
+		map.put(inputDocCriteria, documentText);
+		
+		PCollection<KV<Entity, Map<DocumentCriteria, String>>> input = pipeline.apply(Create.of(KV.of(expectedEntity, map))
+				.withCoder(KvCoder.of(SerializableCoder.of(Entity.class), MapCoder.of(SerializableCoder.of(DocumentCriteria.class), StringUtf8Coder.of()))));
 
-		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.BIONLP,
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				pipelineKey, pipelineVersion);
 
 		PCollectionTuple output = OpenNLPSentenceSegmentFn.process(input, outputTextDocCriteria, timestamp);
