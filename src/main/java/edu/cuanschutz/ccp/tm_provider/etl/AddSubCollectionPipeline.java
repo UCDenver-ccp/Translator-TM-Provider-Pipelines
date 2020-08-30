@@ -35,8 +35,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
  */
 public class AddSubCollectionPipeline {
 
-	private final static Logger LOGGER = Logger.getLogger(AddSubCollectionPipeline.class.getName());
-
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The document collection to process")
 		String getCollection();

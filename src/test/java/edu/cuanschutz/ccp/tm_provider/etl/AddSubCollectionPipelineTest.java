@@ -42,7 +42,7 @@ public class AddSubCollectionPipelineTest {
 	}
 	
 	@Test
-	public void testUpdateStatusEntity_ensureSubCollectionPrefixCorrect() {
+	public void testUpdateStatusEntityEnsureSubCollectionPrefixCorrect() {
 		String subCollectionPrefix = "prefix_";
 
 		Entity entity = PipelineTestUtil.createEntity("PMID:1000001", "PUBMED", "TEST");
@@ -65,7 +65,7 @@ public class AddSubCollectionPipelineTest {
 	}
 	
 	@Test
-	public void testUpdateStatusEntity_ensureSubCollectionPrefixCorrect1() {
+	public void testUpdateStatusEntityEnsureSubCollectionPrefixCorrect1() {
 		String subCollectionPrefix = "prefix_";
 
 		Entity entity = PipelineTestUtil.createEntity("PMID:1000000", "PUBMED", "TEST");
@@ -89,7 +89,7 @@ public class AddSubCollectionPipelineTest {
 	
 	
 	@Test
-	public void testUpdateStatusEntity_ensureSubCollectionPrefixCorrect2() {
+	public void testUpdateStatusEntityEnsureSubCollectionPrefixCorrect2() {
 		String subCollectionPrefix = "prefix_";
 
 		Entity entity = PipelineTestUtil.createEntity("PMID:999999", "PUBMED", "TEST");
@@ -112,7 +112,7 @@ public class AddSubCollectionPipelineTest {
 	}
 	
 	@Test
-	public void testUpdateStatusEntity_ensureSubCollectionPrefixCorrect3() {
+	public void testUpdateStatusEntityEnsureSubCollectionPrefixCorrect3() {
 		String subCollectionPrefix = "prefix_";
 
 		Entity entity = PipelineTestUtil.createEntity("PMID:2222222", "PUBMED", "TEST");
@@ -136,11 +136,10 @@ public class AddSubCollectionPipelineTest {
 	
 	
 	@Test
-	public void testUpdateStatusEntity_ensureOldSubCollectionsAreRemoved() {
+	public void testUpdateStatusEntityEnsureOldSubCollectionsAreRemoved() {
 		String subCollectionPrefix = "prefix_";
 
 		Entity entity = PipelineTestUtil.createEntity("PMID:1", "PUBMED", "TEST", "prefix_12345");
-		Value origCollectionValues = entity.getPropertiesMap().get(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS);
 
 		Entity updatedEntity = AddSubCollectionPipeline.updateStatusEntity(entity, subCollectionPrefix);
 		
