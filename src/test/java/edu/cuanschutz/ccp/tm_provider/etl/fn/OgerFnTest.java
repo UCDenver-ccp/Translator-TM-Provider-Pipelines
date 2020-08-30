@@ -44,11 +44,10 @@ public class OgerFnTest {
 
 	}
 
-	
 	@Test
 	public void testSpanValidation2() throws IOException {
-		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
-				"567.concept_cl.oger.tsv", CharacterEncoding.UTF_8);
+		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "567.concept_cl.oger.tsv",
+				CharacterEncoding.UTF_8);
 
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "567.txt",
 				CharacterEncoding.UTF_8);
@@ -57,57 +56,53 @@ public class OgerFnTest {
 		System.out.println(bionlp);
 
 	}
-	
+
 	@Test
 	public void testSpanValidation3() throws IOException {
-		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
-				"7890.concept_cl.oger.tsv", CharacterEncoding.UTF_8);
-		
+		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "7890.concept_cl.oger.tsv",
+				CharacterEncoding.UTF_8);
+
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "7890.txt",
 				CharacterEncoding.UTF_8);
-		
+
 		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
-		
+
 	}
-	
+
 	@Test
 	public void testSpanValidation4() throws IOException {
 		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
 				"7890.concept_chebi.oger.tsv", CharacterEncoding.UTF_8);
-		
+
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "7890.txt",
 				CharacterEncoding.UTF_8);
-		
+
 		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
-		
+
 	}
-	
-	
+
 	@Test
 	public void testSpanValidation5() throws IOException {
 		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
 				"0863gwzz.concept_chebi.oger.tsv", CharacterEncoding.UTF_8);
-		
+
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "0863gwzz.txt",
 				CharacterEncoding.UTF_8);
-		
+
 		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
-		
+
 	}
-	
-	
+
 	@Test
 	public void testSpanValidation6() throws IOException {
 		String clOgerTsv = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class,
 				"0863gwzz.concept_pr.oger.cloud.tsv", CharacterEncoding.UTF_8);
-		
+
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "0863gwzz.txt",
 				CharacterEncoding.UTF_8);
-		
+
 		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
-		
+
 	}
-	
-	
 
 }
