@@ -65,8 +65,14 @@ public class PipelineMain {
 		if (pipeline != null) {
 			String[] pipelineArgs = Arrays.copyOfRange(args, 1, args.length);
 			switch (pipeline) {
+			case ADD_SUB_COLLECTION:
+				AddSubCollectionPipeline.main(pipelineArgs);
+				break;
 			case BIOC_TO_TEXT:
 				BiocToTextPipeline.main(pipelineArgs);
+				break;
+			case CRF:
+				CrfNerPipeline.main(pipelineArgs);
 				break;
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);

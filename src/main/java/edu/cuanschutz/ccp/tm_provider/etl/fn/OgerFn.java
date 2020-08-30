@@ -59,8 +59,9 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToText, String ogerServiceUri,
-			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, OgerOutputType ogerOutputType) {
+	public static PCollectionTuple process(PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToText,
+			String ogerServiceUri, DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
+			OgerOutputType ogerOutputType) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
@@ -71,7 +72,8 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 							MultiOutputReceiver out) {
 						Entity statusEntity = statusEntityToText.getKey();
 						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
-						// there is only one entry in the input map and it is the plain text of the input document
+						// there is only one entry in the input map and it is the plain text of the
+						// input document
 						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 
 						try {
@@ -121,12 +123,20 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 					new ByteArrayInputStream(ogerSystemOutput.getBytes()), CharacterEncoding.UTF_8, null); lineIter
 							.hasNext();) {
 				String line = lineIter.next().getText();
-				String[] cols = line.split("\\t");
-				int spanStart = Integer.parseInt(cols[2]);
-				int spanEnd = Integer.parseInt(cols[3]);
-				String coveredText = cols[4];
-				String id = cols[6];
-				td.addAnnotation(factory.createAnnotation(spanStart, spanEnd, coveredText, id));
+				if (!line.trim().isEmpty()) {
+					String[] cols = line.split("\\t");
+					try {
+						int spanStart = Integer.parseInt(cols[2]);
+						int spanEnd = Integer.parseInt(cols[3]);
+						String coveredText = cols[4];
+						String id = cols[6];
+						td.addAnnotation(factory.createAnnotation(spanStart, spanEnd, coveredText, id));
+					} catch (ArrayIndexOutOfBoundsException e) {
+						throw new IOException(
+								String.format("ArrayIndexOutOfBounds. Line (num cols: %d) = \"%s\"", cols.length, line),
+								e);
+					}
+				}
 			}
 		} else if (ogerOutputType == OgerOutputType.PUBANNOTATION) {
 			PubAnnotationDocumentReader docReader = new PubAnnotationDocumentReader();

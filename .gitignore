@@ -13,5 +13,4 @@ buildNumber.properties
 .DS_Store
 .project
 .settings/
-**/helper/
 tmp/
