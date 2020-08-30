@@ -1,13 +1,12 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn.OgerOutputType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.serialization.SentenceCooccurrenceBuilderTest;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 
