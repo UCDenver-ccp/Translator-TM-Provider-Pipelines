@@ -146,33 +146,42 @@ public class BioNLPDocumentReader extends DocumentReader {
 		while (lineIter.hasNext()) {
 			String line = lineIter.next().getText();
 			if (line.startsWith("T")) {
+				extractAnnotations(documentText, annotIdToAnnotMap, factory, line);
+			} else {
+				relationLines.add(line);
+			}
+		}
+		lineIter.close();
+	}
 
-				String[] toks = line.split("\\t");
-				String annotId = toks[0];
+	private void extractAnnotations(String documentText, Map<String, TextAnnotation> annotIdToAnnotMap,
+			TextAnnotationFactory factory, String line) {
+		String[] toks = line.split("\\t");
+		String annotId = toks[0];
 
-				String annotType = toks[1].substring(0, toks[1].indexOf(" "));
-				/* replace all spaceHolders in annotation type with spaces */
-				if (spacePlaceholder != null) {
-					annotType = annotType.replaceAll(RegExPatterns.escapeCharacterForRegEx(spacePlaceholder), " ");
-				}
-				String spanStr = toks[1].substring(toks[1].indexOf(" ") + 1);
+		String annotType = toks[1].substring(0, toks[1].indexOf(" "));
+		/* replace all spaceHolders in annotation type with spaces */
+		if (spacePlaceholder != null) {
+			annotType = annotType.replaceAll(RegExPatterns.escapeCharacterForRegEx(spacePlaceholder), " ");
+		}
+		String spanStr = toks[1].substring(toks[1].indexOf(" ") + 1);
 
-				TextAnnotation ta = null;
-				// TODO FIX SPAN VALIDATION WHEN THERE IS A DISCONTINUOUS SPAN -- will involve
-				// parsing the expected covered text
-				String coveredText = ""; // expected covered text will not appear in the document
-				if (toks.length > 2) {
-					coveredText = toks[2]; // TODO: Note that if this is a discontinuous span, then the
-				}
-				String[] spanToks = spanStr.split(";");
+		TextAnnotation ta = null;
+		// TODO FIX SPAN VALIDATION WHEN THERE IS A DISCONTINUOUS SPAN -- will involve
+		// parsing the expected covered text
+		String coveredText = ""; // expected covered text will not appear in the document
+		if (toks.length > 2) {
+			coveredText = toks[2]; // TODO: Note that if this is a discontinuous span, then the
+		}
+		String[] spanToks = spanStr.split(";");
 
-				for (String spanTok : spanToks) {
-					String[] spanTokToks = spanTok.split(" ");
-					int spanStart = Integer.parseInt(spanTokToks[0]);
-					int spanEnd = Integer.parseInt(spanTokToks[1]);
-					if (ta == null) {
-						ta = factory.createAnnotation(spanStart, spanEnd, "", new DefaultClassMention(annotType));
-						TextAnnotationUtil.addSlotValue(ta, THEME_ID_SLOT_NAME, annotId);
+		for (String spanTok : spanToks) {
+			String[] spanTokToks = spanTok.split(" ");
+			int spanStart = Integer.parseInt(spanTokToks[0]);
+			int spanEnd = Integer.parseInt(spanTokToks[1]);
+			if (ta == null) {
+				ta = factory.createAnnotation(spanStart, spanEnd, "", new DefaultClassMention(annotType));
+				TextAnnotationUtil.addSlotValue(ta, THEME_ID_SLOT_NAME, annotId);
 
 //						// TODO: NOTE - validation of spans/covered text needs to be implemented for
 //						// discontinuous span annots
@@ -208,22 +217,17 @@ public class BioNLPDocumentReader extends DocumentReader {
 //								}
 //							}
 //						}
-						// TODO -- revisit for use with discontinuous annotations
-						if (coveredText.isEmpty() && documentText.length() > ta.getAnnotationSpanEnd()) {
-							coveredText = documentText.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd());
-						}
-					} else {
-						ta.addSpan(new Span(spanStart, spanEnd));
-						coveredText += (" " + documentText.substring(spanStart, spanEnd));
-					}
+				// TODO -- revisit for use with discontinuous annotations
+				if (coveredText.isEmpty() && documentText.length() > ta.getAnnotationSpanEnd()) {
+					coveredText = documentText.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd());
 				}
-				ta.setCoveredText(coveredText);
-				annotIdToAnnotMap.put(annotId, ta);
 			} else {
-				relationLines.add(line);
+				ta.addSpan(new Span(spanStart, spanEnd));
+				coveredText += (" " + documentText.substring(spanStart, spanEnd));
 			}
 		}
-		lineIter.close();
+		ta.setCoveredText(coveredText);
+		annotIdToAnnotMap.put(annotId, ta);
 	}
 
 }
