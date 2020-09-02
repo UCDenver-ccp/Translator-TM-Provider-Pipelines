@@ -43,7 +43,7 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 	private String conceptChebi;
 	private String conceptCl;
 	private String dependency;
-	private String sentences;
+//	private String sentences;
 	private String text;
 
 	@Before
@@ -55,8 +55,8 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 				"12345.concept_cl.bionlp", CharacterEncoding.UTF_8);
 		dependency = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
 				"12345.dependency.conllu", CharacterEncoding.UTF_8);
-		sentences = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
-				"12345.sentence.bionlp", CharacterEncoding.UTF_8);
+//		sentences = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class,
+//				"12345.sentence.bionlp", CharacterEncoding.UTF_8);
 		text = ClassPathUtil.getContentsFromClasspathResource(SentenceCooccurrenceBuilderTest.class, "12345.txt",
 				CharacterEncoding.UTF_8);
 
@@ -158,7 +158,7 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 				"PMC1790863-sentences.bionlp", CharacterEncoding.UTF_8);
 		PAssert.that(output.get(OpenNLPSentenceSegmentFn.SENTENCE_ANNOT_TAG))
 				.containsInAnyOrder(KV.of(
-						PipelineTestUtil.createEntity(docId, ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE),
+						PipelineTestUtil.createProcessingStatus(docId, ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE),
 						CollectionsUtil.createList(expectedBioNlp)));
 
 		pipeline.run();

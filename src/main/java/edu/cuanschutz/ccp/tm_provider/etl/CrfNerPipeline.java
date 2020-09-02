@@ -1,6 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
  * This Apache Beam pipeline processes documents with the OGER concept
@@ -113,10 +113,10 @@ public class CrfNerPipeline {
 		/*
 		 * The CRF pipeline requires sentences and the document text.
 		 */
-		List<DocumentCriteria> inputDocCriteria = Arrays
-				.asList(new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
+		Set<DocumentCriteria> inputDocCriteria = CollectionsUtil
+				.createSet(new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 						options.getInputSentencePipelineKey(), options.getInputSentencePipelineVersion()));
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
 						options.getQueryLimit());
@@ -126,7 +126,7 @@ public class CrfNerPipeline {
 		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCrfServiceUri(), outputDocCriteria,
 				timestamp);
 
-		PCollection<KV<Entity, List<String>>> statusEntityToAnnotation = output.get(CrfNerFn.ANNOTATIONS_TAG);
+		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output.get(CrfNerFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(CrfNerFn.ETL_FAILURE_TAG);
 
 		/*
@@ -136,7 +136,8 @@ public class CrfNerPipeline {
 		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
 				.deduplicateDocuments(statusEntityToAnnotation);
 		nonredundantDocIdToAnnotations
-				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+				.apply("annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -144,7 +145,7 @@ public class CrfNerPipeline {
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
 		 */
 		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
-				statusEntityToAnnotation.apply(Keys.<Entity>create()), targetProcessingStatusFlag);
+				statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));

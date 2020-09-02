@@ -15,13 +15,12 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.datastore.v1.Entity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
@@ -30,25 +29,26 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<Entity, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<Entity, List<String>>>() {
+	public static TupleTag<KV<ProcessingStatus, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
 	public static PCollectionTuple process(
-			PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToSentenceBionlp, String crfServiceUri,
-			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp) {
+			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToSentenceBionlp,
+			String crfServiceUri, DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp) {
 
-		return statusEntityToSentenceBionlp.apply("Identify concept annotations in sentences",
-				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
+		return statusEntityToSentenceBionlp.apply("Identify concept annotations in sentences", ParDo.of(
+				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<Entity, Map<DocumentCriteria, String>> statusEntityToText,
+					public void processElement(
+							@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
-						Entity statusEntity = statusEntityToText.getKey();
-						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+						ProcessingStatus processingStatus = statusEntityToText.getKey();
+						String docId = processingStatus.getDocumentId();
 
 						Entry<DocumentCriteria, String> entry = statusEntityToText.getValue().entrySet().iterator()
 								.next();
@@ -67,7 +67,7 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 								String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
 
 								List<String> chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
-								out.get(ANNOTATIONS_TAG).output(KV.of(statusEntity, chunkedCrfOutput));
+								out.get(ANNOTATIONS_TAG).output(KV.of(processingStatus, chunkedCrfOutput));
 
 							} else {
 								throw new IllegalArgumentException(

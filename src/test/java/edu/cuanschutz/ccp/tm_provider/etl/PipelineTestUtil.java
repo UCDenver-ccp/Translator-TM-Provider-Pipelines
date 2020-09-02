@@ -28,6 +28,14 @@ public class PipelineTestUtil {
 		return entity1;
 	}
 
+	public static ProcessingStatus createProcessingStatus(String documentId, ProcessingStatusFlag... flagsToSet) {
+		ProcessingStatus ps = new ProcessingStatus(documentId);
+		for (ProcessingStatusFlag flag : flagsToSet) {
+			ps.enableFlag(flag);
+		}
+		return ps;
+	}
+
 	public static Entity createEntity(String documentId, String... collectionNames) {
 		Key key = DatastoreKeyUtil.createStatusKey(documentId);
 		Entity.Builder entityBuilder = Entity.newBuilder();
@@ -40,5 +48,13 @@ public class PipelineTestUtil {
 		entityBuilder.putProperties(STATUS_PROPERTY_COLLECTIONS, makeValue(collections).build());
 		Entity entity1 = entityBuilder.build();
 		return entity1;
+	}
+
+	public static ProcessingStatus createProcessingStatus(String documentId, String... collectionNames) {
+		ProcessingStatus ps = new ProcessingStatus(documentId);
+		for (String collectionName : collectionNames) {
+			ps.addCollection(collectionName);
+		}
+		return ps;
 	}
 }

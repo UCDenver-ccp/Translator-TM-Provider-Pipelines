@@ -3,6 +3,12 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 import static com.google.datastore.v1.client.DatastoreHelper.makeAndFilter;
 import static com.google.datastore.v1.client.DatastoreHelper.makeFilter;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_KIND;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
 import java.io.UnsupportedEncodingException;
@@ -13,6 +19,7 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,8 +33,12 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TupleTag;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
@@ -36,21 +47,27 @@ import com.google.datastore.v1.Key;
 import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
-import com.google.protobuf.Int32Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreDocumentUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 
 public class PipelineMain {
 
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
+
+	private static final TupleTag<ProcessingStatus> statusTag = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag = new TupleTag<>();
 
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
@@ -65,9 +82,6 @@ public class PipelineMain {
 		if (pipeline != null) {
 			String[] pipelineArgs = Arrays.copyOfRange(args, 1, args.length);
 			switch (pipeline) {
-			case ADD_SUB_COLLECTION:
-				AddSubCollectionPipeline.main(pipelineArgs);
-				break;
 			case BIOC_TO_TEXT:
 				BiocToTextPipeline.main(pipelineArgs);
 				break;
@@ -118,8 +132,8 @@ public class PipelineMain {
 	 * @return a mapping from the status entity to various document content (a
 	 *         mapping from the document criteria to the document content)
 	 */
-	public static PCollection<KV<Entity, Map<DocumentCriteria, String>>> getStatusEntity2Content(
-			List<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
+	public static PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> getStatusEntity2Content(
+			Set<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
 			String collection, OverwriteOutput overwriteOutput, int queryLimit) {
 
@@ -127,42 +141,97 @@ public class PipelineMain {
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
 		 */
-		PCollection<Entity> status = getStatusEntitiesToProcess(beamPipeline, targetProcessStatusFlag,
-				requiredProcessStatusFlags, gcpProjectId, collection, overwriteOutput, queryLimit);
+		PCollection<KV<String, ProcessingStatus>> docId2Status = getStatusEntitiesToProcess(beamPipeline,
+				targetProcessStatusFlag, requiredProcessStatusFlags, gcpProjectId, collection, overwriteOutput,
+				queryLimit);
 
-		/*
-		 * then return a mapping from document id to the document content that will be
-		 * processed
-		 */
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = status
-				.apply("get document content", ParDo.of(new DoFn<Entity, KV<Entity, Map<DocumentCriteria, String>>>() {
+		KeyedPCollectionTuple<String> tuple = KeyedPCollectionTuple.of(statusTag, docId2Status);
+
+		for (DocumentCriteria docCriteria : inputDocCriteria) {
+			PCollection<KV<String, ProcessedDocument>> docId2Document = getDocumentEntitiesToProcess(beamPipeline,
+					docCriteria, collection, gcpProjectId);
+			tuple = tuple.and(documentTag, docId2Document);
+		}
+
+		PCollection<KV<String, CoGbkResult>> result = tuple.apply(CoGroupByKey.create());
+
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply(
+				ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<ProcessingStatus, Map<DocumentCriteria, String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element Entity statusEntity,
-							OutputReceiver<KV<Entity, Map<DocumentCriteria, String>>> out) {
-//						String documentId = statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+					public void processElement(ProcessContext c) {
+						KV<String, CoGbkResult> element = c.element();
+						CoGbkResult result = element.getValue();
 
-						// TODO: This needs to be fixed -- this chunk count field is only present for
-						// the text document right now
-//						String chunkCountPropertyName = DatastoreProcessingStatusUtil
-//								.getDocumentChunkCountPropertyName(inputDocCriteria);
-//						long chunkCount = status.getPropertiesMap().get(chunkCountPropertyName).getIntegerValue();
+						// get the processing status -- there will only be one
+						try {
+							ProcessingStatus processingStatus = result.getOnly(statusTag);
 
-						DatastoreDocumentUtil util = new DatastoreDocumentUtil();
-						KV<Entity, Map<DocumentCriteria, String>> documentIdToContent = util
-								.getStatusEntityToContent(statusEntity, inputDocCriteria);
-						if (documentIdToContent != null) {
-							out.output(documentIdToContent);
+							if (processingStatus != null) {
+								// get all associated documents -- shere should be only one
+								// Iterable<ProcessedDocument> associated with the documentTag
+								Iterable<ProcessedDocument> documents = result.getAll(documentTag);
+
+								// piece together documents that have been split for storage
+								Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(documents);
+
+								c.output(KV.of(processingStatus, contentMap));
+							}
+						} catch (IllegalArgumentException e) {
+//							throw new IllegalArgumentException(
+//									"Status or documents missing for id: " + element.getKey(), e);
+							LOGGER.log(Level.WARNING, "Skipping processing due to missing documents for id: " + element.getKey());
+							// TODO: this should probably output an EtlFailure here instead of logging a warning
 						}
 					}
+
 				}));
-		return statusEntity2Content;
+
+		return outputPCollection;
 	}
 
-	public static PCollection<Entity> getStatusEntitiesToProcess(Pipeline p,
+	@VisibleForTesting
+	protected static Map<DocumentCriteria, String> spliceDocumentChunks(Iterable<ProcessedDocument> documents) {
+		Map<DocumentCriteria, Map<Long, String>> map = new HashMap<DocumentCriteria, Map<Long, String>>();
+
+		// map content by chunk id so that it can be sorted and spliced back together
+		for (ProcessedDocument document : documents) {
+			DocumentCriteria docCriteria = document.getDocumentCriteria();
+			long chunkId = document.getChunkId();
+			String content = document.getDocumentContent();
+
+			if (map.containsKey(docCriteria)) {
+				map.get(docCriteria).put(chunkId, content);
+			} else {
+				Map<Long, String> innerMap = new HashMap<Long, String>();
+				innerMap.put(chunkId, content);
+				map.put(docCriteria, innerMap);
+			}
+		}
+
+		// splice the documents together
+		Map<DocumentCriteria, String> outputMap = new HashMap<DocumentCriteria, String>();
+		for (Entry<DocumentCriteria, Map<Long, String>> entry : map.entrySet()) {
+			DocumentCriteria docCriteria = entry.getKey();
+			Map<Long, String> chunkMap = entry.getValue();
+			Map<Long, String> sortedChunkMap = CollectionsUtil.sortMapByKeys(chunkMap, SortOrder.ASCENDING);
+			StringBuilder sb = new StringBuilder();
+			for (Entry<Long, String> chunkEntry : sortedChunkMap.entrySet()) {
+				sb.append(chunkEntry.getValue());
+			}
+			outputMap.put(docCriteria, sb.toString());
+		}
+
+		return outputMap;
+
+	}
+
+	public static PCollection<KV<String, ProcessingStatus>> getStatusEntitiesToProcess(Pipeline p,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
 			String gcpProjectId, String collection, OverwriteOutput overwriteOutput, Integer queryLimit) {
+		LOGGER.log(Level.INFO, String.format("PROCESSING STATUS FILTER SETTINGS: \nOVERWRITE: %s\nCOLLECTION: %s",
+				overwriteOutput.name(), collection));
 		List<Filter> filters = new ArrayList<Filter>();
 		for (ProcessingStatusFlag flag : requiredProcessStatusFlags) {
 			Filter filter = makeFilter(flag.getDatastoreFlagPropertyName(), PropertyFilter.Operator.EQUAL,
@@ -182,7 +251,7 @@ public class PipelineMain {
 		}
 
 		for (Filter filter : filters) {
-			LOGGER.log(Level.INFO, "FILTER: " + filter.toString());
+			LOGGER.log(Level.INFO, "PROCESSING STATUS FILTER: " + filter.toString());
 		}
 
 		Filter filter = makeAndFilter(filters).build();
@@ -190,14 +259,101 @@ public class PipelineMain {
 		query.addKindBuilder().setName(STATUS_KIND);
 		query.setFilter(filter);
 
-		if (queryLimit != null && queryLimit != 0) {
-			query.setLimit(Int32Value.of(queryLimit));
-
-		}
-
 		PCollection<Entity> status = p.apply("datastore->status entities to process",
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
-		return status;
+
+		PCollection<KV<String, ProcessingStatus>> docId2Status = status.apply("status entity->status",
+				ParDo.of(new DoFn<Entity, KV<String, ProcessingStatus>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(@Element Entity statusEntity,
+							OutputReceiver<KV<String, ProcessingStatus>> out) {
+						ProcessingStatus ps = new ProcessingStatus(statusEntity);
+						out.output(KV.of(ps.getDocumentId(), ps));
+					}
+				}));
+
+		return docId2Status;
+	}
+
+	public static PCollection<KV<String, ProcessedDocument>> getDocumentEntitiesToProcess(Pipeline p,
+			DocumentCriteria docCriteria, String collection, String gcpProjectId) {
+		List<Filter> filters = new ArrayList<Filter>();
+		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
+		DocumentType documentType = docCriteria.getDocumentType();
+		PipelineKey pipelineKey = docCriteria.getPipelineKey();
+		String pipelineVersion = docCriteria.getPipelineVersion();
+
+		if (documentFormat != null) {
+			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
+					makeValue(documentFormat.name())).build();
+			filters.add(filter);
+		}
+
+		if (documentType != null) {
+			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_TYPE, PropertyFilter.Operator.EQUAL,
+					makeValue(documentType.name())).build();
+			filters.add(filter);
+		}
+
+		if (pipelineKey != null) {
+			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE, PropertyFilter.Operator.EQUAL,
+					makeValue(pipelineKey.name())).build();
+			filters.add(filter);
+		}
+
+		if (pipelineVersion != null) {
+			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION,
+					PropertyFilter.Operator.EQUAL, makeValue(pipelineVersion)).build();
+			filters.add(filter);
+		}
+
+		/* incorporate the collection name into the query if there is one */
+		if (collection != null) {
+			filters.add(makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, PropertyFilter.Operator.EQUAL,
+					makeValue(collection)).build());
+		}
+
+		for (Filter filter : filters) {
+			LOGGER.log(Level.INFO, "DOCUMENT FILTER: " + filter.toString());
+		}
+
+		Query.Builder query = Query.newBuilder();
+		query.addKindBuilder().setName(DOCUMENT_KIND);
+
+		if (!filters.isEmpty()) {
+			Filter filter = makeAndFilter(filters).build();
+			query.setFilter(filter);
+		}
+
+		PCollection<Entity> documents = p.apply("datastore->document entities to process",
+				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
+
+		PCollection<KV<String, ProcessedDocument>> docId2Document = documents.apply("document entity -> PD",
+				ParDo.of(new DoFn<Entity, KV<String, ProcessedDocument>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(@Element Entity statusEntity,
+							OutputReceiver<KV<String, ProcessedDocument>> out) {
+
+						try {
+							ProcessedDocument pd = new ProcessedDocument(statusEntity);
+							out.output(KV.of(pd.getDocumentId(), pd));
+						} catch (UnsupportedEncodingException e) {
+							throw new IllegalStateException("Error while converting from entity to ProcessedDocument.",
+									e);
+						}
+
+					}
+				}));
+
+//		// group the documents by their document id
+//		PCollection<KV<String, Iterable<ProcessedDocument>>> docId2Documents = docId2Document.apply("group-by-docid",
+//				GroupByKey.<String, ProcessedDocument>create());
+
+		return docId2Document;
 	}
 
 	/**
@@ -265,14 +421,41 @@ public class PipelineMain {
 		return deduplicateEntitiesByKey(documentIdToStatusEntity);
 	}
 
+	public static PCollection<Entity> deduplicateDocumentEntities(PCollection<Entity> documentEntities) {
+		PCollection<KV<String, Entity>> documentIdToDocumentEntity = documentEntities.apply("document-->key/document",
+				ParDo.of(new DoFn<Entity, KV<String, Entity>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						Entity documentEntity = c.element();
+						String documentId = documentEntity.getPropertiesMap().get(DOCUMENT_PROPERTY_ID)
+								.getStringValue();
+						String documentType = documentEntity.getPropertiesMap().get(DOCUMENT_PROPERTY_TYPE)
+								.getStringValue();
+						String documentFormat = documentEntity.getPropertiesMap().get(DOCUMENT_PROPERTY_FORMAT)
+								.getStringValue();
+						String pipelineKey = documentEntity.getPropertiesMap().get(DOCUMENT_PROPERTY_PIPELINE)
+								.getStringValue();
+						String pipelineVersion = documentEntity.getPropertiesMap()
+								.get(DOCUMENT_PROPERTY_PIPELINE_VERSION).getStringValue();
+						String compositeKey = String.format("%s-%s-%s-%s-%s", documentId, documentType, documentFormat,
+								pipelineKey, pipelineVersion);
+						c.output(KV.of(compositeKey, documentEntity));
+					}
+				}));
+
+		return deduplicateEntitiesByKey(documentIdToDocumentEntity);
+	}
+
 	/**
-	 * @param statusEntities
+	 * @param docId2Entity
 	 * @return a non-redundant collection of the input entities filtered based on
 	 *         the entity keys (the String in the KV pair)
 	 */
-	public static PCollection<Entity> deduplicateEntitiesByKey(PCollection<KV<String, Entity>> statusEntities) {
+	public static PCollection<Entity> deduplicateEntitiesByKey(PCollection<KV<String, Entity>> docId2Entity) {
 		// remove any duplicates
-		PCollection<KV<String, Iterable<Entity>>> idToEntities = statusEntities.apply("group-by-key",
+		PCollection<KV<String, Iterable<Entity>>> idToEntities = docId2Entity.apply("group-by-key",
 				GroupByKey.<String, Entity>create());
 		PCollection<Entity> nonredundantStatusEntities = idToEntities.apply("dedup-by-key",
 				ParDo.of(new DoFn<KV<String, Iterable<Entity>>, Entity>() {
@@ -289,17 +472,18 @@ public class PipelineMain {
 	}
 
 	public static PCollection<KV<String, List<String>>> deduplicateDocuments(
-			PCollection<KV<Entity, List<String>>> statusEntityToPlainText) {
+			PCollection<KV<ProcessingStatus, List<String>>> statusEntityToPlainText) {
 
 		PCollection<KV<String, List<String>>> docIdToContent = statusEntityToPlainText.apply(
-				"status_entity-->document_id", ParDo.of(new DoFn<KV<Entity, List<String>>, KV<String, List<String>>>() {
+				"status_entity-->document_id",
+				ParDo.of(new DoFn<KV<ProcessingStatus, List<String>>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext c) {
-						Entity statusEntity = c.element().getKey();
+						ProcessingStatus statusEntity = c.element().getKey();
 						List<String> content = c.element().getValue();
-						String documentId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+						String documentId = statusEntity.getDocumentId();
 						c.output(KV.of(documentId, content));
 					}
 				}));
@@ -341,14 +525,26 @@ public class PipelineMain {
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
 	@VisibleForTesting
-	private static Entity updateStatusEntity(Entity origEntity, ProcessingStatusFlag... flagsToActivate) {
-		Key key = origEntity.getKey();
+	private static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
+		String documentId = origEntity.getDocumentId();
+		Key key = DatastoreKeyUtil.createStatusKey(documentId);
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 
-		for (Entry<String, Value> entry : origEntity.getPropertiesMap().entrySet()) {
-			entityBuilder.putProperties(entry.getKey(), entry.getValue());
+		Set<String> collections = origEntity.getCollections();
+		if (collections != null && !collections.isEmpty()) {
+			List<Value> collectionNames = new ArrayList<Value>();
+			for (String c : collections) {
+				collectionNames.add(makeValue(c).build());
+			}
+			entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS,
+					makeValue(collectionNames).build());
+		}
+		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID, makeValue(documentId).build());
+
+		for (Entry<String, Boolean> entry : origEntity.getFlagPropertiesMap().entrySet()) {
+			entityBuilder.putProperties(entry.getKey(), makeValue(entry.getValue()).build());
 		}
 		for (ProcessingStatusFlag flag : flagsToActivate) {
 			entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
@@ -364,15 +560,15 @@ public class PipelineMain {
 	 *         ProcessingStatusFlags have been set to true and all other flag remain
 	 *         as they were.
 	 */
-	public static PCollection<Entity> updateStatusEntities(PCollection<Entity> statusEntities,
+	public static PCollection<Entity> updateStatusEntities(PCollection<ProcessingStatus> statusEntities,
 			ProcessingStatusFlag... flagsToActivate) {
 
-		return statusEntities.apply("update-status", ParDo.of(new DoFn<Entity, Entity>() {
+		return statusEntities.apply("update-status", ParDo.of(new DoFn<ProcessingStatus, Entity>() {
 			private static final long serialVersionUID = 1L;
 
 			@ProcessElement
 			public void processElement(ProcessContext c) {
-				Entity entity = c.element();
+				ProcessingStatus entity = c.element();
 				Entity updatedEntity = updateStatusEntity(entity, flagsToActivate);
 				c.output(updatedEntity);
 			}

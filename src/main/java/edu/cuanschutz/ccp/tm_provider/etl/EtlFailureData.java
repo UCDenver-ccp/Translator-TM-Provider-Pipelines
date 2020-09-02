@@ -34,4 +34,14 @@ public class EtlFailureData extends DoFn {
 		this.timestamp = timestamp;
 	}
 
+	
+	public EtlFailureData(DocumentCriteria documentCriteria, String customMessage, String documentId,
+			com.google.cloud.Timestamp timestamp) {
+		this.documentCriteria = documentCriteria;
+		this.message = customMessage;
+		this.documentId = documentId;
+		this.stackTrace = "";
+		this.timestamp = timestamp;
+	}
+
 }

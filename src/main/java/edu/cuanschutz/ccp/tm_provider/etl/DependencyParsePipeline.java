@@ -1,6 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
  * This Apache Beam pipeline processes documents with a dependency parser
@@ -94,8 +94,8 @@ public class DependencyParsePipeline {
 		 */
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
-				.getStatusEntity2Content(Arrays.asList(inputTextDocCriteria), options.getProject(), p,
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
+				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
 						options.getOverwrite(), options.getQueryLimit());
 
@@ -112,7 +112,7 @@ public class DependencyParsePipeline {
 		 * processing.
 		 */
 
-		PCollection<KV<Entity, List<String>>> statusEntityToConllu = output.get(TurkuDepParserFn.CONLLU_TAG);
+		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToConllu = output.get(TurkuDepParserFn.CONLLU_TAG);
 		PCollection<EtlFailureData> failures = output.get(TurkuDepParserFn.ETL_FAILURE_TAG);
 
 		/*
@@ -121,15 +121,17 @@ public class DependencyParsePipeline {
 		 */
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
 				.deduplicateDocuments(statusEntityToConllu);
-		nonredundantPlainText.apply("conllu->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		nonredundantPlainText
+				.apply("conllu->document_entity",
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * update the status entities to reflect the work completed, and store in
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
 		 */
-		PCollection<Entity> updatedEntities = PipelineMain
-				.updateStatusEntities(statusEntityToConllu.apply(Keys.<Entity>create()), targetProcessingStatusFlag);
+		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+				statusEntityToConllu.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));

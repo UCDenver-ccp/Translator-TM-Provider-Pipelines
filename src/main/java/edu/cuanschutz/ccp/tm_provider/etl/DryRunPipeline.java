@@ -1,6 +1,5 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -18,15 +17,13 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
-import com.google.datastore.v1.Entity;
-
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
  * This Apache Beam pipeline is useful for testing pipeline input arguments. It
@@ -101,22 +98,24 @@ public class DryRunPipeline {
 
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> docId2Content = PipelineMain.getStatusEntity2Content(
-				Arrays.asList(inputTextDocCriteria), options.getProject(), p, targetProcessingStatusFlag,
-				requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(), options.getQueryLimit());
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> docId2Content = PipelineMain
+				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
+						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
+						options.getOverwrite(), options.getQueryLimit());
 
-		docId2Content.apply(Keys.<Entity>create()).apply("extract-doc-id", ParDo.of(new DoFn<Entity, String>() {
-			private static final long serialVersionUID = 1L;
+		docId2Content.apply(Keys.<ProcessingStatus>create())
+				.apply("extract-doc-id", ParDo.of(new DoFn<ProcessingStatus, String>() {
+					private static final long serialVersionUID = 1L;
 
-			@ProcessElement
-			public void processElement(ProcessContext c) {
-				Entity statusEntity = c.element();
-				String documentId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
-				// if there are more than one entity, we just return one
-				c.output(documentId);
-			}
-		})).apply("write ids file",
-				TextIO.write().to(options.getOutputDirectory() + "/annotation.").withSuffix(".txt"));
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						ProcessingStatus statusEntity = c.element();
+						String documentId = statusEntity.getDocumentId();
+						// if there are more than one entity, we just return one
+						c.output(documentId);
+					}
+				})).apply("write ids file",
+						TextIO.write().to(options.getOutputDirectory() + "/annotation.").withSuffix(".txt"));
 
 		p.run().waitUntilFinish();
 	}
