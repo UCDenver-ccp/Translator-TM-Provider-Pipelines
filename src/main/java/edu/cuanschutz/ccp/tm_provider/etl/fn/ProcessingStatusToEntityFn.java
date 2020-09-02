@@ -21,6 +21,7 @@ import com.google.datastore.v1.Value;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -35,15 +36,30 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 
 	private static final long serialVersionUID = 1L;
 
+	private final SerializableFunction<String, String> collectionFn;
+
+	public ProcessingStatusToEntityFn(SerializableFunction<String, String> collectionFn) {
+		this.collectionFn = collectionFn;
+	}
+
+	public ProcessingStatusToEntityFn() {
+		this.collectionFn = null;
+	}
+
 	@ProcessElement
-	public void processElement(@Element ProcessingStatus status, OutputReceiver<KV<String,Entity>> out)
+	public void processElement(@Element ProcessingStatus status, OutputReceiver<KV<String, Entity>> out)
 			throws UnsupportedEncodingException {
+		if (collectionFn != null) {
+			for (String c : ToEntityFnUtils.getCollections(null, collectionFn, status.getDocumentId())) {
+				status.addCollection(c);
+			}
+		}
 		Entity entity = buildStatusEntity(status);
 		out.output(KV.of(entity.getKey().toString(), entity));
 
 	}
 
-	static Entity buildStatusEntity(ProcessingStatus status) throws UnsupportedEncodingException {
+	public static Entity buildStatusEntity(ProcessingStatus status)  {
 		Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
@@ -66,9 +82,9 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 			}
 		}
 
-		for (String countProperty : status.getCountProperties()) {
-			entityBuilder.putProperties(countProperty, makeValue(status.getCountPropertyValue(countProperty)).build());
-		}
+//		for (String countProperty : status.getCountProperties()) {
+//			entityBuilder.putProperties(countProperty, makeValue(status.getCountPropertyValue(countProperty)).build());
+//		}
 
 		// store document collection indicators
 		Set<Value> collectionValues = new HashSet<Value>();
@@ -96,8 +112,8 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 				boolean booleanValue = entry.getValue().getBooleanValue();
 				status.setFlagProperty(propertyName, booleanValue);
 			} else if (propertyName.endsWith("_COUNT")) {
-				long countValue = entry.getValue().getIntegerValue();
-				status.setCountProperty(propertyName, countValue);
+//				long countValue = entry.getValue().getIntegerValue();
+//				status.setCountProperty(propertyName, countValue);
 			} else if (propertyName.equals(STATUS_PROPERTY_COLLECTIONS)) {
 				List<Value> valuesList = entry.getValue().getArrayValue().getValuesList();
 				for (Value v : valuesList) {

@@ -16,6 +16,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.tools.ant.util.StringUtils;
 import org.medline.PubmedArticle;
 
 import com.google.datastore.v1.Entity;
@@ -28,6 +29,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class MedlineXmlToTextPipeline {
@@ -35,6 +37,7 @@ public class MedlineXmlToTextPipeline {
 //	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.MEDLINE_XML_TO_TEXT;
+	private static final String SUBCOLLECTION_PREFIX = "PUBMED_SUB_";
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
@@ -92,13 +95,20 @@ public class MedlineXmlToTextPipeline {
 		PCollection<ProcessingStatus> status = output.get(MedlineXmlToTextFn.processingStatusTag);
 
 		/*
+		 * We want to add a subcollection to divide up the PubMed documents. The
+		 * subcollection names are based on the PMIDs of the documents.
+		 */
+		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
+
+		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
 				.deduplicateDocumentsByStringKey(statusEntityToPlainText);
 		nonredundantPlainText
-				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
+				.apply("plaintext->document_entity",
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -108,7 +118,9 @@ public class MedlineXmlToTextPipeline {
 		PCollection<KV<String, List<String>>> nonredundantStatusEntityToAnnotations = PipelineMain
 				.deduplicateDocumentsByStringKey(statusEntityToAnnotation);
 		nonredundantStatusEntityToAnnotations
-				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
+				.apply("annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
+								collectionFn)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -126,13 +138,31 @@ public class MedlineXmlToTextPipeline {
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn()));
+				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		p.run().waitUntilFinish();
 
+	}
+
+	private static String getSubCollectionName(String documentId) {
+		if (documentId.startsWith("PMID:")) {
+			int pmid = Integer.parseInt(StringUtils.removePrefix(documentId, "PMID:"));
+
+			int windowSize = 1000000;
+			int subCollectionIndex = 0;
+			while (true) {
+				int windowStart = subCollectionIndex * windowSize;
+				int windowEnd = windowStart + windowSize;
+				if (pmid >= windowStart && pmid < windowEnd) {
+					return String.format("%s%d", SUBCOLLECTION_PREFIX, subCollectionIndex);
+				}
+				subCollectionIndex++;
+			}
+		}
+		return null;
 	}
 
 }

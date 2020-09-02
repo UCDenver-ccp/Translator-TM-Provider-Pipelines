@@ -113,7 +113,7 @@ public class LoadFilesPipeline {
 		 */
 		PCollection<KV<String, List<String>>> nonredundantContent = PipelineMain
 				.deduplicateDocumentsByStringKey(docIdToContent);
-		nonredundantContent.apply("content->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria)))
+		nonredundantContent.apply("content->document_entity", ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
