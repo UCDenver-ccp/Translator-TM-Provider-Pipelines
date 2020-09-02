@@ -2,15 +2,12 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.beam.sdk.values.KV;
 
@@ -21,11 +18,12 @@ import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.PathElement;
 
 /**
+ * NOTE: This class is no longer used. Use DatastoreIO.v1 instead for efficiency
+ * purposes.
+ * 
  * Utility for querying 'Documents' in Cloud Datastore.
  */
 public class DatastoreDocumentUtil {
-
-	private static Logger logger = Logger.getLogger(DatastoreDocumentUtil.class.getName());
 
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
@@ -44,22 +42,9 @@ public class DatastoreDocumentUtil {
 		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
 
 		for (DocumentCriteria docCriteria : documentCriteria) {
-			// documents can be stored in chunks depending on their size. Query for each
-			// chunk here.
-			StringBuffer content = new StringBuffer();
-
-			int chunkIndex = 0;
-			Key key = createDocumentKey(documentId, docCriteria, chunkIndex++);
+			Key key = createDocumentKey(documentId, docCriteria, 0);
 			Entity entity = datastore.get(key);
-
-			while (entity != null) {
-				content.append(getDocumentContent(entity));
-				key = createDocumentKey(documentId, docCriteria, chunkIndex++);
-				entity = datastore.get(key);
-			}
-
-			map.put(docCriteria, content.toString());
-
+			map.put(docCriteria, getDocumentContent(entity));
 		}
 
 		return KV.of(statusEntity, map);
@@ -79,14 +64,6 @@ public class DatastoreDocumentUtil {
 			List<DocumentCriteria> documentCriteria) {
 
 		Map<DocumentType, String> typeToContentMap = new HashMap<DocumentType, String>();
-
-		Entity statusEntity = datastore.get(createStatusKey(documentId));
-
-//		for (int i = 0; i < documentCriteria.size(); i++) {
-//			DocumentType documentType = documentCriteria.get(i).getDocumentType();
-//			PipelineKey pipelineKey = documentCriteria.get(i).getPipelineKey();
-//			DocumentFormat documentFormat = documentCriteria.get(i).getDocumentFormat();
-//			String pipelineVersion = documentCriteria.get(i).getPipelineVersion();
 
 		for (DocumentCriteria dc : documentCriteria) {
 
@@ -122,10 +99,6 @@ public class DatastoreDocumentUtil {
 
 	}
 
-	private int getChunkCount(Entity status, DocumentCriteria dc) {
-		return new Long(status.getLong(DatastoreProcessingStatusUtil.getDocumentChunkCountPropertyName(dc))).intValue();
-	}
-
 	/**
 	 * @param document
 	 * @return the document content for the given document {@link Entity}
@@ -135,22 +108,11 @@ public class DatastoreDocumentUtil {
 	}
 
 	/**
-	 * @param document
-	 * @return the document ID for the given document {@link Entity}
-	 */
-	private String getDocumentId(Entity document) {
-		return document.getString(DOCUMENT_PROPERTY_ID);
-	}
-
-	/**
-	 * @param document
-	 * @return the document type for the given document {@link Entity}
-	 */
-	private DocumentType getDocumentType(Entity document) {
-		return DocumentType.valueOf(document.getString(DOCUMENT_PROPERTY_TYPE));
-	}
-
-	/**
+	 * 
+	 * 
+	 * 
+	 * /**
+	 * 
 	 * @param docId
 	 * @param type
 	 * @param format

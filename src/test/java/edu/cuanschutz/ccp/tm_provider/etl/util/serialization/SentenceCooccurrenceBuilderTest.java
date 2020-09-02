@@ -260,8 +260,8 @@ public class SentenceCooccurrenceBuilderTest {
 
 	@Test
 	public void testToOgerAnnotAlignment() throws IOException {
-		String docId = "567";
-		SentenceCooccurrenceBuilder builder = new SentenceCooccurrenceBuilder();
+//		String docId = "567";
+//		SentenceCooccurrenceBuilder builder = new SentenceCooccurrenceBuilder();
 
 		Map<DocumentType, String> docTypeToContentMap = new HashMap<DocumentType, String>();
 		String conceptChebi = ClassPathUtil.getContentsFromClasspathResource(getClass(), "567.concept_chebi.bionlp",
@@ -299,8 +299,8 @@ public class SentenceCooccurrenceBuilderTest {
 	
 	@Test
 	public void testToOgerAnnotAlignment2() throws IOException {
-		String docId = "567";
-		SentenceCooccurrenceBuilder builder = new SentenceCooccurrenceBuilder();
+//		String docId = "567";
+//		SentenceCooccurrenceBuilder builder = new SentenceCooccurrenceBuilder();
 
 //		Map<DocumentType, String> docTypeToContentMap = new HashMap<DocumentType, String>();
 //		String conceptChebi = ClassPathUtil.getContentsFromClasspathResource(getClass(), "567.concept_chebi.bionlp",

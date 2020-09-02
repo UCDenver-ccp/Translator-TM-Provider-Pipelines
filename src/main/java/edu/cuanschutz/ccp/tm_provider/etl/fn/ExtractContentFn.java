@@ -16,7 +16,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.string.StringUtil;
 
@@ -83,8 +82,8 @@ public class ExtractContentFn extends DoFn<KV<String, String>, KV<String, String
 								 * e.g. a section annotations file for a document that was previously loaded.
 								 */
 								ProcessingStatus status = new ProcessingStatus(docId);
-								status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria,
-										chunkedContent.size());
+								status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+//										chunkedContent.size());
 								if (collection != null) {
 									status.addCollection(collection);
 								}

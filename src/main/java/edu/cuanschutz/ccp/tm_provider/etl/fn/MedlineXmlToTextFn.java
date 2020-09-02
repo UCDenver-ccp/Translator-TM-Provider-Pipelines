@@ -153,8 +153,8 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 		 * output a {@link ProcessingStatus} for the document
 		 */
 		ProcessingStatus status = new ProcessingStatus(docId);
-		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputTextDocCriteria, 1);
-		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria, 1);
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
 
 		if (collection != null) {
 			status.addCollection(collection);
