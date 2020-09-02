@@ -135,15 +135,14 @@ public class PipelineMain {
 	public static PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> getStatusEntity2Content(
 			Set<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String collection, OverwriteOutput overwriteOutput, int queryLimit) {
+			String collection, OverwriteOutput overwriteOutput) {
 
 		/*
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
 		 */
 		PCollection<KV<String, ProcessingStatus>> docId2Status = getStatusEntitiesToProcess(beamPipeline,
-				targetProcessStatusFlag, requiredProcessStatusFlags, gcpProjectId, collection, overwriteOutput,
-				queryLimit);
+				targetProcessStatusFlag, requiredProcessStatusFlags, gcpProjectId, collection, overwriteOutput);
 
 		KeyedPCollectionTuple<String> tuple = KeyedPCollectionTuple.of(statusTag, docId2Status);
 
@@ -229,7 +228,7 @@ public class PipelineMain {
 
 	public static PCollection<KV<String, ProcessingStatus>> getStatusEntitiesToProcess(Pipeline p,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String gcpProjectId, String collection, OverwriteOutput overwriteOutput, Integer queryLimit) {
+			String gcpProjectId, String collection, OverwriteOutput overwriteOutput) {
 		LOGGER.log(Level.INFO, String.format("PROCESSING STATUS FILTER SETTINGS: \nOVERWRITE: %s\nCOLLECTION: %s",
 				overwriteOutput.name(), collection));
 		List<Filter> filters = new ArrayList<Filter>();

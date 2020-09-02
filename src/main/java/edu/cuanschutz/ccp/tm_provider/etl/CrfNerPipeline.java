@@ -79,11 +79,6 @@ public class CrfNerPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("Limit on the number of documents to process")
-		Integer getQueryLimit();
-
-		void setQueryLimit(Integer value);
-
 	}
 
 	public static void main(String[] args) {
@@ -118,8 +113,7 @@ public class CrfNerPipeline {
 						options.getInputSentencePipelineKey(), options.getInputSentencePipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
-						options.getQueryLimit());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);

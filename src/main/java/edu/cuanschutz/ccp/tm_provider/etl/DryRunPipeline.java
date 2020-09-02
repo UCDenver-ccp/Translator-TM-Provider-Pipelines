@@ -75,11 +75,6 @@ public class DryRunPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("Limit on the number of documents to process")
-		Integer getQueryLimit();
-
-		void setQueryLimit(Integer value);
-
 	}
 
 	public static void main(String[] args) {
@@ -101,7 +96,7 @@ public class DryRunPipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> docId2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite(), options.getQueryLimit());
+						options.getOverwrite());
 
 		docId2Content.apply(Keys.<ProcessingStatus>create())
 				.apply("extract-doc-id", ParDo.of(new DoFn<ProcessingStatus, String>() {

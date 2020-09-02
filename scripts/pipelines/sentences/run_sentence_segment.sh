@@ -19,7 +19,6 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar SENTENCE_S
 --inputPipelineVersion='0.1.0' \
 --collection=$COLLECTION \
 --overwrite='YES' \
---queryLimit=0 \
 --project=${PROJECT} \
 --stagingLocation=$STAGE_LOCATION \
 --gcpTempLocation=$TMP_LOCATION \

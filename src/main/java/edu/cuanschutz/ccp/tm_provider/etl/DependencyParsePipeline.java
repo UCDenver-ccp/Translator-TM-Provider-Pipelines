@@ -66,11 +66,6 @@ public class DependencyParsePipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("Limit on the number of documents to process")
-		Integer getQueryLimit();
-
-		void setQueryLimit(Integer value);
-
 	}
 
 	public static void main(String[] args) {
@@ -97,7 +92,7 @@ public class DependencyParsePipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite(), options.getQueryLimit());
+						options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);
