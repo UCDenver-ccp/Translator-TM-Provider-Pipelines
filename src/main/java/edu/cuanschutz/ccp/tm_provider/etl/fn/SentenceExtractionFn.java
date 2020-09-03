@@ -92,8 +92,9 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 					private void logFailure(String message, DocumentCriteria outputDocCriteria,
 							com.google.cloud.Timestamp timestamp, MultiOutputReceiver out, String docId, Throwable t) {
-						
-						// crop message size so that it fits in the 1500 byte threshold for datastore fields
+
+						// crop message size so that it fits in the 1500 byte threshold for datastore
+						// fields
 						EtlFailureData failure = (t == null)
 								? new EtlFailureData(outputDocCriteria, message, docId, timestamp)
 								: new EtlFailureData(outputDocCriteria, message, docId, t, timestamp);
@@ -230,9 +231,16 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 							String yText = yAnnot.getCoveredText();
 							String ySpan = yAnnot.getSpans().toString();
 
-							ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan, yId, yText,
-									ySpan, keywordInSentence, sentenceAnnot.getCoveredText(), documentText);
-							extractedSentences.add(es);
+							/**
+							 * There are cases, e.g. extension classes, where the same ontology concepts
+							 * exists in different ontologies. Extracted sentences should not link the same
+							 * concept, e.g. concept x should not equal concept y.
+							 */
+							if (!(xId.equals(yId) || xSpan.equals(ySpan))) {
+								ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan, yId, yText,
+										ySpan, keywordInSentence, sentenceAnnot.getCoveredText(), documentText);
+								extractedSentences.add(es);
+							}
 						}
 					}
 				}
