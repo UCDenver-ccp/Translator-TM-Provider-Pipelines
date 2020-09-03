@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -40,9 +39,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
  */
 public class SentenceExtractionPipeline {
 
-	private final static Logger LOGGER = Logger.getLogger(SentenceExtractionPipeline.class.getName());
-
-	private static final PipelineKey PIPELINE_KEY = PipelineKey.OGER;
+	private static final PipelineKey PIPELINE_KEY = PipelineKey.SENTENCE_EXTRACTION;
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
