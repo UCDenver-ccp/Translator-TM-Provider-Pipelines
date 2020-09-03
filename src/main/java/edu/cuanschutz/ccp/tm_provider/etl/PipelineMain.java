@@ -110,6 +110,9 @@ public class PipelineMain {
 			case BIGQUERY_EXPORT:
 				BigQueryExportPipeline.main(pipelineArgs);
 				break;
+			case SENTENCE_EXTRACTION:
+				SentenceExtractionPipeline.main(pipelineArgs);
+				break;
 			case SENTENCE_SEGMENTATION:
 				SentenceSegmentationPipeline.main(pipelineArgs);
 				break;
