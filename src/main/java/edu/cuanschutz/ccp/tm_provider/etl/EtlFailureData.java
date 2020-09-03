@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -28,20 +29,32 @@ public class EtlFailureData extends DoFn {
 	public EtlFailureData(DocumentCriteria documentCriteria, String customMessage, String documentId, Throwable thrown,
 			com.google.cloud.Timestamp timestamp) {
 		this.documentCriteria = documentCriteria;
-		this.message = customMessage + " -- " + thrown.toString();
+		this.message = trimMessage(customMessage + " -- " + thrown.toString());
 		this.documentId = documentId;
 		this.stackTrace = Arrays.toString(thrown.getStackTrace());
 		this.timestamp = timestamp;
 	}
 
-	
 	public EtlFailureData(DocumentCriteria documentCriteria, String customMessage, String documentId,
 			com.google.cloud.Timestamp timestamp) {
 		this.documentCriteria = documentCriteria;
-		this.message = customMessage;
+		this.message = trimMessage(customMessage);
 		this.documentId = documentId;
 		this.stackTrace = "";
 		this.timestamp = timestamp;
+	}
+
+	private String trimMessage(String message) {
+		try {
+			while (message.getBytes("UTF-8").length > 1400) {
+				message = message.substring(0, message.length() - 2);
+			}
+		} catch (UnsupportedEncodingException e) {
+			if (message.length() > 1000) {
+				message = message.substring(0, 1000);
+			}
+		}
+		return message;
 	}
 
 }
