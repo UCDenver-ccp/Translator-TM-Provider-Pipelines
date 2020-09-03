@@ -20,6 +20,7 @@ import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -67,10 +68,16 @@ public class PipelineMain {
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
 
 	private static final TupleTag<ProcessingStatus> statusTag = new TupleTag<>();
-	private static final TupleTag<ProcessedDocument> documentTag = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag1 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag2 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag3 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag4 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag5 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag6 = new TupleTag<>();
 
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
+		
 		PipelineKey pipeline = null;
 		try {
 			pipeline = PipelineKey.valueOf(args[0]);
@@ -121,6 +128,19 @@ public class PipelineMain {
 		}
 	}
 
+	private static Map<Integer, TupleTag<ProcessedDocument>> populateTagMap() {
+		Map<Integer, TupleTag<ProcessedDocument>> tagMap = new HashMap<Integer, TupleTag<ProcessedDocument>>();
+
+		tagMap.put(1, documentTag1);
+		tagMap.put(2, documentTag2);
+		tagMap.put(3, documentTag3);
+		tagMap.put(4, documentTag4);
+		tagMap.put(5, documentTag5);
+		tagMap.put(6, documentTag6);
+
+		return tagMap;
+	}
+
 	/**
 	 * @param inputDocCriteria
 	 * @param gcpProjectId
@@ -137,6 +157,10 @@ public class PipelineMain {
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
 			String collection, OverwriteOutput overwriteOutput) {
 
+		
+		Map<Integer, TupleTag<ProcessedDocument>> tagMap = populateTagMap();
+		
+		
 		/*
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
@@ -146,10 +170,20 @@ public class PipelineMain {
 
 		KeyedPCollectionTuple<String> tuple = KeyedPCollectionTuple.of(statusTag, docId2Status);
 
+		// current code allows up to 6 document criteria to be added. Code can be
+		// extended if more are needed. It doesn't seem possible to do this (create
+		// tuple tags) dynamically.
+
+		if (inputDocCriteria.size() > 6) {
+			throw new IllegalArgumentException(
+					"Cannot have >6 input document criteria. Code can be extended, but code revision is required.");
+		}
+
+		int tagIndex = 1;
 		for (DocumentCriteria docCriteria : inputDocCriteria) {
 			PCollection<KV<String, ProcessedDocument>> docId2Document = getDocumentEntitiesToProcess(beamPipeline,
 					docCriteria, collection, gcpProjectId);
-			tuple = tuple.and(documentTag, docId2Document);
+			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
 		PCollection<KV<String, CoGbkResult>> result = tuple.apply(CoGroupByKey.create());
@@ -168,20 +202,26 @@ public class PipelineMain {
 							ProcessingStatus processingStatus = result.getOnly(statusTag);
 
 							if (processingStatus != null) {
-								// get all associated documents -- shere should be only one
-								// Iterable<ProcessedDocument> associated with the documentTag
-								Iterable<ProcessedDocument> documents = result.getAll(documentTag);
+								// get all associated documents -- there should be only one
+								// ProcessedDocument associated with each documentTag
+								Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
+								for (int index = 1; index <= inputDocCriteria.size(); index++) {
+									ProcessedDocument doc = result.getOnly(tagMap.get(index));
+									if (doc != null) {
+										allDocuments.add(doc);
+									}
+								}
 
 								// piece together documents that have been split for storage
-								Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(documents);
+								Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
 
 								c.output(KV.of(processingStatus, contentMap));
 							}
 						} catch (IllegalArgumentException e) {
-//							throw new IllegalArgumentException(
-//									"Status or documents missing for id: " + element.getKey(), e);
-							LOGGER.log(Level.WARNING, "Skipping processing due to missing documents for id: " + element.getKey());
-							// TODO: this should probably output an EtlFailure here instead of logging a warning
+							LOGGER.log(Level.WARNING,
+									"Skipping processing due to missing documents for id: " + element.getKey());
+							// TODO: this should probably output an EtlFailure here instead of logging a
+							// warning
 						}
 					}
 
