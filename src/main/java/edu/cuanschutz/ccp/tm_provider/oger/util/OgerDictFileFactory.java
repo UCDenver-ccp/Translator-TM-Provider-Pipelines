@@ -166,8 +166,8 @@ public class OgerDictFileFactory {
 		try {
 			createOgerDictionaryFile(ontologyFile, dictFile, ontMainType, ontKey);
 //			createOgerDictFileFromHGNC(hgncDownloadFile, dictFile);
-//		} catch (OWLOntologyCreationException | IOException e) {
-		} catch (IOException e) {
+		} catch (OWLOntologyCreationException | IOException e) {
+//		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
