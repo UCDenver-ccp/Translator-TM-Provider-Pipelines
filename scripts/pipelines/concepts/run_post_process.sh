@@ -20,9 +20,9 @@ INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_CHEBI|BIONLP|OGE
 #INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_CHEBI|BIONLP|OGER|0.1.0;CRF_CHEBI|BIONLP|CRF|0.1.0;CONCEPT_PR|BIONLP|OGER|0.1.0;CRF_PR|BIONLP|CRF|0.1.0'
 REQUIRED_FLAGS='TEXT_DONE'
 
-PR_PROMOTION_MAP_FILE_PATH='${BUCKET}/ontology-resources/pr-promotion-map.tsv.gz'
-NCBITAXON_PROMOTION_MAP_FILE_PATH='${BUCKET}/ontology-resources/ncbitaxon-promotion-map.tsv.gz'
-EXTENSION_MAP_FILE_PATH='${BUCKET}/ontology-resources/craft-mapping-files/*.txt.gz'
+PR_PROMOTION_MAP_FILE_PATH="${BUCKET}/ontology-resources/pr-promotion-map.tsv.gz"
+NCBITAXON_PROMOTION_MAP_FILE_PATH="${BUCKET}/ontology-resources/ncbitaxon-promotion-map.tsv.gz"
+EXTENSION_MAP_FILE_PATH="${BUCKET}/ontology-resources/craft-mapping-files/*.txt.gz"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_POST_PROCESS \
 --jobName=$JOB_NAME \
@@ -32,6 +32,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_PO
 --prPromotionMapFileDelimiter='TAB' \
 --ncbiTaxonPromotionMapFilePath=$NCBITAXON_PROMOTION_MAP_FILE_PATH \
 --ncbiTaxonPromotionMapFileDelimiter='TAB' \
+--ncbiTaxonPromotionMapFileSetDelimiter='PIPE' \
 --extensionMapFilePath=$EXTENSION_MAP_FILE_PATH \
 --extensionMapFileDelimiter='TAB' \
 --extensionMapFileSetDelimiter='TAB' \

@@ -14,7 +14,7 @@ echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-OUTPUT_BUCKET='${BUCKET}/extracted-sentences/chebi-pr-downregulation'
+OUTPUT_BUCKET="${BUCKET}/extracted-sentences/chebi-pr-downregulation"
 
 
 UPREGULATION='increase|increased|increases|increasing|amplify|amplified|amplifies|amplifying|raise|raises|raised|raising|multiply|multiplied|multiplies|multiplying|elevate|elevates|elevated|elevating|augment|augments|augmented|positive|stimulate|stimulates|stimulated|stimulating|activate|activates|activated|activating|up-regulate|up-regulates|up-regulated|up-regulating|upregulate|upregulates|upregulated|upregulating|transactivate|transactivates|transactivated|transactivating|trans-activate|trans-activates|trans-activated|trans-activating|catalyze|catalyzes|catalyzed|catalyzing|reactivate|reactivates|reactivated|reactivating|transduce|transduces|transduced|transducing|enhance|enhances|enhanced|enhancing|activator|coactivator|co-activator|upregulator|up-regulator|transducer|activation|up-regulation|upregulation|transactivation|promote|promotes|promoted|promoting|evoke|evokes|evoked|evoking|enhance|enhances|enhanced|enhancing|stabilize|stabilized|stabilizes|stabilizing|augment|augments|augmented|augmenting|facilitate|facilitates|facilitated|facilitating|trigger|triggers|triggered|triggering|potentiate|potentiates|potentiated|potentiating|elevate|elevates|elevated|elevating|raise|raises|raised|raising|stimulation|stimulator|elevation|rise|elevator'

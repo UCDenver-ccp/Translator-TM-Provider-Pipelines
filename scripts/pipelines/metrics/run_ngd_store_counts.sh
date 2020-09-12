@@ -17,8 +17,8 @@ echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 echo "DISK_TYPE: $DISK_TYPE"
 
-ANCESTOR_MAP_FILE_PATH='${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz'
-OUTPUT_BUCKET='${BUCKET}/output/ngd-concept-counts'
+ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
+OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-counts"
 
 INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0'
 REQUIRED_FLAGS='CONCEPT_POST_PROCESSING_DONE'

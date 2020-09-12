@@ -8,12 +8,12 @@ BUCKET=$4
 JOB_NAME='NGD-KGX'
 
 
-SINGLETON_FILE_PATTERN='${BUCKET}/output/ngd-concept-counts/concept-to-doc.*'
-PAIR_FILE_PATTERN='${BUCKET}/output/ngd-concept-counts/concept-pair-to-doc.*'
-CONCEPT_COUNT_FILE_PATTERN='${BUCKET}/output/ngd-concept-counts/doc-to-concept-count.*'
-LABEL_MAP_FILE='${BUCKET}/ontology-resources/ontology-class-label-map.uniq.tsv.gz'
-CATEGORY_MAP_FILE='${BUCKET}/ontology-resources/ontology-class-biolink-category-map.uniq.tsv.gz'
-OUTPUT_BUCKET='${BUCKET}/output/ngd-concept-kgx/concept-cooccur-kgx'
+SINGLETON_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/concept-to-doc.*"
+PAIR_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/concept-pair-to-doc.*"
+CONCEPT_COUNT_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/doc-to-concept-count.*"
+LABEL_MAP_FILE="${BUCKET}/ontology-resources/ontology-class-label-map.uniq.tsv.gz"
+CATEGORY_MAP_FILE="${BUCKET}/ontology-resources/ontology-class-biolink-category-map.uniq.tsv.gz"
+OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-kgx/concept-cooccur-kgx"
 
 
 echo "COLLECTION: $COLLECTION"
