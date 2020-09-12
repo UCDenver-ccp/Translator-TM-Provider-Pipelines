@@ -7,17 +7,23 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_CC_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_MF_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_HP_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MONDO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MOP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NCBITAXON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_PR_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_NGD_COUNTS_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_NGD_KGX_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_BP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_CC_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_MF_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_HP_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_MONDO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_MOP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_NCBITAXON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_PR_DONE;
@@ -46,6 +52,10 @@ public enum ProcessingStatusFlag {
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
 
 	CONCEPT_POST_PROCESSING_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE),
+
+	NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE(STATUS_PROPERTY_NGD_COUNTS_DONE),
+	NORMALIZED_GOOGLE_DISTANCE_KGX_DONE(STATUS_PROPERTY_NGD_KGX_DONE),
+
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
@@ -70,6 +80,10 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	OGER_GO_MF_DONE(STATUS_PROPERTY_OGER_GO_MF_DONE),
+
+	OGER_HP_DONE(STATUS_PROPERTY_OGER_HP_DONE),
+
+	OGER_MONDO_DONE(STATUS_PROPERTY_OGER_MONDO_DONE),
 	/**
 	 * 
 	 */
@@ -115,6 +129,10 @@ public enum ProcessingStatusFlag {
 	* 
 	*/
 	CRF_GO_MF_DONE(STATUS_PROPERTY_CRF_GO_MF_DONE),
+
+	CRF_HP_DONE(STATUS_PROPERTY_CRF_HP_DONE),
+
+	CRF_MONDO_DONE(STATUS_PROPERTY_CRF_MONDO_DONE),
 	/**
 	* 
 	*/
