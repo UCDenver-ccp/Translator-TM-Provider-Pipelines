@@ -11,6 +11,8 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -19,6 +21,8 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +36,8 @@ import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -40,6 +46,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.tools.ant.util.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
@@ -62,6 +69,11 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
+import edu.ucdenver.ccp.nlp.core.annotation.Span;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
 public class PipelineMain {
 
@@ -74,10 +86,29 @@ public class PipelineMain {
 	private static final TupleTag<ProcessedDocument> documentTag4 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag5 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag6 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag7 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag8 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag9 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag10 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag11 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag12 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag13 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag14 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag15 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag16 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag17 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag18 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag19 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag20 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag21 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag22 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag23 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag24 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag25 = new TupleTag<>();
 
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
-		
+
 		PipelineKey pipeline = null;
 		try {
 			pipeline = PipelineKey.valueOf(args[0]);
@@ -95,8 +126,17 @@ public class PipelineMain {
 			case CRF:
 				CrfNerPipeline.main(pipelineArgs);
 				break;
+			case CONCEPT_POST_PROCESS:
+				ConceptPostProcessingPipeline.main(pipelineArgs);
+				break;
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);
+				break;
+			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS:
+				NGDStoreCountsPipeline.main(pipelineArgs);
+				break;
+			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX:
+				NGDKgxPipeline.main(pipelineArgs);
 				break;
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
@@ -140,6 +180,25 @@ public class PipelineMain {
 		tagMap.put(4, documentTag4);
 		tagMap.put(5, documentTag5);
 		tagMap.put(6, documentTag6);
+		tagMap.put(7, documentTag7);
+		tagMap.put(8, documentTag8);
+		tagMap.put(9, documentTag9);
+		tagMap.put(10, documentTag10);
+		tagMap.put(11, documentTag11);
+		tagMap.put(12, documentTag12);
+		tagMap.put(13, documentTag13);
+		tagMap.put(14, documentTag14);
+		tagMap.put(15, documentTag15);
+		tagMap.put(16, documentTag16);
+		tagMap.put(17, documentTag17);
+		tagMap.put(18, documentTag18);
+		tagMap.put(19, documentTag19);
+		tagMap.put(20, documentTag20);
+		tagMap.put(21, documentTag21);
+		tagMap.put(22, documentTag22);
+		tagMap.put(23, documentTag23);
+		tagMap.put(24, documentTag24);
+		tagMap.put(25, documentTag25);
 
 		return tagMap;
 	}
@@ -160,10 +219,8 @@ public class PipelineMain {
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
 			String collection, OverwriteOutput overwriteOutput) {
 
-		
 		Map<Integer, TupleTag<ProcessedDocument>> tagMap = populateTagMap();
-		
-		
+
 		/*
 		 * get the status entities for documents that meet the required process status
 		 * flag critera but whose target process status flag is false
@@ -173,13 +230,14 @@ public class PipelineMain {
 
 		KeyedPCollectionTuple<String> tuple = KeyedPCollectionTuple.of(statusTag, docId2Status);
 
-		// current code allows up to 6 document criteria to be added. Code can be
+		// current code allows up to 25 document criteria to be added. Code can be
 		// extended if more are needed. It doesn't seem possible to do this (create
 		// tuple tags) dynamically.
 
-		if (inputDocCriteria.size() > 6) {
-			throw new IllegalArgumentException(
-					"Cannot have >6 input document criteria. Code can be extended, but code revision is required.");
+		if (inputDocCriteria.size() > tagMap.size()) {
+			throw new IllegalArgumentException(String.format(
+					"Cannot have >%d input document criteria. Code can be extended, but code revision is required.",
+					tagMap.size()));
 		}
 
 		int tagIndex = 1;
@@ -208,17 +266,26 @@ public class PipelineMain {
 								// get all associated documents -- there should be only one
 								// ProcessedDocument associated with each documentTag
 								Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
+								boolean hasAllDocuments = true;
+								// index starts with 1 here b/c the tagMap keys start with 1
 								for (int index = 1; index <= inputDocCriteria.size(); index++) {
 									ProcessedDocument doc = result.getOnly(tagMap.get(index));
 									if (doc != null) {
 										allDocuments.add(doc);
+									} else {
+										hasAllDocuments = false;
+										break;
 									}
 								}
 
-								// piece together documents that have been split for storage
-								Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
-
-								c.output(KV.of(processingStatus, contentMap));
+								if (hasAllDocuments) {
+									// piece together documents that have been split for storage
+									Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
+									c.output(KV.of(processingStatus, contentMap));
+								} else {
+									LOGGER.log(Level.WARNING,
+											"Skipping processing due to missing documents for id: " + element.getKey());
+								}
 							}
 						} catch (IllegalArgumentException e) {
 							LOGGER.log(Level.WARNING,
@@ -369,7 +436,9 @@ public class PipelineMain {
 			query.setFilter(filter);
 		}
 
-		PCollection<Entity> documents = p.apply("datastore->document entities to process",
+		PCollection<Entity> documents = p.apply(
+				String.format("datastore->[%s] document entities",
+						(documentType == null) ? "all types" : documentType.name().toLowerCase()),
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 
 		PCollection<KV<String, ProcessedDocument>> docId2Document = documents.apply("document entity -> PD",
@@ -513,6 +582,25 @@ public class PipelineMain {
 		return nonredundantStatusEntities;
 	}
 
+	// TODO this method can replace the one above
+	public static <T> PCollection<T> deduplicateByKey(PCollection<KV<String, T>> docId2Entity) {
+		// remove any duplicates
+		PCollection<KV<String, Iterable<T>>> idToEntities = docId2Entity.apply("group-by-key",
+				GroupByKey.<String, T>create());
+		PCollection<T> nonredundantStatusEntities = idToEntities.apply("dedup-by-key",
+				ParDo.of(new DoFn<KV<String, Iterable<T>>, T>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						Iterable<T> entities = c.element().getValue();
+						// if there are more than one entity, we just return one
+						c.output(entities.iterator().next());
+					}
+				}));
+		return nonredundantStatusEntities;
+	}
+
 	public static PCollection<KV<String, List<String>>> deduplicateDocuments(
 			PCollection<KV<ProcessingStatus, List<String>>> statusEntityToPlainText) {
 
@@ -616,6 +704,274 @@ public class PipelineMain {
 			}
 		}));
 
+	}
+
+	/**
+	 * Log a failure to Datastore
+	 * 
+	 * @param failureTag
+	 * @param message
+	 * @param outputDocCriteria
+	 * @param timestamp
+	 * @param out
+	 * @param docId
+	 * @param t
+	 */
+	public static void logFailure(TupleTag<EtlFailureData> failureTag, String message,
+			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp, MultiOutputReceiver out,
+			String docId, Throwable t) {
+
+		EtlFailureData failure = initFailure(message, outputDocCriteria, timestamp, docId, t);
+		out.get(failureTag).output(failure);
+	}
+
+	public static EtlFailureData initFailure(String message, DocumentCriteria outputDocCriteria,
+			com.google.cloud.Timestamp timestamp, String docId, Throwable t) {
+
+		EtlFailureData failure = (t == null) ? new EtlFailureData(outputDocCriteria, message, docId, timestamp)
+				: new EtlFailureData(outputDocCriteria, message, docId, t, timestamp);
+		return failure;
+	}
+
+	/**
+	 * e.g. TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0
+	 * 
+	 * @param inputDocumentCriteria
+	 * @return
+	 */
+	public static Set<DocumentCriteria> compileInputDocumentCriteria(String inputDocumentCriteria) {
+		String[] toks = inputDocumentCriteria.split(";");
+		Set<DocumentCriteria> docCriteria = new HashSet<DocumentCriteria>();
+		for (String tok : toks) {
+			String[] cols = tok.split("\\|");
+			DocumentType type = DocumentType.valueOf(cols[0]);
+			DocumentFormat format = DocumentFormat.valueOf(cols[1]);
+			PipelineKey pipeline = PipelineKey.valueOf(cols[2]);
+			String pipelineVersion = cols[3];
+			DocumentCriteria dc = new DocumentCriteria(type, format, pipeline, pipelineVersion);
+			docCriteria.add(dc);
+		}
+		return docCriteria;
+	}
+
+	public static Set<ProcessingStatusFlag> compileRequiredProcessingStatusFlags(String delimitedFlags) {
+		Set<ProcessingStatusFlag> flags = new HashSet<ProcessingStatusFlag>();
+		for (String flagStr : delimitedFlags.split("\\|")) {
+			flags.add(ProcessingStatusFlag.valueOf(flagStr));
+		}
+		return flags;
+	}
+
+	/**
+	 * Map document type to content. This map assumes only one document in the input
+	 * for each type, so if multiple documents for a given type are observed an
+	 * exception is thrown.
+	 * 
+	 * @param value
+	 * @return
+	 * @throws IOException
+	 */
+	public static Map<DocumentType, Collection<TextAnnotation>> getDocTypeToContentMap(String documentId,
+			Map<DocumentCriteria, String> inputDocuments) throws IOException {
+		Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
+
+		// document text is needed to parse some of the document formats
+		String documentText = getDocumentText(inputDocuments);
+
+		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
+			DocumentType documentType = entry.getKey().getDocumentType();
+
+			// there is no handling for duplicate document types, so throw an exception if
+			// duplicate types are observed
+			if (docTypeToAnnotMap.containsKey(documentType)) {
+				throw new IllegalArgumentException(String.format(
+						"Observed multiple documents of type %s. Input documents should be unique with regard to document type.",
+						documentType));
+			}
+
+			DocumentFormat documentFormat = entry.getKey().getDocumentFormat();
+			String content = entry.getValue();
+			if (docTypeToAnnotMap.containsKey(documentType)) {
+				throw new IllegalArgumentException(
+						String.format("Duplicate document type (%s) detected in input.", documentType.name()));
+			}
+
+			Collection<TextAnnotation> annots = deserializeAnnotations(documentId, content, documentFormat,
+					documentText);
+
+			docTypeToAnnotMap.put(documentType, annots);
+
+		}
+
+		return docTypeToAnnotMap;
+	}
+
+	/**
+	 * cycle through the input documents and return the document text
+	 * 
+	 * @param inputDocuments
+	 * @return
+	 */
+	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
+		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
+			DocumentCriteria documentCriteria = entry.getKey();
+			if (documentCriteria.getDocumentType() == DocumentType.TEXT) {
+				return entry.getValue();
+			}
+		}
+		throw new IllegalArgumentException("Unable to find document text in input documents.");
+	}
+
+	private static Collection<TextAnnotation> deserializeAnnotations(String documentId, String content,
+			DocumentFormat documentFormat, String documentText) throws IOException {
+		switch (documentFormat) {
+		case BIONLP:
+			BioNLPDocumentReader reader = new BioNLPDocumentReader();
+			TextDocument td = reader.readDocument(documentId, "unknown", new ByteArrayInputStream(content.getBytes()),
+					new ByteArrayInputStream(documentText.getBytes()), CharacterEncoding.UTF_8);
+			return td.getAnnotations();
+		default:
+			// this is a document format that does not serialize annotations, e.g. TEXT
+			return Collections.emptyList();
+//			LOGGER.log(Level.)
+//			throw new IllegalArgumentException(
+//					String.format("Unhandled input document format: %s", documentFormat.name()));
+
+		}
+	}
+
+	public static Map<DocumentType, Collection<TextAnnotation>> filterConceptAnnotations(
+			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap) {
+		Map<DocumentType, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
+
+		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> map = pairConceptWithCrfAnnots(
+				docTypeToAnnotMap);
+
+		for (Entry<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> entry : map.entrySet()) {
+
+			DocumentType type = entry.getKey();
+			Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
+			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
+
+			Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
+
+			typeToAnnotMap.put(type, filteredAnnots);
+
+		}
+		return typeToAnnotMap;
+	}
+
+	public static List<TextAnnotation> filterViaCrf(Collection<TextAnnotation> conceptAnnots,
+			Collection<TextAnnotation> crfAnnots) {
+
+		List<TextAnnotation> toKeep = new ArrayList<TextAnnotation>();
+
+		// annotations must be sorted
+		List<TextAnnotation> conceptList = new ArrayList<TextAnnotation>(conceptAnnots);
+		Collections.sort(conceptList, TextAnnotation.BY_SPAN());
+		List<TextAnnotation> crfList = new ArrayList<TextAnnotation>(crfAnnots);
+		Collections.sort(crfList, TextAnnotation.BY_SPAN());
+
+		for (TextAnnotation conceptAnnot : conceptList) {
+			for (TextAnnotation crfAnnot : crfList) {
+				if (conceptAnnot.overlaps(crfAnnot)) {
+					toKeep.add(conceptAnnot);
+					break;
+				}
+			}
+		}
+
+		return toKeep;
+	}
+
+	public enum CrfOrConcept {
+		CRF, CONCEPT
+	}
+
+	private static Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> pairConceptWithCrfAnnots(
+			Map<DocumentType, Collection<TextAnnotation>> inputMap) {
+
+		/*
+		 * outer map key is the concept type, e.g. CHEBI, CL, etc. inner map links keys:
+		 * CONCEPT & CRF to the associated bionlp formatted doc content
+		 */
+		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> docTypeToSplitAnnotMap = new HashMap<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>>();
+
+		for (Entry<DocumentType, Collection<TextAnnotation>> entry : inputMap.entrySet()) {
+			DocumentType documentType = entry.getKey();
+			Collection<TextAnnotation> annots = entry.getValue();
+
+			if (documentType.name().startsWith("CRF_")) {
+				String type = StringUtils.removePrefix(documentType.name(), "CRF_");
+				DocumentType indexType = DocumentType.valueOf("CONCEPT_" + type);
+				addToMap(docTypeToSplitAnnotMap, annots, indexType, CrfOrConcept.CRF);
+			} else if (documentType.name().startsWith("CONCEPT_")) {
+				addToMap(docTypeToSplitAnnotMap, annots, documentType, CrfOrConcept.CONCEPT);
+			}
+		}
+
+		return docTypeToSplitAnnotMap;
+	}
+
+	/**
+	 * Add a document of a given type to the map
+	 * 
+	 * @param conceptTypeToContentMap
+	 * @param documentContent
+	 * @param type
+	 * @param crfOrConcept
+	 */
+	@VisibleForTesting
+	protected static void addToMap(
+			Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> conceptTypeToContentMap,
+			Collection<TextAnnotation> annots, DocumentType type, CrfOrConcept crfOrConcept) {
+		if (conceptTypeToContentMap.containsKey(type)) {
+			conceptTypeToContentMap.get(type).put(crfOrConcept, annots);
+		} else {
+			Map<CrfOrConcept, Collection<TextAnnotation>> innerMap = new HashMap<CrfOrConcept, Collection<TextAnnotation>>();
+			innerMap.put(crfOrConcept, annots);
+			conceptTypeToContentMap.put(type, innerMap);
+		}
+	}
+
+	/**
+	 * Given a map that contains Collections as values, return a set that is the
+	 * aggregate of all unique collection members
+	 * 
+	 * @param <T>
+	 * @param map
+	 * @return
+	 */
+	public static <T> Set<T> spliceValues(Map<String, Collection<T>> map) {
+		Set<T> set = new HashSet<T>();
+		for (Collection<T> collection : map.values()) {
+			for (T t : collection) {
+				set.add(t);
+			}
+		}
+		return set;
+	}
+
+	public static <T> Set<T> spliceValues(Collection<Collection<T>> collections) {
+		Set<T> set = new HashSet<T>();
+		for (Collection<T> collection : collections) {
+			for (T t : collection) {
+				set.add(t);
+			}
+		}
+		return set;
+	}
+
+	public static TextAnnotation clone(TextAnnotation annot) {
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(annot.getDocumentID());
+		List<Span> origSpans = annot.getSpans();
+		Span firstSpan = origSpans.get(0);
+		TextAnnotation ta = factory.createAnnotation(firstSpan.getSpanStart(), firstSpan.getSpanEnd(),
+				annot.getCoveredText(), annot.getClassMention().getMentionName());
+		for (int i = 1; i < origSpans.size(); i++) {
+			ta.addSpan(new Span(origSpans.get(i).getSpanStart(), origSpans.get(i).getSpanEnd()));
+		}
+		return ta;
 	}
 
 }

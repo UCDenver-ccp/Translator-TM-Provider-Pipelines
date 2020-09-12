@@ -2,8 +2,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +23,7 @@ import org.apache.tools.ant.util.StringUtils;
 import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -74,7 +73,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 							Set<ExtractedSentence> extractedSentences = extractSentences(requiredDocumentCriteria,
 									statusEntityToText, keywords);
 							if (extractedSentences == null) {
-								logFailure(
+								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
 												+ " -- contains (" + statusEntityToText.getValue().size() + ") "
 												+ statusEntityToText.getValue().keySet().toString(),
@@ -85,20 +84,9 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 								}
 							}
 						} catch (Throwable t) {
-							logFailure("Failure during sentence extraction", outputDocCriteria, timestamp, out, docId,
-									t);
+							PipelineMain.logFailure(ETL_FAILURE_TAG, "Failure during sentence extraction",
+									outputDocCriteria, timestamp, out, docId, t);
 						}
-					}
-
-					private void logFailure(String message, DocumentCriteria outputDocCriteria,
-							com.google.cloud.Timestamp timestamp, MultiOutputReceiver out, String docId, Throwable t) {
-
-						// crop message size so that it fits in the 1500 byte threshold for datastore
-						// fields
-						EtlFailureData failure = (t == null)
-								? new EtlFailureData(outputDocCriteria, message, docId, timestamp)
-								: new EtlFailureData(outputDocCriteria, message, docId, t, timestamp);
-						out.get(ETL_FAILURE_TAG).output(failure);
 					}
 
 				}).withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
@@ -187,12 +175,12 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 				new ByteArrayInputStream(crfAnnotationBionlpY.getBytes()),
 				new ByteArrayInputStream(documentText.getBytes()), CharacterEncoding.UTF_8);
 
-		List<TextAnnotation> conceptXAnnots = filterViaCrf(conceptXDocument.getAnnotations(),
+		List<TextAnnotation> conceptXAnnots = PipelineMain.filterViaCrf(conceptXDocument.getAnnotations(),
 				crfXDocument.getAnnotations());
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty()) {
-			List<TextAnnotation> conceptYAnnots = filterViaCrf(conceptYDocument.getAnnotations(),
+			List<TextAnnotation> conceptYAnnots = PipelineMain.filterViaCrf(conceptYDocument.getAnnotations(),
 					crfYDocument.getAnnotations());
 			if (!conceptYAnnots.isEmpty()) {
 
@@ -303,20 +291,4 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 		return null;
 	}
 
-	@VisibleForTesting
-	protected static List<TextAnnotation> filterViaCrf(List<TextAnnotation> conceptAnnots,
-			List<TextAnnotation> crfAnnots) {
-
-		List<TextAnnotation> toKeep = new ArrayList<TextAnnotation>();
-		for (TextAnnotation conceptAnnot : conceptAnnots) {
-			for (TextAnnotation crfAnnot : crfAnnots) {
-				if (conceptAnnot.overlaps(crfAnnot)) {
-					toKeep.add(conceptAnnot);
-					break;
-				}
-			}
-		}
-
-		return toKeep;
-	}
 }

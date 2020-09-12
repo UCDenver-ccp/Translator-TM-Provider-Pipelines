@@ -17,6 +17,7 @@ import org.apache.beam.sdk.values.KV;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -69,6 +70,9 @@ public class SentenceExtractionFnTest {
 	private static TextAnnotation x1Sentence2Annot = factory.createAnnotation(43, 52, "ConceptX1", X_000001);
 	private static TextAnnotation x1Sentence4Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000001);
 	private static TextAnnotation y1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
+
+	// This is simulating the concept Y_000001 existing in both the X & Y ontologies, e.g. an extension class
+	private static TextAnnotation x3ReallyY1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
 	private TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
 	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
@@ -155,7 +159,7 @@ public class SentenceExtractionFnTest {
 		expectedAnnots.add(factory.createAnnotation(32, 41, "conceptX2", "X:000002"));
 		expectedAnnots.add(factory.createAnnotation(43, 52, "ConceptX1", X_000001));
 
-		List<TextAnnotation> filteredAnnots = SentenceExtractionFn.filterViaCrf(conceptXAnnots, crfAnnots);
+		List<TextAnnotation> filteredAnnots = PipelineMain.filterViaCrf(conceptXAnnots, crfAnnots);
 
 		assertEquals(expectedAnnots, filteredAnnots);
 	}
@@ -163,6 +167,30 @@ public class SentenceExtractionFnTest {
 	@Test
 	public void testCatalogExtractedSentences() {
 		Set<String> keywords = CollectionsUtil.createSet("sentence");
+
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
+
+		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
+		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1", "[[43..52]]", Y_000001,
+				"conceptY1", "[[84..93]]", "sentence", sentence2, documentText);
+		expectedExtractedSentences.add(es);
+
+		assertEquals(expectedExtractedSentences, extractedSentences);
+
+	}
+
+	/**
+	 * There are cases, e.g. extension classes, where the same ontology concepts
+	 * exists in different ontologies. Extracted sentences should not link the same
+	 * concept, e.g. concept x should not equal concept y.
+	 */
+	@Test
+	public void testCatalogExtractedSentencesPreventDuplicates() {
+		Set<String> keywords = CollectionsUtil.createSet("sentence");
+
+		// this is concept X but is part of the y ontology so it potentially creates a
+		// situation where an ExtractedSentence contains two references to concept X1.
+		conceptXAnnots.add(x3ReallyY1Sentence2Annot);
 
 		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
 
@@ -337,7 +365,7 @@ public class SentenceExtractionFnTest {
 		keywords = CollectionsUtil.createSet("notfound");
 		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords);
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
-		
+
 	}
 
 }

@@ -107,7 +107,8 @@ public class SentenceExtractionPipeline {
 		// require that the documents have a plain text version to be processed by OGER
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
-		Set<DocumentCriteria> inputDocCriteria = compileInputDocumentCriteria(options.getInputDocumentCriteria());
+		Set<DocumentCriteria> inputDocCriteria = PipelineMain
+				.compileInputDocumentCriteria(options.getInputDocumentCriteria());
 		Set<String> keywords = compileKeywords(options.getKeywords());
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
@@ -170,28 +171,6 @@ public class SentenceExtractionPipeline {
 		outputTsv.apply("write annotation table", TextIO.write().to(options.getOutputBucket()).withSuffix(".tsv"));
 
 		p.run().waitUntilFinish();
-	}
-
-	/**
-	 * e.g. TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0
-	 * 
-	 * @param inputDocumentCriteria
-	 * @return
-	 */
-	@VisibleForTesting
-	protected static Set<DocumentCriteria> compileInputDocumentCriteria(String inputDocumentCriteria) {
-		String[] toks = inputDocumentCriteria.split(";");
-		Set<DocumentCriteria> docCriteria = new HashSet<DocumentCriteria>();
-		for (String tok : toks) {
-			String[] cols = tok.split("\\|");
-			DocumentType type = DocumentType.valueOf(cols[0]);
-			DocumentFormat format = DocumentFormat.valueOf(cols[1]);
-			PipelineKey pipeline = PipelineKey.valueOf(cols[2]);
-			String pipelineVersion = cols[3];
-			DocumentCriteria dc = new DocumentCriteria(type, format, pipeline, pipelineVersion);
-			docCriteria.add(dc);
-		}
-		return docCriteria;
 	}
 
 	@VisibleForTesting

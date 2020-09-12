@@ -16,18 +16,6 @@ import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 public class SentenceExtractionPipelineTest {
 
 	@Test
-	public void testCompileInputDocumentCriteria() {
-		String s = "TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_CHEBI|BIONLP|OGER|0.1.0";
-		Set<DocumentCriteria> docCriteria = SentenceExtractionPipeline.compileInputDocumentCriteria(s);
-
-		Set<DocumentCriteria> expectedDocCriteria = CollectionsUtil.createSet(
-				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
-				new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"));
-
-		assertEquals(expectedDocCriteria, docCriteria);
-	}
-
-	@Test
 	public void testCompileKeywords() {
 		assertEquals(new HashSet<String>(), SentenceExtractionPipeline.compileKeywords(null));
 		assertEquals(new HashSet<String>(), SentenceExtractionPipeline.compileKeywords(""));

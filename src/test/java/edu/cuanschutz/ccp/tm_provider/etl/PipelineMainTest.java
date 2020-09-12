@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -31,6 +32,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.nlp.core.annotation.Span;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
 
 public class PipelineMainTest {
@@ -250,5 +254,33 @@ public class PipelineMainTest {
 
 		assertEquals(expectedResult, result);
 	}
+	
+	@Test
+	public void testCompileInputDocumentCriteria() {
+		String s = "TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_CHEBI|BIONLP|OGER|0.1.0";
+		Set<DocumentCriteria> docCriteria = PipelineMain.compileInputDocumentCriteria(s);
+
+		Set<DocumentCriteria> expectedDocCriteria = CollectionsUtil.createSet(
+				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
+				new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"));
+
+		assertEquals(expectedDocCriteria, docCriteria);
+	}
+
+	
+	@Test
+	public void testCloneTextAnnotation() {
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+		TextAnnotation annot = factory.createAnnotation(0, 5, "some text", "PR:00000000025");
+		TextAnnotation clone = PipelineMain.clone(annot);
+		assertEquals(annot, clone);
+
+		// test with multiple spans
+		annot.addSpan(new Span(15, 20));
+		clone = PipelineMain.clone(annot);
+
+		assertEquals(annot, clone);
+	}
+	
 
 }
