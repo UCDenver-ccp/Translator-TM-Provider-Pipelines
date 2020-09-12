@@ -1,10 +1,13 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -23,12 +26,12 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
-import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -45,13 +48,16 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
+	public static final Set<String> NCBITAXON_IDS_TO_EXCLUDE = CollectionsUtil
+			.createSet("NCBITaxon:169495" /* matches "This" */);
+
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria,
 			PCollectionView<Map<String, Set<String>>> extensionToOboMapView,
 			PCollectionView<Map<String, String>> prPromotionMapView,
-			PCollectionView<Map<String, String>> ncbiTaxonPromotionMapView) {
+			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -65,7 +71,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 						Map<String, Set<String>> extensionToOboMap = context.sideInput(extensionToOboMapView);
 						Map<String, String> prPromotionMap = context.sideInput(prPromotionMapView);
-						Map<String, String> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonPromotionMapView);
+						Map<String, Set<String>> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
 
 						try {
 							// check to see if all documents are present
@@ -87,8 +93,9 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
 								allAnnots = convertExtensionToObo(allAnnots, extensionToOboMap);
-								allAnnots = promoteAnnots(allAnnots, prPromotionMap);
-								allAnnots = promoteAnnots(allAnnots, ncbitaxonPromotionMap);
+								allAnnots = promotePrAnnots(allAnnots, prPromotionMap);
+								allAnnots = excludeSelectNcbiTaxonAnnots(allAnnots);
+								allAnnots = promoteNcbiTaxonAnnots(allAnnots, ncbitaxonPromotionMap);
 
 								String documentText = PipelineMain.getDocumentText(docs);
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
@@ -109,8 +116,103 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						}
 					}
 
-				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView)
+				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonAncestorMapView)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	@VisibleForTesting
+	protected static Set<TextAnnotation> excludeSelectNcbiTaxonAnnots(Set<TextAnnotation> annots) {
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+
+		for (TextAnnotation annot : annots) {
+			String type = annot.getClassMention().getMentionName();
+			if (!NCBITAXON_IDS_TO_EXCLUDE.contains(type)) {
+				// keep annotations that are not in the exclude list
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	/**
+	 * If there are taxon annotations with the same span, keep the more general
+	 * class
+	 * 
+	 * @param allAnnots
+	 * @param ncbitaxonAncestorMap
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Set<TextAnnotation> promoteNcbiTaxonAnnots(Set<TextAnnotation> allAnnots,
+			Map<String, Set<String>> ncbitaxonAncestorMap) {
+
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+
+		Map<Span, Set<TextAnnotation>> spanToTaxonAnnotMap = new HashMap<Span, Set<TextAnnotation>>();
+		for (TextAnnotation annot : allAnnots) {
+			if (annot.getClassMention().getMentionName().startsWith("NCBITaxon:")) {
+				CollectionsUtil.addToOne2ManyUniqueMap(annot.getAggregateSpan(), annot, spanToTaxonAnnotMap);
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
+		for (Entry<Span, Set<TextAnnotation>> entry : spanToTaxonAnnotMap.entrySet()) {
+			Set<TextAnnotation> annots = entry.getValue();
+
+			if (annots.size() > 1) {
+				// keep more general class
+				Map<String, TextAnnotation> typeToAnnotMap = new HashMap<String, TextAnnotation>();
+				for (TextAnnotation annot : annots) {
+					typeToAnnotMap.put(annot.getClassMention().getMentionName(), annot);
+				}
+				Set<String> typesToKeep = prefer(typeToAnnotMap.keySet(), ncbitaxonAncestorMap);
+				for (String typeToKeep : typesToKeep) {
+					toKeep.add(typeToAnnotMap.get(typeToKeep));
+				}
+			} else {
+				// there is only one taxon annotation so keep it
+				toKeep.addAll(annots);
+			}
+
+		}
+
+		return toKeep;
+
+	}
+
+	@VisibleForTesting
+	protected static Set<String> prefer(Set<String> ids, Map<String, Set<String>> ncbitaxonAncestorMap) {
+
+		Set<String> toKeep = new HashSet<String>(ids);
+
+		List<String> idList = new ArrayList<String>(ids);
+
+		for (int i = 0; i < idList.size(); i++) {
+			for (int j = 0; j < idList.size(); j++) {
+				if (i != j) {
+					String id1 = idList.get(i);
+					String id2 = idList.get(j);
+
+					Set<String> ancestors1 = ncbitaxonAncestorMap.get(id1);
+					if (ancestors1.contains(id2)) {
+						toKeep.remove(id1);
+					} else {
+						Set<String> ancestors2 = ncbitaxonAncestorMap.get(id2);
+						if (ancestors2.contains(id1)) {
+							toKeep.remove(id2);
+						}
+					}
+				}
+			}
+			// if there is only one member in toKeep, then we can break out of the loops.
+			if (toKeep.size() == 1) {
+				break;
+			}
+		}
+
+		return toKeep;
 	}
 
 	/**
@@ -121,7 +223,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param promotionMap
 	 */
 	@VisibleForTesting
-	protected static Set<TextAnnotation> promoteAnnots(Set<TextAnnotation> annots, Map<String, String> promotionMap) {
+	protected static Set<TextAnnotation> promotePrAnnots(Set<TextAnnotation> annots, Map<String, String> promotionMap) {
 
 		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
 		for (TextAnnotation annot : annots) {
@@ -168,7 +270,5 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		return toKeep;
 
 	}
-
-	
 
 }

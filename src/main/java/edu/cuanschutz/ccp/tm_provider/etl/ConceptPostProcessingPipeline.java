@@ -89,6 +89,11 @@ public class ConceptPostProcessingPipeline {
 
 		void setNcbiTaxonPromotionMapFileDelimiter(Delimiter delimiter);
 
+		@Description("delimiter used to separate values in the 2nd column in the NCBITaxon promotion map file")
+		Delimiter getNcbiTaxonPromotionMapFileSetDelimiter();
+
+		void setNcbiTaxonPromotionMapFileSetDelimiter(Delimiter delimiter);
+
 		@Description("path to (pattern for) CRAFT extension class to OBO class mapping files are located")
 		String getExtensionMapFilePath();
 
@@ -143,10 +148,11 @@ public class ConceptPostProcessingPipeline {
 				options.getPrPromotionMapFilePath(), options.getPrPromotionMapFileDelimiter(), Compression.GZIP)
 				.apply(View.<String, String>asMap());
 
-		final PCollectionView<Map<String, String>> ncbiTaxonPromotionMapView = PCollectionUtil
-				.fromTwoColumnFiles(p, options.getNcbiTaxonPromotionMapFilePath(),
-						options.getNcbiTaxonPromotionMapFileDelimiter(), Compression.GZIP)
-				.apply(View.<String, String>asMap());
+		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = PCollectionUtil
+				.fromKeyToSetTwoColumnFiles(p, options.getNcbiTaxonPromotionMapFilePath(),
+						options.getNcbiTaxonPromotionMapFileDelimiter(),
+						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
+				.apply(View.<String, Set<String>>asMap());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_ALL, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
