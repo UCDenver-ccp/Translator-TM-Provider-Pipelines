@@ -151,9 +151,29 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 
 		conceptAnnots = addSuperClassAnnotations(documentId, conceptAnnots, superClassMap);
 
+		conceptAnnots = removeAnnotsWithMissingTypes(conceptAnnots);
+
 		singletonConceptIds.addAll(getUniqueConceptIds(conceptAnnots));
 		pairedConceptIds.addAll(getConceptPairs(conceptAnnots, levelAnnots));
 
+	}
+
+	/**
+	 * The output contains a blank identifiers, so we remove any annotations with
+	 * missing types here
+	 * 
+	 * @param conceptAnnots
+	 * @return
+	 */
+	private static Collection<TextAnnotation> removeAnnotsWithMissingTypes(Collection<TextAnnotation> conceptAnnots) {
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : conceptAnnots) {
+			String type = annot.getClassMention().getMentionName();
+			if (!type.trim().isEmpty()) {
+				toKeep.add(annot);
+			}
+		}
+		return toKeep;
 	}
 
 	@VisibleForTesting
