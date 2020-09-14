@@ -140,15 +140,15 @@ public class NGDStoreCountsPipeline {
 		conceptIdToDocId.apply("write concept-id to doc-id file",
 				TextIO.write().to(options.getOutputBucket()
 						+ String.format("/concept-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-						.withSuffix(".nodes.tsv"));
+						.withSuffix(".tsv"));
 
 		conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
 				+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-				.withSuffix(".nodes.tsv"));
+				.withSuffix(".tsv"));
 
 		docIdToConceptCount.apply("write doc-id to concept count file", TextIO.write().to(options.getOutputBucket()
 				+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), options.getCooccurLevel()))
-				.withSuffix(".nodes.tsv"));
+				.withSuffix(".tsv"));
 
 		p.run().waitUntilFinish();
 	}
