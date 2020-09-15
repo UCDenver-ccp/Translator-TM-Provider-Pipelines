@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.RegExPatterns;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
+import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -56,7 +58,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria) {
+			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> suffixToPlaceholderMap) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, ExtractedSentence>>() {
@@ -71,7 +73,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 						try {
 							Set<ExtractedSentence> extractedSentences = extractSentences(requiredDocumentCriteria,
-									statusEntityToText, keywords);
+									statusEntityToText, keywords, suffixToPlaceholderMap);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -94,8 +96,8 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> extractSentences(Set<DocumentCriteria> requiredDocCriteria,
-			KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText, Set<String> keywords)
-			throws IOException {
+			KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText, Set<String> keywords,
+			Map<String, String> suffixToPlaceholderMap) throws IOException {
 		// check to see that all required documents are present -- it's possible that
 		// due to various processing errors that one or more of the documents may be
 		// missing.
@@ -116,6 +118,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 		String crfAnnotationBionlpY = null;
 
 		String xSuffix = null;
+		String ySuffix = null;
 
 		for (Entry<DocumentCriteria, String> entry : docs.entrySet()) {
 			DocumentType documentType = entry.getKey().getDocumentType();
@@ -133,6 +136,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 					if (documentType.name().endsWith(xSuffix)) {
 						crfAnnotationBionlpX = entry.getValue();
 					} else {
+						ySuffix = StringUtils.removePrefix(documentType.name(), "CRF_");
 						crfAnnotationBionlpY = entry.getValue();
 					}
 				}
@@ -187,8 +191,11 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 				Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
 						sentenceDocument.getAnnotations(), conceptXAnnots, conceptYAnnots);
 
-				extractedSentences
-						.addAll(catalogExtractedSentences(keywords, documentText, documentId, sentenceToConceptMap));
+				String xPlaceholder = suffixToPlaceholderMap.get(xSuffix);
+				String yPlaceholder = suffixToPlaceholderMap.get(ySuffix);
+
+				extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
+						sentenceToConceptMap, xPlaceholder, yPlaceholder));
 
 			}
 		}
@@ -197,7 +204,8 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> catalogExtractedSentences(Set<String> keywords, String documentText,
-			String documentId, Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap) {
+			String documentId, Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap,
+			String xPlaceholder, String yPlaceholder) {
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
@@ -214,10 +222,10 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 						for (TextAnnotation yAnnot : yConceptsInSentence) {
 							String xId = xAnnot.getClassMention().getMentionName();
 							String xText = xAnnot.getCoveredText();
-							String xSpan = xAnnot.getSpans().toString();
+							List<Span> xSpan = offsetSpan(xAnnot.getSpans(), sentenceAnnot.getAnnotationSpanStart());
 							String yId = yAnnot.getClassMention().getMentionName();
 							String yText = yAnnot.getCoveredText();
-							String ySpan = yAnnot.getSpans().toString();
+							List<Span> ySpan = offsetSpan(yAnnot.getSpans(), sentenceAnnot.getAnnotationSpanStart());
 
 							/**
 							 * There are cases, e.g. extension classes, where the same ontology concepts
@@ -225,8 +233,9 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 							 * concept, e.g. concept x should not equal concept y.
 							 */
 							if (!(xId.equals(yId) || xSpan.equals(ySpan))) {
-								ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan, yId, yText,
-										ySpan, keywordInSentence, sentenceAnnot.getCoveredText(), documentText);
+								ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan,
+										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
+										sentenceAnnot.getCoveredText(), documentText);
 								extractedSentences.add(es);
 							}
 						}
@@ -235,6 +244,25 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			}
 		}
 		return extractedSentences;
+	}
+
+	/**
+	 * return the input spans offset by the specified value. Useful for converting
+	 * annotation spans relative to the document into spans relative to the
+	 * sentence.
+	 * 
+	 * @param spans
+	 * @param offset
+	 * @return
+	 */
+	private static List<Span> offsetSpan(List<Span> spans, int offset) {
+		List<Span> offsetSpans = new ArrayList<Span>();
+
+		for (Span span : spans) {
+			offsetSpans.add(new Span(span.getSpanStart() - offset, span.getSpanEnd() - offset));
+		}
+
+		return offsetSpans;
 	}
 
 	@VisibleForTesting

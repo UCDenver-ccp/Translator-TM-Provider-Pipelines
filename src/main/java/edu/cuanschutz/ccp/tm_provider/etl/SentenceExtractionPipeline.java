@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,26 @@ public class SentenceExtractionPipeline {
 		String getKeywords();
 
 		void setKeywords(String keywords);
+
+		@Description("suffix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X.")
+		String getSuffixX();
+
+		void setSuffixX(String suffix);
+
+		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with suffix X.")
+		String getPlaceholderX();
+
+		void setPlaceholderX(String placeholder);
+
+		@Description("suffix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y.")
+		String getSuffixY();
+
+		void setSuffixY(String suffix);
+
+		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with suffix Y.")
+		String getPlaceholderY();
+
+		void setPlaceholderY(String placeholder);
 
 //		@Description("The targetDocumentType should also align with the concept type served by the OGER service URI; pipe-delimited list")
 //		DocumentType getTargetDocumentType();
@@ -117,8 +138,17 @@ public class SentenceExtractionPipeline {
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
+
+		// the extracted sentence output contains a version of the sentence where the
+		// concepts have been replaced by placeholders. This map determines which
+		// concept type is replaced by which placeholder.
+		Map<String, String> suffixToPlaceholderMap = new HashMap<String, String>();
+
+		suffixToPlaceholderMap.put(options.getSuffixX(), options.getPlaceholderX());
+		suffixToPlaceholderMap.put(options.getSuffixY(), options.getPlaceholderY());
+
 		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria);
+				timestamp, inputDocCriteria, suffixToPlaceholderMap);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
 				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
@@ -168,7 +198,8 @@ public class SentenceExtractionPipeline {
 						c.output(element.getValue());
 					}
 				}));
-		outputTsv.apply("write annotation table", TextIO.write().to(options.getOutputBucket()).withSuffix(".tsv"));
+		outputTsv.apply("write tsv",
+				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		p.run().waitUntilFinish();
 	}

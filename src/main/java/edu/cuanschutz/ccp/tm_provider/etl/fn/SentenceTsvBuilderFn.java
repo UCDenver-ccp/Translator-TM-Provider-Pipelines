@@ -34,7 +34,9 @@ public class SentenceTsvBuilderFn extends DoFn<KV<ProcessingStatus, ExtractedSen
 						KV<ProcessingStatus, ExtractedSentence> element = c.element();
 						try {
 							String tsv = element.getValue().toTsv();
-							out.get(OUTPUT_TSV_TAG).output(KV.of(element.getKey(), tsv));
+							if (tsv != null) {
+								out.get(OUTPUT_TSV_TAG).output(KV.of(element.getKey(), tsv));
+							}
 						} catch (Throwable t) {
 							String docId = element.getValue().getDocumentId();
 
