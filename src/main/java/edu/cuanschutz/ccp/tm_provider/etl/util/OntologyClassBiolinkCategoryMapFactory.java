@@ -42,14 +42,22 @@ public class OntologyClassBiolinkCategoryMapFactory {
 			if (id.startsWith("GO:")) {
 				// this should be a GO concept
 				String namespace = ontUtil.getNamespace(cls);
-				if (namespace.equals("biological_process")) {
-					category = "biolink:BiologicalProcess";
-				} else if (namespace.equals("cellular_component")) {
-					category = "biolink:CellularComponent";
-				} else if (namespace.equals("molecular_function")) {
-					category = "biolink:MolecularActivity";
+				if (namespace != null) {
+					if (namespace.endsWith("\"")) {
+						namespace = namespace.substring(0, namespace.length() - 1);
+					}
+					if (namespace.equals("biological_process")) {
+						category = "biolink:BiologicalProcess";
+					} else if (namespace.equals("cellular_component")) {
+						category = "biolink:CellularComponent";
+					} else if (namespace.equals("molecular_function")) {
+						category = "biolink:MolecularActivity";
+					} else {
+						throw new IllegalArgumentException(
+								"no category for: " + cls.getIRI().toString() + " namespace = " + namespace);
+					}
 				} else {
-					throw new IllegalArgumentException("no category for: " + cls.getIRI().toString());
+					category = "";
 				}
 			} else if (id.contains(":")) {
 				String prefix = id.substring(0, id.indexOf(":"));
@@ -105,25 +113,27 @@ public class OntologyClassBiolinkCategoryMapFactory {
 		prefixToBiolinkMap.put("PR", "biolink:GeneOrGeneProduct");
 		prefixToBiolinkMap.put("SO", "biolink:SequenceFeature");
 		prefixToBiolinkMap.put("UBERON", "biolink:AnatomicalEntity");
+		prefixToBiolinkMap.put("MONDO", "biolink:Disease");
+		prefixToBiolinkMap.put("HP", "biolink:PhenotypicFeature");
 
 		File ontologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies");
+		File craftOntologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/craft");
 		File outputFile = new File(ontologyDir, "ontology-class-biolink-category-map.tsv");
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
 
+			for (Iterator<File> fileIterator = FileUtil.getFileIterator(craftOntologyDir, false,
+					".obo.gz"); fileIterator.hasNext();) {
+				File ontologyFile = fileIterator.next();
+				processOntology(prefixToBiolinkMap, writer, ontologyFile);
+			}
+			
 			for (Iterator<File> fileIterator = FileUtil.getFileIterator(ontologyDir, false, ".owl.gz"); fileIterator
 					.hasNext();) {
-
 				File ontologyFile = fileIterator.next();
-				System.out.println("Processing " + ontologyFile.getName());
-				OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)));
-				String defaultCategory = null;
-				if (ontologyFile.getName().equals("pr.owl.gz")) {
-					defaultCategory = "biolink:GeneOrGeneProduct";
-				}
-				new OntologyClassBiolinkCategoryMapFactory().createMappingFile(ontUtil, writer, prefixToBiolinkMap,
-						defaultCategory);
-
+				processOntology(prefixToBiolinkMap, writer, ontologyFile);
 			}
+
+			
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -135,6 +145,18 @@ public class OntologyClassBiolinkCategoryMapFactory {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+	}
+
+	private static void processOntology(Map<String, String> prefixToBiolinkMap, BufferedWriter writer,
+			File ontologyFile) throws OWLOntologyCreationException, IOException, FileNotFoundException {
+		System.out.println("Processing " + ontologyFile.getName());
+		OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)));
+		String defaultCategory = null;
+		if (ontologyFile.getName().equals("pr.owl.gz")) {
+			defaultCategory = "biolink:GeneOrGeneProduct";
+		}
+		new OntologyClassBiolinkCategoryMapFactory().createMappingFile(ontUtil, writer, prefixToBiolinkMap,
+				defaultCategory);
 	}
 
 }

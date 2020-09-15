@@ -35,6 +35,14 @@ public class OntologyClassLabelMapFactory {
 			OWLClass cls = classIterator.next();
 
 			String label = ontUtil.getLabel(cls);
+			
+			if (label == null) {
+				label = "_null";
+			}
+			
+			if (label.endsWith("\"")) {
+				label = label.substring(0, label.length()-1);
+			}
 
 			writeMapping(writer, getId(cls), label);
 
@@ -60,18 +68,26 @@ public class OntologyClassLabelMapFactory {
 
 	public static void main(String[] args) {
 
-		File ontologyDir = new File("/Users/bill/projects/ncats-translator/craft-resources/ontologies");
+		File ontologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies");
+		File craftOntologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/craft");
 		File outputFile = new File(ontologyDir, "ontology-class-label-map.tsv");
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
 
-			for (Iterator<File> fileIterator = FileUtil.getFileIterator(ontologyDir, false, ".owl.gz"); fileIterator
-					.hasNext();) {
-
+			for (Iterator<File> fileIterator = FileUtil.getFileIterator(craftOntologyDir, false,
+					".obo.gz"); fileIterator.hasNext();) {
 				File ontologyFile = fileIterator.next();
 				System.out.println("Processing " + ontologyFile.getName());
 				OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)));
 				new OntologyClassLabelMapFactory().createMappingFile(ontUtil, writer);
+			}
 
+			for (Iterator<File> fileIterator = FileUtil.getFileIterator(ontologyDir, false, ".owl.gz"); fileIterator
+					.hasNext();) {
+				File ontologyFile = fileIterator.next();
+
+				System.out.println("Processing " + ontologyFile.getName());
+				OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)));
+				new OntologyClassLabelMapFactory().createMappingFile(ontUtil, writer);
 			}
 
 		} catch (FileNotFoundException e) {

@@ -70,8 +70,19 @@ public class OntologyClassAncestorMapFactory {
 	public static void main(String[] args) {
 
 		File ontologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies");
+		File craftOntologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/craft");
 		File outputFile = new File(ontologyDir, "ontology-class-ancestor-map.tsv");
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
+
+			for (Iterator<File> fileIterator = FileUtil.getFileIterator(craftOntologyDir, false,
+					".obo.gz"); fileIterator.hasNext();) {
+
+				File ontologyFile = fileIterator.next();
+				System.out.println("Processing " + ontologyFile.getName());
+				OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)));
+				new OntologyClassAncestorMapFactory().createMappingFile(ontUtil, writer);
+
+			}
 
 			for (Iterator<File> fileIterator = FileUtil.getFileIterator(ontologyDir, false, ".owl.gz"); fileIterator
 					.hasNext();) {
