@@ -134,7 +134,7 @@ public class NormalizedGoogleDistanceFnTest {
 		ancestorMap.put(X_000001, CollectionsUtil.createSet(X_000000));
 		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000000, X_000001));
 		ancestorMap.put(X_000003, CollectionsUtil.createSet(X_000000, X_000001, X_000002));
-		ancestorMap.put(Y_000001, CollectionsUtil.createSet(Y_000000));
+		ancestorMap.put(Y_000001, CollectionsUtil.createSet(Y_000000, "XYZ:some_parent_class"));
 
 		TextDocument sentenceDoc = new TextDocument(documentId, "PubMed", documentText);
 		sentenceDoc.addAnnotations(sentenceAnnots);
@@ -254,14 +254,6 @@ public class NormalizedGoogleDistanceFnTest {
 				new ConceptPair(X_000000, Y_000000), new ConceptPair(X_000001, Y_000000),
 				new ConceptPair(X_000000, Y_000001));
 
-		for (String conceptId : singletonConceptIds) {
-			System.out.println("SINGLE: " + conceptId);
-		}
-
-		for (ConceptPair pair : pairedConceptIds) {
-			System.out.println("PAIR: " + pair.toReproducibleKey());
-		}
-
 		assertEquals(expectedSingletonConceptIds.size(), singletonConceptIds.size());
 		assertEquals(expectedSingletonConceptIds, singletonConceptIds);
 		assertEquals(expectedPairedConceptIds.size(), pairedConceptIds.size());
@@ -327,6 +319,8 @@ public class NormalizedGoogleDistanceFnTest {
 				ancestorMap);
 		Set<TextAnnotation> expectedSet = new HashSet<TextAnnotation>(conceptAnnots);
 		expectedSet.addAll(conceptAncestorAnnots);
+
+		assertEquals(expectedSet.size(), outputSet.size());
 		assertEquals(expectedSet, outputSet);
 
 	}

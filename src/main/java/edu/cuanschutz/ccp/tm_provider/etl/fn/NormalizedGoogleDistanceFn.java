@@ -259,6 +259,14 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 	 * corresponding ancestor identifiers, return a list of the concept annotations
 	 * augmented with annotations including all ancestor classes.
 	 * 
+	 * Some ontologies, e.g. MONDO, link a large number of other "ontology concept",
+	 * e.g. Mesh,ICD9, etc. This causes a combinatoric explosion when computing
+	 * cooccurrence. To limit this issue, only superclasses with the same prefix as
+	 * the seed class are added, e.g. for the class CHEBI_1234, only superclasses
+	 * with the CHEBI prefix are added. This will also inherently avoid some of the
+	 * upperlevel concepts that aren't likely to be that useful since they will
+	 * cooccur with all/many concepts.
+	 * 
 	 * @param documentId
 	 * @param conceptAnnots
 	 * @param superClassMap
@@ -273,16 +281,26 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 
 		for (TextAnnotation annot : conceptAnnots) {
 			updatedAnnots.add(annot);
-			Set<String> superClassIds = superClassMap.get(annot.getClassMention().getMentionName());
+			String conceptId = annot.getClassMention().getMentionName();
+			String conceptPrefix = null;
+			if (conceptId.contains(":")) {
+				conceptPrefix = conceptId.substring(0, conceptId.indexOf(":")+1);
+				System.out.println("PREFIX= " + conceptPrefix);
+			}
+			Set<String> superClassIds = superClassMap.get(conceptId);
 			if (superClassIds != null) {
 				for (String superClassId : superClassIds) {
-					List<Span> spans = annot.getSpans();
-					TextAnnotation newAnnot = factory.createAnnotation(spans.get(0).getSpanStart(),
-							spans.get(0).getSpanEnd(), annot.getCoveredText(), superClassId);
-					for (int i = 1; i < spans.size(); i++) {
-						newAnnot.addSpan(spans.get(i));
+					// if the concept id has a prefix, then only include superclasses that also have
+					// the same prefix to limit the number of superclasses imported
+					if (conceptPrefix == null || superClassId.startsWith(conceptPrefix)) {
+						List<Span> spans = annot.getSpans();
+						TextAnnotation newAnnot = factory.createAnnotation(spans.get(0).getSpanStart(),
+								spans.get(0).getSpanEnd(), annot.getCoveredText(), superClassId);
+						for (int i = 1; i < spans.size(); i++) {
+							newAnnot.addSpan(spans.get(i));
+						}
+						updatedAnnots.add(newAnnot);
 					}
-					updatedAnnots.add(newAnnot);
 				}
 			}
 		}
