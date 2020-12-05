@@ -124,7 +124,9 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	protected static String addLeadingColumn(String sentenceAnnotsInBioNLP, String docId) {
 		StringBuilder sb = new StringBuilder();
 		for (String line : sentenceAnnotsInBioNLP.split("\\n")) {
-			sb.append(docId + "\t" + line + "\n");
+			if (!line.trim().isEmpty()) {
+				sb.append(docId + "\t" + line + "\n");
+			}
 		}
 		return sb.toString();
 	}
