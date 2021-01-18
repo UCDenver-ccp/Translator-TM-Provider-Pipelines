@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;

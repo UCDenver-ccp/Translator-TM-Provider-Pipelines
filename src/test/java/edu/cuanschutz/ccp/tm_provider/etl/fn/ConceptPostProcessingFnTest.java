@@ -11,7 +11,6 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
-import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
