@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.sdk.values.KV;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,9 +40,9 @@ public class SentenceExtractionFnTest {
 
 	private static final String Y_000001 = "Y:000001";
 	private static final String X_000001 = "X:000001";
-	private static List<TextAnnotation> sentenceAnnotations;
-	private static List<TextAnnotation> conceptXAnnots;
-	private static List<TextAnnotation> conceptYAnnots;
+	private List<TextAnnotation> sentenceAnnotations;
+	private List<TextAnnotation> conceptXAnnots;
+	private List<TextAnnotation> conceptYAnnots;
 	// 1 2 3 4
 	// 012345678901234567890123456789012345678901234567890123456789
 	private static final String sentence1 = "This sentence has conceptX1 and conceptX2.";
@@ -84,35 +85,41 @@ public class SentenceExtractionFnTest {
 	// ontologies, e.g. an extension class
 	private static TextAnnotation x3ReallyY1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
-	private static TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
-	private static TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
-	private static TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
-	private static TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
+	private TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
+	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
+	private TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
+	private TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
 
-	@BeforeClass
-	public static void setUp() {
-		populateSentenceAnnotations();
-		populateConceptAnnotations();
+	@Before
+	public void setUp() {
+		sentenceAnnotations = populateSentenceAnnotations();
+		conceptXAnnots = populateXConceptAnnotations();
+		conceptYAnnots = populateYConceptAnnotations();
 	}
 
-	private static void populateConceptAnnotations() {
-		conceptXAnnots = new ArrayList<TextAnnotation>();
+	private List<TextAnnotation> populateXConceptAnnotations() {
+		List<TextAnnotation> conceptXAnnots = new ArrayList<TextAnnotation>();
 		conceptXAnnots.add(x1Sentence1Annot);
 		conceptXAnnots.add(x2Sentence1Annot);
 		conceptXAnnots.add(x1Sentence2Annot);
 		conceptXAnnots.add(x1Sentence4Annot);
+		return conceptXAnnots;
+	}
 
-		conceptYAnnots = new ArrayList<TextAnnotation>();
+	private List<TextAnnotation> populateYConceptAnnotations() {
+		List<TextAnnotation> conceptYAnnots = new ArrayList<TextAnnotation>();
 		conceptYAnnots.add(y1Sentence2Annot);
+		return conceptYAnnots;
 
 	}
 
-	private static void populateSentenceAnnotations() {
-		sentenceAnnotations = new ArrayList<TextAnnotation>();
+	private List<TextAnnotation> populateSentenceAnnotations() {
+		List<TextAnnotation> sentenceAnnotations = new ArrayList<TextAnnotation>();
 		sentenceAnnotations.add(sentence1Annot);
 		sentenceAnnotations.add(sentence2Annot);
 		sentenceAnnotations.add(sentence3Annot);
 		sentenceAnnotations.add(sentence4Annot);
+		return sentenceAnnotations;
 	}
 
 	@Test
