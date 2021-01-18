@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -23,9 +25,11 @@ import org.apache.beam.sdk.io.xml.JAXBCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
 import org.medline.PubmedArticle;
@@ -36,6 +40,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
@@ -175,8 +180,14 @@ public class MedlineXmlToTextFnTest {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
+
+		// simulate empty PCollectionView
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+				.apply(View.<Set<String>>asSingleton());
+
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection);
+				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
@@ -214,8 +225,14 @@ public class MedlineXmlToTextFnTest {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
+
+		// simulate empty PCollectionView
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+				.apply(View.<Set<String>>asSingleton());
+
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection);
+				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedPmid_2 = "PMID:31839728";
@@ -235,6 +252,55 @@ public class MedlineXmlToTextFnTest {
 				KV.of(expectedPmid_1, Arrays.asList(expectedSerializedAnnots_1)),
 				KV.of(expectedPmid_2, Arrays.asList(expectedSerializedAnnots_2)),
 				KV.of(expectedPmid_3, Arrays.asList(expectedSerializedAnnots_3)));
+
+		pipeline.run();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testMedlineXmlToTextConversionFn_testPlainText_someAlreadyStored()
+			throws IOException, JAXBException, XMLStreamException {
+		PipelineKey pipelineKey = PipelineKey.MEDLINE_XML_TO_TEXT;
+		String pipelineVersion = "0.1.0";
+		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
+
+		PCollection<PubmedArticle> input = pipeline
+				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
+
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				pipelineKey, pipelineVersion);
+		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+		String collection = null;
+
+		// simulate PMID:31839728 already has been stored so it should be skipped
+//		PCollectionView<Map<String, String>> docIdsAlreadyStoredView = pipeline
+//				.apply("Create schema view", Create.of(KV.of("PMID:31839728", "null"))).apply(View.asMap());
+//		
+
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("PMID:31839728")))
+				.apply(View.<Set<String>>asSingleton());
+
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+				timestamp, collection, docIdsAlreadyStoredView);
+
+		String expectedPmid_1 = "PMID:1";
+		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+				"PMID1.txt", CharacterEncoding.UTF_8);
+
+//		String expectedPmid_2 = "PMID:31839728";
+//		String expectedText_2 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+//				"PMID31839728.txt", CharacterEncoding.UTF_8);
+
+		String expectedPmid_3 = "PMID:31839729";
+		String expectedText_3 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+				"PMID31839729.txt", CharacterEncoding.UTF_8);
+
+		PAssert.that(output.get(MedlineXmlToTextFn.plainTextTag))
+				.containsInAnyOrder(KV.of(expectedPmid_1, Arrays.asList(expectedText_1)),
+//				KV.of(expectedPmid_2, Arrays.asList(expectedText_2)),
+						KV.of(expectedPmid_3, Arrays.asList(expectedText_3)));
 
 		pipeline.run();
 	}

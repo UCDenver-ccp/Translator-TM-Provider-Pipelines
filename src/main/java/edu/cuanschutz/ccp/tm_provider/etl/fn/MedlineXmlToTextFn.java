@@ -3,12 +3,15 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.medline.Abstract;
@@ -39,7 +42,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
  * </ul>
  *
  */
-public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
+public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<String>>> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -56,27 +59,44 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
 	};
 
+	/**
+	 * @param pubmedArticles
+	 * @param outputTextDocCriteria
+	 * @param outputAnnotationDocCriteria
+	 * @param timestamp
+	 * @param collection
+	 * @param docIdsAlreadyInDatastore
+	 * @return
+	 */
 	public static PCollectionTuple process(PCollection<PubmedArticle> pubmedArticles,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collection) {
+			com.google.cloud.Timestamp timestamp, String collection,
+			PCollectionView<Set<String>> docIdsAlreadyInDatastore) {
 
 		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
 				ParDo.of(new DoFn<PubmedArticle, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element PubmedArticle pubmedArticle, MultiOutputReceiver out) {
+					public void processElement(ProcessContext context) {
+						PubmedArticle pubmedArticle = context.element();
+						Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
 						TextDocument td = buildDocument(pubmedArticle);
-						try {
-							outputDocument(out, td, outputTextDocCriteria, outputAnnotationDocCriteria, collection);
-						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
-									"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
-							out.get(etlFailureTag).output(failure);
+
+						// only store new documents
+						if (!alreadyStoredDocIds.contains(td.getSourceid())) {
+							try {
+								outputDocument(context, td, outputTextDocCriteria, outputAnnotationDocCriteria,
+										collection);
+							} catch (Throwable t) {
+								EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
+										"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
+								context.output(etlFailureTag, failure);
+							}
 						}
 
 					}
-				}).withOutputTags(plainTextTag,
+				}).withSideInputs(docIdsAlreadyInDatastore).withOutputTags(plainTextTag,
 						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
 	}
 
@@ -129,7 +149,7 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 		return sb.toString();
 	}
 
-	private static void outputDocument(MultiOutputReceiver out, TextDocument td, DocumentCriteria outputTextDocCriteria,
+	private static void outputDocument(ProcessContext context, TextDocument td, DocumentCriteria outputTextDocCriteria,
 			DocumentCriteria outputAnnotationDocCriteria, String collection) throws IOException {
 		String docId = td.getSourceid();
 		String plainText = td.getText();
@@ -147,8 +167,8 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 		List<String> chunkedPlainText = PipelineMain.chunkContent(plainText);
 		List<String> chunkedAnnotations = PipelineMain.chunkContent(serializedAnnotations);
 
-		out.get(sectionAnnotationsTag).output(KV.of(docId, chunkedAnnotations));
-		out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
+		context.output(sectionAnnotationsTag, KV.of(docId, chunkedAnnotations));
+		context.output(plainTextTag, KV.of(docId, chunkedPlainText));
 		/*
 		 * output a {@link ProcessingStatus} for the document
 		 */
@@ -159,7 +179,7 @@ public class MedlineXmlToTextFn extends DoFn<KV<String, String>, KV<String, Stri
 		if (collection != null) {
 			status.addCollection(collection);
 		}
-		out.get(processingStatusTag).output(status);
+		context.output(processingStatusTag, status);
 	}
 
 }

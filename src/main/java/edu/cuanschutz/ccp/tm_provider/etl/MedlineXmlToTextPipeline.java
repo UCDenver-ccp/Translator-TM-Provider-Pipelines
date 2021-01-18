@@ -1,6 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -12,10 +14,14 @@ import org.apache.beam.sdk.io.xml.XmlIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.tools.ant.util.StringUtils;
 import org.medline.PubmedArticle;
 
@@ -25,12 +31,15 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 public class MedlineXmlToTextPipeline {
 
@@ -74,8 +83,24 @@ public class MedlineXmlToTextPipeline {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
+		// catalog documents that have already been stored so that we can exclude
+		// loading redundant documents. There will be cases in the PubMed/Medline update
+		// files where records are included due to changes, e.g. modification date, but
+		// are not new documents, so they should be excluded from being loaded into
+		// datastore here.
+
+		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
+				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE),
+				options.getProject(), options.getCollection(), OverwriteOutput.YES);
+
+		// create a set of document IDs already present in Datastore to be used as a
+		// side input
+		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
+		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
+		final PCollectionView<Set<String>> docIdsSetView = docIdsSet.apply(View.<Set<String>>asSingleton());
+
 		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria,
-				outputAnnotationDocCriteria, timestamp, options.getCollection());
+				outputAnnotationDocCriteria, timestamp, options.getCollection(), docIdsSetView);
 
 		/*
 		 * Processing of the Medline XML documents resulted in at least two, and
@@ -163,6 +188,37 @@ public class MedlineXmlToTextPipeline {
 			}
 		}
 		return null;
+	}
+
+	/** Modeled after code in og.apache.beam.sdk.transforms.CombineTest */
+	public static class UniqueStrings extends Combine.CombineFn<String, Set<String>, Set<String>> {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Set<String> createAccumulator() {
+			return new HashSet<>();
+		}
+
+		@Override
+		public Set<String> addInput(Set<String> accumulator, String input) {
+			accumulator.add(input);
+			return accumulator;
+		}
+
+		@Override
+		public Set<String> mergeAccumulators(Iterable<Set<String>> accumulators) {
+			Set<String> all = new HashSet<>();
+			for (Set<String> part : accumulators) {
+				all.addAll(part);
+			}
+			return all;
+		}
+
+		@Override
+		public Set<String> extractOutput(Set<String> accumulator) {
+			return accumulator;
+		}
 	}
 
 }
