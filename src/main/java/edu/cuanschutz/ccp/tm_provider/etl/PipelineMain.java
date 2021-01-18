@@ -132,10 +132,10 @@ public class PipelineMain {
 				MedlineXmlToTextPipeline.main(pipelineArgs);
 				break;
 			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS:
-				NGDStoreCountsPipeline.main(pipelineArgs);
+				NgdStoreCountsPipeline.main(pipelineArgs);
 				break;
 			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX:
-				NGDKgxPipeline.main(pipelineArgs);
+				NgdKgxPipeline.main(pipelineArgs);
 				break;
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
@@ -387,45 +387,12 @@ public class PipelineMain {
 
 	public static PCollection<KV<String, ProcessedDocument>> getDocumentEntitiesToProcess(Pipeline p,
 			DocumentCriteria docCriteria, String collection, String gcpProjectId) {
-		List<Filter> filters = new ArrayList<Filter>();
 		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
 		DocumentType documentType = docCriteria.getDocumentType();
 		PipelineKey pipelineKey = docCriteria.getPipelineKey();
 		String pipelineVersion = docCriteria.getPipelineVersion();
 
-		if (documentFormat != null) {
-			Filter filter = makeFilter(DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
-					makeValue(documentFormat.name())).build();
-			filters.add(filter);
-		}
-
-		if (documentType != null) {
-			Filter filter = makeFilter(DOCUMENT_PROPERTY_TYPE, PropertyFilter.Operator.EQUAL,
-					makeValue(documentType.name())).build();
-			filters.add(filter);
-		}
-
-		if (pipelineKey != null) {
-			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE, PropertyFilter.Operator.EQUAL,
-					makeValue(pipelineKey.name())).build();
-			filters.add(filter);
-		}
-
-		if (pipelineVersion != null) {
-			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE_VERSION, PropertyFilter.Operator.EQUAL,
-					makeValue(pipelineVersion)).build();
-			filters.add(filter);
-		}
-
-		/* incorporate the collection name into the query if there is one */
-		if (collection != null) {
-			filters.add(makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, PropertyFilter.Operator.EQUAL,
-					makeValue(collection)).build());
-		}
-
-		for (Filter filter : filters) {
-			LOGGER.log(Level.INFO, "DOCUMENT FILTER: " + filter.toString());
-		}
+		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion);
 
 		Query.Builder query = Query.newBuilder();
 		query.addKindBuilder().setName(DOCUMENT_KIND);
@@ -464,6 +431,45 @@ public class PipelineMain {
 //				GroupByKey.<String, ProcessedDocument>create());
 
 		return docId2Document;
+	}
+
+	private static List<Filter> setFilters(String collection, DocumentFormat documentFormat, DocumentType documentType,
+			PipelineKey pipelineKey, String pipelineVersion) {
+		List<Filter> filters = new ArrayList<Filter>();
+		if (documentFormat != null) {
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
+					makeValue(documentFormat.name())).build();
+			filters.add(filter);
+		}
+
+		if (documentType != null) {
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_TYPE, PropertyFilter.Operator.EQUAL,
+					makeValue(documentType.name())).build();
+			filters.add(filter);
+		}
+
+		if (pipelineKey != null) {
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE, PropertyFilter.Operator.EQUAL,
+					makeValue(pipelineKey.name())).build();
+			filters.add(filter);
+		}
+
+		if (pipelineVersion != null) {
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE_VERSION, PropertyFilter.Operator.EQUAL,
+					makeValue(pipelineVersion)).build();
+			filters.add(filter);
+		}
+
+		/* incorporate the collection name into the query if there is one */
+		if (collection != null) {
+			filters.add(makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, PropertyFilter.Operator.EQUAL,
+					makeValue(collection)).build());
+		}
+
+		for (Filter filter : filters) {
+			LOGGER.log(Level.INFO, "DOCUMENT FILTER: " + filter.toString());
+		}
+		return filters;
 	}
 
 	/**

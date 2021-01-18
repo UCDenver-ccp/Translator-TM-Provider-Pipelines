@@ -17,7 +17,7 @@ public class NGDProcessCountsPipelineTest {
 		long fxy = 20800000l;
 		long N = 25270000000000l;
 
-		double ngd = NGDKgxPipeline.normalizedGoogleDistance(N, fx, fy, fxy);
+		double ngd = NgdKgxPipeline.normalizedGoogleDistance(N, fx, fy, fxy);
 
 		assertEquals(0.13, ngd, 0.005);
 	}

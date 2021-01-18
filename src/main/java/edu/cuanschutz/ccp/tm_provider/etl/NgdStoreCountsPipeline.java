@@ -35,7 +35,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 /**
  * Computes normalized google distance between concepts
  */
-public class NGDStoreCountsPipeline {
+public class NgdStoreCountsPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS;
 
