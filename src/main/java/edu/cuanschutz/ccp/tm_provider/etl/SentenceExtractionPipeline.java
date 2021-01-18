@@ -25,7 +25,7 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionConceptAllFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -60,22 +60,22 @@ public class SentenceExtractionPipeline {
 
 		void setKeywords(String keywords);
 
-		@Description("suffix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X.")
-		String getSuffixX();
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X.")
+		String getPrefixX();
 
-		void setSuffixX(String suffix);
+		void setPrefixX(String prefix);
 
-		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with suffix X.")
+		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with prefix X.")
 		String getPlaceholderX();
 
 		void setPlaceholderX(String placeholder);
 
-		@Description("suffix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y.")
-		String getSuffixY();
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y.")
+		String getPrefixY();
 
-		void setSuffixY(String suffix);
+		void setPrefixY(String prefix);
 
-		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with suffix Y.")
+		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with prefix Y.")
 		String getPlaceholderY();
 
 		void setPlaceholderY(String placeholder);
@@ -142,17 +142,17 @@ public class SentenceExtractionPipeline {
 		// the extracted sentence output contains a version of the sentence where the
 		// concepts have been replaced by placeholders. This map determines which
 		// concept type is replaced by which placeholder.
-		Map<String, String> suffixToPlaceholderMap = new HashMap<String, String>();
+		Map<String, String> prefixToPlaceholderMap = new HashMap<String, String>();
 
-		suffixToPlaceholderMap.put(options.getSuffixX(), options.getPlaceholderX());
-		suffixToPlaceholderMap.put(options.getSuffixY(), options.getPlaceholderY());
+		prefixToPlaceholderMap.put(options.getPrefixX(), options.getPlaceholderX());
+		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
 
-		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, suffixToPlaceholderMap);
+		PCollectionTuple output = SentenceExtractionConceptAllFn.process(statusEntity2Content, keywords,
+				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
-				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
-		PCollection<EtlFailureData> failures = output.get(SentenceExtractionFn.ETL_FAILURE_TAG);
+				.get(SentenceExtractionConceptAllFn.EXTRACTED_SENTENCES_TAG);
+		PCollection<EtlFailureData> failures = output.get(SentenceExtractionConceptAllFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from sentence extraction
