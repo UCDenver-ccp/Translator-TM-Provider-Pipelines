@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -83,53 +83,53 @@ public class NormalizedGoogleDistanceFnTest {
 	private static TextAnnotation x1Sentence4Ancestor0Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000000);
 	private static TextAnnotation y1Sentence2Ancestor0Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000000);
 
-	private TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
-	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
-	private TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
-	private TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
+	private static TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
+	private static TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
+	private static TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
+	private static TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
 
-	private TextAnnotation titleSectionAnnot = factory.createAnnotation(0, 42, sentence1, "title");
-	private TextAnnotation abstractSectionAnnot = factory.createAnnotation(43, 165, sentence1, "abstract");
-	private TextAnnotation documentAnnot = factory.createAnnotation(0, 165, sentence1, "document");
+	private static TextAnnotation titleSectionAnnot = factory.createAnnotation(0, 42, sentence1, "title");
+	private static TextAnnotation abstractSectionAnnot = factory.createAnnotation(43, 165, sentence1, "abstract");
+	private static TextAnnotation documentAnnot = factory.createAnnotation(0, 165, sentence1, "document");
 
-	private List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot, x2Sentence1Annot,
+	private static List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot, x2Sentence1Annot,
 			x1Sentence2Annot, x1Sentence4Annot);
 
-	private List<TextAnnotation> conceptXAnnots = Arrays.asList(x1Sentence1Annot, x2Sentence1Annot, x1Sentence2Annot,
+	private static List<TextAnnotation> conceptXAnnots = Arrays.asList(x1Sentence1Annot, x2Sentence1Annot, x1Sentence2Annot,
 			x1Sentence4Annot);
-	private List<TextAnnotation> conceptYAnnots = Arrays.asList(y1Sentence2Annot);
-	private List<TextAnnotation> crfXAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot);
-	private List<TextAnnotation> crfYAnnots = Arrays.asList(y1Sentence2Annot);
+	private static List<TextAnnotation> conceptYAnnots = Arrays.asList(y1Sentence2Annot);
+	private static List<TextAnnotation> crfXAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot);
+	private static List<TextAnnotation> crfYAnnots = Arrays.asList(y1Sentence2Annot);
 
-	private List<TextAnnotation> allConceptsPostCrfFilter = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot,
+	private static List<TextAnnotation> allConceptsPostCrfFilter = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot,
 			y1Sentence2Annot);
 
-	private List<TextAnnotation> conceptAncestorAnnots = Arrays.asList(y1Sentence2Ancestor0Annot,
+	private static List<TextAnnotation> conceptAncestorAnnots = Arrays.asList(y1Sentence2Ancestor0Annot,
 			x1Sentence1Ancestor0Annot, x2Sentence1Ancestor0Annot, x2Sentence1Ancestor1Annot, x1Sentence2Ancestor0Annot,
 			x1Sentence4Ancestor0Annot);
-	private List<TextAnnotation> sentenceAnnots = Arrays.asList(sentence1Annot, sentence2Annot, sentence3Annot,
+	private static List<TextAnnotation> sentenceAnnots = Arrays.asList(sentence1Annot, sentence2Annot, sentence3Annot,
 			sentence4Annot);
-	private List<TextAnnotation> sectionAnnots = Arrays.asList(titleSectionAnnot, abstractSectionAnnot);
+	private static List<TextAnnotation> sectionAnnots = Arrays.asList(titleSectionAnnot, abstractSectionAnnot);
 
-	private Map<String, Set<String>> ancestorMap;
+	private static Map<String, Set<String>> ancestorMap;
 
-	private String sentenceAnnotationBionlp;
-	private String sectionAnnotationBionlp;
-	private String conceptXAnnotationBionlp;
-	private String crfXAnnotationBionlp;
-	private String conceptYAnnotationBionlp;
-	private String crfYAnnotationBionlp;
-	private String conceptAllAnnotationBionlp;
+	private static String sentenceAnnotationBionlp;
+	private static String sectionAnnotationBionlp;
+	private static String conceptXAnnotationBionlp;
+	private static String crfXAnnotationBionlp;
+	private static String conceptYAnnotationBionlp;
+	private static String crfYAnnotationBionlp;
+	private static String conceptAllAnnotationBionlp;
 
 	// this map contains all CONCEPT and CRF annotations plus text, sentences, etc.
-	private Map<DocumentCriteria, String> docCriteriaToContentMapPreCrfFiltering;
+	private static Map<DocumentCriteria, String> docCriteriaToContentMapPreCrfFiltering;
 
 	// this map contains a single aggregated CONCEPT_ALL annotation string, plus
 	// text, sentences, etc.
-	private Map<DocumentCriteria, String> docCriteriaToContentMapPostCrfFiltering;
+	private static Map<DocumentCriteria, String> docCriteriaToContentMapPostCrfFiltering;
 
-	@Before
-	public void setUp() throws IOException {
+	@BeforeClass
+	public static void setUp() throws IOException {
 		ancestorMap = new HashMap<String, Set<String>>();
 		ancestorMap.put(X_000001, CollectionsUtil.createSet(X_000000));
 		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000000, X_000001));
@@ -158,33 +158,40 @@ public class NormalizedGoogleDistanceFnTest {
 		allConceptsDoc.addAnnotations(allConceptsPostCrfFilter);
 
 		CharacterEncoding encoding = CharacterEncoding.UTF_8;
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+		
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(sentenceDoc, outStream, encoding);
 			sentenceAnnotationBionlp = outStream.toString();
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(sectionDoc, outStream, encoding);
 			sectionAnnotationBionlp = outStream.toString();
 		}
 
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(conceptDocX, outStream, encoding);
 			conceptXAnnotationBionlp = outStream.toString();
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(conceptDocY, outStream, encoding);
 			conceptYAnnotationBionlp = outStream.toString();
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(crfDocX, outStream, encoding);
 			crfXAnnotationBionlp = outStream.toString();
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(crfDocY, outStream, encoding);
 			crfYAnnotationBionlp = outStream.toString();
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(allConceptsDoc, outStream, encoding);
 			conceptAllAnnotationBionlp = outStream.toString();
 		}
