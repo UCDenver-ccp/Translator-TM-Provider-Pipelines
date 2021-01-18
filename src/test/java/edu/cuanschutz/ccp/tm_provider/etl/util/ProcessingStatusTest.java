@@ -14,9 +14,7 @@ public class ProcessingStatusTest {
 	public void test() {
 		String documentId = "PMC12345";
 		ProcessingStatus status = new ProcessingStatus(documentId);
-		DocumentCriteria dc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
-				"0.1.0");
-		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, dc, 1);
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 
 		assertEquals(documentId, status.getDocumentId());
 		assertTrue(status.getFlagPropertyValue(ProcessingStatusFlag.TEXT_DONE.getDatastoreFlagPropertyName()));

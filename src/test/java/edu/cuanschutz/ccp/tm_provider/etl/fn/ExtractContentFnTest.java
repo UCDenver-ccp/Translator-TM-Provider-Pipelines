@@ -59,7 +59,7 @@ public class ExtractContentFnTest {
 
 		// check that the status logged two chunks and the collection name
 		ProcessingStatus statusEntity = new ProcessingStatus(docId);
-		statusEntity.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputDocCriteria, 2);
+		statusEntity.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 		statusEntity.addCollection(collection);
 		PAssert.that(output.get(ExtractContentFn.processingStatusTag)).containsInAnyOrder(statusEntity);
 

@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
@@ -39,7 +40,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "PMC1790863.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 
@@ -51,8 +56,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "567.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
-		System.out.println(bionlp);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 
@@ -64,7 +72,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "7890.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 
@@ -76,7 +88,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "7890.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 
@@ -88,7 +104,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "0863gwzz.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 
@@ -100,7 +120,11 @@ public class OgerFnTest {
 		String text = ClassPathUtil.getContentsFromClasspathResource(OgerFnTest.class, "0863gwzz.txt",
 				CharacterEncoding.UTF_8);
 
-		String bionlp = OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		try {
+			OgerFn.convertToBioNLP(clOgerTsv, "12345", text, OgerOutputType.TSV);
+		} catch (RuntimeException e) {
+			fail();
+		}
 
 	}
 

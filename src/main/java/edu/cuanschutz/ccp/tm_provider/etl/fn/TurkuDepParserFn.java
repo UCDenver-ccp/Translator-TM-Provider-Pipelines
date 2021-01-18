@@ -12,11 +12,9 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
-import com.google.datastore.v1.Entity;
-
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
 
@@ -38,24 +36,24 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 	 * be stored in chunks.
 	 */
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<Entity, List<String>>> CONLLU_TAG = new TupleTag<KV<Entity, List<String>>>() {
+	public static TupleTag<KV<ProcessingStatus, List<String>>> CONLLU_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<Entity, Map<DocumentCriteria, String>>> statusEntityToText,
+	public static PCollectionTuple process(PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			String dependencyParserServiceUri, DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
 		return statusEntityToText.apply("Compute dependency parse",
-				ParDo.of(new DoFn<KV<Entity, Map<DocumentCriteria, String>>, KV<Entity, List<String>>>() {
+				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<Entity, Map<DocumentCriteria, String>> statusEntityToText,
+					public void processElement(@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
-						Entity statusEntity = statusEntityToText.getKey();
-						String docId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+						ProcessingStatus statusEntity = statusEntityToText.getKey();
+						String docId = statusEntity.getDocumentId();
 						// there is only one entry in the input map and it is the plain text of the input document
 						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 

@@ -18,13 +18,11 @@ import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileReaderUtil;
-import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
 import edu.ucdenver.ccp.file.conversion.conllu.CoNLLUDocumentReader;
 import edu.ucdenver.ccp.nlp.core.annotation.Annotator;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
-import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class SentenceCooccurrenceBuilder implements Serializable {
@@ -52,7 +50,6 @@ public class SentenceCooccurrenceBuilder implements Serializable {
 
 		StringBuilder builder = new StringBuilder();
 
-		List<TextAnnotation> annotations = td.getAnnotations();
 
 		Map<Span, TextAnnotation> spanToSentenceAnnotMap = new HashMap<Span, TextAnnotation>();
 

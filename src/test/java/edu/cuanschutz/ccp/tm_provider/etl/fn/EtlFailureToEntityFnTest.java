@@ -25,6 +25,7 @@ public class EtlFailureToEntityFnTest {
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testEtlFailureToEntityConversionFn() throws IOException {
 		/* test creation of a failure Cloud Datastore entity */

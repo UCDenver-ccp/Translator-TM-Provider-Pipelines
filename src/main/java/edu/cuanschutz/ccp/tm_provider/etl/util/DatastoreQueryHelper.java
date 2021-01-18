@@ -19,7 +19,6 @@ import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
-import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Value;
 
@@ -280,7 +279,6 @@ public class DatastoreQueryHelper {
 
 		Builder query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.STATUS_KIND);
 		query.setFilter(PropertyFilter.eq(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS, collection));
-		DatastoreProcessingStatusUtil util = new DatastoreProcessingStatusUtil();
 		QueryResults<Entity> results = datastore.run(query.build());
 		int count = 0;
 

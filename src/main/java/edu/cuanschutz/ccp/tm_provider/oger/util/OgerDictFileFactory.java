@@ -49,11 +49,11 @@ public class OgerDictFileFactory {
 	}
 
 	public static void createOgerDictFileFromHGNC(File hgncDownloadFile, File dictFile) throws IOException {
-		
+
 		Set<String> alreadyWritten = new HashSet<String>();
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
-			for (StreamLineIterator lineIter = new StreamLineIterator(hgncDownloadFile,
-					CharacterEncoding.UTF_8, "HGNC ID"); lineIter.hasNext();) {
+			for (StreamLineIterator lineIter = new StreamLineIterator(hgncDownloadFile, CharacterEncoding.UTF_8,
+					"HGNC ID"); lineIter.hasNext();) {
 				String line = lineIter.next().getText();
 				String[] cols = line.split("\\t");
 
@@ -63,7 +63,6 @@ public class OgerDictFileFactory {
 				// Approved name
 				// Alias name
 				// Alias symbol
-
 
 				String hgncId = cols[0];
 				String approvedSymbol = cols[2];
@@ -81,15 +80,15 @@ public class OgerDictFileFactory {
 
 				String dictLine = getDictLine("HGNC", hgncId, approvedSymbol, approvedSymbol, "gene", false);
 				writeDictLine(alreadyWritten, writer, dictLine);
-				
+
 				dictLine = getDictLine("HGNC", hgncId, approvedName, approvedSymbol, "gene", false);
 				writeDictLine(alreadyWritten, writer, dictLine);
-				
+
 				if (aliasName != null) {
 					dictLine = getDictLine("HGNC", hgncId, aliasName, approvedSymbol, "gene", false);
 					writeDictLine(alreadyWritten, writer, dictLine);
 				}
-				
+
 				if (aliasSymbol != null) {
 					dictLine = getDictLine("HGNC", hgncId, aliasSymbol, approvedSymbol, "gene", false);
 					writeDictLine(alreadyWritten, writer, dictLine);
@@ -102,8 +101,8 @@ public class OgerDictFileFactory {
 	private static void writeDictLine(Set<String> alreadyWritten, BufferedWriter writer, String dictLine)
 			throws IOException {
 		if (!alreadyWritten.contains(dictLine)) {
-		writer.write(dictLine);
-		alreadyWritten.add(dictLine);
+			writer.write(dictLine);
+			alreadyWritten.add(dictLine);
 		}
 	}
 
@@ -121,9 +120,6 @@ public class OgerDictFileFactory {
 		return String.format("\t%s\t%s\t%s\t%s\t%s\n", ontKey, id, label, primaryLabel, ontMainType);
 	}
 
-	
-	
-	
 	static String fixLabel(String label) {
 		if (label.contains("\"")) {
 			label = label.substring(0, label.indexOf("\""));
@@ -150,16 +146,28 @@ public class OgerDictFileFactory {
 //		String ontMainType = "gene/protein";
 //		String ontKey = "PR";
 
-		File hgncDownloadFile = new File(
-				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/ontologies/hgnc_download.tsv");
-		File dictFile = new File(
-				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/vocab/HGNC.tsv");
+//		File hgncDownloadFile = new File(
+//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/ontologies/hgnc_download.tsv");
+//		File dictFile = new File(
+//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/vocab/HGNC.tsv");
+
+		File ontologyFile = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/mondo.owl");
+		File dictFile = new File("/Users/bill/projects/ncats-translator/prototype/oger-docker.git/dict/MONDO.tsv");
+		String ontMainType = "disease";
+		String ontKey = "MONDO";
+
+//		File ontologyFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/hp.owl");
+//		File dictFile = new File(
+//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/dict/HP.tsv");
+//		String ontMainType = "phenotype";
+//		String ontKey = "HP";
 
 		try {
-//			createOgerDictionaryFile(ontologyFile, dictFile, ontMainType, ontKey);
-			createOgerDictFileFromHGNC(hgncDownloadFile, dictFile);
-//		} catch (OWLOntologyCreationException | IOException e) {
-		} catch (IOException e) {
+			createOgerDictionaryFile(ontologyFile, dictFile, ontMainType, ontKey);
+//			createOgerDictFileFromHGNC(hgncDownloadFile, dictFile);
+		} catch (OWLOntologyCreationException | IOException e) {
+//		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CHUNK_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CHUNK_TOTAL;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_CONTENT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_ID;
@@ -11,17 +12,21 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMENT_PROPERTY_TYPE;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
+import com.google.datastore.v1.Value;
 import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import lombok.Data;
@@ -38,6 +43,20 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 
 	private static final long serialVersionUID = 1L;
 	private final DocumentCriteria dc;
+	private final String collection;
+	private final SerializableFunction<String, String> collectionFn;
+
+	public DocumentToEntityFn(DocumentCriteria dc, String collection, SerializableFunction<String, String> collectionFn) {
+		this.dc = dc;
+		this.collection = collection;
+		this.collectionFn = collectionFn;
+	}
+
+	public DocumentToEntityFn(DocumentCriteria dc, String collection) {
+		this.dc = dc;
+		this.collection = collection;
+		this.collectionFn = null;
+	}
 
 	@ProcessElement
 	public void processElement(@Element KV<String, List<String>> docIdToDocContent, OutputReceiver<Entity> out)
@@ -48,13 +67,17 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		/* crop document id if it is a file path */
 		docId = updateDocId(docId);
 
+		Set<String> collections = ToEntityFnUtils.getCollections(collection, collectionFn, docId);
+
 		int index = 0;
 		for (String docContent : docContentChunks) {
-			Entity entity = createEntity(docId, index++, docContentChunks.size(), dc, docContent);
+			Entity entity = createEntity(docId, index++, docContentChunks.size(), dc, docContent, collections);
 			out.output(entity);
 		}
 
 	}
+
+	
 
 	/**
 	 * if the document id is a file path, then extract the file name. The BioC file
@@ -65,7 +88,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 	 * @param docId
 	 * @return
 	 */
-	static String updateDocId(String docId) {
+	protected static String updateDocId(String docId) {
 		if (docId.contains("/")) {
 			String updatedDocId = docId.substring(docId.lastIndexOf("/") + 1);
 			/* remove file suffix if there is one */
@@ -81,8 +104,8 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		return docId;
 	}
 
-	static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent)
-			throws UnsupportedEncodingException {
+	protected static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent,
+			Set<String> collectionNames) throws UnsupportedEncodingException {
 		Key key = DatastoreKeyUtil.createDocumentKey(docId, chunkId, dc);
 
 		/*
@@ -101,6 +124,12 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_TYPE, makeValue(dc.getDocumentType().name()).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE_VERSION, makeValue(dc.getPipelineVersion()).build());
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
+
+		List<Value> collections = new ArrayList<Value>();
+		for (String collection : collectionNames) {
+			collections.add(makeValue(collection).build());
+		}
+		entityBuilder.putProperties(DOCUMENT_PROPERTY_COLLECTIONS, makeValue(collections).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;

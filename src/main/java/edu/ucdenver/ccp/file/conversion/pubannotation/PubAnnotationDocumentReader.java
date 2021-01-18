@@ -56,7 +56,6 @@ import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import edu.ucdenver.ccp.nlp.core.mention.impl.DefaultClassMention;
-import lombok.Data;
 
 public class PubAnnotationDocumentReader extends DocumentReader {
 

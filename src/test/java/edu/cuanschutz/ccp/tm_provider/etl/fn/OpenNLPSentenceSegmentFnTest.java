@@ -1,6 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import static edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil.createEntity;
+import static edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil.createProcessingStatus;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -23,11 +23,9 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.datastore.v1.Entity;
-
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -52,18 +50,21 @@ public class OpenNLPSentenceSegmentFnTest {
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		DocumentCriteria inputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.FILE_LOAD, "v0.1.3");
+		DocumentCriteria inputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.FILE_LOAD, "v0.1.3");
 		String documentText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
 		String docId = "PMC1790863";
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.SENTENCE_DONE;
-		Entity expectedEntity = createEntity(docId, targetProcessingStatusFlag);
+//		Entity expectedEntity = createEntity(docId, targetProcessingStatusFlag);
+		ProcessingStatus expectedEntity = createProcessingStatus(docId, targetProcessingStatusFlag);
 
 		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
 		map.put(inputDocCriteria, documentText);
-		
-		PCollection<KV<Entity, Map<DocumentCriteria, String>>> input = pipeline.apply(Create.of(KV.of(expectedEntity, map))
-				.withCoder(KvCoder.of(SerializableCoder.of(Entity.class), MapCoder.of(SerializableCoder.of(DocumentCriteria.class), StringUtf8Coder.of()))));
+
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> input = pipeline.apply(
+				Create.of(KV.of(expectedEntity, map)).withCoder(KvCoder.of(SerializableCoder.of(ProcessingStatus.class),
+						MapCoder.of(SerializableCoder.of(DocumentCriteria.class), StringUtf8Coder.of()))));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				pipelineKey, pipelineVersion);
@@ -76,7 +77,7 @@ public class OpenNLPSentenceSegmentFnTest {
 		PCollection<EtlFailureData> failures = output.get(OpenNLPSentenceSegmentFn.ETL_FAILURE_TAG);
 		PAssert.that(failures).satisfies(new FailureCountCheckerFn(0));
 
-		PCollection<KV<Entity, List<String>>> resultsCollection = output
+		PCollection<KV<ProcessingStatus, List<String>>> resultsCollection = output
 				.get(OpenNLPSentenceSegmentFn.SENTENCE_ANNOT_TAG);
 		PAssert.that(resultsCollection).satisfies(new MyPCollectionCountCheckerFn(1));
 
@@ -104,7 +105,8 @@ public class OpenNLPSentenceSegmentFnTest {
 
 	}
 
-	private static class MyPCollectionCountCheckerFn extends PCollectionCountCheckerFn<KV<Entity, List<String>>> {
+	private static class MyPCollectionCountCheckerFn
+			extends PCollectionCountCheckerFn<KV<ProcessingStatus, List<String>>> {
 
 		private static final long serialVersionUID = 1L;
 
@@ -113,10 +115,9 @@ public class OpenNLPSentenceSegmentFnTest {
 		}
 
 		@Override
-		protected String getString(KV<Entity, List<String>> item) {
-			Entity statusEntity = item.getKey();
-			return String.format("%s -- %s", DatastoreProcessingStatusUtil.getDocumentId(statusEntity),
-					item.getValue().toString());
+		protected String getString(KV<ProcessingStatus, List<String>> item) {
+			ProcessingStatus statusEntity = item.getKey();
+			return String.format("%s -- %s", statusEntity.getDocumentId(), item.getValue().toString());
 		}
 
 	}

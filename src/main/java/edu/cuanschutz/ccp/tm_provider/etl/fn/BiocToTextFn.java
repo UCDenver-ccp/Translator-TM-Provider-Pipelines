@@ -108,10 +108,10 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								 * output a {@link ProcessingStatus} for the document
 								 */
 								ProcessingStatus status = new ProcessingStatus(docId);
-								status.enableFlag(ProcessingStatusFlag.TEXT_DONE, outputTextDocCriteria,
-										chunkedPlainText.size());
-								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE, outputAnnotationDocCriteria,
-										chunkedPlainText.size());
+								status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+//										chunkedPlainText.size());
+								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
+//										chunkedAnnotations.size());
 
 								if (collection != null) {
 									status.addCollection(collection);

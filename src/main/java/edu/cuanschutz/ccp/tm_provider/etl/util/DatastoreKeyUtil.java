@@ -4,16 +4,11 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Key.Builder;
 import com.google.datastore.v1.Key.PathElement;
 
 public class DatastoreKeyUtil {
-	
-	private final static Logger LOGGER = Logger.getLogger(DatastoreKeyUtil.class.getName());
 
 	///////////////////////////////
 	//////// DOCUMENT KEY /////////

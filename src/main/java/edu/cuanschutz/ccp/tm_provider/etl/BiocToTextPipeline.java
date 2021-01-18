@@ -114,7 +114,7 @@ public class BiocToTextPipeline {
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
 				.deduplicateDocumentsByStringKey(docIdToPlainText);
 		nonredundantPlainText
-				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria)))
+				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection())))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -124,7 +124,7 @@ public class BiocToTextPipeline {
 		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
 				.deduplicateDocumentsByStringKey(docIdToAnnotations);
 		nonredundantAnnotations
-				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria)))
+				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection())))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

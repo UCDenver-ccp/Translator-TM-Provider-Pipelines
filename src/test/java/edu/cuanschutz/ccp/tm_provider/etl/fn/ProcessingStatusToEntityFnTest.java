@@ -14,10 +14,6 @@ import org.junit.Test;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 
 public class ProcessingStatusToEntityFnTest {
@@ -25,6 +21,7 @@ public class ProcessingStatusToEntityFnTest {
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testProcessingStatusToEntityConversionFn() throws IOException {
 		/* test creation of a processing status Cloud Datastore entity */
@@ -32,12 +29,8 @@ public class ProcessingStatusToEntityFnTest {
 
 		ProcessingStatus status = new ProcessingStatus(docId);
 
-		DocumentCriteria textDc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
-				"0.1");
-		status.enableFlag(ProcessingStatusFlag.TEXT_DONE, textDc, 1);
-		DocumentCriteria bertDc = new DocumentCriteria(DocumentType.CONCEPT_CL, DocumentFormat.OGER_CONLL,
-				PipelineKey.OGER, "0.2");
-		status.enableFlag(ProcessingStatusFlag.OGER_CL_DONE, bertDc, 2);
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+		status.enableFlag(ProcessingStatusFlag.OGER_CL_DONE);
 
 		PCollection<ProcessingStatus> input = pipeline.apply(Create.of(status));
 		PCollection<KV<String,Entity>> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));

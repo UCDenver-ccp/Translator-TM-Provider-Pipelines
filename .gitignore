@@ -1,3 +1,5 @@
+run-*-batch.sh
+logs/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
