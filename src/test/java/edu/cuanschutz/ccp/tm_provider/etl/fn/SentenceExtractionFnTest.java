@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.sdk.values.KV;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -282,7 +281,6 @@ public class SentenceExtractionFnTest {
 		status.enableFlag(ProcessingStatusFlag.OGER_PR_DONE);
 		status.enableFlag(ProcessingStatusFlag.CRF_PR_DONE);
 
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 		CharacterEncoding encoding = CharacterEncoding.UTF_8;
 
 		String sentenceBionlp = null;
@@ -292,6 +290,7 @@ public class SentenceExtractionFnTest {
 		String crfPrBionlp = null;
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
 			td.addAnnotations(sentenceAnnotations);
 			writer.serialize(td, outputStream, encoding);
@@ -299,6 +298,7 @@ public class SentenceExtractionFnTest {
 		}
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
 			td.addAnnotations(conceptXAnnots);
 			writer.serialize(td, outputStream, encoding);
@@ -306,6 +306,7 @@ public class SentenceExtractionFnTest {
 		}
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
 			td.addAnnotations(conceptYAnnots);
 			writer.serialize(td, outputStream, encoding);
@@ -321,6 +322,7 @@ public class SentenceExtractionFnTest {
 		crfYAnnots.add(y1Sentence2Annot);
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
 			td.addAnnotations(crfXAnnots);
 			writer.serialize(td, outputStream, encoding);
@@ -328,6 +330,7 @@ public class SentenceExtractionFnTest {
 		}
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
 			td.addAnnotations(crfYAnnots);
 			writer.serialize(td, outputStream, encoding);
@@ -349,7 +352,7 @@ public class SentenceExtractionFnTest {
 		Map<String, String> suffixToPlaceholderMap = new HashMap<String, String>();
 		suffixToPlaceholderMap.put("CHEBI", PLACEHOLDER_X);
 		suffixToPlaceholderMap.put("PR", PLACEHOLDER_Y);
-		
+
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria,
 				statusEntityToText, keywords, suffixToPlaceholderMap);
 		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
@@ -365,7 +368,8 @@ public class SentenceExtractionFnTest {
 
 		// no keywords
 		keywords = null;
-		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords, suffixToPlaceholderMap);
+		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords,
+				suffixToPlaceholderMap);
 		esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1", CollectionsUtil.createList(x1Sentence2Span),
 				PLACEHOLDER_X, Y_000001, "conceptY1", CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null,
 				sentence2, documentText);
@@ -378,14 +382,16 @@ public class SentenceExtractionFnTest {
 
 		// no keywords
 		keywords = new HashSet<String>();
-		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords, suffixToPlaceholderMap);
+		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords,
+				suffixToPlaceholderMap);
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
 		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
 
 		// keyword not found so no sentence extracted
 		keywords = CollectionsUtil.createSet("notfound");
-		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords, suffixToPlaceholderMap);
+		extractedSentences = SentenceExtractionFn.extractSentences(requiredDocCriteria, statusEntityToText, keywords,
+				suffixToPlaceholderMap);
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 
 	}
