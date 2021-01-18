@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.apache.beam.sdk.values.KV;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -39,9 +40,9 @@ public class SentenceExtractionFnTest {
 
 	private static final String Y_000001 = "Y:000001";
 	private static final String X_000001 = "X:000001";
-	private List<TextAnnotation> sentenceAnnotations;
-	private List<TextAnnotation> conceptXAnnots;
-	private List<TextAnnotation> conceptYAnnots;
+	private static List<TextAnnotation> sentenceAnnotations;
+	private static List<TextAnnotation> conceptXAnnots;
+	private static List<TextAnnotation> conceptYAnnots;
 	// 1 2 3 4
 	// 012345678901234567890123456789012345678901234567890123456789
 	private static final String sentence1 = "This sentence has conceptX1 and conceptX2.";
@@ -84,18 +85,18 @@ public class SentenceExtractionFnTest {
 	// ontologies, e.g. an extension class
 	private static TextAnnotation x3ReallyY1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
-	private TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
-	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
-	private TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
-	private TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
+	private static TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
+	private static TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
+	private static TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
+	private static TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
 
-	@Before
-	public void setUp() {
+	@BeforeClass
+	public static void setUp() {
 		populateSentenceAnnotations();
 		populateConceptAnnotations();
 	}
 
-	private void populateConceptAnnotations() {
+	private static void populateConceptAnnotations() {
 		conceptXAnnots = new ArrayList<TextAnnotation>();
 		conceptXAnnots.add(x1Sentence1Annot);
 		conceptXAnnots.add(x2Sentence1Annot);
@@ -107,7 +108,7 @@ public class SentenceExtractionFnTest {
 
 	}
 
-	private void populateSentenceAnnotations() {
+	private static void populateSentenceAnnotations() {
 		sentenceAnnotations = new ArrayList<TextAnnotation>();
 		sentenceAnnotations.add(sentence1Annot);
 		sentenceAnnotations.add(sentence2Annot);
