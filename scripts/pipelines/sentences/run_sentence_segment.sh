@@ -14,14 +14,14 @@ echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar SENTENCE_SEGMENTATION \
---jobName=$JOB_NAME \
+--jobName="$JOB_NAME" \
 --inputPipelineKey='MEDLINE_XML_TO_TEXT' \
 --inputPipelineVersion='0.1.0' \
---collection=$COLLECTION \
+--collection="$COLLECTION" \
 --overwrite='YES' \
---project=${PROJECT} \
---stagingLocation=$STAGE_LOCATION \
---gcpTempLocation=$TMP_LOCATION \
+--project="${PROJECT}" \
+--stagingLocation="$STAGE_LOCATION" \
+--gcpTempLocation="$TMP_LOCATION" \
 --zone=us-central1-c \
 --numWorkers=10 \
 --maxNumWorkers=25 \

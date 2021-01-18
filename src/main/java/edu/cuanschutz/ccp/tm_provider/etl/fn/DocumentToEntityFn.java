@@ -88,7 +88,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 	 * @param docId
 	 * @return
 	 */
-	static String updateDocId(String docId) {
+	protected static String updateDocId(String docId) {
 		if (docId.contains("/")) {
 			String updatedDocId = docId.substring(docId.lastIndexOf("/") + 1);
 			/* remove file suffix if there is one */
@@ -104,7 +104,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		return docId;
 	}
 
-	static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent,
+	protected static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent,
 			Set<String> collectionNames) throws UnsupportedEncodingException {
 		Key key = DatastoreKeyUtil.createDocumentKey(docId, chunkId, dc);
 

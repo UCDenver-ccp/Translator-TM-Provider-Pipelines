@@ -124,19 +124,17 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefix);
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
-		if (!conceptXAnnots.isEmpty()) {
-			if (!conceptYAnnots.isEmpty()) {
+		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
 
-				Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
-						sentenceAnnots, conceptXAnnots, conceptYAnnots);
+			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
+					sentenceAnnots, conceptXAnnots, conceptYAnnots);
 
-				String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
-				String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
+			String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
+			String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
 
-				extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
-						sentenceToConceptMap, xPlaceholder, yPlaceholder));
+			extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
+					sentenceToConceptMap, xPlaceholder, yPlaceholder));
 
-			}
 		}
 		return extractedSentences;
 	}

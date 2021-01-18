@@ -22,19 +22,19 @@ echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
---jobName=$JOB_NAME \
---ogerServiceUri=$SERVICE_URL \
+--jobName="$JOB_NAME" \
+--ogerServiceUri="$SERVICE_URL" \
 --ogerOutputType=TSV \
---targetProcessingStatusFlag=$TPSF \
---targetDocumentType=$TDT \
+--targetProcessingStatusFlag="$TPSF" \
+--targetDocumentType="$TDT" \
 --targetDocumentFormat='BIONLP' \
 --inputPipelineKey='MEDLINE_XML_TO_TEXT' \
 --inputPipelineVersion='0.1.0' \
---collection=$COLLECTION \
+--collection="$COLLECTION" \
 --overwrite='YES' \
---project=${PROJECT} \
---stagingLocation=$STAGE_LOCATION \
---gcpTempLocation=$TMP_LOCATION \
+--project="${PROJECT}" \
+--stagingLocation="$STAGE_LOCATION" \
+--gcpTempLocation="$TMP_LOCATION" \
 --zone=us-central1-c \
 --numWorkers=10 \
 --maxNumWorkers=25 \

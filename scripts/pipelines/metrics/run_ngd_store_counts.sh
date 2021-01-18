@@ -9,8 +9,8 @@ BUCKET=$5
 
 ZONE='us-central1-c'
 JOB_NAME=$(echo "NGD-STORE-COUNTS-${COLLECTION}" | tr '_' '-')
-DISK_TYPE='compute.googleapis.com/projects/${PROJECT}/zones/${ZONE}/diskTypes/pd-ssd'
-DISK_SIZE_GB=50
+#DISK_TYPE="compute.googleapis.com/projects/${PROJECT}/zones/${ZONE}/diskTypes/pd-ssd"
+#DISK_SIZE_GB=50
 
 echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
@@ -25,20 +25,20 @@ REQUIRED_FLAGS='CONCEPT_POST_PROCESSING_DONE'
 
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS \
---jobName=$JOB_NAME \
---inputDocumentCriteria=$INPUT_DOC_CRITERIA \
---requiredProcessingStatusFlags=$REQUIRED_FLAGS \
---ancestorMapFilePath=$ANCESTOR_MAP_FILE_PATH \
+--jobName="$JOB_NAME" \
+--inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
+--requiredProcessingStatusFlags="$REQUIRED_FLAGS" \
+--ancestorMapFilePath="$ANCESTOR_MAP_FILE_PATH" \
 --ancestorMapFileDelimiter='TAB' \
 --ancestorMapFileSetDelimiter='PIPE' \
 --cooccurLevel='DOCUMENT' \
---collection=$COLLECTION \
+--collection="$COLLECTION" \
 --overwrite='YES' \
---outputBucket=$OUTPUT_BUCKET \
---project=${PROJECT} \
---stagingLocation=$STAGE_LOCATION \
---gcpTempLocation=$TMP_LOCATION \
---zone=$ZONE \
+--outputBucket="$OUTPUT_BUCKET" \
+--project="${PROJECT}" \
+--stagingLocation="$STAGE_LOCATION" \
+--gcpTempLocation="$TMP_LOCATION" \
+--zone="$ZONE" \
 --numWorkers=10 \
 --maxNumWorkers=100 \
 --runner=DataflowRunner

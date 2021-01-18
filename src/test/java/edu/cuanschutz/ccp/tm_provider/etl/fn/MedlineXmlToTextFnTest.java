@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -177,8 +176,8 @@ public class MedlineXmlToTextFnTest {
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
-		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
-				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+//		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+//				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
 
 		// simulate empty PCollectionView
@@ -186,7 +185,7 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
 				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedPmid_1 = "PMID:1";
@@ -222,8 +221,8 @@ public class MedlineXmlToTextFnTest {
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
-		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
-				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+//		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+//				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
 
 		// simulate empty PCollectionView
@@ -231,7 +230,7 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
 				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedPmid_1 = "PMID:1";
@@ -269,8 +268,8 @@ public class MedlineXmlToTextFnTest {
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
-		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
-				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
+//		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
+//				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
 
 		// simulate PMID:31839728 already has been stored so it should be skipped
@@ -282,7 +281,7 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("PMID:31839728")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
 				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedPmid_1 = "PMID:1";

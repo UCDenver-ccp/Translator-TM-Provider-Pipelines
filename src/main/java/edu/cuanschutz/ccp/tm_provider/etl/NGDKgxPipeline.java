@@ -36,6 +36,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 public class NGDKgxPipeline {
 
 	private static final Logger LOGGER = Logger.getLogger(NGDKgxPipeline.class.getName());
+	protected static final String KGX_OUTPUT_EDGE_LABEL = "biolink:related_to";
+	protected static final String KGX_OUTPUT_RELATION = "SIO:000001"; // 'is related to'
+	protected static final String KGX_ASSOCIATION_TYPE = "biolink:Association";
 
 	public interface Options extends DataflowPipelineOptions {
 
@@ -80,10 +83,6 @@ public class NGDKgxPipeline {
 		void setOutputBucket(String bucketPath);
 
 	}
-
-	protected static final String KGX_OUTPUT_EDGE_LABEL = "biolink:related_to";
-	protected static final String KGX_OUTPUT_RELATION = "SIO:000001"; // 'is related to'
-	protected static final String KGX_ASSOCIATION_TYPE = "biolink:Association";
 
 	public static void main(String[] args) {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);

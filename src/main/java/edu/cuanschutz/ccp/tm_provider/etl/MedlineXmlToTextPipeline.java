@@ -99,8 +99,8 @@ public class MedlineXmlToTextPipeline {
 		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
 		final PCollectionView<Set<String>> docIdsSetView = docIdsSet.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria,
-				outputAnnotationDocCriteria, timestamp, options.getCollection(), docIdsSetView);
+		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria, timestamp,
+				options.getCollection(), docIdsSetView);
 
 		/*
 		 * Processing of the Medline XML documents resulted in at least two, and

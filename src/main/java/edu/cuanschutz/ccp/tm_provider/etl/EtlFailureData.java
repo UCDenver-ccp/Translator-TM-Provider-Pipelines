@@ -45,16 +45,17 @@ public class EtlFailureData extends DoFn {
 	}
 
 	private String trimMessage(String message) {
+		String updatedMessage = message;
 		try {
-			while (message.getBytes("UTF-8").length > 1400) {
-				message = message.substring(0, message.length() - 2);
+			while (updatedMessage.getBytes("UTF-8").length > 1400) {
+				updatedMessage = updatedMessage.substring(0, updatedMessage.length() - 2);
 			}
 		} catch (UnsupportedEncodingException e) {
-			if (message.length() > 1000) {
-				message = message.substring(0, 1000);
+			if (updatedMessage.length() > 1000) {
+				updatedMessage = updatedMessage.substring(0, 1000);
 			}
 		}
-		return message;
+		return updatedMessage;
 	}
 
 }

@@ -21,18 +21,18 @@ echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX \
---jobName=$JOB_NAME \
---singletonFilePattern=$SINGLETON_FILE_PATTERN \
---pairFilePattern=$PAIR_FILE_PATTERN \
---conceptCountFilePattern=$CONCEPT_COUNT_FILE_PATTERN \
---labelMapFilePattern=$LABEL_MAP_FILE \
+--jobName="$JOB_NAME" \
+--singletonFilePattern="$SINGLETON_FILE_PATTERN" \
+--pairFilePattern="$PAIR_FILE_PATTERN" \
+--conceptCountFilePattern="$CONCEPT_COUNT_FILE_PATTERN" \
+--labelMapFilePattern="$LABEL_MAP_FILE" \
 --labelMapFileDelimiter='TAB' \
---categoryMapFilePattern=$CATEGORY_MAP_FILE \
+--categoryMapFilePattern="$CATEGORY_MAP_FILE" \
 --categoryMapFileDelimiter='TAB' \
---outputBucket=$OUTPUT_BUCKET \
---project=${PROJECT} \
---stagingLocation=$STAGE_LOCATION \
---gcpTempLocation=$TMP_LOCATION \
+--outputBucket="$OUTPUT_BUCKET" \
+--project="${PROJECT}" \
+--stagingLocation="$STAGE_LOCATION" \
+--gcpTempLocation="$TMP_LOCATION" \
 --zone=us-central1-c \
 --numWorkers=10 \
 --maxNumWorkers=200 \

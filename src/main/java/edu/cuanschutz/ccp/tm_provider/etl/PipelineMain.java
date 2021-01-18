@@ -37,7 +37,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -395,26 +394,26 @@ public class PipelineMain {
 		String pipelineVersion = docCriteria.getPipelineVersion();
 
 		if (documentFormat != null) {
-			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
 					makeValue(documentFormat.name())).build();
 			filters.add(filter);
 		}
 
 		if (documentType != null) {
-			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_TYPE, PropertyFilter.Operator.EQUAL,
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_TYPE, PropertyFilter.Operator.EQUAL,
 					makeValue(documentType.name())).build();
 			filters.add(filter);
 		}
 
 		if (pipelineKey != null) {
-			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE, PropertyFilter.Operator.EQUAL,
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE, PropertyFilter.Operator.EQUAL,
 					makeValue(pipelineKey.name())).build();
 			filters.add(filter);
 		}
 
 		if (pipelineVersion != null) {
-			Filter filter = makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION,
-					PropertyFilter.Operator.EQUAL, makeValue(pipelineVersion)).build();
+			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE_VERSION, PropertyFilter.Operator.EQUAL,
+					makeValue(pipelineVersion)).build();
 			filters.add(filter);
 		}
 

@@ -3,7 +3,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -69,8 +68,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @return
 	 */
 	public static PCollectionTuple process(PCollection<PubmedArticle> pubmedArticles,
-			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collection,
+			DocumentCriteria outputTextDocCriteria, com.google.cloud.Timestamp timestamp, String collection,
 			PCollectionView<Set<String>> docIdsAlreadyInDatastore) {
 
 		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
@@ -86,8 +84,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 						// only store new documents
 						if (!alreadyStoredDocIds.contains(td.getSourceid())) {
 							try {
-								outputDocument(context, td, outputTextDocCriteria, outputAnnotationDocCriteria,
-										collection);
+								outputDocument(context, td, collection);
 							} catch (Throwable t) {
 								EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
 										"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
@@ -149,8 +146,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		return sb.toString();
 	}
 
-	private static void outputDocument(ProcessContext context, TextDocument td, DocumentCriteria outputTextDocCriteria,
-			DocumentCriteria outputAnnotationDocCriteria, String collection) throws IOException {
+	private static void outputDocument(ProcessContext context, TextDocument td, String collection) throws IOException {
 		String docId = td.getSourceid();
 		String plainText = td.getText();
 
