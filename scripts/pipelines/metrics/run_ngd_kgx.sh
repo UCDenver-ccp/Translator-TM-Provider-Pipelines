@@ -8,12 +8,12 @@ BUCKET=$4
 JOB_NAME='NGD-KGX'
 
 
-SINGLETON_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts-relay/concept-to-doc.*"
-PAIR_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts-relay/concept-pair-to-doc.*"
-CONCEPT_COUNT_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts-relay/doc-to-concept-count.*"
+SINGLETON_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/concept-to-doc.*"
+PAIR_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/concept-pair-to-doc.*"
+CONCEPT_COUNT_FILE_PATTERN="${BUCKET}/output/ngd-concept-counts/doc-to-concept-count.*"
 LABEL_MAP_FILE="${BUCKET}/ontology-resources/ontology-class-label-map.tsv.gz"
 CATEGORY_MAP_FILE="${BUCKET}/ontology-resources/ontology-class-biolink-category-map.tsv.gz"
-OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-kgx-relay-big/ngd-concept-cooccur-kgx-relay"
+OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-kgx/ngd-cooccur-kgx-"
 
 
 echo "COLLECTION: $COLLECTION"
@@ -35,5 +35,5 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED
 --gcpTempLocation=$TMP_LOCATION \
 --zone=us-central1-c \
 --numWorkers=10 \
---maxNumWorkers=125 \
+--maxNumWorkers=200 \
 --runner=DataflowRunner

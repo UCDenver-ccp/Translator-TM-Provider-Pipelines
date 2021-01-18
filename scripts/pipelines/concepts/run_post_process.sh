@@ -43,5 +43,5 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_PO
 --gcpTempLocation=$TMP_LOCATION \
 --zone=us-central1-c \
 --numWorkers=10 \
---maxNumWorkers=125 \
+--maxNumWorkers=100 \
 --runner=DataflowRunner
