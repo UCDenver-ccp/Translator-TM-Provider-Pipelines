@@ -191,7 +191,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 							if (!(xId.equals(yId) || xSpan.equals(ySpan))) {
 								ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan,
 										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
-										sentenceAnnot.getCoveredText(), documentText);
+										documentText.substring(sentenceAnnot.getAnnotationSpanStart(), sentenceAnnot.getAnnotationSpanEnd()), documentText);
 								extractedSentences.add(es);
 							}
 						}
