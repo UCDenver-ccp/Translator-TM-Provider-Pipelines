@@ -1,15 +1,18 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -46,8 +49,13 @@ public class BiocToTextFnTest {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
+
+		// simulate empty PCollectionView
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+				.apply(View.<Set<String>>asSingleton());
 		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection);
+				timestamp, collection, docIdsAlreadyStoredView);
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
@@ -81,8 +89,13 @@ public class BiocToTextFnTest {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, pipelineKey, pipelineVersion);
 		String collection = null;
+
+		// simulate empty PCollectionView
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+				.apply(View.<Set<String>>asSingleton());
 		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection);
+				timestamp, collection, docIdsAlreadyStoredView);
 
 		PAssert.that(output.get(BiocToTextFn.plainTextTag)).empty();
 		PAssert.that(output.get(BiocToTextFn.sectionAnnotationsTag)).empty();

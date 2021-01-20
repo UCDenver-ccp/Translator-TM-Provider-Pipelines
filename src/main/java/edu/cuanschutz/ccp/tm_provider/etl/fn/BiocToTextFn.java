@@ -5,12 +5,14 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
@@ -64,14 +66,17 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collection) {
+			com.google.cloud.Timestamp timestamp, String collection, PCollectionView<Set<String>> existingDocumentIds) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<String, String> docIdToBioc, MultiOutputReceiver out) {
+					public void processElement(ProcessContext context) {
+
+						KV<String, String> docIdToBioc = context.element();
+
 						String fileId = docIdToBioc.getKey();
 						String biocXml = docIdToBioc.getValue();
 
@@ -79,12 +84,18 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 							Map<String, TextDocument> docIdToDocumentMap = BiocToTextConverter
 									.convert(new ByteArrayInputStream(biocXml.getBytes()));
 
+							Set<String> alreadyStoredDocIds = context.sideInput(existingDocumentIds);
 							/*
 							 * It's possible that there are multiple documents in the map, but there is
 							 * likely only one document in the map.
 							 */
 							for (Entry<String, TextDocument> entry : docIdToDocumentMap.entrySet()) {
 								String docId = entry.getKey();
+
+								// if the document id has already been stored, then don't store it again
+								if (alreadyStoredDocIds.contains(docId)) {
+									continue;
+								}
 								String plainText = entry.getValue().getText();
 
 								/*
@@ -102,31 +113,29 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 								List<String> chunkedAnnotations = PipelineMain.chunkContent(serializedAnnotations);
 
-								out.get(sectionAnnotationsTag).output(KV.of(docId, chunkedAnnotations));
-								out.get(plainTextTag).output(KV.of(docId, chunkedPlainText));
+								context.output(sectionAnnotationsTag, KV.of(docId, chunkedAnnotations));
+								context.output(plainTextTag, KV.of(docId, chunkedPlainText));
 								/*
 								 * output a {@link ProcessingStatus} for the document
 								 */
 								ProcessingStatus status = new ProcessingStatus(docId);
 								status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
-//										chunkedPlainText.size());
 								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
-//										chunkedAnnotations.size());
 
 								if (collection != null) {
 									status.addCollection(collection);
 								}
-								out.get(processingStatusTag).output(status);
+								context.output(processingStatusTag, status);
 
 							}
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
 									"Likely failure during BioC XML parsing.", fileId, t, timestamp);
-							out.get(etlFailureTag).output(failure);
+							context.output(etlFailureTag, failure);
 						}
 
 					}
-				}).withOutputTags(plainTextTag,
+				}).withSideInputs(existingDocumentIds).withOutputTags(plainTextTag,
 						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
 	}
 

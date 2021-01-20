@@ -13,7 +13,9 @@ public class ToEntityFnUtils {
 		}
 		if (collectionFn != null) {
 			String anotherCollection = collectionFn.apply(docId);
-			collections.add(anotherCollection);
+			if (anotherCollection != null) {
+				collections.add(anotherCollection);
+			}
 		}
 		return collections;
 	}
