@@ -28,6 +28,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
@@ -107,6 +108,8 @@ public class BiocToTextPipeline {
 		PCollection<EtlFailureData> failures = output.get(BiocToTextFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(BiocToTextFn.processingStatusTag);
 
+		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
+
 		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
@@ -114,7 +117,8 @@ public class BiocToTextPipeline {
 		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
 				.deduplicateDocumentsByStringKey(docIdToPlainText);
 		nonredundantPlainText
-				.apply("plaintext->document_entity", ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection())))
+				.apply("plaintext->document_entity",
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -124,7 +128,9 @@ public class BiocToTextPipeline {
 		PCollection<KV<String, List<String>>> nonredundantAnnotations = PipelineMain
 				.deduplicateDocumentsByStringKey(docIdToAnnotations);
 		nonredundantAnnotations
-				.apply("annotations->annot_entity", ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection())))
+				.apply("annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
+								collectionFn)))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -142,7 +148,7 @@ public class BiocToTextPipeline {
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
 		 */
 		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn()));
+				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
@@ -151,4 +157,16 @@ public class BiocToTextPipeline {
 
 	}
 
+	protected static String getSubCollectionName(String documentId) {
+		try {
+			if (documentId.startsWith("PMC")) {
+				int idAsNum = Integer.parseInt(documentId.substring(3));
+				int bin = Math.floorDiv(idAsNum, 250000);
+				return String.format("PMC_SUBSET_%d", bin);
+			}
+			return null;
+		} catch (NumberFormatException nfe) {
+			return null;
+		}
+	}
 }
