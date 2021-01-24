@@ -52,6 +52,36 @@ public class BiocToTextConverterTest {
 
 	}
 
+	@Test
+	public void testConvert2() throws FactoryConfigurationError, XMLStreamException, IOException {
+		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC7500000.xml");
+		Map<String, TextDocument> docIdToDataMap = convert(sampleDocStream);
+
+		System.out.println("KEYS: " + docIdToDataMap.keySet().toString());
+
+		String id = "PMC7500000";
+		assertNotNull(docIdToDataMap.get(id));
+		TextDocument td = docIdToDataMap.get(id);
+
+//		assertEquals(132, td.getAnnotations().size());
+//		assertTrue(td.getText().startsWith("Quantifying Organismal Complexity"));
+//		assertTrue(td.getText().endsWith("What is a gene?"));
+
+		String expectedText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMC7500000.txt",
+				CharacterEncoding.UTF_8);
+		assertEquals(expectedText, td.getText());
+
+		for (TextAnnotation ta : td.getAnnotations()) {
+			System.out.println(ta.getAggregateSpan() + " -- " + ta.getCoveredText());
+			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
+					ta.getAggregateSpan().getSpanEnd());
+			if (StringUtil.startsWithRegex(substring, "\\s")) {
+				throw new RuntimeException("covered text starts with space |" + substring + "|");
+			}
+		}
+
+	}
+
 	@Test(expected = WstxUnexpectedCharException.class)
 	public void testConvert_invalidXml() throws FactoryConfigurationError, XMLStreamException, IOException {
 		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(),
@@ -61,5 +91,3 @@ public class BiocToTextConverterTest {
 	}
 
 }
-
-

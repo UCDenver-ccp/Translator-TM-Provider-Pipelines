@@ -382,7 +382,7 @@ public class BiocToTextConverter {
 
 		String updatedText = text;
 		while (passageByteOffset > byteCount) {
-			updatedText += "\n";
+			updatedText += " ";
 			byteCount = updatedText.getBytes().length;
 		}
 

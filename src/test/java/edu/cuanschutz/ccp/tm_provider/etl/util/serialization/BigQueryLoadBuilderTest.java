@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFnTest;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.serialization.BigQueryAnnotationSerializer.TableKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -57,10 +57,16 @@ public class BigQueryLoadBuilderTest {
 
 	}
 
+	/*
+	 * note that the version of PMC1790863.txt in the /fn directory has excessive
+	 * line breaks whereas the version in the util/ directory uses spaces to match
+	 * the offsets in the bioc files. TODO: these should be aligned at some point --
+	 * will require recreating many of the test files in fn/
+	 */
 	@Test
 	public void testIsAsExpected() throws IOException {
-		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
-				"PMC1790863.txt", CharacterEncoding.UTF_8);
+		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class, "PMC1790863.txt",
+				CharacterEncoding.UTF_8);
 		assertEquals(version1.trim(), text.trim());
 	}
 
