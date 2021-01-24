@@ -128,6 +128,9 @@ public class PipelineMain {
 			case CONCEPT_POST_PROCESS:
 				ConceptPostProcessingPipeline.main(pipelineArgs);
 				break;
+			case CONCEPT_ANNOTATION_EXPORT:
+				ConceptAnnotationExportPipeline.main(pipelineArgs);
+				break;
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);
 				break;
@@ -347,7 +350,13 @@ public class PipelineMain {
 			filters.add(filter);
 		}
 
-		if (overwriteOutput == OverwriteOutput.NO) {
+		/*
+		 * targetProcessStatusFlag is null when we won't be updating the status document
+		 * on the results of this processing run, e.g. when we are not adding data to
+		 * Datastore but are simply exporting content to a bucket, e.g. the
+		 * ConceptAnnotationExportPipeline
+		 */
+		if (overwriteOutput == OverwriteOutput.NO && targetProcessStatusFlag != null) {
 			filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(),
 					PropertyFilter.Operator.EQUAL, makeValue(false)).build());
 		}
