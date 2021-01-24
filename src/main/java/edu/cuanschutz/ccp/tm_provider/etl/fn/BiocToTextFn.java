@@ -20,6 +20,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverter;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -66,7 +67,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collection, PCollectionView<Set<String>> existingDocumentIds) {
+			com.google.cloud.Timestamp timestamp, String collection, PCollectionView<Set<String>> existingDocumentIds,
+			OverwriteOutput overwriteOutput) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
@@ -93,7 +95,7 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								String docId = entry.getKey();
 
 								// if the document id has already been stored, then don't store it again
-								if (alreadyStoredDocIds.contains(docId)) {
+								if (overwriteOutput == OverwriteOutput.NO && alreadyStoredDocIds.contains(docId)) {
 									continue;
 								}
 								String plainText = entry.getValue().getText();

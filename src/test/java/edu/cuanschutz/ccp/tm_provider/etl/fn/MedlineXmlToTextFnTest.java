@@ -39,6 +39,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
@@ -186,7 +187,7 @@ public class MedlineXmlToTextFnTest {
 				.apply(View.<Set<String>>asSingleton());
 
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
@@ -231,7 +232,7 @@ public class MedlineXmlToTextFnTest {
 				.apply(View.<Set<String>>asSingleton());
 
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedPmid_2 = "PMID:31839728";
@@ -282,7 +283,7 @@ public class MedlineXmlToTextFnTest {
 				.apply(View.<Set<String>>asSingleton());
 
 		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.NO);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,

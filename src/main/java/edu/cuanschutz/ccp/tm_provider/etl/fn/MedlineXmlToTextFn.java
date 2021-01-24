@@ -20,6 +20,7 @@ import org.medline.PubmedArticle;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -69,7 +70,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 */
 	public static PCollectionTuple process(PCollection<PubmedArticle> pubmedArticles,
 			DocumentCriteria outputTextDocCriteria, com.google.cloud.Timestamp timestamp, String collection,
-			PCollectionView<Set<String>> docIdsAlreadyInDatastore) {
+			PCollectionView<Set<String>> docIdsAlreadyInDatastore, OverwriteOutput overwrite) {
 
 		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
 				ParDo.of(new DoFn<PubmedArticle, KV<String, List<String>>>() {
@@ -81,8 +82,8 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 						Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
 						TextDocument td = buildDocument(pubmedArticle);
 
-						// only store new documents
-						if (!alreadyStoredDocIds.contains(td.getSourceid())) {
+						// only store new documents unless overwrite = OverwriteOutput.YES
+						if (overwrite == OverwriteOutput.YES || !alreadyStoredDocIds.contains(td.getSourceid())) {
 							try {
 								outputDocument(context, td, collection);
 							} catch (Throwable t) {

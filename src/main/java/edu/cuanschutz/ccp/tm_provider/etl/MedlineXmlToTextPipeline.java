@@ -60,6 +60,10 @@ public class MedlineXmlToTextPipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous imported documents")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
 	}
 
 	public static void main(String[] args) {
@@ -83,24 +87,11 @@ public class MedlineXmlToTextPipeline {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		// catalog documents that have already been stored so that we can exclude
-		// loading redundant documents. There will be cases in the PubMed/Medline update
-		// files where records are included due to changes, e.g. modification date, but
-		// are not new documents, so they should be excluded from being loaded into
-		// datastore here.
-
-		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
-				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE),
-				options.getProject(), options.getCollection(), OverwriteOutput.YES);
-
-		// create a set of document IDs already present in Datastore to be used as a
-		// side input
-		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
-		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
-		final PCollectionView<Set<String>> docIdsSetView = docIdsSet.apply(View.<Set<String>>asSingleton());
+		final PCollectionView<Set<String>> docIdsSetView = PipelineMain.catalogExistingDocuments(options.getProject(),
+				options.getCollection(), options.getOverwrite(), p);
 
 		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria, timestamp,
-				options.getCollection(), docIdsSetView);
+				options.getCollection(), docIdsSetView, options.getOverwrite());
 
 		/*
 		 * Processing of the Medline XML documents resulted in at least two, and

@@ -17,6 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -55,7 +56,7 @@ public class BiocToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
@@ -97,7 +98,7 @@ public class BiocToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
 				"PMC7500000.txt", CharacterEncoding.UTF_8);
@@ -137,7 +138,7 @@ public class BiocToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 		PCollectionTuple output = BiocToTextFn.process(input, outputTextDocCriteria, outputAnnotationDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+				timestamp, collection, docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		PAssert.that(output.get(BiocToTextFn.plainTextTag)).empty();
 		PAssert.that(output.get(BiocToTextFn.sectionAnnotationsTag)).empty();

@@ -12,11 +12,8 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -25,7 +22,6 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -35,10 +31,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 public class BiocToTextPipeline {
 
@@ -57,6 +51,11 @@ public class BiocToTextPipeline {
 		String getCollection();
 
 		void setCollection(String value);
+
+		@Description("Overwrite any previous imported documents")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
 
 	}
 
@@ -88,24 +87,12 @@ public class BiocToTextPipeline {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		// catalog documents that have already been stored so that we can exclude
-		// loading redundant documents. There will be cases in the PubMed/Medline update
-		// files where records are included due to changes, e.g. modification date, but
-		// are not new documents, so they should be excluded from being loaded into
-		// datastore here.
-
-		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
-				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE),
-				options.getProject(), options.getCollection(), OverwriteOutput.YES);
-
-		// create a set of document IDs already present in Datastore to be used as a
-		// side input
-		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
-		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
-		final PCollectionView<Set<String>> existingDocumentIds = docIdsSet.apply(View.<Set<String>>asSingleton());
+		final PCollectionView<Set<String>> existingDocumentIds = PipelineMain
+				.catalogExistingDocuments(options.getProject(), options.getCollection(), options.getOverwrite(), p);
 
 		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, outputTextDocCriteria,
-				outputAnnotationDocCriteria, timestamp, options.getCollection(), existingDocumentIds);
+				outputAnnotationDocCriteria, timestamp, options.getCollection(), existingDocumentIds,
+				options.getOverwrite());
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly

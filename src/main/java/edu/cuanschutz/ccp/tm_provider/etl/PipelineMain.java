@@ -34,16 +34,23 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.SetCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
 import org.apache.beam.sdk.transforms.GroupByKey;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.tools.ant.util.StringUtils;
 
@@ -55,6 +62,7 @@ import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
+import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
@@ -986,6 +994,43 @@ public class PipelineMain {
 			ta.addSpan(new Span(origSpans.get(i).getSpanStart(), origSpans.get(i).getSpanEnd()));
 		}
 		return ta;
+	}
+
+	/**
+	 * Returns a collection of existing document identifiers, unless the
+	 * OverwriteOutput flag is set to YES, in which case it returns an empty set.
+	 * 
+	 * @param options
+	 * @param p
+	 * @return
+	 */
+	public static PCollectionView<Set<String>> catalogExistingDocuments(String project, String collection,
+			OverwriteOutput overwrite, Pipeline p) {
+		/*
+		 * if OverwriteOutput == YES, then there is no need to catalog te existing
+		 * documents as they will be overwritten if they exist
+		 */
+		if (overwrite == OverwriteOutput.YES) {
+			return p.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+					.apply(View.<Set<String>>asSingleton());
+		}
+
+		// catalog documents that have already been stored so that we can exclude
+		// loading redundant documents. There will be cases in the PubMed/Medline update
+		// files where records are included due to changes, e.g. modification date, but
+		// are not new documents, so they should be excluded from being loaded into
+		// datastore here.
+
+		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
+				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE), project,
+				collection, OverwriteOutput.YES);
+
+		// create a set of document IDs already present in Datastore to be used as a
+		// side input
+		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
+		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
+		final PCollectionView<Set<String>> existingDocumentIds = docIdsSet.apply(View.<Set<String>>asSingleton());
+		return existingDocumentIds;
 	}
 
 }
