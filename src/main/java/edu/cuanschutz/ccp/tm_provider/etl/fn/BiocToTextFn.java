@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,7 +41,7 @@ import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
  *
  */
 public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
-
+//	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextFn.class);
 	private static final long serialVersionUID = 1L;
 	/**
 	 * The value in the returned KV pair is a list because it is possible that the
@@ -84,7 +85,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 						try {
 							Map<String, TextDocument> docIdToDocumentMap = BiocToTextConverter
-									.convert(new ByteArrayInputStream(biocXml.getBytes()));
+									.convert(new InputStreamReader(new ByteArrayInputStream(biocXml.getBytes("UTF-8")),
+											"UTF-8"));
 
 							Set<String> alreadyStoredDocIds = context.sideInput(existingDocumentIds);
 							/*

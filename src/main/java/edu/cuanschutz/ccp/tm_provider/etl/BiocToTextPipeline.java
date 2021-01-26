@@ -19,6 +19,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.apache.log4j.Logger;
 
 import com.google.datastore.v1.Entity;
 
@@ -36,7 +37,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 public class BiocToTextPipeline {
 
-//	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
+	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextPipeline.class);
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
@@ -60,6 +61,7 @@ public class BiocToTextPipeline {
 	}
 
 	public static void main(String[] args) {
+		logger.debug("TMPLOG -- Instantiating BIOC-TO-TEXT pipeline");
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 

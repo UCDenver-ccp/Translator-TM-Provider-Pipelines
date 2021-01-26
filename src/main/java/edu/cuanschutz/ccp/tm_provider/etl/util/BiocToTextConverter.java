@@ -1,7 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLResolver;
 import javax.xml.stream.XMLStreamException;
+
+import org.apache.log4j.Logger;
 
 import com.pengyifan.bioc.BioCDocument;
 import com.pengyifan.bioc.BioCPassage;
@@ -42,18 +42,20 @@ public class BiocToTextConverter {
 	 */
 	private static Set<String> knownSections = populateKnownSectionsSet();
 
-	private static Logger logger = Logger.getLogger(BiocToTextConverter.class.getName());
+	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextConverter.class);
 
-	public static Map<String, TextDocument> convert(InputStream input)
+	public static Map<String, TextDocument> convert(InputStreamReader input)
 			throws FactoryConfigurationError, XMLStreamException, IOException {
 		String text = "";
 
 		Map<String, TextDocument> docId2DocumentMap = new HashMap<String, TextDocument>();
 		try (BioCDocumentReader reader = new BioCDocumentReader(input, getBioCXmlResolver())) {
+//			reader.readCollectionInfo().setEncoding(CharacterEncoding.UTF_8.getCharacterSetName());
 			String source = reader.readCollectionInfo().getSource();
 			BioCDocument doc = null;
 			while ((doc = reader.readDocument()) != null) {
 				String docId = source + doc.getID();
+//				logger.debug("TMPLOG -- converting bioc-to-text for document: " + docId);
 				TextAnnotationFactory taFactory = TextAnnotationFactory.createFactoryWithDefaults(docId);
 
 				List<TextAnnotation> sections = new ArrayList<TextAnnotation>();
@@ -75,7 +77,6 @@ public class BiocToTextConverter {
 				adjustForAddedWhitespace(td);
 
 				docId2DocumentMap.put(docId, td);
-//				System.out.println(text);
 			}
 		}
 
@@ -168,15 +169,13 @@ public class BiocToTextConverter {
 	private static String processBioCDocument(String text, BioCDocument doc, List<TextAnnotation> sections,
 			Stack<OpenSection> openSections, TextAnnotationFactory taFactory) {
 		for (BioCPassage passage : doc.getPassages()) {
-
 			String passageType = passage.getInfon("type").get();
 			if (passage.getText().isPresent()) {
 				sections.add(getPassageAnnotation(text, passage.getText().get(), passageType, taFactory));
 
 				String sectionType = passage.getInfon("section_type").get();
 				if (!(knownSections.contains(sectionType) || breakingSections.contains(sectionType))) {
-					logger.log(Level.WARNING,
-							"Unknown section type observed: " + sectionType + " in document: " + doc.getID());
+					logger.warn("Unknown section type observed: " + sectionType + " in document: " + doc.getID());
 				}
 
 				boolean justOpenedNewSection = updateSectionTypes(text, sections, openSections, sectionType, taFactory);

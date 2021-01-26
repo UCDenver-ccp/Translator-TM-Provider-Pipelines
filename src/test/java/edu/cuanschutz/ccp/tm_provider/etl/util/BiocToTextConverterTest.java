@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
 
 import javax.xml.stream.FactoryConfigurationError;
@@ -27,7 +28,7 @@ public class BiocToTextConverterTest {
 	@Test
 	public void testConvert() throws FactoryConfigurationError, XMLStreamException, IOException {
 		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC1790863.xml");
-		Map<String, TextDocument> docIdToDataMap = convert(sampleDocStream);
+		Map<String, TextDocument> docIdToDataMap = convert(new InputStreamReader(sampleDocStream, "UTF-8"));
 
 		String id = "PMC1790863";
 		assertNotNull(docIdToDataMap.get(id));
@@ -55,7 +56,7 @@ public class BiocToTextConverterTest {
 	@Test
 	public void testConvert2() throws FactoryConfigurationError, XMLStreamException, IOException {
 		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC7500000.xml");
-		Map<String, TextDocument> docIdToDataMap = convert(sampleDocStream);
+		Map<String, TextDocument> docIdToDataMap = convert(new InputStreamReader(sampleDocStream, "UTF-8"));
 
 		System.out.println("KEYS: " + docIdToDataMap.keySet().toString());
 
@@ -80,13 +81,14 @@ public class BiocToTextConverterTest {
 			}
 		}
 
+		System.out.println(td.getText());
 	}
 
 	@Test(expected = WstxUnexpectedCharException.class)
 	public void testConvert_invalidXml() throws FactoryConfigurationError, XMLStreamException, IOException {
 		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(),
 				"PMC1790863_invalid.xml");
-		convert(sampleDocStream);
+		convert(new InputStreamReader(sampleDocStream, "UTF-8"));
 
 	}
 
