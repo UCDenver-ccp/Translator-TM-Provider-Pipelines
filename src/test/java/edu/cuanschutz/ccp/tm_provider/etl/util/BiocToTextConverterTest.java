@@ -83,6 +83,35 @@ public class BiocToTextConverterTest {
 
 		System.out.println(td.getText());
 	}
+	
+	
+	@Test
+	public void testConvert3() throws FactoryConfigurationError, XMLStreamException, IOException {
+		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC1069648.xml");
+		Map<String, TextDocument> docIdToDataMap = convert(new InputStreamReader(sampleDocStream, "UTF-8"));
+
+		System.out.println("KEYS: " + docIdToDataMap.keySet().toString());
+
+		String id = "PMC1069648";
+		assertNotNull(docIdToDataMap.get(id));
+		TextDocument td = docIdToDataMap.get(id);
+
+		String expectedText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMC1069648.txt",
+				CharacterEncoding.UTF_8);
+		
+		System.out.println(td.getText());
+		
+		assertEquals(expectedText, td.getText());
+
+		for (TextAnnotation ta : td.getAnnotations()) {
+			System.out.println(ta.getAggregateSpan() + " -- " + ta.getCoveredText());
+			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
+					ta.getAggregateSpan().getSpanEnd());
+			if (StringUtil.startsWithRegex(substring, "\\s")) {
+				throw new RuntimeException("covered text starts with space |" + substring + "|");
+			}
+		}
+	}
 
 	@Test(expected = WstxUnexpectedCharException.class)
 	public void testConvert_invalidXml() throws FactoryConfigurationError, XMLStreamException, IOException {

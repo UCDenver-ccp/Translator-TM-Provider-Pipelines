@@ -87,15 +87,20 @@ public class BiocToTextConverter {
 		for (TextAnnotation ta : td.getAnnotations()) {
 			String substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
 					ta.getAggregateSpan().getSpanEnd());
+
 			while (StringUtil.startsWithRegex(substring, "\\s")) {
 				Span span = ta.getAggregateSpan();
-				Span updatedSpan = new Span(span.getSpanStart() + 1, span.getSpanEnd() + 1);
+				int updatedStart = span.getSpanStart() + 1;
+				int updatedEnd = (span.getSpanEnd() < td.getText().length()) ? span.getSpanEnd() + 1
+						: span.getSpanEnd();
+
+				Span updatedSpan = new Span(updatedStart, updatedEnd);
 				ta.setSpan(updatedSpan);
+
 				substring = td.getText().substring(ta.getAggregateSpan().getSpanStart(),
 						ta.getAggregateSpan().getSpanEnd());
 			}
 		}
-
 	}
 
 	/**
