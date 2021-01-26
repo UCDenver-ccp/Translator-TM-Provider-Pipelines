@@ -16,7 +16,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
-import com.google.datastore.v1.Key;
 import com.google.protobuf.ByteString;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
@@ -60,7 +59,7 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 
 	static Entity buildFailureEntity(DocumentCriteria dc, String docId, String message, String stackTrace,
 			com.google.cloud.Timestamp timestamp) throws UnsupportedEncodingException {
-		Key key = DatastoreKeyUtil.createFailureKey(docId, dc);
+		com.google.datastore.v1.Key key = DatastoreKeyUtil.createFailureKey(docId, dc);
 
 		/*
 		 * the stacktrace is likely too large to store as a property, so we make it a

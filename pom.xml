@@ -11,10 +11,10 @@
 
 
 	<properties>
-		<beam.version>2.19.0</beam.version>
+		<beam.version>2.27.0</beam.version>
 
 		<bigquery.version>v2-rev20181221-1.28.0</bigquery.version>
-		<google-clients.version>1.28.0</google-clients.version>
+		<google-clients.version>1.31.1</google-clients.version>
 		<hamcrest.version>2.1</hamcrest.version>
 		<jackson.version>2.9.10</jackson.version>
 		<joda.version>2.10.3</joda.version>
@@ -421,6 +421,14 @@
 			<version>${beam.version}</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>30.1-jre</version>
+		</dependency>
+
+
 		<!-- Dependencies below this line are specific dependencies needed by the 
 			examples code. -->
 		<dependency>
@@ -502,6 +510,14 @@
 			<version>${joda.version}</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.14.0</version>
+		</dependency>
+
+
 		<!-- Add slf4j API frontend binding with JUL backend -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -564,7 +580,7 @@
 			<artifactId>common</artifactId>
 			<version>1.5.6</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>edu.ucdenver.ccp</groupId>
 			<artifactId>datasource-fileparsers</artifactId>

@@ -15,7 +15,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
-import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
@@ -60,7 +59,7 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 	}
 
 	public static Entity buildStatusEntity(ProcessingStatus status)  {
-		Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
+		com.google.datastore.v1.Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);

@@ -20,7 +20,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
-import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Value;
 import com.google.protobuf.ByteString;
 
@@ -106,7 +105,7 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 
 	protected static Entity createEntity(String docId, long chunkId, int chunkTotal, DocumentCriteria dc, String docContent,
 			Set<String> collectionNames) throws UnsupportedEncodingException {
-		Key key = DatastoreKeyUtil.createDocumentKey(docId, chunkId, dc);
+		com.google.datastore.v1.Key key = DatastoreKeyUtil.createDocumentKey(docId, chunkId, dc);
 
 		/*
 		 * the document content is likely too large to store as a property, so we make

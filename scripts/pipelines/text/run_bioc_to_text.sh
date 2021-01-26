@@ -15,7 +15,7 @@ echo "OVERWRITE: $OVERWRITE"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar BIOC_TO_TEXT \
+java -jar target/tm-pipelines-bundled-0.1.0.jar BIOC_TO_TEXT \
 --jobName="$JOB_NAME" \
 --biocDir="$BIOC_DIR" \
 --overwrite="$OVERWRITE" \
@@ -23,7 +23,9 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar BIOC_TO_TE
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
---zone=us-central1-c \
+--workerZone=us-central1-c \
+--region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=200 \
+--defaultWorkerLogLevel=DEBUG \
 --runner=DataflowRunner
