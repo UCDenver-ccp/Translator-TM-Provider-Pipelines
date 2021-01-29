@@ -27,5 +27,5 @@ java -jar target/tm-pipelines-bundled-0.1.0.jar BIOC_TO_TEXT \
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=200 \
---defaultWorkerLogLevel=DEBUG \
+--defaultWorkerLogLevel=INFO \
 --runner=DataflowRunner
