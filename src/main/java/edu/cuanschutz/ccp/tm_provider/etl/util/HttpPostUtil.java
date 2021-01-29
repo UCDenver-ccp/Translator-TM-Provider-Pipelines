@@ -2,6 +2,8 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -23,6 +25,8 @@ import lombok.Data;
 @Data
 public class HttpPostUtil {
 
+	private static final Logger logger = org.apache.log4j.Logger.getLogger(HttpPostUtil.class);
+
 	private final String targetUri;
 
 	/**
@@ -39,6 +43,38 @@ public class HttpPostUtil {
 	 * @throws InterruptedException
 	 */
 	public String submit(String payload) throws IOException {
+		/*
+		 * occasionally the server does not respond, or does not respond in time and an
+		 * exception is thrown. In these cases we will catch the exception, wait 5
+		 * seconds, and retry up to 3 times total before officially failing.
+		 */
+		int tryCount = 0;
+		HttpResponse response = null;
+		while (tryCount++ < 4) {
+			try {
+				response = makeHttpRequest(payload);
+				// request was successful so break out of the while loop
+				break;
+			} catch (HttpResponseException e) {
+				if (tryCount == 4) {
+					throw new HttpResponseException(response);
+				}
+				/* sleep for 5s before trying again */
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e1) {
+					throw new IOException(e1);
+				}
+			}
+		}
+		if (tryCount > 1) {
+			logger.info("TMPLOG -- recovered HTTPReponse after sleeping.");
+		}
+		return response.parseAsString();
+	}
+
+	private HttpResponse makeHttpRequest(String payload) throws IOException {
+		HttpResponse response;
 		GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
 		if (!(credentials instanceof IdTokenProvider)) {
 			throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
@@ -52,32 +88,8 @@ public class HttpPostUtil {
 		HttpContent content = new ByteArrayContent("application/text", payload.getBytes());
 		HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, content);
 
-		/*
-		 * occasionally the server does not respond, or does not respond in time and an
-		 * exception is thrown. In these cases we will catch the exception, wait 5
-		 * seconds, and retry up to 3 times total before officially failing.
-		 */
-		int tryCount = 0;
-		HttpResponse response = null;
-		while (tryCount++ < 3) {
-			try {
-				response = request.execute();
-				// request was successful so break out of the while loop
-				break;
-			} catch (HttpResponseException e) {
-				if (tryCount == 2) {
-					throw new HttpResponseException(response);
-				}
-				/* sleep for 5s before trying again */
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e1) {
-					throw new IOException(e1);
-				}
-			}
-		}
-
-		return response.parseAsString();
+		response = request.execute();
+		return response;
 	}
 
 //	public String submit(String payload) throws IOException {

@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.log4j.Logger;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import lombok.Data;
@@ -19,6 +20,7 @@ import lombok.EqualsAndHashCode;
 public class EtlFailureData extends DoFn {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = org.apache.log4j.Logger.getLogger(EtlFailureData.class);
 
 	private final String message;
 	private final String documentId;
@@ -29,19 +31,16 @@ public class EtlFailureData extends DoFn {
 	public EtlFailureData(DocumentCriteria documentCriteria, String customMessage, String documentId, Throwable thrown,
 			com.google.cloud.Timestamp timestamp) {
 		this.documentCriteria = documentCriteria;
-		this.message = trimMessage(customMessage + " -- " + thrown.toString());
+		this.message = (thrown == null) ? trimMessage(customMessage) : trimMessage(customMessage + " -- " + thrown.toString());
 		this.documentId = documentId;
-		this.stackTrace = Arrays.toString(thrown.getStackTrace());
+		this.stackTrace = (thrown == null) ? "" : Arrays.toString(thrown.getStackTrace());
 		this.timestamp = timestamp;
+		logger.warn("TMPLOG -- Logging failure: " + getMessage() + " -- " + getStackTrace());
 	}
 
 	public EtlFailureData(DocumentCriteria documentCriteria, String customMessage, String documentId,
 			com.google.cloud.Timestamp timestamp) {
-		this.documentCriteria = documentCriteria;
-		this.message = trimMessage(customMessage);
-		this.documentId = documentId;
-		this.stackTrace = "";
-		this.timestamp = timestamp;
+		this(documentCriteria, customMessage, documentId, null, timestamp);
 	}
 
 	private String trimMessage(String message) {
