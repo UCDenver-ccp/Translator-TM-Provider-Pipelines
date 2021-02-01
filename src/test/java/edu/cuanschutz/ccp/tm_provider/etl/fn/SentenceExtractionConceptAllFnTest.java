@@ -41,6 +41,7 @@ public class SentenceExtractionConceptAllFnTest {
 
 	private static final String Y_000001 = "Y:000001";
 	private static final String X_000001 = "X:000001";
+	private static final String X_000002 = "X:000002";
 	private List<TextAnnotation> sentenceAnnotations;
 	private List<TextAnnotation> conceptXAnnots;
 	private List<TextAnnotation> conceptYAnnots;
@@ -72,9 +73,9 @@ public class SentenceExtractionConceptAllFnTest {
 	private static TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(documentId);
 
 	private static TextAnnotation x1Sentence1Annot = factory.createAnnotation(18, 27, "conceptX1", X_000001);
-//	private static Span x1Sentence1Span = new Span(18, 27);
-	private static TextAnnotation x2Sentence1Annot = factory.createAnnotation(32, 41, "conceptX2", "X:000002");
-//	private static Span x2Sentence1Span = new Span(32, 41);
+	private static Span x1Sentence1Span = new Span(18, 27);
+	private static TextAnnotation x2Sentence1Annot = factory.createAnnotation(32, 41, "conceptX2", X_000002);
+	private static Span x2Sentence1Span = new Span(32, 41);
 	private static TextAnnotation x1Sentence2Annot = factory.createAnnotation(43, 52, "ConceptX1", X_000001);
 	private static Span x1Sentence2Span = new Span(43 - 43, 52 - 43);
 	private static TextAnnotation x1Sentence4Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000001);
@@ -174,11 +175,11 @@ public class SentenceExtractionConceptAllFnTest {
 	@Test
 	public void testFilterViaCrf() {
 		List<TextAnnotation> crfAnnots = new ArrayList<TextAnnotation>();
-		crfAnnots.add(factory.createAnnotation(32, 41, "conceptX2", "X:000002"));
+		crfAnnots.add(factory.createAnnotation(32, 41, "conceptX2", X_000002));
 		crfAnnots.add(factory.createAnnotation(49, 55, "ConceptX1", X_000001));
 
 		List<TextAnnotation> expectedAnnots = new ArrayList<TextAnnotation>();
-		expectedAnnots.add(factory.createAnnotation(32, 41, "conceptX2", "X:000002"));
+		expectedAnnots.add(factory.createAnnotation(32, 41, "conceptX2", X_000002));
 		expectedAnnots.add(factory.createAnnotation(43, 52, "ConceptX1", X_000001));
 
 		List<TextAnnotation> filteredAnnots = PipelineMain.filterViaCrf(conceptXAnnots, crfAnnots);
@@ -248,6 +249,33 @@ public class SentenceExtractionConceptAllFnTest {
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null, sentence2, documentText);
 		expectedExtractedSentences.add(es);
 
+		assertEquals(expectedExtractedSentences, extractedSentences);
+
+	}
+
+	/**
+	 * There may be cases where we want to extract sentences that contain two of the
+	 * same type, e.g. for PR - regulates - PR.
+	 */
+	@Test
+	public void testCatalogExtractedSentencesNoKeyword_DuplicatePlaceholder() {
+		Set<String> keywords = null;
+
+		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
+				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptXAnnots);
+
+		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.catalogExtractedSentences(keywords,
+				documentText, documentId, sentenceToConceptMap, PLACEHOLDER_X, PLACEHOLDER_X);
+
+		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
+		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "conceptX1",
+				CollectionsUtil.createList(x1Sentence1Span), PLACEHOLDER_X, X_000002, "conceptX2",
+				CollectionsUtil.createList(x2Sentence1Span), PLACEHOLDER_X, null, sentence1, documentText);
+		expectedExtractedSentences.add(es);
+
+		
+		assertEquals(expectedExtractedSentences.size(), extractedSentences.size());
+		assertEquals(expectedExtractedSentences.iterator().next().getSentenceIdentifier(), extractedSentences.iterator().next().getSentenceIdentifier());
 		assertEquals(expectedExtractedSentences, extractedSentences);
 
 	}

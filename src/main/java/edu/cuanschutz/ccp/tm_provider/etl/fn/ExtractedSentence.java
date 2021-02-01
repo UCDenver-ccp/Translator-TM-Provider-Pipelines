@@ -43,15 +43,32 @@ public class ExtractedSentence extends DoFn {
 			String entityPlaceholder1, String entityId2, String entityCoveredText2, List<Span> entitySpan2,
 			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext) {
 		super();
+		
+		// order entities by span so that their order is reproducible
+		Span aggregateSpan1 = getAggregateSpan(entitySpan1);
+		Span aggregateSpan2 = getAggregateSpan(entitySpan2);
+		
+		if (aggregateSpan1.startsBefore(aggregateSpan2)) {
+			this.entityId1 = entityId1;
+			this.entityCoveredText1 = entityCoveredText1;
+			this.entitySpan1 = entitySpan1;
+			this.entityPlaceholder1 = entityPlaceholder1;
+			this.entityId2 = entityId2;
+			this.entityCoveredText2 = entityCoveredText2;
+			this.entitySpan2 = entitySpan2;
+			this.entityPlaceholder2 = entityPlaceholder2;			
+		} else {
+			this.entityId1 = entityId2;
+			this.entityCoveredText1 = entityCoveredText2;
+			this.entitySpan1 = entitySpan2;
+			this.entityPlaceholder1 = entityPlaceholder2;
+			this.entityId2 = entityId1;
+			this.entityCoveredText2 = entityCoveredText1;
+			this.entitySpan2 = entitySpan1;
+			this.entityPlaceholder2 = entityPlaceholder1;
+		}
+
 		this.documentId = documentId;
-		this.entityId1 = entityId1;
-		this.entityCoveredText1 = entityCoveredText1;
-		this.entitySpan1 = entitySpan1;
-		this.entityPlaceholder1 = entityPlaceholder1;
-		this.entityId2 = entityId2;
-		this.entityCoveredText2 = entityCoveredText2;
-		this.entitySpan2 = entitySpan2;
-		this.entityPlaceholder2 = entityPlaceholder2;
 		this.keyword = keyword;
 		this.sentenceText = sentenceText;
 		this.sentenceContext = sentenceContext.replaceAll("\\n", "||||");
