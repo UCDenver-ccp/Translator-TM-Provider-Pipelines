@@ -863,8 +863,12 @@ public class PipelineMain {
 		}
 	}
 
+	public enum FilterFlag {
+		NONE, BY_CRF
+	}
+
 	public static Map<DocumentType, Collection<TextAnnotation>> filterConceptAnnotations(
-			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap) {
+			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap, FilterFlag filterFlag) {
 		Map<DocumentType, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 
 		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> map = pairConceptWithCrfAnnots(
@@ -873,12 +877,17 @@ public class PipelineMain {
 		for (Entry<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> entry : map.entrySet()) {
 
 			DocumentType type = entry.getKey();
-			Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
 			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
 
-			Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
-
-			typeToAnnotMap.put(type, filteredAnnots);
+			if (filterFlag == FilterFlag.BY_CRF) {
+				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
+				Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
+				typeToAnnotMap.put(type, filteredAnnots);
+			} else if (filterFlag == FilterFlag.NONE) {
+				typeToAnnotMap.put(type, conceptAnnots);
+			} else {
+				throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+			}
 
 		}
 		return typeToAnnotMap;

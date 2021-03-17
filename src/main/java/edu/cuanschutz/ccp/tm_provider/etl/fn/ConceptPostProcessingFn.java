@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -39,6 +40,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String, String>> {
 
+	
 	private static final long serialVersionUID = 1L;
 
 	@SuppressWarnings("serial")
@@ -57,7 +59,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			Set<DocumentCriteria> requiredDocumentCriteria,
 			PCollectionView<Map<String, Set<String>>> extensionToOboMapView,
 			PCollectionView<Map<String, String>> prPromotionMapView,
-			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView) {
+			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView, FilterFlag filterFlag) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -88,7 +90,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 										.getDocTypeToContentMap(statusEntity.getDocumentId(),
 												statusEntityToText.getValue());
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
-										.filterConceptAnnotations(docTypeToContentMap);
+										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 

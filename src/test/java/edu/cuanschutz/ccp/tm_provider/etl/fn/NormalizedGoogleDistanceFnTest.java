@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.ConceptPair;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -361,7 +362,7 @@ public class NormalizedGoogleDistanceFnTest {
 		}
 
 		Map<DocumentType, Collection<TextAnnotation>> outputAnnotMap = PipelineMain
-				.filterConceptAnnotations(docTypeToContentMap);
+				.filterConceptAnnotations(docTypeToContentMap, FilterFlag.BY_CRF);
 
 		Map<DocumentType, Collection<TextAnnotation>> expectedAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 		expectedAnnotMap.put(DocumentType.CONCEPT_CHEBI, Arrays.asList(x2Sentence1Annot, x1Sentence2Annot));

@@ -130,6 +130,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
 
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE = "concept_pp";
+	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
 
 	/**
 	 * NGD = Normalized Google Distance

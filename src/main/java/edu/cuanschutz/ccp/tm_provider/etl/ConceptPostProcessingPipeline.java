@@ -20,6 +20,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -36,7 +37,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 /**
  * This pipeline accomplishes a number of tasks:
  * <ul>
- * <li>filters concept annotations based on the CRF output
+ * <li>Optionally filters concept annotations based on the CRF output
  * <li>converts any extension class concept identifiers to their corresponding
  * canonical OBO identifier
  * <li>performs post-processing operations on select ontologies (PR, NCBITaxon
@@ -118,6 +119,17 @@ public class ConceptPostProcessingPipeline {
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
+
+		@Description("Allows user to specify whether concept annotations should be filtered by CRFs or not")
+		FilterFlag getFilterFlag();
+
+		void setFilterFlag(FilterFlag value);
+
+		@Description("Should be either ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE or ProcessingStatusFlag.CONCEPT_POST_PROCESSING_UNFILTERED_DONE;")
+		ProcessingStatusFlag getTargetProcessingStatusFlag();
+
+		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
+
 	}
 
 	public static void main(String[] args) {
@@ -125,7 +137,7 @@ public class ConceptPostProcessingPipeline {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
-		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE;
+		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		Pipeline p = Pipeline.create(options);
 
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = PipelineMain
@@ -154,11 +166,17 @@ public class ConceptPostProcessingPipeline {
 						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_ALL, DocumentFormat.BIONLP,
+		DocumentType outputDocumentType = DocumentType.CONCEPT_ALL;
+		if (options.getFilterFlag() == FilterFlag.NONE) {
+			outputDocumentType = DocumentType.CONCEPT_ALL_UNFILTERED;
+		}
+
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(outputDocumentType, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
-				inputDocCriteria, extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView);
+				inputDocCriteria, extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView,
+				options.getFilterFlag());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output
 				.get(ConceptPostProcessingFn.ANNOTATIONS_TAG);

@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
@@ -52,6 +53,8 @@ public enum ProcessingStatusFlag {
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
 
 	CONCEPT_POST_PROCESSING_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE),
+	
+	CONCEPT_POST_PROCESSING_UNFILTERED_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE),
 
 	NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE(STATUS_PROPERTY_NGD_COUNTS_DONE),
 	NORMALIZED_GOOGLE_DISTANCE_KGX_DONE(STATUS_PROPERTY_NGD_KGX_DONE),
