@@ -34,8 +34,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.SetCoder;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
@@ -168,6 +166,9 @@ public class PipelineMain {
 				break;
 			case SENTENCE_COOCCURRENCE_EXPORT:
 				SentenceCooccurrencePipeline.main(pipelineArgs);
+				break;
+			case WEBANNO_SENTENCE_EXTRACTION:
+				WebAnnoSentenceExtractionPipeline.main(pipelineArgs);
 				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);

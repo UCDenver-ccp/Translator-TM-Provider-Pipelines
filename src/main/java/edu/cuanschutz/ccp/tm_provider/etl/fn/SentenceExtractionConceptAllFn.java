@@ -147,7 +147,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	 * @param xPrefix
 	 * @return
 	 */
-	private static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots, String prefix) {
+	public static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots, String prefix) {
 		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
 
 		for (TextAnnotation annot : conceptAnnots) {
@@ -211,7 +211,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	 * @param offset
 	 * @return
 	 */
-	private static List<Span> offsetSpan(List<Span> spans, int offset) {
+	public static List<Span> offsetSpan(List<Span> spans, int offset) {
 		List<Span> offsetSpans = new ArrayList<Span>();
 
 		for (Span span : spans) {
