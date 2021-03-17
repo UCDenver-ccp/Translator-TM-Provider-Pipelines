@@ -2,6 +2,9 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
@@ -53,6 +56,64 @@ public class ExtractedSentenceTest {
 
 		assertEquals(expectedSentenceWithPlaceholders, sentenceWithPlaceholders);
 
+	}
+
+	@Test
+	public void testGetSpansSingle() {
+		List<Span> spans = Arrays.asList(new Span(0, 5));
+		String spanStr = spans.toString();
+
+		List<Span> extractedSpans = ExtractedSentence.getSpans(spanStr);
+
+		assertEquals(spans, extractedSpans);
+	}
+
+	@Test
+	public void testGetSpansMoreThanOne() {
+		List<Span> spans = Arrays.asList(new Span(0, 5), new Span(10, 15));
+		String spanStr = spans.toString();
+
+		List<Span> extractedSpans = ExtractedSentence.getSpans(spanStr);
+
+		assertEquals(spans, extractedSpans);
+	}
+
+	@Test
+	public void testFromTsv() {
+		String tsv = "Treatment with the five isosteroid alkaloids in appropriate concentrations could reduce the production of nitric oxide (NO), tumor necrosis factor ? (@GENE$-?) and interleukin-6 (IL-6) in supernatant, and suppressed the @CHEMICAL$ expressions of TNF-? and IL-6.	PMID:31816576	TNF	PR:000016488	[[150..153]]	mRNA	CHEBI:33699	[[217..221]]	reduce	252		Treatment with the five isosteroid alkaloids in appropriate concentrations could reduce the production of nitric oxide (NO), tumor necrosis factor ? (TNF-?) and interleukin-6 (IL-6) in supernatant, and suppressed the mRNA expressions of TNF-? and IL-6.	Isosteroid alkaloids with different chemical structures from Fritillariae cirrhosae bulbus alleviate LPS-induced inflammatory response in RAW 264.7 cells by MAPK signaling pathway.||||||||Isosteroid alkaloids, natural products from Fritillariae Cirrhosae Bulbus, are well known for its antitussive, expectorant, anti-asthmatic and anti-inflammatory properties. However, the anti-inflammatory effect and its mechanism have not been fully explored. In this study, the anti-inflammatory activitives and the potential mechanisms of five isosteroid alkaloids from F. Cirrhosae Bulbus were investigated in lipopolysaccharide (LPS)-induced RAW264.7 macrophage cells. The pro-inflammatory mediators and cytokines were measured by Griess reagent, ELISA and qRT-PCR. The expression of MAPKs was investigated by western blotting. Treatment with the five isosteroid alkaloids in appropriate concentrations could reduce the production of nitric oxide (NO), tumor necrosis factor α (TNF-α) and interleukin-6 (IL-6) in supernatant, and suppressed the mRNA expressions of TNF-α and IL-6. Meanwhile, the five isosteroid alkaloids significantly inhibited the phosphorylated activation of mitogen activated protein kinase (MAPK) signaling pathways, including extracellular signal-regulated kinase (ERK1/2), p38 MAPK and c-Jun N-terminal kinase/stress-activated protein kinase (JNK/SAPK). These results demonstrated that isosteroid alkaloids from F. Cirrhosae Bulbus exert anti-inflammatory effects by down-regulating the level of inflammatory mediators via mediation of MAPK phosphorylation in LPS-induced RAW264.7 macrophages, thus could be candidates for the prevention and treatment of inflammatory diseases.";
+
+		ExtractedSentence es = ExtractedSentence.fromTsv(tsv, false);
+
+		String documentId = "PMID:31816576";
+		String entityCoveredText1 = "TNF";
+		String entityId1 = "PR:000016488";
+		List<Span> entitySpan1 = Arrays.asList(new Span(150, 153));
+		String entityPlaceholder1 = "@GENE$";
+		String entityCoveredText2 = "mRNA";
+		String entityId2 = "CHEBI:33699";
+		List<Span> entitySpan2 = Arrays.asList(new Span(217, 221));
+		String entityPlaceholder2 = "@CHEMICAL$";
+		String keyword = "reduce";
+
+		String sentenceText = "Treatment with the five isosteroid alkaloids in appropriate concentrations could reduce the production of nitric oxide (NO), tumor necrosis factor ? (TNF-?) and interleukin-6 (IL-6) in supernatant, and suppressed the mRNA expressions of TNF-? and IL-6.";
+		String sentenceContext = "Isosteroid alkaloids with different chemical structures from Fritillariae cirrhosae bulbus alleviate LPS-induced inflammatory response in RAW 264.7 cells by MAPK signaling pathway.||||||||Isosteroid alkaloids, natural products from Fritillariae Cirrhosae Bulbus, are well known for its antitussive, expectorant, anti-asthmatic and anti-inflammatory properties. However, the anti-inflammatory effect and its mechanism have not been fully explored. In this study, the anti-inflammatory activitives and the potential mechanisms of five isosteroid alkaloids from F. Cirrhosae Bulbus were investigated in lipopolysaccharide (LPS)-induced RAW264.7 macrophage cells. The pro-inflammatory mediators and cytokines were measured by Griess reagent, ELISA and qRT-PCR. The expression of MAPKs was investigated by western blotting. Treatment with the five isosteroid alkaloids in appropriate concentrations could reduce the production of nitric oxide (NO), tumor necrosis factor α (TNF-α) and interleukin-6 (IL-6) in supernatant, and suppressed the mRNA expressions of TNF-α and IL-6. Meanwhile, the five isosteroid alkaloids significantly inhibited the phosphorylated activation of mitogen activated protein kinase (MAPK) signaling pathways, including extracellular signal-regulated kinase (ERK1/2), p38 MAPK and c-Jun N-terminal kinase/stress-activated protein kinase (JNK/SAPK). These results demonstrated that isosteroid alkaloids from F. Cirrhosae Bulbus exert anti-inflammatory effects by down-regulating the level of inflammatory mediators via mediation of MAPK phosphorylation in LPS-induced RAW264.7 macrophages, thus could be candidates for the prevention and treatment of inflammatory diseases.";
+
+		ExtractedSentence expectedEs = new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1,
+				entityPlaceholder1, entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword,
+				sentenceText, sentenceContext);
+
+		assertEquals(expectedEs.getDocumentId(), es.getDocumentId());
+		assertEquals(expectedEs.getEntityCoveredText1(), es.getEntityCoveredText1());
+		assertEquals(expectedEs.getEntityCoveredText2(), es.getEntityCoveredText2());
+		assertEquals(expectedEs.getEntityId1(), es.getEntityId1());
+		assertEquals(expectedEs.getEntityId2(), es.getEntityId2());
+		assertEquals(expectedEs.getEntitySpan1(), es.getEntitySpan1());
+		assertEquals(expectedEs.getEntitySpan2(), es.getEntitySpan2());
+		assertEquals(expectedEs.getEntityPlaceholder1(), es.getEntityPlaceholder1());
+		assertEquals(expectedEs.getEntityPlaceholder2(), es.getEntityPlaceholder2());
+		assertEquals(expectedEs.getSentenceIdentifier(), es.getSentenceIdentifier());
+		assertEquals(expectedEs.getSentenceText(), es.getSentenceText());
+		assertEquals(expectedEs.getSentenceContext(), es.getSentenceContext());
 	}
 
 }

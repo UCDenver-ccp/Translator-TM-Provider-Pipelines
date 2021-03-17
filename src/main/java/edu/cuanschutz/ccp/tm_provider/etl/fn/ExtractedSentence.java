@@ -1,10 +1,13 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -12,6 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
+import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -43,11 +47,11 @@ public class ExtractedSentence extends DoFn {
 			String entityPlaceholder1, String entityId2, String entityCoveredText2, List<Span> entitySpan2,
 			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext) {
 		super();
-		
+
 		// order entities by span so that their order is reproducible
 		Span aggregateSpan1 = getAggregateSpan(entitySpan1);
 		Span aggregateSpan2 = getAggregateSpan(entitySpan2);
-		
+
 		if (aggregateSpan1.startsBefore(aggregateSpan2)) {
 			this.entityId1 = entityId1;
 			this.entityCoveredText1 = entityCoveredText1;
@@ -56,7 +60,7 @@ public class ExtractedSentence extends DoFn {
 			this.entityId2 = entityId2;
 			this.entityCoveredText2 = entityCoveredText2;
 			this.entitySpan2 = entitySpan2;
-			this.entityPlaceholder2 = entityPlaceholder2;			
+			this.entityPlaceholder2 = entityPlaceholder2;
 		} else {
 			this.entityId1 = entityId2;
 			this.entityCoveredText1 = entityCoveredText2;
@@ -123,9 +127,110 @@ public class ExtractedSentence extends DoFn {
 		String blankColumn = "";
 		return String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s", getSentenceIdentifier(),
 				getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, entitySpan1.toString(),
-				entityCoveredText2, entityId2, entitySpan2.toString(), keyword, sentenceText.length(), blankColumn, sentenceText,
-				sentenceContext);
+				entityCoveredText2, entityId2, entitySpan2.toString(), keyword, sentenceText.length(), blankColumn,
+				sentenceText, sentenceContext);
 
+	}
+
+	public static ExtractedSentence fromTsv(String tsv, boolean sentenceIdInFirstColumn) {
+		Pattern placeholderPattern = Pattern.compile("(@.*?\\$)"); // e.g. @GENE$
+
+		String[] cols = tsv.split("\\t");
+
+		int index = 0;
+		if (sentenceIdInFirstColumn) {
+			index++; // skip sentence identifier column
+		}
+		String sentenceWithPlaceholders = cols[index++];
+		String documentId = cols[index++];
+		String entityCoveredText1 = cols[index++];
+		String entityId1 = cols[index++];
+		List<Span> entitySpan1 = getSpans(cols[index++]);
+		String entityCoveredText2 = cols[index++];
+		String entityId2 = cols[index++];
+		List<Span> entitySpan2 = getSpans(cols[index++]);
+		String keyword = cols[index++];
+		index++; // skip sentence length column
+		index++; // skip blank column
+		String sentenceText = cols[index++];
+		String sentenceContext = cols[index++];
+
+		int entity1Start = entitySpan1.get(0).getSpanStart();
+		int entity2Start = entitySpan2.get(0).getSpanStart();
+
+		String entityPlaceholder1 = null;
+		String entityPlaceholder2 = null;
+
+		Matcher m = placeholderPattern.matcher(sentenceWithPlaceholders);
+		boolean foundFirstPlaceholder = false;
+		int count = 0;
+		while (m.find()) {
+			if (count++ > 1) {
+				throw new IllegalStateException(
+						"Encountered more that 2 placeholders in sentence: " + sentenceWithPlaceholders);
+			}
+			String placeholder = m.group(1);
+			if (!foundFirstPlaceholder) {
+				if (entity1Start < entity2Start) {
+					entityPlaceholder1 = placeholder;
+				} else {
+					entityPlaceholder2 = placeholder;
+				}
+				foundFirstPlaceholder = true;
+			} else {
+				if (entityPlaceholder1 == null) {
+					entityPlaceholder1 = placeholder;
+				} else if (entityPlaceholder2 == null) {
+					entityPlaceholder2 = placeholder;
+				} else {
+					throw new IllegalStateException("both should not be non-null at this point");
+				}
+			}
+
+		}
+
+		return new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1, entityPlaceholder1,
+				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, sentenceContext);
+	}
+
+	/**
+	 * Parse strings like [[106..118]] and return a list of {@link Span}
+	 * 
+	 * @param spanStr
+	 * @return
+	 */
+	protected static List<Span> getSpans(String spanStr) {
+		Pattern p = Pattern.compile("\\[(\\d+)\\.\\.(\\d+)\\]");
+		List<Span> spans = new ArrayList<Span>();
+		String cleanSpanStr = spanStr;
+		// drop first and last square brackets
+		if (cleanSpanStr.startsWith("[[")) {
+			cleanSpanStr = cleanSpanStr.substring(1);
+		} else {
+			throw new IllegalArgumentException(
+					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
+		}
+		if (cleanSpanStr.endsWith("]]")) {
+			cleanSpanStr = cleanSpanStr.substring(0, cleanSpanStr.length() - 1);
+		} else {
+			throw new IllegalArgumentException(
+					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
+		}
+		// parse the inner content and create spans
+		String[] spanToks = cleanSpanStr.split(",");
+		for (String spanTok : spanToks) {
+			Matcher m = p.matcher(spanTok);
+			if (m.find()) {
+				int spanStart = Integer.parseInt(m.group(1));
+				int spanEnd = Integer.parseInt(m.group(2));
+				spans.add(new Span(spanStart, spanEnd));
+			} else {
+				throw new IllegalArgumentException(
+						"Unexpected span serialization format: " + spanTok + ". Expected something like: [0..5]");
+			}
+		}
+
+		return spans;
 	}
 
 	private Span getAggregateSpan(List<Span> spans) {
