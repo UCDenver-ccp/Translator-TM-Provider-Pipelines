@@ -33,6 +33,7 @@ import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -40,7 +41,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String, String>> {
 
-	
 	private static final long serialVersionUID = 1L;
 
 	@SuppressWarnings("serial")
@@ -98,6 +98,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								allAnnots = promotePrAnnots(allAnnots, prPromotionMap);
 								allAnnots = excludeSelectNcbiTaxonAnnots(allAnnots);
 								allAnnots = promoteNcbiTaxonAnnots(allAnnots, ncbitaxonPromotionMap);
+								allAnnots = removeNcbiStopWords(allAnnots);
 
 								String documentText = PipelineMain.getDocumentText(docs);
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
@@ -120,6 +121,21 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonAncestorMapView)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	@VisibleForTesting
+	protected static Set<TextAnnotation> removeNcbiStopWords(Set<TextAnnotation> annots) {
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		Set<String> stopwords = new HashSet<String>(StopWordUtil.STOPWORDS);
+		for (TextAnnotation annot : annots) {
+			String coveredText = annot.getCoveredText();
+			if (coveredText.length() > 2 && !stopwords.contains(coveredText.toLowerCase())) {
+				// keep annotations that are not in the stopword list
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
 	}
 
 	@VisibleForTesting

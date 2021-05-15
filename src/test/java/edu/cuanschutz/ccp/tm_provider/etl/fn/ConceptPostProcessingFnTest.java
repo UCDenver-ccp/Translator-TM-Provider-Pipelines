@@ -148,5 +148,23 @@ public class ConceptPostProcessingFnTest {
 
 		assertEquals(expectedOutput, output);
 	}
+	
+	
+	@Test
+	public void testRemoveStopwords() {
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+		TextAnnotation taxonAnnot1 = factory.createAnnotation(0, 3, "Was", "NCBITaxon:000000286");
+		TextAnnotation taxonAnnot2 = factory.createAnnotation(0, 3, "was", "NCBITaxon:169495");
+		TextAnnotation clAnnot = factory.createAnnotation(0, 5, "annot", "CL:0000000");
+		TextAnnotation prAnnot = factory.createAnnotation(17, 19, "be", "MONDO:0001234");
+		TextAnnotation taxonAnnot3 = factory.createAnnotation(20, 25, "annot", "NCBITaxon:000000285");
+		Set<TextAnnotation> input = CollectionsUtil.createSet(taxonAnnot1, taxonAnnot2, taxonAnnot3, clAnnot, prAnnot);
+
+		Set<TextAnnotation> output = ConceptPostProcessingFn.removeNcbiStopWords(input);
+
+		Set<TextAnnotation> expectedOutput = CollectionsUtil.createSet( taxonAnnot3, clAnnot);
+
+		assertEquals(expectedOutput, output);
+	}
 
 }
