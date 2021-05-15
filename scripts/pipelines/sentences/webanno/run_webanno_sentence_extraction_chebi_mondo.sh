@@ -19,7 +19,7 @@ OUTPUT_BUCKET="${BUCKET}/output/webanno-sentences/chebi-mondo/chebi-mondo"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar WEBANNO_SENTENCE_EXTRACTION \
 --jobName="$JOB_NAME" \
---inputDocumentCriteria="TEXT|TEXT|$TEXT_PIPELINE_KEY|0.1.0;SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0" \
+--inputDocumentCriteria="TEXT|TEXT|$TEXT_PIPELINE_KEY|0.1.0;SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL_UNFILTERED|BIONLP|CONCEPT_POST_PROCESS|0.1.0" \
 --keywords='' \
 --collection="$COLLECTION" \
 --overwrite='YES' \

@@ -113,11 +113,13 @@ public class WebAnnoSentenceExtractionPipeline {
 				.compileInputDocumentCriteria(options.getInputDocumentCriteria());
 		Set<String> keywords = compileKeywords(options.getKeywords());
 
+		DocumentType conceptDocumentType = extractConceptDocumentType(inputDocCriteria);
+
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP,
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(conceptDocumentType, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
 
 		// the extracted sentence output contains a version of the sentence where the
@@ -128,8 +130,8 @@ public class WebAnnoSentenceExtractionPipeline {
 		prefixToPlaceholderMap.put(options.getPrefixX(), options.getPlaceholderX());
 		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
 
-		PCollectionTuple output = SentenceExtractionWebAnnoFn.process(statusEntity2Content, keywords,
-				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap);
+		PCollectionTuple output = SentenceExtractionWebAnnoFn.process(statusEntity2Content, keywords, outputDocCriteria,
+				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
 
 		PCollection<KV<ProcessingStatus, String>> statusToOutputTsv = output
 				.get(SentenceExtractionWebAnnoFn.EXTRACTED_SENTENCES_TAG);
@@ -183,6 +185,19 @@ public class WebAnnoSentenceExtractionPipeline {
 				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		p.run().waitUntilFinish();
+	}
+
+	private static DocumentType extractConceptDocumentType(Set<DocumentCriteria> inputDocCriteria) {
+		for (DocumentCriteria dc : inputDocCriteria) {
+			if (dc.getDocumentType() == DocumentType.CONCEPT_ALL) {
+				return DocumentType.CONCEPT_ALL;
+			} else if (dc.getDocumentType() == DocumentType.CONCEPT_ALL_UNFILTERED) {
+				return DocumentType.CONCEPT_ALL_UNFILTERED;
+			}
+		}
+		throw new IllegalArgumentException(
+				"Expected to find a concept document type in the input document criteria (CONCEPT_ALL or "
+						+ "CONCEPT_ALL_UNFILTERED) but did not find one. " + inputDocCriteria.toString());
 	}
 
 	@VisibleForTesting

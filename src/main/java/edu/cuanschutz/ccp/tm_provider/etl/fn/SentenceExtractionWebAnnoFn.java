@@ -65,7 +65,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap) {
+			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap, DocumentType conceptDocumentType) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, String>>() {
@@ -86,7 +86,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
 
 							Set<String> extractedSentences = extractSentences(docId, documentText, docTypeToContentMap,
-									keywords, prefixToPlaceholderMap, tokenizer);
+									keywords, prefixToPlaceholderMap, tokenizer, conceptDocumentType);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -107,13 +107,24 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 				}).withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
+	/**
+	 * @param documentId
+	 * @param documentText
+	 * @param docTypeToContentMap
+	 * @param keywords
+	 * @param prefixToPlaceholderMap
+	 * @param tokenizer
+	 * @param conceptDocumentType CONCEPT_ALL or CONCEPT_ALL_UNFILTERED
+	 * @return
+	 * @throws IOException
+	 */
 	@VisibleForTesting
 	protected static Set<String> extractSentences(String documentId, String documentText,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer) throws IOException {
+			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer, DocumentType conceptDocumentType) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
-		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(DocumentType.CONCEPT_ALL);
+		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocumentType);
 
 		String xPrefix = null;
 		String yPrefix = null;
@@ -146,6 +157,14 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 
 			String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
 			String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
+			
+			// remove leading @ and trailing $
+			if (xPlaceholder.startsWith("@") && xPlaceholder.endsWith("$")) {
+				xPlaceholder = xPlaceholder.substring(1, xPlaceholder.length()-1);
+			}
+			if (yPlaceholder.startsWith("@") && yPlaceholder.endsWith("$")) {
+				yPlaceholder = yPlaceholder.substring(1, yPlaceholder.length()-1);
+			}
 
 			extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
 					sentenceToConceptMap, xPlaceholder, yPlaceholder, tokenizer));
@@ -198,7 +217,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 					System.out.println(union);
 					// must be at least two annotations
 					if (union.size() > 1) {
-						String webAnnoTsv = createWebAnnotTsv(union, sentenceAnnot.getCoveredText(), tokenizer);
+						String sentenceText = documentText.substring(sentenceAnnot.getAnnotationSpanStart(), sentenceAnnot.getAnnotationSpanEnd());
+						String webAnnoTsv = createWebAnnotTsv(union, sentenceText, tokenizer);
 						extractedSentences.add(webAnnoTsv);
 					}
 				}

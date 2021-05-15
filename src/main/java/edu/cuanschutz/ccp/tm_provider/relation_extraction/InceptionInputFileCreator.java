@@ -2,7 +2,9 @@ package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +14,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.beam.vendor.grpc.v1p26p0.com.jcraft.jzlib.GZIPInputStream;
 
 import com.google.api.client.util.Base64;
 
@@ -39,7 +43,7 @@ public class InceptionInputFileCreator {
 
 	private static final CharacterEncoding UTF8 = CharacterEncoding.UTF_8;
 	private long globalCharacterOffset = 0;
-	private long globalMultiTokenEntityIndex = 1;
+	private long globalMultiTokenEntityIndex = 0;
 
 	/**
 	 * @param inputSentenceFile
@@ -58,7 +62,10 @@ public class InceptionInputFileCreator {
 
 		int sentenceIndex = 1;
 		int extractedSentenceCount = 1;
-		StreamLineIterator lineIter = new StreamLineIterator(inputSentenceFile, UTF8);
+		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
+				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
+				: new FileInputStream(inputSentenceFile);
+		StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null);
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
 			/* write the file header */
 			writer.write("#FORMAT=WebAnno TSV 3.3\n" + "#T_SP=custom.Span|label\n" + "\n" + "\n");
@@ -73,7 +80,11 @@ public class InceptionInputFileCreator {
 					if (!alreadyAnnotated.contains(hash)) {
 						alreadyAnnotated.add(hash);
 						String updatedSentenceData = updateSentenceData(extractedSentenceCount++, sentenceData);
-						writer.write(updatedSentenceData + "\n");
+						writer.write(updatedSentenceData);
+						// avoid line break on the final sentence
+						if (extractedSentenceCount < batchSize) {
+							writer.write("\n");
+						}
 					}
 				}
 			}
@@ -94,11 +105,14 @@ public class InceptionInputFileCreator {
 	 */
 	protected static Set<String> loadAlreadyAnnotatedSentenceIds(File[] previousSubsetFiles) throws IOException {
 		Set<String> hashes = new HashSet<String>();
-		for (File previousSubsetFile : previousSubsetFiles) {
-			for (StreamLineIterator lineIter = new StreamLineIterator(previousSubsetFile, UTF8); lineIter.hasNext();) {
-				String line = lineIter.next().getText();
-				if (line.startsWith("#Text=")) {
-					hashes.add(computeHash(line));
+		if (previousSubsetFiles != null) {
+			for (File previousSubsetFile : previousSubsetFiles) {
+				for (StreamLineIterator lineIter = new StreamLineIterator(previousSubsetFile, UTF8); lineIter
+						.hasNext();) {
+					String line = lineIter.next().getText();
+					if (line.startsWith("#Text=")) {
+						hashes.add(computeHash(line));
+					}
 				}
 			}
 		}
@@ -116,7 +130,10 @@ public class InceptionInputFileCreator {
 	 */
 	protected static int countSentences(File inputSentenceFile) throws IOException {
 		int sentenceCount = 0;
-		for (StreamLineIterator lineIter = new StreamLineIterator(inputSentenceFile, UTF8); lineIter.hasNext();) {
+		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
+				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
+				: new FileInputStream(inputSentenceFile);
+		for (StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null); lineIter.hasNext();) {
 			String line = lineIter.next().getText();
 			if (line.startsWith("#Text=")) {
 				sentenceCount++;
@@ -206,7 +223,7 @@ public class InceptionInputFileCreator {
 		}
 
 		setGlobalCharacterOffset(spanEnd + 1);
-		setGlobalMultiTokenEntityIndex(globalMultTokenEntityIndex);
+//		setGlobalMultiTokenEntityIndex(globalMultTokenEntityIndex);
 		return builder.toString();
 	}
 
