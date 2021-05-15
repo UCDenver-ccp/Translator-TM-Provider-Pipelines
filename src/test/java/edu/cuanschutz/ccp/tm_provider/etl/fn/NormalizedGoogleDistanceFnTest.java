@@ -21,6 +21,7 @@ import org.junit.Test;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.ConceptPair;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -254,7 +255,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
 		CooccurLevel level = CooccurLevel.SENTENCE;
 		NormalizedGoogleDistanceFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
-				singletonConceptIds, pairedConceptIds, level);
+				singletonConceptIds, pairedConceptIds, level, AddSuperClassAnnots.YES, FilterFlag.BY_CRF);
 
 		Set<String> expectedSingletonConceptIds = CollectionsUtil.createSet(X_000000, X_000001, X_000002, Y_000000,
 				Y_000001);

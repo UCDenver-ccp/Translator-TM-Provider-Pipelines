@@ -131,6 +131,9 @@ public class PipelineMain {
 			case CRF:
 				CrfNerPipeline.main(pipelineArgs);
 				break;
+			case CONCEPT_COUNT_DISTRIBUTION:
+				ConceptCountDistributionPipeline.main(pipelineArgs);
+				break;
 			case CONCEPT_POST_PROCESS:
 				ConceptPostProcessingPipeline.main(pipelineArgs);
 				break;

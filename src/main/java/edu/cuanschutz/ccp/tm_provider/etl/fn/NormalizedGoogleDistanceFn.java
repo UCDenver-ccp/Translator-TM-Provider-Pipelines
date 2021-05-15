@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -47,6 +48,10 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 									// paragraph in full text docs
 	}
 
+	public enum AddSuperClassAnnots {
+		YES, NO
+	}
+
 	private static final long serialVersionUID = 1L;
 
 	public static Delimiter OUTPUT_FILE_DELIMITER = Delimiter.TAB;
@@ -67,8 +72,8 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 	public static PCollectionTuple computeCounts(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, CooccurLevel level,
-			PCollectionView<Map<String, Set<String>>> ancestorMapView) {
+			Set<DocumentCriteria> requiredDocumentCriteria, CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots,
+			FilterFlag filterFlag, PCollectionView<Map<String, Set<String>>> ancestorMapView) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, String>() {
@@ -90,7 +95,7 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 							validateDocuments(docId, statusEntityToText.getValue(), requiredDocumentCriteria);
 
 							countConcepts(docId, statusEntityToText.getValue(), ancestorMap, singletonConceptIds,
-									pairedConceptIds, level);
+									pairedConceptIds, level, addSuperClassAnnots, filterFlag);
 
 							for (String conceptId : singletonConceptIds) {
 								context.output(SINGLETON_TO_DOCID,
@@ -139,7 +144,7 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 	@VisibleForTesting
 	protected static void countConcepts(String documentId, Map<DocumentCriteria, String> docs,
 			Map<String, Set<String>> superClassMap, Set<String> singletonConceptIds, Set<ConceptPair> pairedConceptIds,
-			CooccurLevel level) throws IOException {
+			CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots, FilterFlag filterFlag) throws IOException {
 
 		String documentText = PipelineMain.getDocumentText(docs);
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
@@ -147,9 +152,13 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 
 		List<TextAnnotation> levelAnnots = getLevelAnnotations(documentId, level, documentText, docTypeToContentMap);
 
-		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(DocumentType.CONCEPT_ALL);
+		DocumentType dt = (filterFlag == FilterFlag.NONE) ? DocumentType.CONCEPT_ALL_UNFILTERED
+				: DocumentType.CONCEPT_ALL;
+		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(dt);
 
-		conceptAnnots = addSuperClassAnnotations(documentId, conceptAnnots, superClassMap);
+		if (addSuperClassAnnots == AddSuperClassAnnots.YES) {
+			conceptAnnots = addSuperClassAnnotations(documentId, conceptAnnots, superClassMap);
+		}
 
 		conceptAnnots = removeAnnotsWithMissingTypes(conceptAnnots);
 
@@ -284,7 +293,7 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 			String conceptId = annot.getClassMention().getMentionName();
 			String conceptPrefix = null;
 			if (conceptId.contains(":")) {
-				conceptPrefix = conceptId.substring(0, conceptId.indexOf(":")+1);
+				conceptPrefix = conceptId.substring(0, conceptId.indexOf(":") + 1);
 				System.out.println("PREFIX= " + conceptPrefix);
 			}
 			Set<String> superClassIds = superClassMap.get(conceptId);

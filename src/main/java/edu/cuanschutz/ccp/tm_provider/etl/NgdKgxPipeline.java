@@ -88,7 +88,7 @@ public class NgdKgxPipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		final PCollection<KV<String, Long>> conceptIdToCounts = getSingletonCountMapView(options, p);
+		final PCollection<KV<String, Long>> conceptIdToCounts = getSingletonCountMapView(options.getSingletonFilePattern(), p);
 
 		final PCollectionView<Map<String, Long>> singletonCountMap = conceptIdToCounts
 				.apply(View.<String, Long>asMap());
@@ -249,11 +249,11 @@ public class NgdKgxPipeline {
 		return totalConceptCount;
 	}
 
-	private static PCollection<KV<String, Long>> getSingletonCountMapView(Options options, Pipeline p) {
+	public static PCollection<KV<String, Long>> getSingletonCountMapView(String singletonFilePattern, Pipeline p) {
 		// get lines that link concept identifiers to content identifiers (could be a
 		// document id, but could also be a sentence id, or something else).
 		PCollection<KV<String, String>> conceptIdToDocId = PCollectionUtil.fromTwoColumnFiles(p,
-				options.getSingletonFilePattern(), NormalizedGoogleDistanceFn.OUTPUT_FILE_DELIMITER,
+				singletonFilePattern, NormalizedGoogleDistanceFn.OUTPUT_FILE_DELIMITER,
 				Compression.UNCOMPRESSED);
 		// group by concept-id so that we now map from concept-id to all of its
 		// content-ids
