@@ -13,8 +13,10 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.log4j.Logger;
 import org.medline.Abstract;
 import org.medline.AbstractText;
+import org.medline.MedlineCitation;
 import org.medline.PubmedArticle;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
@@ -79,20 +81,25 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 					@ProcessElement
 					public void processElement(ProcessContext context) {
 						PubmedArticle pubmedArticle = context.element();
-						Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
-						TextDocument td = buildDocument(pubmedArticle);
-
-						// only store new documents unless overwrite = OverwriteOutput.YES
-						if (overwrite == OverwriteOutput.YES || !alreadyStoredDocIds.contains(td.getSourceid())) {
-							try {
-								outputDocument(context, td, collection);
-							} catch (Throwable t) {
-								EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
-										"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
-								context.output(etlFailureTag, failure);
+						/* pubmedArticle was observed to be null in the daily update files */
+						if (pubmedArticle != null) {
+							Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
+							TextDocument td = buildDocument(pubmedArticle);
+							if (td != null) {
+								// only store new documents unless overwrite = OverwriteOutput.YES
+								if (overwrite == OverwriteOutput.YES
+										|| !alreadyStoredDocIds.contains(td.getSourceid())) {
+									try {
+										outputDocument(context, td, collection);
+									} catch (Throwable t) {
+										EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
+												"Likely failure during Medline processing.", td.getSourceid(), t,
+												timestamp);
+										context.output(etlFailureTag, failure);
+									}
+								}
 							}
 						}
-
 					}
 				}).withSideInputs(docIdsAlreadyInDatastore).withOutputTags(plainTextTag,
 						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
@@ -104,27 +111,38 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 *         corresponding section annotations
 	 */
 	static TextDocument buildDocument(PubmedArticle pubmedArticle) {
-		String pmid = "PMID:" + pubmedArticle.getMedlineCitation().getPMID().getvalue();
-		String title = pubmedArticle.getMedlineCitation().getArticle().getArticleTitle().getvalue();
-		String abstractText = getAbstractText(pubmedArticle);
-		String documentText = (abstractText == null || abstractText.isEmpty()) ? title
-				: String.format("%s\n\n%s", title, abstractText);
+		MedlineCitation medlineCitation = pubmedArticle.getMedlineCitation();
+		/*
+		 * There are cases when processing Medline update files where either the
+		 * MedlineCitation or the PMID are null. This is likely when processing the
+		 * DeleteCitation entries at the bottom of each update file. To handle these
+		 * cases, we check for nulls here and skip any documents where the
+		 * MedlineCitation or PMID are null
+		 */
+		if (medlineCitation != null && medlineCitation.getPMID() != null) {
+			String pmid = "PMID:" + medlineCitation.getPMID().getvalue();
+			String title = medlineCitation.getArticle().getArticleTitle().getvalue();
+			String abstractText = getAbstractText(pubmedArticle);
+			String documentText = (abstractText == null || abstractText.isEmpty()) ? title
+					: String.format("%s\n\n%s", title, abstractText);
 
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
-		TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
-		TextAnnotation abstractAnnotation = null;
-		if (abstractText != null && !abstractText.isEmpty()) {
-			int abstractStart = title.length() + 2;
-			int abstractEnd = abstractStart + abstractText.length();
-			abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
-		}
+			TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
+			TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
+			TextAnnotation abstractAnnotation = null;
+			if (abstractText != null && !abstractText.isEmpty()) {
+				int abstractStart = title.length() + 2;
+				int abstractEnd = abstractStart + abstractText.length();
+				abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
+			}
 
-		TextDocument td = new TextDocument(pmid, "PubMed", documentText);
-		td.addAnnotation(titleAnnotation);
-		if (abstractAnnotation != null) {
-			td.addAnnotation(abstractAnnotation);
+			TextDocument td = new TextDocument(pmid, "PubMed", documentText);
+			td.addAnnotation(titleAnnotation);
+			if (abstractAnnotation != null) {
+				td.addAnnotation(abstractAnnotation);
+			}
+			return td;
 		}
-		return td;
+		return null;
 	}
 
 	/**
