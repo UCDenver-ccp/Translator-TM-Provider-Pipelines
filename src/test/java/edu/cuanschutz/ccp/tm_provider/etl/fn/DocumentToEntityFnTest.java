@@ -38,6 +38,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a bioc document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String biocXml = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.xml",
@@ -61,6 +62,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.txt",
@@ -85,6 +87,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String sectionAnnotationsInBioNLPFormat = ClassPathUtil.getContentsFromClasspathResource(
@@ -108,6 +111,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = "this is some text";
@@ -133,6 +137,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection, "NEW COLLECTION: PMC1790863");
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.txt",
