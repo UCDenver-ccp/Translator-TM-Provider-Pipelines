@@ -14,9 +14,11 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
@@ -123,6 +125,10 @@ public class CrfNerPipeline {
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output.get(CrfNerFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(CrfNerFn.ETL_FAILURE_TAG);
 
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()))
+				.apply(View.<String, Set<String>>asMap());
+
 		/*
 		 * store the serialized annotation document content in Cloud Datastore -
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
@@ -131,7 +137,8 @@ public class CrfNerPipeline {
 				.deduplicateDocuments(statusEntityToAnnotation);
 		nonredundantDocIdToAnnotations
 				.apply("annotations->annot_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

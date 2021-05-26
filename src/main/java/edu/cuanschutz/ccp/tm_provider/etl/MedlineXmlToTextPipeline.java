@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -15,7 +16,6 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
@@ -36,10 +36,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 public class MedlineXmlToTextPipeline {
 
@@ -116,6 +114,9 @@ public class MedlineXmlToTextPipeline {
 		 */
 		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
 
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(status)
+				.apply(View.<String, Set<String>>asMap());
+
 		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
@@ -124,7 +125,8 @@ public class MedlineXmlToTextPipeline {
 				.deduplicateDocumentsByStringKey(statusEntityToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn,
+								documentIdToCollections)))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -136,7 +138,7 @@ public class MedlineXmlToTextPipeline {
 		nonredundantStatusEntityToAnnotations
 				.apply("annotations->annot_entity",
 						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
-								collectionFn)))
+								collectionFn, documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

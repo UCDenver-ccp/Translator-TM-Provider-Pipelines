@@ -1046,4 +1046,23 @@ public class PipelineMain {
 		return existingDocumentIds;
 	}
 
+	
+	/**
+	 * @param statusEntity
+	 * @return a mapping from document ID to collection names
+	 */
+	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
+			PCollection<ProcessingStatus> statusEntity) {
+		return statusEntity.apply(ParDo.of(new DoFn<ProcessingStatus, KV<String, Set<String>>>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(ProcessContext c) {
+				ProcessingStatus ps = c.element();
+				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
+			}
+		}));
+
+	}
+
 }

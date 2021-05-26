@@ -182,6 +182,9 @@ public class ConceptPostProcessingPipeline {
 				.get(ConceptPostProcessingFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(ConceptPostProcessingFn.ETL_FAILURE_TAG);
 
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()))
+				.apply(View.<String, Set<String>>asMap());
 		/*
 		 * store the serialized annotation document content in Cloud Datastore -
 		 * deduplication is necessary to avoid Datastore non-transactional commit errors
@@ -190,7 +193,8 @@ public class ConceptPostProcessingPipeline {
 				.deduplicateDocuments(statusEntityToAnnotation);
 		nonredundantDocIdToAnnotations
 				.apply("annotations->annot_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

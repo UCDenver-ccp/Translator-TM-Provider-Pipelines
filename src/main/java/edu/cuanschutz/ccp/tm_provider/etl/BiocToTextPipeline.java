@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -14,6 +15,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -113,6 +115,9 @@ public class BiocToTextPipeline {
 
 		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
 
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(status)
+				.apply(View.<String, Set<String>>asMap());
+
 		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
@@ -121,7 +126,8 @@ public class BiocToTextPipeline {
 				.deduplicateDocumentsByStringKey(docIdToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn,
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -133,7 +139,7 @@ public class BiocToTextPipeline {
 		nonredundantAnnotations
 				.apply("annotations->annot_entity",
 						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
-								collectionFn)))
+								collectionFn, documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

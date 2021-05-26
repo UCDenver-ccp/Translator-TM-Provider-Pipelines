@@ -12,9 +12,11 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
@@ -110,6 +112,10 @@ public class DependencyParsePipeline {
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToConllu = output.get(TurkuDepParserFn.CONLLU_TAG);
 		PCollection<EtlFailureData> failures = output.get(TurkuDepParserFn.ETL_FAILURE_TAG);
 
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(statusEntityToConllu.apply(Keys.<ProcessingStatus>create()))
+				.apply(View.<String, Set<String>>asMap());
+
 		/*
 		 * store the CoNLL-U document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
@@ -118,7 +124,8 @@ public class DependencyParsePipeline {
 				.deduplicateDocuments(statusEntityToConllu);
 		nonredundantPlainText
 				.apply("conllu->document_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
