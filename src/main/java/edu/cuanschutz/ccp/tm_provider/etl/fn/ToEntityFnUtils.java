@@ -8,6 +8,13 @@ import java.util.function.Function;
 
 public class ToEntityFnUtils {
 
+	/*
+	 * Note: this format must remain in alignment with the format used in the
+	 * Airflow scripts that orchestrate processing. This format with dashes is the
+	 * default output of the Airflow {{ ds }} default variable.
+	 */
+	private static final String DATE_COLLECTION_FORMAT = "yyyy-MM-dd";
+
 	public static Set<String> getCollections(String collection, Function<String, String> collectionFn, String docId) {
 		Set<String> collections = new HashSet<String>();
 
@@ -27,7 +34,7 @@ public class ToEntityFnUtils {
 	}
 
 	protected static String getDateCollectionName() {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd");
+		SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_COLLECTION_FORMAT);
 		Date date = new Date(System.currentTimeMillis());
 		return dateFormat.format(date);
 	}
