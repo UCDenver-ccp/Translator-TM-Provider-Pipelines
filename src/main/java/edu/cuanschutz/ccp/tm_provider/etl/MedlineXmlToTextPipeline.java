@@ -126,7 +126,7 @@ public class MedlineXmlToTextPipeline {
 		nonredundantPlainText
 				.apply("plaintext->document_entity",
 						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn,
-								documentIdToCollections)))
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
