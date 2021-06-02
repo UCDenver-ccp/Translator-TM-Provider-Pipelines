@@ -202,11 +202,12 @@ public class SentenceExtractionWebAnnoFnTest {
 
 		Set<String> extractedSentences = extractSentences(keywords);
 
-		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1.\n"
+		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1. -- PMID:12345\n"
 				+ "1-1	0-9	ConceptX1	@CONCEPTX$\n" + "1-2	10-12	is	_\n" + "1-3	13-15	in	_\n"
 				+ "1-4	16-20	this	_\n" + "1-5	21-29	sentence	_\n" + "1-6	29-30	,	_\n"
 				+ "1-7	31-34	and	_\n" + "1-8	35-37	so	_\n" + "1-9	38-40	is	_\n"
-				+ "1-10	41-50	conceptY1	@CONCEPTY$\n" + "1-11	50-51	.	_\n";
+				+ "1-10	41-50	conceptY1	@CONCEPTY$\n" + "1-11	50-51	.	_\n" + "1-12	52-54	--	_\n"
+				+ "1-13	55-65	PMID:12345	_\n";
 
 		Set<String> expectedExtractedSentences = new HashSet<String>();
 		expectedExtractedSentences.add(expectedSentence);
@@ -232,7 +233,7 @@ public class SentenceExtractionWebAnnoFnTest {
 		Set<String> extractedSentences = extractSentences(keywords);
 
 		// @formatter:off
-		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1.\n" + 
+		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1. -- PMID:12345\n" + 
 				"1-1	0-9	ConceptX1	@CONCEPTX$\n" + 
 				"1-2	10-12	is	_\n" + 
 				"1-3	13-15	in	_\n" + 
@@ -243,7 +244,7 @@ public class SentenceExtractionWebAnnoFnTest {
 				"1-8	35-37	so	_\n" + 
 				"1-9	38-40	is	_\n" + 
 				"1-10	41-50	conceptY1	@CONCEPTY$\n" + 
-				"1-11	50-51	.	_\n";
+				"1-11	50-51	.	_\n" + "1-12	52-54	--	_\n" + "1-13	55-65	PMID:12345	_\n";
 		// @formatter:on
 
 		Set<String> expectedExtractedSentences = new HashSet<String>();
@@ -270,7 +271,7 @@ public class SentenceExtractionWebAnnoFnTest {
 		Set<String> extractedSentences = extractSentences(keywords);
 
 		// @formatter:off
-		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1.\n" + 
+		String expectedSentence = "\n#Text=ConceptX1 is in this sentence, and so is conceptY1. -- PMID:12345\n" + 
 				"1-1	0-9	ConceptX1	@CONCEPTX$\n" + 
 				"1-2	10-12	is	_\n" + 
 				"1-3	13-15	in	_\n" + 
@@ -281,7 +282,7 @@ public class SentenceExtractionWebAnnoFnTest {
 				"1-8	35-37	so	_\n" + 
 				"1-9	38-40	is	_\n" + 
 				"1-10	41-50	conceptY1	@CONCEPTY$\n" + 
-				"1-11	50-51	.	_\n";
+				"1-11	50-51	.	_\n" + "1-12	52-54	--	_\n" + "1-13	55-65	PMID:12345	_\n";
 		// @formatter:on
 
 		Set<String> expectedExtractedSentences = new HashSet<String>();
@@ -310,14 +311,14 @@ public class SentenceExtractionWebAnnoFnTest {
 		}
 
 		// @formatter:off
-		String extractedSentence = "\n#Text=This sentence has conceptX1 and conceptX2.\n" + 
+		String extractedSentence = "\n#Text=This sentence has conceptX1 and conceptX2. -- PMID:12345\n" + 
 				"1-1	0-4	This	_\n" + 
 				"1-2	5-13	sentence	_\n" + 
 				"1-3	14-17	has	_\n" + 
 				"1-4	18-27	conceptX1	@CONCEPTX$\n" + 
 				"1-5	28-31	and	_\n" + 
 				"1-6	32-41	conceptX2	@CONCEPTX$\n" + 
-				"1-7	41-42	.	_\n";
+				"1-7	41-42	.	_\n" + "1-8	43-45	--	_\n" + "1-9	46-56	PMID:12345	_\n";
 		// @formatter:on
 
 		Set<String> expectedExtractedSentences = new HashSet<String>();
