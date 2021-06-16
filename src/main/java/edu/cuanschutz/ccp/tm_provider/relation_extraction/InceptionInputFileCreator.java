@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,7 +52,7 @@ public class InceptionInputFileCreator {
 	 * @param previousSubsetFiles - to ensure that the new sentence file contains
 	 *                            unique sentences
 	 */
-	public void createNewSubset(int batchSize, File inputSentenceFile, File outputFile, File... previousSubsetFiles)
+	public void createNewSubset(int batchSize, File inputSentenceFile, File outputFile, Collection<File> previousSubsetFiles)
 			throws IOException {
 
 		Set<String> alreadyAnnotated = loadAlreadyAnnotatedSentenceIds(previousSubsetFiles);
@@ -103,7 +104,7 @@ public class InceptionInputFileCreator {
 	 * @return
 	 * @throws IOException
 	 */
-	protected static Set<String> loadAlreadyAnnotatedSentenceIds(File[] previousSubsetFiles) throws IOException {
+	protected static Set<String> loadAlreadyAnnotatedSentenceIds(Collection<File> previousSubsetFiles) throws IOException {
 		Set<String> hashes = new HashSet<String>();
 		if (previousSubsetFiles != null) {
 			for (File previousSubsetFile : previousSubsetFiles) {

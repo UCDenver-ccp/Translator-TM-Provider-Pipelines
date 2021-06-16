@@ -19,6 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
@@ -48,7 +49,7 @@ public class InceptionInputFileCreatorTest {
 		}
 
 		Set<String> alreadyAnnotatedSentenceIds = InceptionInputFileCreator
-				.loadAlreadyAnnotatedSentenceIds(new File[] { outputFile1, outputFile2 });
+				.loadAlreadyAnnotatedSentenceIds(CollectionsUtil.createList( outputFile1, outputFile2 ));
 
 		Set<String> expectedHashes = new HashSet<String>();
 
