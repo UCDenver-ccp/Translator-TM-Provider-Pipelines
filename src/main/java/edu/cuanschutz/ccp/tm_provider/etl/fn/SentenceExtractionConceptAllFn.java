@@ -51,10 +51,22 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
+	/**
+	 * @param statusEntityToText
+	 * @param keywords
+	 * @param outputDocCriteria
+	 * @param timestamp
+	 * @param requiredDocumentCriteria
+	 * @param prefixToPlaceholderMap
+	 * @param conceptDocType           either DocumentType.CONCEPT_ALL or
+	 *                                 DocumentType.CONCEPT_ALL_UNFILTERED
+	 * @return
+	 */
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap) {
+			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap,
+			DocumentType conceptDocType) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, ExtractedSentence>>() {
@@ -74,7 +86,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
 
 							Set<ExtractedSentence> extractedSentences = extractSentences(docId, documentText,
-									docTypeToContentMap, keywords, prefixToPlaceholderMap);
+									docTypeToContentMap, keywords, prefixToPlaceholderMap, conceptDocType);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -98,10 +110,10 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> extractSentences(String documentId, String documentText,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<String, String> prefixToPlaceholderMap) throws IOException {
+			Map<String, String> prefixToPlaceholderMap, DocumentType conceptDocType) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
-		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(DocumentType.CONCEPT_ALL);
+		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
 
 		String xPrefix = null;
 		String yPrefix = null;
@@ -191,7 +203,9 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 							if (!(xId.equals(yId) || xSpan.equals(ySpan))) {
 								ExtractedSentence es = new ExtractedSentence(documentId, xId, xText, xSpan,
 										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
-										documentText.substring(sentenceAnnot.getAnnotationSpanStart(), sentenceAnnot.getAnnotationSpanEnd()), documentText);
+										documentText.substring(sentenceAnnot.getAnnotationSpanStart(),
+												sentenceAnnot.getAnnotationSpanEnd()),
+										documentText);
 								extractedSentences.add(es);
 							}
 						}

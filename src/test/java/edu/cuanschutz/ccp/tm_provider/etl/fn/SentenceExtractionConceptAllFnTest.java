@@ -273,9 +273,9 @@ public class SentenceExtractionConceptAllFnTest {
 				CollectionsUtil.createList(x2Sentence1Span), PLACEHOLDER_X, null, sentence1, documentText);
 		expectedExtractedSentences.add(es);
 
-		
 		assertEquals(expectedExtractedSentences.size(), extractedSentences.size());
-		assertEquals(expectedExtractedSentences.iterator().next().getSentenceIdentifier(), extractedSentences.iterator().next().getSentenceIdentifier());
+		assertEquals(expectedExtractedSentences.iterator().next().getSentenceIdentifier(),
+				extractedSentences.iterator().next().getSentenceIdentifier());
 		assertEquals(expectedExtractedSentences, extractedSentences);
 
 	}
@@ -393,7 +393,7 @@ public class SentenceExtractionConceptAllFnTest {
 				.getDocTypeToContentMap(documentId, map);
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId,
-				documentText, docTypeToContentMap, keywords, suffixToPlaceholderMap);
+				documentText, docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText);
@@ -408,7 +408,7 @@ public class SentenceExtractionConceptAllFnTest {
 		// no keywords
 		keywords = null;
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap);
+				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1", CollectionsUtil.createList(x1Sentence2Span),
 				PLACEHOLDER_X, Y_000001, "conceptY1", CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null,
 				sentence2, documentText);
@@ -422,7 +422,7 @@ public class SentenceExtractionConceptAllFnTest {
 		// no keywords
 		keywords = new HashSet<String>();
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap);
+				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
 		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
@@ -430,7 +430,7 @@ public class SentenceExtractionConceptAllFnTest {
 		// keyword not found so no sentence extracted
 		keywords = CollectionsUtil.createSet("notfound");
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap);
+				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 
 	}

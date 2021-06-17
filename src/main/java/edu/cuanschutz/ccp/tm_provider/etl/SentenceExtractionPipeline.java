@@ -147,8 +147,10 @@ public class SentenceExtractionPipeline {
 		prefixToPlaceholderMap.put(options.getPrefixX(), options.getPlaceholderX());
 		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
 
+		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
+
 		PCollectionTuple output = SentenceExtractionConceptAllFn.process(statusEntity2Content, keywords,
-				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap);
+				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
 				.get(SentenceExtractionConceptAllFn.EXTRACTED_SENTENCES_TAG);
@@ -202,6 +204,18 @@ public class SentenceExtractionPipeline {
 				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		p.run().waitUntilFinish();
+	}
+
+	private static DocumentType extractConceptDocumentTypeFromInputDocCriteria(Set<DocumentCriteria> inputDocCriteria) {
+		for (DocumentCriteria dc : inputDocCriteria) {
+			if (dc.getDocumentType() == DocumentType.CONCEPT_ALL) {
+				return DocumentType.CONCEPT_ALL;
+			} else if (dc.getDocumentType() == DocumentType.CONCEPT_ALL_UNFILTERED) {
+				return DocumentType.CONCEPT_ALL_UNFILTERED;
+			}
+		}
+		throw new IllegalArgumentException(
+				"No concept document type was specified in the input document criteria. Processing cannot continue.");
 	}
 
 	@VisibleForTesting
