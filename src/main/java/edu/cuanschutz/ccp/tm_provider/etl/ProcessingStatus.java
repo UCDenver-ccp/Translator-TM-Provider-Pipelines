@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * A data structure summarizing the processing status for a given document
@@ -32,6 +34,13 @@ public class ProcessingStatus extends DoFn {
 	private final String documentId;
 
 	@Getter
+	@Setter
+	private String yearPublished = "9999";
+
+	@Getter
+	private List<String> publicationTypes = new ArrayList<String>();
+
+	@Getter
 	private Map<String, Boolean> flagPropertiesMap;
 
 	@Getter
@@ -44,6 +53,10 @@ public class ProcessingStatus extends DoFn {
 
 	public ProcessingStatus(Entity statusEntity) {
 		this.documentId = DatastoreProcessingStatusUtil.getDocumentId(statusEntity);
+		this.yearPublished = DatastoreProcessingStatusUtil.getYearPublished(statusEntity);
+		for (String pubType : DatastoreProcessingStatusUtil.getPublicationTypes(statusEntity)) {
+			this.publicationTypes.add(pubType);
+		}
 		this.flagPropertiesMap = new HashMap<String, Boolean>();
 		for (Entry<String, Value> entry : statusEntity.getPropertiesMap().entrySet()) {
 			if (entry.getKey().equals(DatastoreConstants.STATUS_PROPERTY_COLLECTIONS)) {
@@ -111,6 +124,10 @@ public class ProcessingStatus extends DoFn {
 			String flagPropertyName = flag.getDatastoreFlagPropertyName();
 			flagPropertiesMap.put(flagPropertyName, status);
 		}
+	}
+
+	public void addPublicationType(String pubType) {
+		this.publicationTypes.add(pubType);
 	}
 
 }

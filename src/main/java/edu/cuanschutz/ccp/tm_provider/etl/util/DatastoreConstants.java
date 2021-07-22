@@ -117,6 +117,11 @@ public interface DatastoreConstants {
 	 * The document ID corresponding to this status data
 	 */
 	public static final String STATUS_PROPERTY_DOCUMENT_ID = "document_id";
+	
+	public static final String STATUS_PROPERTY_YEAR_PUBLISHED = "pub_year";
+	
+	public static final String STATUS_PROPERTY_PUBLICATION_TYPES = "pub_types";
+	
 	/**
 	 * 
 	 */

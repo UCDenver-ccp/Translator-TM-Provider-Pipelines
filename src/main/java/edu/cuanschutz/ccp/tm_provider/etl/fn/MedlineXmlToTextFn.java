@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -13,10 +14,10 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
-import org.apache.log4j.Logger;
 import org.medline.Abstract;
 import org.medline.AbstractText;
 import org.medline.MedlineCitation;
+import org.medline.PublicationType;
 import org.medline.PubmedArticle;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
@@ -30,6 +31,8 @@ import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Outputs four {@link PCollection} objects
@@ -45,6 +48,8 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
  *
  */
 public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<String>>> {
+
+	private static final String DEFAULT_PUB_YEAR = "9999";
 
 	private static final long serialVersionUID = 1L;
 
@@ -84,7 +89,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 						/* pubmedArticle was observed to be null in the daily update files */
 						if (pubmedArticle != null) {
 							Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
-							TextDocument td = buildDocument(pubmedArticle);
+							TextDocumentWithMetadata td = buildDocument(pubmedArticle);
 							if (td != null) {
 								// only store new documents unless overwrite = OverwriteOutput.YES
 								if (overwrite == OverwriteOutput.YES
@@ -110,7 +115,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @return a {@link TextDocument} containing the title/abstract text and
 	 *         corresponding section annotations
 	 */
-	static TextDocument buildDocument(PubmedArticle pubmedArticle) {
+	static TextDocumentWithMetadata buildDocument(PubmedArticle pubmedArticle) {
 		MedlineCitation medlineCitation = pubmedArticle.getMedlineCitation();
 		/*
 		 * There are cases when processing Medline update files where either the
@@ -126,6 +131,9 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			String documentText = (abstractText == null || abstractText.isEmpty()) ? title
 					: String.format("%s\n\n%s", title, abstractText);
 
+			String yearPublished = getYearPublished(medlineCitation);
+			List<String> publicationTypes = getPublicationTypes(medlineCitation);
+
 			TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
 			TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
 			TextAnnotation abstractAnnotation = null;
@@ -135,14 +143,54 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 				abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
 			}
 
-			TextDocument td = new TextDocument(pmid, "PubMed", documentText);
+			TextDocumentWithMetadata td = new TextDocumentWithMetadata(pmid, "PubMed", documentText);
 			td.addAnnotation(titleAnnotation);
 			if (abstractAnnotation != null) {
 				td.addAnnotation(abstractAnnotation);
 			}
+			td.setYearPublished(yearPublished);
+			for (String pubType : publicationTypes) {
+				td.addPublicationType(pubType);
+			}
 			return td;
 		}
 		return null;
+	}
+
+	private static String getYearPublished(MedlineCitation medlineCitation) {
+		List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate = medlineCitation.getArticle().getJournal().getJournalIssue()
+				.getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate();
+		for (Object obj : yearOrMonthOrDayOrSeasonOrMedlineDate) {
+			if (obj instanceof org.medline.Year) {
+				org.medline.Year year = (org.medline.Year) obj;
+				return year.getvalue();
+			}
+			if (obj instanceof org.medline.MedlineDate) {
+				org.medline.MedlineDate md = (org.medline.MedlineDate) obj;
+				return extractYearFromMedlineDate(md);
+			}
+
+		}
+		return DEFAULT_PUB_YEAR;
+	}
+
+	protected static String extractYearFromMedlineDate(org.medline.MedlineDate md) {
+		// <MedlineDate>1998 Dec-1999 Jan</MedlineDate>
+		// <MedlineDate>2015 Nov-Dec</MedlineDate>
+		/* year should be 1st four characters */
+		String yearStr = md.getvalue().split(" ")[0];
+		if (yearStr.matches("[1-2][0-9][0-9][0-9]")) {
+			return yearStr;
+		}
+		return DEFAULT_PUB_YEAR;
+	}
+
+	private static List<String> getPublicationTypes(MedlineCitation medlineCitation) {
+		List<String> pTypes = new ArrayList<String>();
+		for (PublicationType pt : medlineCitation.getArticle().getPublicationTypeList().getPublicationType()) {
+			pTypes.add(pt.getvalue());
+		}
+		return pTypes;
 	}
 
 	/**
@@ -165,7 +213,8 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		return sb.toString();
 	}
 
-	private static void outputDocument(ProcessContext context, TextDocument td, String collection) throws IOException {
+	private static void outputDocument(ProcessContext context, TextDocumentWithMetadata td, String collection)
+			throws IOException {
 		String docId = td.getSourceid();
 		String plainText = td.getText();
 
@@ -188,6 +237,14 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		 * output a {@link ProcessingStatus} for the document
 		 */
 		ProcessingStatus status = new ProcessingStatus(docId);
+		if (td.getYearPublished() != null) {
+			status.setYearPublished(td.getYearPublished());
+		}
+		if (td.getPublicationTypes() != null) {
+			for (String pt : td.getPublicationTypes()) {
+				status.addPublicationType(pt);
+			}
+		}
 		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
 
@@ -195,6 +252,25 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			status.addCollection(collection);
 		}
 		context.output(processingStatusTag, status);
+	}
+
+	private static class TextDocumentWithMetadata extends TextDocument {
+
+		@Setter
+		@Getter
+		private String yearPublished;
+
+		@Getter
+		private List<String> publicationTypes = new ArrayList<String>();
+
+		public TextDocumentWithMetadata(String sourceid, String sourcedb, String text) {
+			super(sourceid, sourcedb, text);
+		}
+
+		public void addPublicationType(String pubType) {
+			publicationTypes.add(pubType);
+		}
+
 	}
 
 }

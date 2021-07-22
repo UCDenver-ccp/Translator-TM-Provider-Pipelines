@@ -40,4 +40,28 @@ public class ProcessingStatusToEntityFnTest {
 		pipeline.run();
 	}
 
+	
+	
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testProcessingStatusToEntityConversionFnWithPubYearAndTypes() throws IOException {
+		/* test creation of a processing status Cloud Datastore entity */
+		String docId = "PMC1790863";
+
+		ProcessingStatus status = new ProcessingStatus(docId);
+		status.setYearPublished("1997");
+		status.addPublicationType("journal article");
+		status.addPublicationType("review");
+
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+		status.enableFlag(ProcessingStatusFlag.OGER_CL_DONE);
+
+		PCollection<ProcessingStatus> input = pipeline.apply(Create.of(status));
+		PCollection<KV<String,Entity>> output = input.apply(ParDo.of(new ProcessingStatusToEntityFn()));
+		Entity expectedEntity = ProcessingStatusToEntityFn.buildStatusEntity(status);
+		PAssert.that(output).containsInAnyOrder(KV.of(expectedEntity.getKey().toString(), expectedEntity));
+
+		pipeline.run();
+	}
 }
