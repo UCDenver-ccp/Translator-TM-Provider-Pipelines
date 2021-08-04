@@ -36,6 +36,14 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 @Ignore("causes inconsistent ConcurrentModificationException when run -- unsure why this happens")
 public class SentenceExtractionConceptAllFnTest {
 
+	/*
+	 * TODO: determining which document zone to assign to sentences is not yet
+	 * implemented, so it will always return null for now
+	 */
+	private static final String DOCUMENT_ZONE = "unknown";
+	private static final int DOCUMENT_YEAR_PUBLISHED = 2021;
+	private static final Set<String> DOCUMENT_PUBLICATION_TYPES = CollectionsUtil.createSet("Journal Article");
+
 	private static final String PLACEHOLDER_X = "@CONCEPTX$";
 	private static final String PLACEHOLDER_Y = "@CONCEPTY$";
 
@@ -196,7 +204,8 @@ public class SentenceExtractionConceptAllFnTest {
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
-				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText);
+				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		expectedExtractedSentences.add(es);
 
 		assertEquals(expectedExtractedSentences, extractedSentences);
@@ -221,7 +230,8 @@ public class SentenceExtractionConceptAllFnTest {
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
-				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText);
+				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		expectedExtractedSentences.add(es);
 
 		assertEquals(expectedExtractedSentences, extractedSentences);
@@ -233,7 +243,8 @@ public class SentenceExtractionConceptAllFnTest {
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptYAnnots);
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.catalogExtractedSentences(keywords,
-				documentText, documentId, sentenceToConceptMap, PLACEHOLDER_X, PLACEHOLDER_Y);
+				documentText, documentId, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, sentenceToConceptMap,
+				PLACEHOLDER_X, PLACEHOLDER_Y);
 		return extractedSentences;
 	}
 
@@ -246,7 +257,8 @@ public class SentenceExtractionConceptAllFnTest {
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
-				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null, sentence2, documentText);
+				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null, sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		expectedExtractedSentences.add(es);
 
 		assertEquals(expectedExtractedSentences, extractedSentences);
@@ -265,12 +277,14 @@ public class SentenceExtractionConceptAllFnTest {
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptXAnnots);
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.catalogExtractedSentences(keywords,
-				documentText, documentId, sentenceToConceptMap, PLACEHOLDER_X, PLACEHOLDER_X);
+				documentText, documentId, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, sentenceToConceptMap,
+				PLACEHOLDER_X, PLACEHOLDER_X);
 
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "conceptX1",
 				CollectionsUtil.createList(x1Sentence1Span), PLACEHOLDER_X, X_000002, "conceptX2",
-				CollectionsUtil.createList(x2Sentence1Span), PLACEHOLDER_X, null, sentence1, documentText);
+				CollectionsUtil.createList(x2Sentence1Span), PLACEHOLDER_X, null, sentence1, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		expectedExtractedSentences.add(es);
 
 		assertEquals(expectedExtractedSentences.size(), extractedSentences.size());
@@ -393,13 +407,16 @@ public class SentenceExtractionConceptAllFnTest {
 				.getDocTypeToContentMap(documentId, map);
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId,
-				documentText, docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+				documentText, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
-				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText);
+				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		ExtractedSentence esYfirst = new ExtractedSentence(documentId, Y_000001, "conceptY1",
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, X_000001, "ConceptX1",
-				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, "sentence", sentence2, documentText);
+				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, "sentence", sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
@@ -408,13 +425,14 @@ public class SentenceExtractionConceptAllFnTest {
 		// no keywords
 		keywords = null;
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1", CollectionsUtil.createList(x1Sentence2Span),
 				PLACEHOLDER_X, Y_000001, "conceptY1", CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null,
-				sentence2, documentText);
+				sentence2, documentText, DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		esYfirst = new ExtractedSentence(documentId, Y_000001, "conceptY1", CollectionsUtil.createList(y1Sentence2Span),
 				PLACEHOLDER_Y, X_000001, "ConceptX1", CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, null,
-				sentence2, documentText);
+				sentence2, documentText, DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
 		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
@@ -422,7 +440,8 @@ public class SentenceExtractionConceptAllFnTest {
 		// no keywords
 		keywords = new HashSet<String>();
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
 		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
@@ -430,7 +449,8 @@ public class SentenceExtractionConceptAllFnTest {
 		// keyword not found so no sentence extracted
 		keywords = CollectionsUtil.createSet("notfound");
 		extractedSentences = SentenceExtractionConceptAllFn.extractSentences(documentId, documentText,
-				docTypeToContentMap, keywords, suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 
 	}

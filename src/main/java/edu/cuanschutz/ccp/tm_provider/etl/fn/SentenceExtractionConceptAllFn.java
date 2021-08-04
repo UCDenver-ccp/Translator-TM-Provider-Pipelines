@@ -79,6 +79,9 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
+						Set<String> documentPublicationTypes = new HashSet<String>(statusEntity.getPublicationTypes());
+						int documentYearPublished = Integer.parseInt(statusEntity.getYearPublished());
+
 						try {
 							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
 
@@ -86,7 +89,8 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
 
 							Set<ExtractedSentence> extractedSentences = extractSentences(docId, documentText,
-									docTypeToContentMap, keywords, prefixToPlaceholderMap, conceptDocType);
+									documentPublicationTypes, documentYearPublished, docTypeToContentMap, keywords,
+									prefixToPlaceholderMap, conceptDocType);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -109,6 +113,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> extractSentences(String documentId, String documentText,
+			Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
 			Map<String, String> prefixToPlaceholderMap, DocumentType conceptDocType) throws IOException {
 
@@ -145,7 +150,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 			String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
 
 			extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
-					sentenceToConceptMap, xPlaceholder, yPlaceholder));
+					documentPublicationTypes, documentYearPublished, sentenceToConceptMap, xPlaceholder, yPlaceholder));
 
 		}
 		return extractedSentences;
@@ -172,12 +177,14 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> catalogExtractedSentences(Set<String> keywords, String documentText,
-			String documentId, Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap,
-			String xPlaceholder, String yPlaceholder) {
+			String documentId, Set<String> documentPublicationTypes, int documentYearPublished,
+			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap, String xPlaceholder,
+			String yPlaceholder) {
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
 			TextAnnotation sentenceAnnot = entry.getKey();
+			String documentZone = determineDocumentZone(sentenceAnnot);
 			String keywordInSentence = sentenceContainsKeyword(sentenceAnnot.getCoveredText(), keywords);
 			if (keywords == null || keywords.isEmpty() || keywordInSentence != null) {
 				if (entry.getValue().size() > 1) {
@@ -205,7 +212,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
 										documentText.substring(sentenceAnnot.getAnnotationSpanStart(),
 												sentenceAnnot.getAnnotationSpanEnd()),
-										documentText);
+										documentText, documentZone, documentPublicationTypes, documentYearPublished);
 								extractedSentences.add(es);
 							}
 						}
@@ -214,6 +221,17 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 			}
 		}
 		return extractedSentences;
+	}
+
+	/**
+	 * TODO - to be implemented - need to bring in the section annotations in order
+	 * to determine that zone the sentence is in
+	 * 
+	 * @param sentenceAnnot
+	 * @return
+	 */
+	private static String determineDocumentZone(TextAnnotation sentenceAnnot) {
+		return "unknown";
 	}
 
 	/**

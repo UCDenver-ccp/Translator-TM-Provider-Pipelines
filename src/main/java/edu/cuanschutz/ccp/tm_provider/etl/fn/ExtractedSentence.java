@@ -1,11 +1,14 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +18,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
-import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -35,6 +37,10 @@ public class ExtractedSentence extends DoFn {
 	private final List<Span> entitySpan2;
 	private final String keyword;
 	private final String sentenceText;
+	private final String documentZone;
+	private final Set<String> documentPublicationTypes;
+	private final int documentYearPublished;
+
 	/**
 	 * Larger block of text, perhaps entire abstract
 	 */
@@ -45,7 +51,8 @@ public class ExtractedSentence extends DoFn {
 
 	public ExtractedSentence(String documentId, String entityId1, String entityCoveredText1, List<Span> entitySpan1,
 			String entityPlaceholder1, String entityId2, String entityCoveredText2, List<Span> entitySpan2,
-			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext) {
+			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext, String documentZone,
+			Set<String> documentPublicationTypes, int documentYearPublished) {
 		super();
 
 		// order entities by span so that their order is reproducible
@@ -76,6 +83,9 @@ public class ExtractedSentence extends DoFn {
 		this.keyword = keyword;
 		this.sentenceText = sentenceText;
 		this.sentenceContext = sentenceContext.replaceAll("\\n", "||||");
+		this.documentZone = documentZone;
+		this.documentPublicationTypes = new HashSet<String>(documentPublicationTypes);
+		this.documentYearPublished = documentYearPublished;
 	}
 
 	public String getSentenceIdentifier() {
@@ -125,11 +135,26 @@ public class ExtractedSentence extends DoFn {
 			return null;
 		}
 		String blankColumn = "";
-		return String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s", getSentenceIdentifier(),
-				getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, entitySpan1.toString(),
-				entityCoveredText2, entityId2, entitySpan2.toString(), keyword, sentenceText.length(), blankColumn,
-				sentenceText, sentenceContext);
+		return CollectionsUtil.createDelimitedString(Arrays.asList(getSentenceIdentifier(),
+				getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
+				entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
+				sentenceText, documentZone, CollectionsUtil.createDelimitedString(documentPublicationTypes, "|"),
+				documentYearPublished, sentenceContext), "\t");
 
+	}
+
+	/**
+	 * @param spans
+	 * @return a string representation of the spans using the following format:
+	 *         0|5;11|14;22|25
+	 */
+	public String getSpanStr(List<Span> spans) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(spans.get(0).getSpanStart() + "|" + spans.get(0).getSpanEnd());
+		for (int i = 1; i < spans.size(); i++) {
+			sb.append(";" + spans.get(i).getSpanStart() + "|" + spans.get(i).getSpanEnd());
+		}
+		return sb.toString();
 	}
 
 	public static ExtractedSentence fromTsv(String tsv, boolean sentenceIdInFirstColumn) {
@@ -153,6 +178,9 @@ public class ExtractedSentence extends DoFn {
 		index++; // skip sentence length column
 		index++; // skip blank column
 		String sentenceText = cols[index++];
+		String documentZone = cols[index++];
+		Set<String> documentPublicationTypes = new HashSet<String>(Arrays.asList(cols[index++].split("\\|")));
+		int documentYearPublished = Integer.parseInt(cols[index++]);
 		String sentenceContext = cols[index++];
 
 		int entity1Start = entitySpan1.get(0).getSpanStart();
@@ -190,7 +218,8 @@ public class ExtractedSentence extends DoFn {
 		}
 
 		return new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1, entityPlaceholder1,
-				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, sentenceContext);
+				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, sentenceContext,
+				documentZone, documentPublicationTypes, documentYearPublished);
 	}
 
 	/**
