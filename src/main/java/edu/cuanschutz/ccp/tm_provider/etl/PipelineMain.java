@@ -173,6 +173,9 @@ public class PipelineMain {
 			case WEBANNO_SENTENCE_EXTRACTION:
 				WebAnnoSentenceExtractionPipeline.main(pipelineArgs);
 				break;
+			case CLASSIFIED_SENTENCE_STORAGE:
+				ClassifiedSentenceStoragePipeline.main(pipelineArgs);
+				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
 				break;

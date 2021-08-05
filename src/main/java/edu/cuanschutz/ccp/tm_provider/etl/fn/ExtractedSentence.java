@@ -148,7 +148,7 @@ public class ExtractedSentence extends DoFn {
 	 * @return a string representation of the spans using the following format:
 	 *         0|5;11|14;22|25
 	 */
-	public String getSpanStr(List<Span> spans) {
+	public static String getSpanStr(List<Span> spans) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(spans.get(0).getSpanStart() + "|" + spans.get(0).getSpanEnd());
 		for (int i = 1; i < spans.size(); i++) {
@@ -222,45 +222,56 @@ public class ExtractedSentence extends DoFn {
 				documentZone, documentPublicationTypes, documentYearPublished);
 	}
 
-	/**
-	 * Parse strings like [[106..118]] and return a list of {@link Span}
-	 * 
-	 * @param spanStr
-	 * @return
-	 */
 	protected static List<Span> getSpans(String spanStr) {
-		Pattern p = Pattern.compile("\\[(\\d+)\\.\\.(\\d+)\\]");
 		List<Span> spans = new ArrayList<Span>();
-		String cleanSpanStr = spanStr;
-		// drop first and last square brackets
-		if (cleanSpanStr.startsWith("[[")) {
-			cleanSpanStr = cleanSpanStr.substring(1);
-		} else {
-			throw new IllegalArgumentException(
-					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
-		}
-		if (cleanSpanStr.endsWith("]]")) {
-			cleanSpanStr = cleanSpanStr.substring(0, cleanSpanStr.length() - 1);
-		} else {
-			throw new IllegalArgumentException(
-					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
-		}
-		// parse the inner content and create spans
-		String[] spanToks = cleanSpanStr.split(",");
-		for (String spanTok : spanToks) {
-			Matcher m = p.matcher(spanTok);
-			if (m.find()) {
-				int spanStart = Integer.parseInt(m.group(1));
-				int spanEnd = Integer.parseInt(m.group(2));
-				spans.add(new Span(spanStart, spanEnd));
-			} else {
-				throw new IllegalArgumentException(
-						"Unexpected span serialization format: " + spanTok + ". Expected something like: [0..5]");
-			}
+		Pattern p = Pattern.compile("(\\d+)\\|(\\d+);?");
+		Matcher m = p.matcher(spanStr);
+		while (m.find()) {
+			spans.add(new Span(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))));
 		}
 
 		return spans;
 	}
+
+//	/**
+//	 * Parse strings like [[106..118]] and return a list of {@link Span}
+//	 * 
+//	 * @param spanStr
+//	 * @return
+//	 */
+//	protected static List<Span> getSpans(String spanStr) {
+//		Pattern p = Pattern.compile("\\[(\\d+)\\.\\.(\\d+)\\]");
+//		List<Span> spans = new ArrayList<Span>();
+//		String cleanSpanStr = spanStr;
+//		// drop first and last square brackets
+//		if (cleanSpanStr.startsWith("[[")) {
+//			cleanSpanStr = cleanSpanStr.substring(1);
+//		} else {
+//			throw new IllegalArgumentException(
+//					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
+//		}
+//		if (cleanSpanStr.endsWith("]]")) {
+//			cleanSpanStr = cleanSpanStr.substring(0, cleanSpanStr.length() - 1);
+//		} else {
+//			throw new IllegalArgumentException(
+//					"Unexpected span serialization format: " + spanStr + ". Expected something like: [[0..5]]");
+//		}
+//		// parse the inner content and create spans
+//		String[] spanToks = cleanSpanStr.split(",");
+//		for (String spanTok : spanToks) {
+//			Matcher m = p.matcher(spanTok);
+//			if (m.find()) {
+//				int spanStart = Integer.parseInt(m.group(1));
+//				int spanEnd = Integer.parseInt(m.group(2));
+//				spans.add(new Span(spanStart, spanEnd));
+//			} else {
+//				throw new IllegalArgumentException(
+//						"Unexpected span serialization format: " + spanTok + ". Expected something like: [0..5]");
+//			}
+//		}
+//
+//		return spans;
+//	}
 
 	private Span getAggregateSpan(List<Span> spans) {
 		Collections.sort(spans, Span.ASCENDING());

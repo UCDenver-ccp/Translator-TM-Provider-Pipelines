@@ -15,8 +15,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.beam.vendor.grpc.v1p26p0.com.jcraft.jzlib.GZIPInputStream;
+import java.util.zip.GZIPInputStream;
 
 import com.google.api.client.util.Base64;
 
@@ -52,8 +51,8 @@ public class InceptionInputFileCreator {
 	 * @param previousSubsetFiles - to ensure that the new sentence file contains
 	 *                            unique sentences
 	 */
-	public void createNewSubset(int batchSize, File inputSentenceFile, File outputFile, Collection<File> previousSubsetFiles)
-			throws IOException {
+	public void createNewSubset(int batchSize, File inputSentenceFile, File outputFile,
+			Collection<File> previousSubsetFiles) throws IOException {
 
 		Set<String> alreadyAnnotated = loadAlreadyAnnotatedSentenceIds(previousSubsetFiles);
 
@@ -104,7 +103,8 @@ public class InceptionInputFileCreator {
 	 * @return
 	 * @throws IOException
 	 */
-	protected static Set<String> loadAlreadyAnnotatedSentenceIds(Collection<File> previousSubsetFiles) throws IOException {
+	protected static Set<String> loadAlreadyAnnotatedSentenceIds(Collection<File> previousSubsetFiles)
+			throws IOException {
 		Set<String> hashes = new HashSet<String>();
 		if (previousSubsetFiles != null) {
 			for (File previousSubsetFile : previousSubsetFiles) {
