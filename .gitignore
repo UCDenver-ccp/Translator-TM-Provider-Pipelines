@@ -17,4 +17,5 @@ buildNumber.properties
 .settings/
 tmp/
 .factorypath
+*.bak
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/InceptionInputFileCreatorMain.java
