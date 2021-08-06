@@ -14,7 +14,7 @@
 		<beam.version>2.27.0</beam.version>
 
 		<bigquery.version>v2-rev20181221-1.28.0</bigquery.version>
-		<google-clients.version>1.31.1</google-clients.version>
+		<google-clients.version>1.32.1</google-clients.version>
 		<hamcrest.version>2.1</hamcrest.version>
 		<jackson.version>2.9.10</jackson.version>
 		<joda.version>2.10.3</joda.version>
@@ -188,49 +188,23 @@
 			</dependencies>
 		</profile>
 
-		<profile>
-			<id>apex-runner</id>
-			<!-- Makes the ApexRunner available when running a pipeline. -->
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-runners-apex</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-				<!-- Apex depends on httpclient version 4.3.6, project has a transitive 
-					dependency to httpclient 4.0.1 from google-http-client. Apex dependency version 
-					being specified explicitly so that it gets picked up. This can be removed 
-					when the project no longer has a dependency on a different httpclient version. -->
-				<dependency>
-					<groupId>org.apache.httpcomponents</groupId>
-					<artifactId>httpclient</artifactId>
-					<version>4.3.6</version>
-					<scope>runtime</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>commons-codec</groupId>
-							<artifactId>commons-codec</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				<!-- Apex 3.6 is built against YARN 2.6. Version in the fat jar has to 
-					match what's on the cluster, hence we need to repeat the Apex Hadoop dependencies 
-					here. -->
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-yarn-client</artifactId>
-					<version>${hadoop.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-common</artifactId>
-					<version>${hadoop.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-			</dependencies>
-		</profile>
+		<!-- <profile> <id>apex-runner</id> Makes the ApexRunner available when 
+			running a pipeline. <dependencies> <dependency> <groupId>org.apache.beam</groupId> 
+			<artifactId>beam-runners-apex</artifactId> <version>${beam.version}</version> 
+			<scope>runtime</scope> </dependency> Apex depends on httpclient version 4.3.6, 
+			project has a transitive dependency to httpclient 4.0.1 from google-http-client. 
+			Apex dependency version being specified explicitly so that it gets picked 
+			up. This can be removed when the project no longer has a dependency on a 
+			different httpclient version. <dependency> <groupId>org.apache.httpcomponents</groupId> 
+			<artifactId>httpclient</artifactId> <version>4.3.6</version> <scope>runtime</scope> 
+			<exclusions> <exclusion> <groupId>commons-codec</groupId> <artifactId>commons-codec</artifactId> 
+			</exclusion> </exclusions> </dependency> Apex 3.6 is built against YARN 2.6. 
+			Version in the fat jar has to match what's on the cluster, hence we need 
+			to repeat the Apex Hadoop dependencies here. <dependency> <groupId>org.apache.hadoop</groupId> 
+			<artifactId>hadoop-yarn-client</artifactId> <version>${hadoop.version}</version> 
+			<scope>runtime</scope> </dependency> <dependency> <groupId>org.apache.hadoop</groupId> 
+			<artifactId>hadoop-common</artifactId> <version>${hadoop.version}</version> 
+			<scope>runtime</scope> </dependency> </dependencies> </profile> -->
 
 		<profile>
 			<id>dataflow-runner</id>
@@ -245,137 +219,46 @@
 			</dependencies>
 		</profile>
 
-		<profile>
-			<id>flink-runner</id>
-			<!-- Makes the FlinkRunner available when running a pipeline. -->
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<!-- Please see the Flink Runner page for an up-to-date list of supported 
-						Flink versions and their artifact names: https://beam.apache.org/documentation/runners/flink/ -->
-					<artifactId>${flink.artifact.name}</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>spark-runner</id>
-			<!-- Makes the SparkRunner available when running a pipeline. Additionally, 
-				overrides some Spark dependencies to Beam-compatible versions. -->
-			<properties>
-				<netty.version>4.1.17.Final</netty.version>
-			</properties>
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-runners-spark</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.spark</groupId>
-					<artifactId>spark-streaming_2.11</artifactId>
-					<version>${spark.version}</version>
-					<scope>runtime</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>org.slf4j</groupId>
-							<artifactId>jul-to-slf4j</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				<dependency>
-					<groupId>com.fasterxml.jackson.module</groupId>
-					<artifactId>jackson-module-scala_2.11</artifactId>
-					<version>${jackson.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-				<!-- [BEAM-3519] GCP IO exposes netty on its API surface, causing conflicts 
-					with runners -->
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
-					<version>${beam.version}</version>
-					<exclusions>
-						<exclusion>
-							<groupId>io.grpc</groupId>
-							<artifactId>grpc-netty</artifactId>
-						</exclusion>
-						<exclusion>
-							<groupId>io.netty</groupId>
-							<artifactId>netty-handler</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>gearpump-runner</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-runners-gearpump</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>samza-runner</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-runners-samza</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>nemo-runner</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.nemo</groupId>
-					<artifactId>nemo-compiler-frontend-beam</artifactId>
-					<version>${nemo.version}</version>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-common</artifactId>
-					<version>${hadoop.version}</version>
-					<exclusions>
-						<exclusion>
-							<groupId>org.slf4j</groupId>
-							<artifactId>slf4j-api</artifactId>
-						</exclusion>
-						<exclusion>
-							<groupId>org.slf4j</groupId>
-							<artifactId>slf4j-log4j12</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>jet-runner</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.beam</groupId>
-					<artifactId>beam-runners-jet</artifactId>
-					<version>${beam.version}</version>
-					<scope>runtime</scope>
-				</dependency>
-			</dependencies>
-		</profile>
+		<!-- <profile> <id>flink-runner</id> Makes the FlinkRunner available when 
+			running a pipeline. <dependencies> <dependency> <groupId>org.apache.beam</groupId> 
+			Please see the Flink Runner page for an up-to-date list of supported Flink 
+			versions and their artifact names: https://beam.apache.org/documentation/runners/flink/ 
+			<artifactId>${flink.artifact.name}</artifactId> <version>${beam.version}</version> 
+			<scope>runtime</scope> </dependency> </dependencies> </profile> <profile> 
+			<id>spark-runner</id> Makes the SparkRunner available when running a pipeline. 
+			Additionally, overrides some Spark dependencies to Beam-compatible versions. 
+			<properties> <netty.version>4.1.17.Final</netty.version> </properties> <dependencies> 
+			<dependency> <groupId>org.apache.beam</groupId> <artifactId>beam-runners-spark</artifactId> 
+			<version>${beam.version}</version> <scope>runtime</scope> </dependency> <dependency> 
+			<groupId>org.apache.beam</groupId> <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId> 
+			<version>${beam.version}</version> <scope>runtime</scope> </dependency> <dependency> 
+			<groupId>org.apache.spark</groupId> <artifactId>spark-streaming_2.11</artifactId> 
+			<version>${spark.version}</version> <scope>runtime</scope> <exclusions> <exclusion> 
+			<groupId>org.slf4j</groupId> <artifactId>jul-to-slf4j</artifactId> </exclusion> 
+			</exclusions> </dependency> <dependency> <groupId>com.fasterxml.jackson.module</groupId> 
+			<artifactId>jackson-module-scala_2.11</artifactId> <version>${jackson.version}</version> 
+			<scope>runtime</scope> </dependency> [BEAM-3519] GCP IO exposes netty on 
+			its API surface, causing conflicts with runners <dependency> <groupId>org.apache.beam</groupId> 
+			<artifactId>beam-sdks-java-io-google-cloud-platform</artifactId> <version>${beam.version}</version> 
+			<exclusions> <exclusion> <groupId>io.grpc</groupId> <artifactId>grpc-netty</artifactId> 
+			</exclusion> <exclusion> <groupId>io.netty</groupId> <artifactId>netty-handler</artifactId> 
+			</exclusion> </exclusions> </dependency> </dependencies> </profile> <profile> 
+			<id>gearpump-runner</id> <dependencies> <dependency> <groupId>org.apache.beam</groupId> 
+			<artifactId>beam-runners-gearpump</artifactId> <version>${beam.version}</version> 
+			<scope>runtime</scope> </dependency> </dependencies> </profile> <profile> 
+			<id>samza-runner</id> <dependencies> <dependency> <groupId>org.apache.beam</groupId> 
+			<artifactId>beam-runners-samza</artifactId> <version>${beam.version}</version> 
+			<scope>runtime</scope> </dependency> </dependencies> </profile> <profile> 
+			<id>nemo-runner</id> <dependencies> <dependency> <groupId>org.apache.nemo</groupId> 
+			<artifactId>nemo-compiler-frontend-beam</artifactId> <version>${nemo.version}</version> 
+			</dependency> <dependency> <groupId>org.apache.hadoop</groupId> <artifactId>hadoop-common</artifactId> 
+			<version>${hadoop.version}</version> <exclusions> <exclusion> <groupId>org.slf4j</groupId> 
+			<artifactId>slf4j-api</artifactId> </exclusion> <exclusion> <groupId>org.slf4j</groupId> 
+			<artifactId>slf4j-log4j12</artifactId> </exclusion> </exclusions> </dependency> 
+			</dependencies> </profile> <profile> <id>jet-runner</id> <dependencies> <dependency> 
+			<groupId>org.apache.beam</groupId> <artifactId>beam-runners-jet</artifactId> 
+			<version>${beam.version}</version> <scope>runtime</scope> </dependency> </dependencies> 
+			</profile> -->
 
 	</profiles>
 
@@ -395,6 +278,13 @@
 
 
 	<dependencies>
+
+
+
+
+
+
+
 		<!-- Adds a dependency on the Beam SDK. -->
 		<dependency>
 			<groupId>org.apache.beam</groupId>
@@ -415,6 +305,13 @@
 			<version>${beam.version}</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.beam/beam-sdks-java-io-jdbc -->
+		<dependency>
+			<groupId>org.apache.beam</groupId>
+			<artifactId>beam-sdks-java-io-jdbc</artifactId>
+			<version>${beam.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.beam</groupId>
 			<artifactId>beam-sdks-java-io-xml</artifactId>
@@ -426,6 +323,27 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>30.1-jre</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.google.http-client/google-http-client-gson -->
+		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-gson</artifactId>
+			<!-- <version>1.39.2</version> -->
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client</artifactId>
+			<version>1.38.0</version>
+			<exclusions>
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
+					dependency of google-api-client -->
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava-jdk5</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 
@@ -451,18 +369,10 @@
 			<exclusion> <groupId>com.google.guava</groupId> <artifactId>guava-jdk5</artifactId> 
 			</exclusion> </exclusions> </dependency> -->
 
-		<dependency>
-			<groupId>com.google.http-client</groupId>
-			<artifactId>google-http-client</artifactId>
-			<exclusions>
-				<!-- Exclude an old version of guava that is being pulled in by a transitive 
-					dependency of google-api-client -->
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava-jdk5</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+
+
+
+
 
 		<dependency>
 			<groupId>com.google.apis</groupId>
@@ -568,6 +478,30 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.google.cloud.sql/mysql-socket-factory -->
+		<!-- <dependency> <groupId>com.google.cloud.sql</groupId> <artifactId>mysql-socket-factory</artifactId> 
+			<version>1.3.2</version> </dependency> -->
+
+
+		<dependency>
+			<groupId>com.google.cloud.sql</groupId>
+			<artifactId>mysql-socket-factory-connector-j-8</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+
+
+		<!-- https://mvnrepository.com/artifact/com.google.http-client/google-http-client-gson -->
+		<!-- <dependency> <groupId>com.google.http-client</groupId> <artifactId>google-http-client-gson</artifactId> 
+			<version>1.39.2</version> </dependency> -->
+
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.26</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -615,6 +549,12 @@
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.opennlp-model-token-en-maxent</artifactId>
 			<version>20120616.1</version>
 		</dependency>
+
+
+
+
+
+
 	</dependencies>
 
 	<repositories>
