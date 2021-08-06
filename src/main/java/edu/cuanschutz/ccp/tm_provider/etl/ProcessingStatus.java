@@ -20,10 +20,12 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * A data structure summarizing the processing status for a given document
  */
+@ToString
 @SuppressWarnings("rawtypes")
 @EqualsAndHashCode(callSuper = false)
 public class ProcessingStatus extends DoFn {
@@ -70,6 +72,23 @@ public class ProcessingStatus extends DoFn {
 			} else {
 				flagPropertiesMap.put(entry.getKey(), entry.getValue().getBooleanValue());
 			}
+		}
+	}
+
+	public ProcessingStatus(ProcessingStatus statusEntity) {
+		this.documentId = statusEntity.getDocumentId();
+		this.yearPublished = statusEntity.getYearPublished();
+		for (String pubType : statusEntity.getPublicationTypes()) {
+			this.publicationTypes.add(pubType);
+		}
+		if (statusEntity.getCollections() != null) {
+			for (String collection : statusEntity.getCollections()) {
+				addCollection(collection);
+			}
+		}
+		this.flagPropertiesMap = new HashMap<String, Boolean>();
+		for (Entry<String, Boolean> entry : statusEntity.getFlagPropertiesMap().entrySet()) {
+			setFlagProperty(entry.getKey(), entry.getValue());
 		}
 	}
 

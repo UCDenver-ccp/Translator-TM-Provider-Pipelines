@@ -88,7 +88,7 @@ public class MedlineXmlToTextFnTest {
 		};
 	}
 
-	private List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
+	public static List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
 		List<PubmedArticle> articles = new ArrayList<PubmedArticle>();
 		InputStream is = new GZIPInputStream(ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class,
 				"sample-pubmed20n0001.xml.gz"));

@@ -61,6 +61,7 @@ import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
+import edu.cuanschutz.ccp.tm_provider.etl.update.UpdateMedlineEntitiesPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
@@ -175,6 +176,9 @@ public class PipelineMain {
 				break;
 			case CLASSIFIED_SENTENCE_STORAGE:
 				ClassifiedSentenceStoragePipeline.main(pipelineArgs);
+				break;
+			case UPDATE_MEDLINE_STATUS_ENTITIES:
+				UpdateMedlineEntitiesPipeline.main(pipelineArgs);
 				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
@@ -683,7 +687,6 @@ public class PipelineMain {
 	 * @return an updated version of the input {@link Entity} with the specified
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
-	@VisibleForTesting
 	private static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
 		String documentId = origEntity.getDocumentId();
 		Key key = DatastoreKeyUtil.createStatusKey(documentId);
@@ -701,6 +704,14 @@ public class PipelineMain {
 					makeValue(collectionNames).build());
 		}
 		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID, makeValue(documentId).build());
+
+		List<String> publicationTypes = origEntity.getPublicationTypes();
+		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_PUBLICATION_TYPES,
+				makeValue(CollectionsUtil.createDelimitedString(publicationTypes, "|")).build());
+
+		String yearPublished = origEntity.getYearPublished();
+		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED,
+				makeValue(yearPublished).build());
 
 		for (Entry<String, Boolean> entry : origEntity.getFlagPropertiesMap().entrySet()) {
 			entityBuilder.putProperties(entry.getKey(), makeValue(entry.getValue()).build());
@@ -1049,7 +1060,6 @@ public class PipelineMain {
 		return existingDocumentIds;
 	}
 
-	
 	/**
 	 * @param statusEntity
 	 * @return a mapping from document ID to collection names

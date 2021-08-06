@@ -49,9 +49,11 @@ import lombok.Setter;
  */
 public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<String>>> {
 
-	private static final String DEFAULT_PUB_YEAR = "9999";
+	public static final String DEFAULT_PUB_YEAR = "9999";
 
 	private static final long serialVersionUID = 1L;
+
+	public static final String UNKNOWN_PUBLICATION_TYPE = "Unknown";
 
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<String, List<String>>> plainTextTag = new TupleTag<KV<String, List<String>>>() {
@@ -157,7 +159,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		return null;
 	}
 
-	private static String getYearPublished(MedlineCitation medlineCitation) {
+	public static String getYearPublished(MedlineCitation medlineCitation) {
 		List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate = medlineCitation.getArticle().getJournal().getJournalIssue()
 				.getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate();
 		for (Object obj : yearOrMonthOrDayOrSeasonOrMedlineDate) {
@@ -185,7 +187,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		return DEFAULT_PUB_YEAR;
 	}
 
-	private static List<String> getPublicationTypes(MedlineCitation medlineCitation) {
+	public static List<String> getPublicationTypes(MedlineCitation medlineCitation) {
 		List<String> pTypes = new ArrayList<String>();
 		for (PublicationType pt : medlineCitation.getArticle().getPublicationTypeList().getPublicationType()) {
 			pTypes.add(pt.getvalue());
@@ -239,11 +241,15 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		ProcessingStatus status = new ProcessingStatus(docId);
 		if (td.getYearPublished() != null) {
 			status.setYearPublished(td.getYearPublished());
+		} else {
+			status.setYearPublished(DEFAULT_PUB_YEAR);
 		}
-		if (td.getPublicationTypes() != null) {
+		if (td.getPublicationTypes() != null && !td.getPublicationTypes().isEmpty()) {
 			for (String pt : td.getPublicationTypes()) {
 				status.addPublicationType(pt);
 			}
+		} else {
+			status.addPublicationType(UNKNOWN_PUBLICATION_TYPE);
 		}
 		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
