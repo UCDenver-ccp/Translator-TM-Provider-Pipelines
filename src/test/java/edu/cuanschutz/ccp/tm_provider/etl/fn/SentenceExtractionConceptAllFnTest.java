@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -33,14 +33,14 @@ import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
-@Ignore("causes inconsistent ConcurrentModificationException when run -- unsure why this happens")
+//@Ignore("causes inconsistent ConcurrentModificationException when run -- unsure why this happens")
 public class SentenceExtractionConceptAllFnTest {
 
 	/*
 	 * TODO: determining which document zone to assign to sentences is not yet
 	 * implemented, so it will always return null for now
 	 */
-	private static final String DOCUMENT_ZONE = "unknown";
+	private static final String DOCUMENT_ZONE = "introduction";
 	private static final int DOCUMENT_YEAR_PUBLISHED = 2021;
 	private static final Set<String> DOCUMENT_PUBLICATION_TYPES = CollectionsUtil.createSet("Journal Article");
 
@@ -99,6 +99,10 @@ public class SentenceExtractionConceptAllFnTest {
 	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
 	private TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
 	private TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
+
+	// single section annotation = introduction
+	private Collection<TextAnnotation> sectionAnnots = Arrays
+			.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 
 	@Before
 	public void setUp() {
@@ -244,7 +248,7 @@ public class SentenceExtractionConceptAllFnTest {
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.catalogExtractedSentences(keywords,
 				documentText, documentId, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, sentenceToConceptMap,
-				PLACEHOLDER_X, PLACEHOLDER_Y);
+				PLACEHOLDER_X, PLACEHOLDER_Y, sectionAnnots);
 		return extractedSentences;
 	}
 
@@ -278,7 +282,7 @@ public class SentenceExtractionConceptAllFnTest {
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionConceptAllFn.catalogExtractedSentences(keywords,
 				documentText, documentId, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, sentenceToConceptMap,
-				PLACEHOLDER_X, PLACEHOLDER_X);
+				PLACEHOLDER_X, PLACEHOLDER_X, sectionAnnots);
 
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "conceptX1",
@@ -315,6 +319,8 @@ public class SentenceExtractionConceptAllFnTest {
 				PipelineKey.SENTENCE_SEGMENTATION, "0.1.0");
 		DocumentCriteria conceptAllDc = new DocumentCriteria(DocumentType.CONCEPT_ALL, DocumentFormat.BIONLP,
 				PipelineKey.CONCEPT_POST_PROCESS, "0.1.0");
+		DocumentCriteria sectionDc = new DocumentCriteria(DocumentType.SECTIONS, DocumentFormat.BIONLP,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
 
 		ProcessingStatus status = new ProcessingStatus(documentId);
 		status.addCollection("PUBMED");
@@ -328,6 +334,7 @@ public class SentenceExtractionConceptAllFnTest {
 		CharacterEncoding encoding = CharacterEncoding.UTF_8;
 
 		String sentenceBionlp = null;
+		String sectionBionlp = null;
 //		String conceptChebiBionlp = null;
 //		String crfChebiBionlp = null;
 //		String conceptPrBionlp = null;
@@ -339,6 +346,14 @@ public class SentenceExtractionConceptAllFnTest {
 			writer.serialize(td, outputStream, encoding);
 			sentenceBionlp = outputStream.toString(encoding.getCharacterSetName());
 		}
+
+		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
+			td.addAnnotations(sectionAnnots);
+			writer.serialize(td, outputStream, encoding);
+			sectionBionlp = outputStream.toString(encoding.getCharacterSetName());
+		}
+
 //
 //		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 //			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
@@ -394,6 +409,7 @@ public class SentenceExtractionConceptAllFnTest {
 		map.put(textDc, documentText);
 		map.put(sentenceDc, sentenceBionlp);
 		map.put(conceptAllDc, conceptAnnotBionlp);
+		map.put(sectionDc, sectionBionlp);
 
 //		KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText = KV.of(status, map);
 
@@ -453,6 +469,33 @@ public class SentenceExtractionConceptAllFnTest {
 				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 
+	}
+
+	@Test
+	public void testDetermineDocumentZone() {
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+
+		TextAnnotation titleSentence = factory.createAnnotation(0, 100, "This sentence is in the title.", "sentence");
+		TextAnnotation abstractSentence = factory.createAnnotation(110, 150, "This sentence is in the abstract.",
+				"sentence");
+		TextAnnotation methodsSentence = factory.createAnnotation(450, 550, "This sentence is in the methods section.",
+				"sentence");
+
+		TextAnnotation titleSection = factory.createAnnotation(0, 100, "This is the title section.", "title");
+		TextAnnotation abstractSection = factory.createAnnotation(102, 200, "This is the abstract section.",
+				"abstract");
+		TextAnnotation introductionSection = factory.createAnnotation(202, 400, "This is the abstract section.",
+				"introduction");
+		TextAnnotation methodsSection = factory.createAnnotation(402, 800, "This is the methods section.", "methods");
+		TextAnnotation methodsSubSection = factory.createAnnotation(445, 600,
+				"This is a subsection in the methods section.", "methods subsection");
+
+		Collection<TextAnnotation> sectionAnnots = Arrays.asList(titleSection, abstractSection, introductionSection,
+				methodsSection, methodsSubSection);
+
+		assertEquals("title", SentenceExtractionConceptAllFn.determineDocumentZone(titleSentence, sectionAnnots));
+		assertEquals("abstract", SentenceExtractionConceptAllFn.determineDocumentZone(abstractSentence, sectionAnnots));
+		assertEquals("methods", SentenceExtractionConceptAllFn.determineDocumentZone(methodsSentence, sectionAnnots));
 	}
 
 }

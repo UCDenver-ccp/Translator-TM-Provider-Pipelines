@@ -119,6 +119,7 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
+		Collection<TextAnnotation> sectionAnnots = docTypeToContentMap.get(DocumentType.SECTIONS);
 
 		String xPrefix = null;
 		String yPrefix = null;
@@ -149,8 +150,9 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 			String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
 			String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
 
-			extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
-					documentPublicationTypes, documentYearPublished, sentenceToConceptMap, xPlaceholder, yPlaceholder));
+			extractedSentences
+					.addAll(catalogExtractedSentences(keywords, documentText, documentId, documentPublicationTypes,
+							documentYearPublished, sentenceToConceptMap, xPlaceholder, yPlaceholder, sectionAnnots));
 
 		}
 		return extractedSentences;
@@ -179,12 +181,12 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	protected static Set<ExtractedSentence> catalogExtractedSentences(Set<String> keywords, String documentText,
 			String documentId, Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap, String xPlaceholder,
-			String yPlaceholder) {
+			String yPlaceholder, Collection<TextAnnotation> sectionAnnots) {
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
 			TextAnnotation sentenceAnnot = entry.getKey();
-			String documentZone = determineDocumentZone(sentenceAnnot);
+			String documentZone = determineDocumentZone(sentenceAnnot, sectionAnnots);
 			String keywordInSentence = sentenceContainsKeyword(sentenceAnnot.getCoveredText(), keywords);
 			if (keywords == null || keywords.isEmpty() || keywordInSentence != null) {
 				if (entry.getValue().size() > 1) {
@@ -230,8 +232,19 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 	 * @param sentenceAnnot
 	 * @return
 	 */
-	private static String determineDocumentZone(TextAnnotation sentenceAnnot) {
-		return "unknown";
+	protected static String determineDocumentZone(TextAnnotation sentenceAnnot,
+			Collection<TextAnnotation> sectionAnnots) {
+
+		List<TextAnnotation> sortedSectionAnnots = new ArrayList<TextAnnotation>(sectionAnnots);
+		Collections.sort(sortedSectionAnnots, TextAnnotation.BY_SPAN());
+
+		for (TextAnnotation section : sortedSectionAnnots) {
+			if (sentenceAnnot.overlaps(section)) {
+				return section.getClassMention().getMentionName();
+			}
+		}
+
+		return "Unknown";
 	}
 
 	/**
