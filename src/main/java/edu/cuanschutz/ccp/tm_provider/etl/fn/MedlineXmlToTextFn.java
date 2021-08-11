@@ -81,7 +81,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			DocumentCriteria outputTextDocCriteria, com.google.cloud.Timestamp timestamp, String collection,
 			PCollectionView<Set<String>> docIdsAlreadyInDatastore, OverwriteOutput overwrite) {
 
-		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
+		return pubmedArticles.apply("Extract section annotations",
 				ParDo.of(new DoFn<PubmedArticle, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 

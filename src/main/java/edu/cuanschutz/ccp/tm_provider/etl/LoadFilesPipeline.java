@@ -111,8 +111,18 @@ public class LoadFilesPipeline {
 		PCollection<EtlFailureData> failures = output.get(ExtractContentFn.etlFailureTag);
 		PCollection<ProcessingStatus> status = output.get(ExtractContentFn.processingStatusTag);
 
-		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(status)
-				.apply(View.<String, Set<String>>asMap());
+		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn()));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
 
 		/*
 		 * store the document content in Cloud Datastore - deduplication is necessary to
@@ -134,16 +144,6 @@ public class LoadFilesPipeline {
 				ParDo.of(new EtlFailureToEntityFn()));
 		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		/*
-		 * store the processing status document for this pipeline in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
-		 */
-		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn()));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*

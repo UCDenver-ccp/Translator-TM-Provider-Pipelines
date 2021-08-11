@@ -73,11 +73,11 @@ public class MedlineXmlToTextPipeline {
 
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		String medlineXmlFilePattern = options.getMedlineXmlDir() + "/*.xml.gz";
-		PCollection<ReadableFile> files = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
+		PCollection<ReadableFile> files = p.apply("get XML files to load",FileIO.match().filepattern(medlineXmlFilePattern))
 				.apply(FileIO.readMatches().withCompression(Compression.GZIP));
 
 		PCollection<PubmedArticle> pubmedArticles = files
-				.apply(XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet")
+				.apply("XML --> PubmedArticle",XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet")
 						.withRecordElement("PubmedArticle").withRecordClass(PubmedArticle.class));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
@@ -114,7 +114,17 @@ public class MedlineXmlToTextPipeline {
 		 */
 		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
 
-		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(status)
+		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+		
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(nonredundantStatusEntities)
 				.apply(View.<String, Set<String>>asMap());
 
 		/*
@@ -151,16 +161,7 @@ public class MedlineXmlToTextPipeline {
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/*
-		 * store the processing status document for this pipeline in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
-		 */
-		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
-
+		
 		p.run().waitUntilFinish();
 
 	}

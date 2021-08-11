@@ -51,6 +51,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.tools.ant.util.StringUtils;
+import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
@@ -1060,22 +1063,35 @@ public class PipelineMain {
 		return existingDocumentIds;
 	}
 
-	/**
-	 * @param statusEntity
-	 * @return a mapping from document ID to collection names
-	 */
-	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
-			PCollection<ProcessingStatus> statusEntity) {
-		return statusEntity.apply(ParDo.of(new DoFn<ProcessingStatus, KV<String, Set<String>>>() {
+//	/**
+//	 * @param statusEntity
+//	 * @return a mapping from document ID to collection names
+//	 */
+//	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
+//			PCollection<ProcessingStatus> statusEntity) {
+//		return statusEntity.apply(ParDo.of(new DoFn<ProcessingStatus, KV<String, Set<String>>>() {
+//			private static final long serialVersionUID = 1L;
+//
+//			@ProcessElement
+//			public void processElement(ProcessContext c) {
+//				ProcessingStatus ps = c.element();
+//				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
+//			}
+//		}));
+//
+//	}
+
+	public static PCollection<KV<String, Set<String>>> getCollectionMappings(PCollection<Entity> nonredundantStatusEntities) {
+		return nonredundantStatusEntities.apply(ParDo.of(new DoFn<Entity, KV<String, Set<String>>>() {
 			private static final long serialVersionUID = 1L;
 
 			@ProcessElement
 			public void processElement(ProcessContext c) {
-				ProcessingStatus ps = c.element();
+				Entity statusEntity = c.element();
+				ProcessingStatus ps = new ProcessingStatus(statusEntity);
 				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
 			}
 		}));
-
 	}
 
 }

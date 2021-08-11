@@ -139,9 +139,18 @@ public class OgerPipeline {
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output.get(OgerFn.ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(OgerFn.ETL_FAILURE_TAG);
 
+		/*
+		 * update the status entities to reflect the work completed, and store in
+		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
+		 */
+		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+				statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+
 		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
-				.getCollectionMappings(statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()))
-				.apply(View.<String, Set<String>>asMap());
+				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
 
 		/*
 		 * store the serialized annotation document content in Cloud Datastore -
@@ -154,16 +163,6 @@ public class OgerPipeline {
 						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
 								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		/*
-		 * update the status entities to reflect the work completed, and store in
-		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
-		 */
-		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
-				statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is
