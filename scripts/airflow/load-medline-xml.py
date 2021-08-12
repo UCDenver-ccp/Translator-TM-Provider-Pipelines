@@ -53,7 +53,9 @@ TM_PIPELINES_JAR=os.environ.get('TM_PIPELINES_JAR')
 args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2021, 5, 14),
+    'start_date': datetime(2021, 8, 11),
+     # run this dag daily @ midnight
+    'schedule_interval'='0 0 * * *',
     'retries': 1,
     'retry_delay': timedelta(minutes=2),
     'dataflow_default_options': {
@@ -64,13 +66,13 @@ args = {
     }
 }
 
-dag = DAG(dag_id='process-pubmed-dag', default_args=args, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='load-medline-xml-dag', default_args=args, schedule_interval=timedelta(days=1))
 
 # download only new files using wget and log names of the downloaded files
 # to downloaded-files.txt
 download = BashOperator(
     task_id='download-pubmed-update-files',
-    bash_command="cd /home/airflow/gcs/data && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed21n108*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > downloaded-files.txt",
+    bash_command="cd /home/airflow/gcs/data && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed21n*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > downloaded-files.txt",
     dag=dag)
 
 # TODO: the md5sum verify could be targeted to only the newly downloaded files
