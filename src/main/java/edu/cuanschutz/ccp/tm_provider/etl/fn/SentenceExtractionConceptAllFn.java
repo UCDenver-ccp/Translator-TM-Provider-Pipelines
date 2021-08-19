@@ -79,8 +79,16 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						Set<String> documentPublicationTypes = new HashSet<String>(statusEntity.getPublicationTypes());
-						int documentYearPublished = Integer.parseInt(statusEntity.getYearPublished());
+						Set<String> documentPublicationTypes = Collections.emptySet();
+						List<String> publicationTypes = statusEntity.getPublicationTypes();
+						if (publicationTypes != null) {
+							documentPublicationTypes = new HashSet<String>(publicationTypes);
+						}
+						String yearPublished = statusEntity.getYearPublished();
+						int documentYearPublished = 9999;
+						if (yearPublished != null && !yearPublished.isEmpty()) {
+							documentYearPublished = Integer.parseInt(yearPublished);
+						}
 
 						try {
 							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());

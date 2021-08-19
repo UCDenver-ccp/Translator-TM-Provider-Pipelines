@@ -42,6 +42,8 @@ public class SentenceExtractionPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.SENTENCE_EXTRACTION;
 
+//	private static final Logger logger = Logger.getLogger(SentenceExtractionPipeline.class);
+
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
 		ProcessingStatusFlag getTargetProcessingStatusFlag();
@@ -121,6 +123,16 @@ public class SentenceExtractionPipeline {
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+
+//		logger.info(" ---------------- Pipeline arguments for the SentenceExtractionPipeline ---------------- ");
+//		logger.info("Collection: " + options.getCollection());
+//		logger.info("Keywords: " + options.getKeywords().toString());
+//		logger.info("Placeholder X: " + options.getPlaceholderX());
+//		logger.info("Placeholder Y: " + options.getPlaceholderY());
+//		logger.info("Prefix X: " + options.getPrefixX());
+//		logger.info("Prefix Y: " + options.getPrefixY());
+//		logger.info("Input Doc Criteria: " + options.getInputDocumentCriteria().toString());
+//		logger.info("Output bucket: " + options.getOutputBucket());
 
 		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		Pipeline p = Pipeline.create(options);

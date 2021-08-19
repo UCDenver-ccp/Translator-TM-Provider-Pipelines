@@ -80,11 +80,13 @@ public class ExtractedSentence extends DoFn {
 		}
 
 		this.documentId = documentId;
-		this.keyword = keyword;
+		this.keyword = (keyword != null) ? keyword : "";
 		this.sentenceText = sentenceText;
 		this.sentenceContext = sentenceContext.replaceAll("\\n", "||||");
-		this.documentZone = documentZone;
-		this.documentPublicationTypes = new HashSet<String>(documentPublicationTypes);
+		this.documentZone = (documentZone != null) ? documentZone : "unknown";
+		this.documentPublicationTypes = (documentPublicationTypes != null)
+				? new HashSet<String>(documentPublicationTypes)
+				: new HashSet<String>();
 		this.documentYearPublished = documentYearPublished;
 	}
 
@@ -135,11 +137,38 @@ public class ExtractedSentence extends DoFn {
 			return null;
 		}
 		String blankColumn = "";
-		return CollectionsUtil.createDelimitedString(Arrays.asList(getSentenceIdentifier(),
-				getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
-				entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
-				sentenceText, documentZone, CollectionsUtil.createDelimitedString(documentPublicationTypes, "|"),
-				documentYearPublished, sentenceContext), "\t");
+		String pubTypesStr = "";
+		if (documentPublicationTypes != null) {
+			pubTypesStr = CollectionsUtil.createDelimitedString(documentPublicationTypes, "|");
+		}
+
+		try {
+
+			return CollectionsUtil.createDelimitedString(Arrays.asList(getSentenceIdentifier(),
+					getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
+					entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
+					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceContext), "\t");
+
+		} catch (NullPointerException e) {
+			StringBuilder msgBuilder = new StringBuilder();
+			msgBuilder.append("sentence id: " + Arrays.asList(getSentenceIdentifier()) + "\n");
+			msgBuilder.append("sentence with placeholders: " + getSentenceWithPlaceholders() + "\n");
+			msgBuilder.append("document id: " + documentId + "\n");
+			msgBuilder.append("entity covered text 1: " + entityCoveredText1 + "\n");
+			msgBuilder.append("entity id 1: " + entityId1 + "\n");
+			msgBuilder.append("entity span 1: " + getSpanStr(entitySpan1) + "\n");
+			msgBuilder.append("entity covered text 2: " + entityCoveredText2 + "\n");
+			msgBuilder.append("entity id 2: " + entityId2 + "\n");
+			msgBuilder.append("entity span 2: " + getSpanStr(entitySpan2) + "\n");
+			msgBuilder.append("keyword: " + keyword + "\n");
+			msgBuilder.append("sentence length: " + sentenceText.length() + "\n");
+			msgBuilder.append("sentence text: " + sentenceText + "\n");
+			msgBuilder.append("document zone: " + documentZone + "\n");
+			msgBuilder.append("pub types: " + pubTypesStr + "\n");
+			msgBuilder.append("year pyblished: " + documentYearPublished + "\n");
+			msgBuilder.append("sentence context: " + sentenceContext + "\n");
+			throw new NullPointerException(msgBuilder.toString());
+		}
 
 	}
 

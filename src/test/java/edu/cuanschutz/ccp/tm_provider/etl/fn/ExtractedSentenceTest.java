@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -123,6 +124,21 @@ public class ExtractedSentenceTest {
 		assertEquals(expectedEs.getDocumentYearPublished(), es.getDocumentYearPublished());
 		assertEquals(expectedEs.getDocumentZone(), es.getDocumentZone());
 
+	}
+	
+	
+	@Test
+	public void testToTsvRobustness() {
+		String keyword = null;
+		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
+				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
+				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, keyword, sentence2,
+				documentText, null, null, 1997);
+		
+		// tests that null publication types don't result in NPE
+		
+		assertNotNull(es.toTsv());
+				
 	}
 
 }
