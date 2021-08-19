@@ -155,6 +155,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_OGER_HP_DONE = "oger_hp";
 	public static final String STATUS_PROPERTY_OGER_MONDO_DONE = "oger_mondo";
 	public static final String STATUS_PROPERTY_OGER_MOP_DONE = "oger_mop";
+	public static final String STATUS_PROPERTY_OGER_MP_DONE = "oger_mp";
 	public static final String STATUS_PROPERTY_OGER_NCBITAXON_DONE = "oger_ncbitaxon";
 	public static final String STATUS_PROPERTY_OGER_SO_DONE = "oger_so";
 	public static final String STATUS_PROPERTY_OGER_PR_DONE = "oger_pr";
