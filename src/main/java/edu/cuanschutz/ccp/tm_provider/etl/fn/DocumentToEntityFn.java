@@ -13,6 +13,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.DOCUMEN
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,9 +21,6 @@ import java.util.Set;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.checkerframework.checker.initialization.qual.Initialized;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Value;
@@ -145,7 +143,11 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
 
 		List<Value> collections = new ArrayList<Value>();
-		for (String collection : collectionNames) {
+		
+		List<String> sortedCollectionNames = new ArrayList<String>(collectionNames);
+		Collections.sort(sortedCollectionNames);
+		
+		for (String collection : sortedCollectionNames) {
 			collections.add(makeValue(collection).build());
 		}
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_COLLECTIONS, makeValue(collections).build());
