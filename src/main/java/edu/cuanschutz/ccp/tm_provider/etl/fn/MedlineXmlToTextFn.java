@@ -49,7 +49,8 @@ import lombok.Setter;
  */
 public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<String>>> {
 
-	public static final String DEFAULT_PUB_YEAR = "9999";
+	// 2155 is the max year value type in MySQL
+	public static final String DEFAULT_PUB_YEAR = "2155";
 
 	private static final long serialVersionUID = 1L;
 

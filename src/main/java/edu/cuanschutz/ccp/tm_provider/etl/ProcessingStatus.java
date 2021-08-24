@@ -37,7 +37,7 @@ public class ProcessingStatus extends DoFn {
 
 	@Getter
 	@Setter
-	private String yearPublished = "9999";
+	private String yearPublished = "2155";
 
 	@Getter
 	private List<String> publicationTypes = new ArrayList<String>();

@@ -85,7 +85,8 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 							documentPublicationTypes = new HashSet<String>(publicationTypes);
 						}
 						String yearPublished = statusEntity.getYearPublished();
-						int documentYearPublished = 9999;
+						// 2155 is the max year value in MySQL
+						int documentYearPublished = 2155;
 						if (yearPublished != null && !yearPublished.isEmpty()) {
 							documentYearPublished = Integer.parseInt(yearPublished);
 						}
