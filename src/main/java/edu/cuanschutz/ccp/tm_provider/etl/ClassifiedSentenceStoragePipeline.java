@@ -81,16 +81,29 @@ public class ClassifiedSentenceStoragePipeline {
 
 		void setCloudSqlRegion(String value);
 
+		@Description("The minimum BERT classification score required for a sentence to be kept as evidence for an assertion.")
+		double getBertScoreInclusionMinimumThreshold();
+
+		void setBertScoreInclusionMinimumThreshold(double minThreshold);
+
 	}
 
 	public static void main(String[] args) {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
-
-		PCollection<String> bertOutputLines = p.apply(TextIO.read().from(options.getBertOutputFilePath()));
+		
+		
+		System.out.println("bert output file: " + options.getBertOutputFilePath());
+		System.out.println("sentence metadata file: " + options.getSentenceMetadataFilePath());
+		
+		final double bertScoreInclusionMinimumThreshold = options.getBertScoreInclusionMinimumThreshold();
+		
+		final String bertOutputFilePath = options.getBertOutputFilePath();
+		PCollection<String> bertOutputLines = p.apply(TextIO.read().from(bertOutputFilePath));
 		PCollection<KV<String, String>> idToBertOutputLines = getKV(bertOutputLines, 0);
 
-		PCollection<String> metadataLines = p.apply(TextIO.read().from(options.getSentenceMetadataFilePath()));
+		final String sentenceMetadataFilePath = options.getSentenceMetadataFilePath();
+		PCollection<String> metadataLines = p.apply(TextIO.read().from(sentenceMetadataFilePath));
 		PCollection<KV<String, String>> idToMetadataLines = getKV(metadataLines, 0);
 
 		/* group the lines by their ids */
@@ -106,6 +119,9 @@ public class ClassifiedSentenceStoragePipeline {
 		final String projectId = options.getProject();
 		final String cloudSqlRegion = options.getCloudSqlRegion();
 		final BiolinkAssociation biolinkAssoc = options.getBiolinkAssociation();
+		
+		
+		
 
 		PCollection<SqlValues> sqlValues = result.apply("compile sql values",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, SqlValues>() {
@@ -154,59 +170,77 @@ public class ClassifiedSentenceStoragePipeline {
 							@SuppressWarnings("unused")
 							String sentenceWithPlaceholders1 = bertOutputCols[index++];
 
+							// one of the scores for the predicates that is not
+							// BiolinkPredicate.NO_RELATION_PRESENT must be greater than the BERT minimum
+							// inclusion score threshold in order for this sentence to be considered
+							// evidence of an assertion. This is checked while populating the
+							// predicateCurietoScoreMap.
+							boolean hasScoreThatMeetsMinimumInclusionThreshold = false;
 							Map<String, Double> predicateCurieToScore = new HashMap<String, Double>();
 							for (String predicateCurie : getPredicateCuries(biolinkAssoc)) {
-								predicateCurieToScore.put(predicateCurie, Double.parseDouble(bertOutputCols[index++]));
+								double score = Double.parseDouble(bertOutputCols[index++]);
+								predicateCurieToScore.put(predicateCurie, score);
+								if (!predicateCurie.equals("false")
+										&& score > bertScoreInclusionMinimumThreshold) {
+									hasScoreThatMeetsMinimumInclusionThreshold = true;
+								}
 							}
 
-							ExtractedSentence es = ExtractedSentence.fromTsv(metadataLine, true);
+							if (hasScoreThatMeetsMinimumInclusionThreshold) {
+								ExtractedSentence es = ExtractedSentence.fromTsv(metadataLine, true);
 
-							String subjectCoveredText;
-							String subjectCurie;
-							String subjectSpanStr;
-							String objectCoveredText;
-							String objectCurie;
-							String objectSpanStr;
-							if (es.getEntityPlaceholder1().equals(biolinkAssoc.getSubjectPlaceholder())) {
-								subjectCurie = es.getEntityId1();
-								subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-								subjectCoveredText = es.getEntityCoveredText1();
-								objectCurie = es.getEntityId2();
-								objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-								objectCoveredText = es.getEntityCoveredText2();
-							} else {
-								subjectCurie = es.getEntityId2();
-								subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-								subjectCoveredText = es.getEntityCoveredText2();
-								objectCurie = es.getEntityId1();
-								objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-								objectCoveredText = es.getEntityCoveredText1();
+								String subjectCoveredText;
+								String subjectCurie;
+								String subjectSpanStr;
+								String objectCoveredText;
+								String objectCurie;
+								String objectSpanStr;
+								if (es.getEntityPlaceholder1().equals(biolinkAssoc.getSubjectPlaceholder())) {
+									subjectCurie = es.getEntityId1();
+									subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+									subjectCoveredText = es.getEntityCoveredText1();
+									objectCurie = es.getEntityId2();
+									objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+									objectCoveredText = es.getEntityCoveredText2();
+								} else {
+									subjectCurie = es.getEntityId2();
+									subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+									subjectCoveredText = es.getEntityCoveredText2();
+									objectCurie = es.getEntityId1();
+									objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+									objectCoveredText = es.getEntityCoveredText1();
+								}
+
+								String documentId = es.getDocumentId();
+								String sentence = es.getSentenceText();
+
+								String assertionId = DigestUtils
+										.sha256Hex(subjectCurie + objectCurie + biolinkAssoc.getAssociationId());
+								String evidenceId = DigestUtils.sha256Hex(documentId + sentence + subjectCurie
+										+ subjectSpanStr + objectCurie + objectSpanStr);
+								String subjectEntityId = DigestUtils
+										.sha256Hex(documentId + sentence + subjectCurie + subjectSpanStr);
+								String objectEntityId = DigestUtils
+										.sha256Hex(documentId + sentence + objectCurie + objectSpanStr);
+
+								int documentYearPublished = es.getDocumentYearPublished();
+								if (documentYearPublished > 2155) {
+									// 2155 is the max year value in MySQL
+									documentYearPublished = 2155;
+								}
+								SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
+										biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
+										subjectEntityId, objectEntityId, es.getDocumentZone(),
+										CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(), "|"),
+										documentYearPublished, subjectSpanStr, objectSpanStr,
+										subjectCoveredText, objectCoveredText);
+
+								for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
+									sqlValues.addScore(entry.getKey(), entry.getValue());
+								}
+
+								c.output(sqlValues);
 							}
-
-							String documentId = es.getDocumentId();
-							String sentence = es.getSentenceText();
-
-							String assertionId = DigestUtils
-									.sha256Hex(subjectCurie + objectCurie + biolinkAssoc.getAssociationId());
-							String evidenceId = DigestUtils.sha256Hex(documentId + sentence + subjectCurie
-									+ subjectSpanStr + objectCurie + objectSpanStr);
-							String subjectEntityId = DigestUtils
-									.sha256Hex(documentId + sentence + subjectCurie + subjectSpanStr);
-							String objectEntityId = DigestUtils
-									.sha256Hex(documentId + sentence + objectCurie + objectSpanStr);
-
-							SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
-									biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence, subjectEntityId,
-									objectEntityId, es.getDocumentZone(),
-									CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(), "|"),
-									es.getDocumentYearPublished(), subjectSpanStr, objectSpanStr, subjectCoveredText,
-									objectCoveredText);
-
-							for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
-								sqlValues.addScore(entry.getKey(), entry.getValue());
-							}
-
-							c.output(sqlValues);
 
 						}
 					}
