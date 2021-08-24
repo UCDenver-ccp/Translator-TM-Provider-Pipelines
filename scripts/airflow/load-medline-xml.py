@@ -128,7 +128,7 @@ dataflow_medline_xml_to_text = DataflowCreateJavaJobOperator(
 # to_load directory so that they are processed the next time the workflow runs.
 pipeline_end = BashOperator(
     task_id='pipeline_end',
-    bash_command="rm /home/airflow/gcs/data/to_load/*.gz",
+    bash_command="rm /home/airflow/gcs/data/to_load/*",
     dag=dag)
 
 
