@@ -54,9 +54,9 @@ args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'start_date': datetime(2021, 8, 11),
-     # run this dag daily @ midnight
-    'schedule_interval': '0 0 * * *',
-    'retries': 1,
+     # run this dag daily @ midnight MT which is 6am UTC
+    'schedule_interval': '0 6 * * *',
+    'retries': 0,
     'retry_delay': timedelta(minutes=2),
     'dataflow_default_options': {
         'zone': DATAFLOW_ZONE,

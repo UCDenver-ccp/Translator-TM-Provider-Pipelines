@@ -100,10 +100,10 @@ args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'start_date': datetime(2021, 8, 24),
-    # run this dag at 2am every night
+    # run this dag at 2:30am MT every night which is 8:30am UTC
     # note that the document download script runs at midnight
-    'schedule_interval': '0 2 * * *',
-    'retries': 1,
+    'schedule_interval': '30 8 * * *',
+    'retries': 0,
     'retry_delay': timedelta(minutes=2),
     'dataflow_default_options': {
         'zone': DATAFLOW_ZONE,
