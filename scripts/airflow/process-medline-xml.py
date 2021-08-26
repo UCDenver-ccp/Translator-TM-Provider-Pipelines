@@ -102,7 +102,7 @@ args = {
     'start_date': datetime(2021, 8, 24),
     # run this dag at 2am every night
     # note that the document download script runs at midnight
-    'schedule_interval'='0 2 * * *',
+    'schedule_interval': '0 2 * * *',
     'retries': 1,
     'retry_delay': timedelta(minutes=2),
     'dataflow_default_options': {
