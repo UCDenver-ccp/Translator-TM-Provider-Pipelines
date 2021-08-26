@@ -87,13 +87,9 @@ BERT_SCORE_INCLUSION_THRESHOLD = 0.9
 #        These must remain in alignment!
 #
 # This function checks the dag_run.conf for a collection. Use it if it exists, otherwise use today's datestamp
-# to override the collection, use the CLI, e.g. --conf '{"collection": "2021-08-12"}'
+# to override the collection, use the CLI, e.g. --conf '{"collection": "2021-08-23"}'
 def get_collection():
-    col = "{{ dag_run.conf['collection'] }}"
-    if (col == None):
-        return "{{ ds }}"
-    else:
-        return col
+    return "{{ dag_run.conf['collection'] if dag_run.conf['collection'] else ds }}"
 
 COLLECTION=get_collection()
 
@@ -103,9 +99,10 @@ COLLECTION=get_collection()
 args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2021, 8, 16),
-    # run this dag at 2 hours 30 min interval from 00:00 28-03-2017
-    # 'schedule_interval'='30 2 * * *',
+    'start_date': datetime(2021, 8, 24),
+    # run this dag at 2am every night
+    # note that the document download script runs at midnight
+    'schedule_interval'='0 2 * * *',
     'retries': 1,
     'retry_delay': timedelta(minutes=2),
     'dataflow_default_options': {
@@ -116,7 +113,7 @@ args = {
     }
 }
 
-dag = DAG(dag_id='process-medline-xml', default_args=args, schedule_interval=timedelta(days=1), catchup=False)
+dag = DAG(dag_id='process-medline-xml', default_args=args, catchup=False)
 
 
 # =============================================================================
@@ -1169,10 +1166,16 @@ BERT_INPUT_SENTENCE_BUCKET = TO_BE_CLASSIFIED_SENTENCE_BUCKET + '/bert-input'
 # [BUCKET]/output/classified_sentences/bl_chemical_to_disease_or_phenotypic_feature/0.1.2
 
 # clean up output sentence files - delete any sentences remaining from previous runs if any exist
-delete_sentences_bl_chemical_to_gene = BashOperator(
-    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC,
+delete_sentences_bl_chemical_to_gene_1 = BashOperator(
+    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC + '_1',
     bash_command='gsutil -q stat "' + SENTENCE_FILE_PREFIX + '*"; if [ "$?" -eq "0" ]; then gsutil rm "' + SENTENCE_FILE_PREFIX + '*"; fi',
     dag=dag)
+
+delete_sentences_bl_chemical_to_gene_2 = BashOperator(
+    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC + '_2',
+    bash_command='gsutil -q stat "' + SENTENCE_FILE_PREFIX + '*"; if [ "$?" -eq "0" ]; then gsutil rm "' + SENTENCE_FILE_PREFIX + '*"; fi',
+    dag=dag)
+
 
 ## call dataflow to extract sentences with chemicals and proteins
 ## Note: proteins will be labeled as @GENE$ in the output
@@ -1325,10 +1328,16 @@ SENTENCE_FILE_PREFIX = TO_BE_CLASSIFIED_SENTENCE_BUCKET + '/' + ASSOCIATION_KEY_
 BERT_INPUT_SENTENCE_BUCKET = TO_BE_CLASSIFIED_SENTENCE_BUCKET + '/bert-input'
 
 # clean up output sentence files - delete any sentences remaining from previous runs if any exist
-delete_sentences_bl_gene_regulatory_relationship = BashOperator(
-    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC,
+delete_sentences_bl_gene_regulatory_relationship_1 = BashOperator(
+    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC + '_1',
     bash_command='gsutil -q stat "' + SENTENCE_FILE_PREFIX + '*"; if [ "$?" -eq "0" ]; then gsutil rm "' + SENTENCE_FILE_PREFIX + '*"; fi',
     dag=dag)
+
+delete_sentences_bl_gene_regulatory_relationship_2 = BashOperator(
+    task_id='delete_old_sentences_' + ASSOCIATION_KEY_LC + '_2',
+    bash_command='gsutil -q stat "' + SENTENCE_FILE_PREFIX + '*"; if [ "$?" -eq "0" ]; then gsutil rm "' + SENTENCE_FILE_PREFIX + '*"; fi',
+    dag=dag)
+
 
 ## call dataflow to extract sentences with two proteins
 sentence_extraction_bl_gene_regulatory_relationship = DataflowCreateJavaJobOperator(
@@ -1446,8 +1455,6 @@ classified_sentence_storage_bl_gene_regulatory_relationship = DataflowCreateJava
 
 
 
-
-
 ##### Execute full pipeline #####
 dataflow_medline_xml_sentences >> prime_chebi_oger
 prime_chebi_oger >> chebi_oger >> prime_cl_oger
@@ -1478,18 +1485,18 @@ uberon_crf >> concept_post_process
 
 concept_post_process >> concept_post_process_unfiltered
 
-concept_post_process_unfiltered >> delete_sentences_bl_chemical_to_gene
-concept_post_process_unfiltered >> delete_sentences_bl_gene_regulatory_relationship
+concept_post_process_unfiltered >> delete_sentences_bl_chemical_to_gene_1
+concept_post_process_unfiltered >> delete_sentences_bl_gene_regulatory_relationship_1
 
 # --- bl_chemical_to_gene
-delete_sentences_bl_chemical_to_gene >> sentence_extraction_bl_chemical_to_gene >> cat_sentences_bl_chemical_to_gene
+delete_sentences_bl_chemical_to_gene_1 >> sentence_extraction_bl_chemical_to_gene >> cat_sentences_bl_chemical_to_gene
 cat_sentences_bl_chemical_to_gene >> classify_bl_chemical_to_gene_sentences >> monitor_classify_bl_chemical_to_gene_sentences
-monitor_classify_bl_chemical_to_gene_sentences >> classified_sentence_storage_bl_chemical_to_gene >> delete_sentences_bl_chemical_to_gene
+monitor_classify_bl_chemical_to_gene_sentences >> classified_sentence_storage_bl_chemical_to_gene >> delete_sentences_bl_chemical_to_gene_2
 
 # --- bl_gene_regulatory_relationship
-delete_sentences_bl_gene_regulatory_relationship >> sentence_extraction_bl_gene_regulatory_relationship >> cat_sentences_bl_gene_regulatory_relationship
+delete_sentences_bl_gene_regulatory_relationship_1 >> sentence_extraction_bl_gene_regulatory_relationship >> cat_sentences_bl_gene_regulatory_relationship
 cat_sentences_bl_gene_regulatory_relationship >> classify_bl_gene_regulatory_relationship_sentences >> monitor_classify_bl_gene_regulatory_relationship_sentences
-monitor_classify_bl_gene_regulatory_relationship_sentences >> classified_sentence_storage_bl_gene_regulatory_relationship >> delete_sentences_bl_gene_regulatory_relationship
+monitor_classify_bl_gene_regulatory_relationship_sentences >> classified_sentence_storage_bl_gene_regulatory_relationship >> delete_sentences_bl_gene_regulatory_relationship_2
 
 
 
