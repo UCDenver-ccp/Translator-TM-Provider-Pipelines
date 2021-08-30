@@ -113,7 +113,7 @@ args = {
     }
 }
 
-dag = DAG(dag_id='process-medline-xml', default_args=args, catchup=False)
+dag = DAG(dag_id='process-medline-xml', default_args=args, catchup=False, schedule_interval='30 8 * * *')
 
 
 # =============================================================================

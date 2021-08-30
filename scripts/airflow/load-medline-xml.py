@@ -66,7 +66,7 @@ args = {
     }
 }
 
-dag = DAG(dag_id='load-medline-xml-dag', default_args=args, catchup=False)
+dag = DAG(dag_id='load-medline-xml-dag', default_args=args, catchup=False, schedule_interval='0 6 * * *',)
 
 # download only new files using wget and log names of the downloaded files
 # to downloaded-files.txt
