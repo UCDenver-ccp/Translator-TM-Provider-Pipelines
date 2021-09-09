@@ -256,7 +256,7 @@ public class SentenceExtractionWebAnnoFnTest {
 
 	private Set<String> extractSentences(Set<String> keywords) {
 		SimpleTokenizer tokenizer = new SimpleTokenizer();
-		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
+		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionFn
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptYAnnots);
 
 		Set<String> extractedSentences = SentenceExtractionWebAnnoFn.catalogExtractedSentences(keywords, documentText,
@@ -300,7 +300,7 @@ public class SentenceExtractionWebAnnoFnTest {
 		SimpleTokenizer tokenizer = new SimpleTokenizer();
 		Set<String> keywords = null;
 
-		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
+		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionFn
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptXAnnots);
 
 		Set<String> extractedSentences = SentenceExtractionWebAnnoFn.catalogExtractedSentences(keywords, documentText,

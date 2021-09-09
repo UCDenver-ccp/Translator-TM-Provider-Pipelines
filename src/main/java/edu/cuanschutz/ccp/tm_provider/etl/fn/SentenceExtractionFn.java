@@ -36,7 +36,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<String, String>> {
+public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
 	@VisibleForTesting

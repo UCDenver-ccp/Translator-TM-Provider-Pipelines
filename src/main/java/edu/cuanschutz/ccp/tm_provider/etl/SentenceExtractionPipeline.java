@@ -25,7 +25,7 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionConceptAllFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -161,12 +161,12 @@ public class SentenceExtractionPipeline {
 
 		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
-		PCollectionTuple output = SentenceExtractionConceptAllFn.process(statusEntity2Content, keywords,
+		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords,
 				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
-				.get(SentenceExtractionConceptAllFn.EXTRACTED_SENTENCES_TAG);
-		PCollection<EtlFailureData> failures = output.get(SentenceExtractionConceptAllFn.ETL_FAILURE_TAG);
+				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
+		PCollection<EtlFailureData> failures = output.get(SentenceExtractionFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from sentence extraction

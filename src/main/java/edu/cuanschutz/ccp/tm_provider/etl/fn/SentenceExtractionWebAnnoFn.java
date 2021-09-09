@@ -145,8 +145,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 			yPrefix = xPrefix;
 		}
 
-		List<TextAnnotation> conceptXAnnots = SentenceExtractionConceptAllFn.getAnnotsByPrefix(conceptAnnots, xPrefix);
-		List<TextAnnotation> conceptYAnnots = SentenceExtractionConceptAllFn.getAnnotsByPrefix(conceptAnnots, yPrefix);
+		List<TextAnnotation> conceptXAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, xPrefix);
+		List<TextAnnotation> conceptYAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, yPrefix);
 
 		System.out.println("CONCEPT X: " + conceptXAnnots.size());
 		System.out.println("CONCEPT Y: " + conceptYAnnots.size());
@@ -154,7 +154,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 		Set<String> extractedSentences = new HashSet<String>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
 
-			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
+			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionFn
 					.buildSentenceToConceptMap(sentenceAnnots, conceptXAnnots, conceptYAnnots);
 
 			String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
@@ -185,7 +185,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 		Set<String> extractedSentences = new HashSet<String>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
 			TextAnnotation sentenceAnnot = entry.getKey();
-			String keywordInSentence = SentenceExtractionConceptAllFn
+			String keywordInSentence = SentenceExtractionFn
 					.sentenceContainsKeyword(sentenceAnnot.getCoveredText(), keywords);
 			if (keywords == null || keywords.isEmpty() || keywordInSentence != null) {
 				if (entry.getValue().size() > 1) {
@@ -199,13 +199,13 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 					// assign categories as mention names instead of ontology concept identifiers
 					// offset spans so that concept spans are relative to the sentence
 					for (TextAnnotation xAnnot : xConceptsInSentence) {
-						List<Span> xSpan = SentenceExtractionConceptAllFn.offsetSpan(xAnnot.getSpans(),
+						List<Span> xSpan = SentenceExtractionFn.offsetSpan(xAnnot.getSpans(),
 								sentenceAnnot.getAnnotationSpanStart());
 						xAnnot.setSpans(xSpan);
 						xAnnot.getClassMention().setMentionName(xPlaceholder);
 					}
 					for (TextAnnotation yAnnot : yConceptsInSentence) {
-						List<Span> ySpan = SentenceExtractionConceptAllFn.offsetSpan(yAnnot.getSpans(),
+						List<Span> ySpan = SentenceExtractionFn.offsetSpan(yAnnot.getSpans(),
 								sentenceAnnot.getAnnotationSpanStart());
 						yAnnot.setSpans(ySpan);
 						yAnnot.getClassMention().setMentionName(yPlaceholder);
