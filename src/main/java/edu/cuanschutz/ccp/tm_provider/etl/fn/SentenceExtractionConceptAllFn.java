@@ -203,6 +203,12 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 					Set<TextAnnotation> xConceptsInSentence = entry.getValue().get(X_CONCEPTS);
 					Set<TextAnnotation> yConceptsInSentence = entry.getValue().get(Y_CONCEPTS);
 
+					// if there are X concepts that share a span, then we will combine the
+					// identifiers for these concepts into a single TextAnnotation object; similar
+					// for Y concepts
+					xConceptsInSentence = mergeOverlappingConcepts(xConceptsInSentence);
+					yConceptsInSentence = mergeOverlappingConcepts(yConceptsInSentence);
+
 					// for each pair of X&Y concepts, create an ExtractedSentence
 					for (TextAnnotation xAnnot : xConceptsInSentence) {
 						for (TextAnnotation yAnnot : yConceptsInSentence) {
@@ -232,6 +238,27 @@ public class SentenceExtractionConceptAllFn extends DoFn<KV<String, String>, KV<
 			}
 		}
 		return extractedSentences;
+	}
+
+	private static Set<TextAnnotation> mergeOverlappingConcepts(Set<TextAnnotation> conceptAnnots) {
+		Map<List<Span>, TextAnnotation> spanToAnnotMap = new HashMap<List<Span>, TextAnnotation>();
+
+		System.out.println("Concept count (in): " + conceptAnnots.size());
+		
+		for (TextAnnotation annot : conceptAnnots) {
+			List<Span> spans = annot.getSpans();
+			if (spanToAnnotMap.containsKey(spans)) {
+				String updatedID = spanToAnnotMap.get(spans).getClassMention().getMentionName() + "|"
+						+ annot.getClassMention().getMentionName();
+				spanToAnnotMap.get(spans).getClassMention().setMentionName(updatedID);
+			} else {
+				spanToAnnotMap.put(spans, annot);
+			}
+		}
+
+		System.out.println("Concept count (out): " + spanToAnnotMap.values().size());
+		return new HashSet<TextAnnotation>(spanToAnnotMap.values());
+
 	}
 
 	/**

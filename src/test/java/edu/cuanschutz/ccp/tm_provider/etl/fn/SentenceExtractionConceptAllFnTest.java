@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
@@ -34,7 +32,6 @@ import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
-@Ignore("causes inconsistent ConcurrentModificationException when run -- unsure why this happens")
 public class SentenceExtractionConceptAllFnTest {
 
 	/*
@@ -50,10 +47,9 @@ public class SentenceExtractionConceptAllFnTest {
 
 	private static final String Y_000001 = "Y:000001";
 	private static final String X_000001 = "X:000001";
+	private static final String X_000001_SYN = "X:000001_SYN";
 	private static final String X_000002 = "X:000002";
-	private List<TextAnnotation> sentenceAnnotations;
-	private List<TextAnnotation> conceptXAnnots;
-	private List<TextAnnotation> conceptYAnnots;
+
 	// 1 2 3 4
 	// 012345678901234567890123456789012345678901234567890123456789
 	private static final String sentence1 = "This sentence has conceptX1 and conceptX2.";
@@ -81,64 +77,108 @@ public class SentenceExtractionConceptAllFnTest {
 
 	private static TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(documentId);
 
-	private static TextAnnotation x1Sentence1Annot = factory.createAnnotation(18, 27, "conceptX1", X_000001);
+	private TextAnnotation x1Sentence1Annot = createX1Sentence1Annot();
 	private static Span x1Sentence1Span = new Span(18, 27);
-	private static TextAnnotation x2Sentence1Annot = factory.createAnnotation(32, 41, "conceptX2", X_000002);
+
+	private static TextAnnotation createX1Sentence1Annot() {
+		return factory.createAnnotation(x1Sentence1Span.getSpanStart(), x1Sentence1Span.getSpanEnd(), "conceptX1",
+				X_000001);
+	}
+
+	private TextAnnotation x2Sentence1Annot = createX2Sentence1Annot();
 	private static Span x2Sentence1Span = new Span(32, 41);
-	private static TextAnnotation x1Sentence2Annot = factory.createAnnotation(43, 52, "ConceptX1", X_000001);
+
+	private static TextAnnotation createX2Sentence1Annot() {
+		return factory.createAnnotation(x2Sentence1Span.getSpanStart(), x2Sentence1Span.getSpanEnd(), "conceptX2",
+				X_000002);
+	}
+
+	private static TextAnnotation x1Sentence2Annot = createX1Sentence2Annot();
 	private static Span x1Sentence2Span = new Span(43 - 43, 52 - 43);
-	private static TextAnnotation x1Sentence4Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000001);
+
+	private static TextAnnotation createX1Sentence2Annot() {
+		return factory.createAnnotation(43, 52, "ConceptX1", X_000001);
+	}
+
+	private static TextAnnotation x1Sentence2SynonymAnnot = createX1Sentence2SynonymAnnot();
+
+	private static TextAnnotation createX1Sentence2SynonymAnnot() {
+		return factory.createAnnotation(43, 52, "ConceptX1", X_000001_SYN);
+	}
+
+	private static TextAnnotation x1Sentence4Annot = createX1Sentence4Annot();
+
+	private static TextAnnotation createX1Sentence4Annot() {
+		return factory.createAnnotation(135, 144, "ConceptX1", X_000001);
+	}
+
 //	private static Span x1Sentence4Span = new Span(135 - 135, 144 - 135);
-	private static TextAnnotation y1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 	private static Span y1Sentence2Span = new Span(84 - 43, 93 - 43);
+	private static TextAnnotation y1Sentence2Annot = createY1Sentence2Annot();
+
+	private static TextAnnotation createY1Sentence2Annot() {
+		return factory.createAnnotation(84, 93, "conceptY1", Y_000001);
+	}
 
 	// This is simulating the concept Y_000001 existing in both the X & Y
 	// ontologies, e.g. an extension class
 	private static TextAnnotation x3ReallyY1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
-	private TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
-	private TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
-	private TextAnnotation sentence3Annot = factory.createAnnotation(95, 134, sentence3, SENTENCE);
-	private TextAnnotation sentence4Annot = factory.createAnnotation(135, 165, sentence4, SENTENCE);
+	private TextAnnotation sentence1Annot = createSentence1Annot();
 
-	// single section annotation = introduction
-	private Collection<TextAnnotation> sectionAnnots = Arrays
-			.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+	private TextAnnotation createSentence1Annot() {
+		return factory.createAnnotation(0, 42, sentence1, SENTENCE);
+	}
 
-	@Before
-	public void setUp() {
-		sentenceAnnotations = populateSentenceAnnotations();
-		conceptXAnnots = populateXConceptAnnotations();
-		conceptYAnnots = populateYConceptAnnotations();
+	private TextAnnotation sentence2Annot = createSentence2Annot();
+
+	private TextAnnotation createSentence2Annot() {
+		return factory.createAnnotation(43, 94, sentence2, SENTENCE);
+	}
+
+	private TextAnnotation sentence3Annot = createSentence3Annot();
+
+	private TextAnnotation createSentence3Annot() {
+		return factory.createAnnotation(95, 134, sentence3, SENTENCE);
+	}
+
+	private TextAnnotation sentence4Annot = createSentence4Annot();
+
+	private TextAnnotation createSentence4Annot() {
+		return factory.createAnnotation(135, 165, sentence4, SENTENCE);
 	}
 
 	private List<TextAnnotation> populateXConceptAnnotations() {
 		List<TextAnnotation> conceptXAnnots = new ArrayList<TextAnnotation>();
-		conceptXAnnots.add(x1Sentence1Annot);
-		conceptXAnnots.add(x2Sentence1Annot);
-		conceptXAnnots.add(x1Sentence2Annot);
-		conceptXAnnots.add(x1Sentence4Annot);
+		conceptXAnnots.add(createX1Sentence1Annot());
+		conceptXAnnots.add(createX2Sentence1Annot());
+		conceptXAnnots.add(createX1Sentence2Annot());
+		conceptXAnnots.add(createX1Sentence4Annot());
 		return conceptXAnnots;
 	}
 
 	private List<TextAnnotation> populateYConceptAnnotations() {
 		List<TextAnnotation> conceptYAnnots = new ArrayList<TextAnnotation>();
-		conceptYAnnots.add(y1Sentence2Annot);
+		conceptYAnnots.add(createY1Sentence2Annot());
 		return conceptYAnnots;
 
 	}
 
 	private List<TextAnnotation> populateSentenceAnnotations() {
 		List<TextAnnotation> sentenceAnnotations = new ArrayList<TextAnnotation>();
-		sentenceAnnotations.add(sentence1Annot);
-		sentenceAnnotations.add(sentence2Annot);
-		sentenceAnnotations.add(sentence3Annot);
-		sentenceAnnotations.add(sentence4Annot);
+		sentenceAnnotations.add(createSentence1Annot());
+		sentenceAnnotations.add(createSentence2Annot());
+		sentenceAnnotations.add(createSentence3Annot());
+		sentenceAnnotations.add(createSentence4Annot());
 		return sentenceAnnotations;
 	}
 
 	@Test
 	public void testBuildSentenceToConceptMap() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+
 		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentToConceptMap = SentenceExtractionConceptAllFn
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptYAnnots);
 
@@ -187,27 +227,63 @@ public class SentenceExtractionConceptAllFnTest {
 
 	@Test
 	public void testFilterViaCrf() {
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+
 		List<TextAnnotation> crfAnnots = new ArrayList<TextAnnotation>();
-		crfAnnots.add(factory.createAnnotation(32, 41, "conceptX2", X_000002));
+		crfAnnots.add(createX2Sentence1Annot());
 		crfAnnots.add(factory.createAnnotation(49, 55, "ConceptX1", X_000001));
 
 		List<TextAnnotation> expectedAnnots = new ArrayList<TextAnnotation>();
-		expectedAnnots.add(factory.createAnnotation(32, 41, "conceptX2", X_000002));
-		expectedAnnots.add(factory.createAnnotation(43, 52, "ConceptX1", X_000001));
+		expectedAnnots.add(createX2Sentence1Annot());
+		expectedAnnots.add(createX1Sentence2Annot());
 
 		List<TextAnnotation> filteredAnnots = PipelineMain.filterViaCrf(conceptXAnnots, crfAnnots);
 
+		assertEquals(expectedAnnots.size(), filteredAnnots.size());
 		assertEquals(expectedAnnots, filteredAnnots);
 	}
 
 	@Test
 	public void testCatalogExtractedSentences() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+
 		Set<String> keywords = CollectionsUtil.createSet("sentence");
 
-		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
+				conceptYAnnots, sectionAnnots);
 
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
+				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
+				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
+				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
+		expectedExtractedSentences.add(es);
+
+		assertEquals(expectedExtractedSentences, extractedSentences);
+
+	}
+
+	@Test
+	public void testCatalogExtractedSentencesWithConceptSynonym() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+
+		Set<String> keywords = CollectionsUtil.createSet("sentence");
+
+		conceptXAnnots.add(x1Sentence2SynonymAnnot);
+
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
+				conceptYAnnots, sectionAnnots);
+
+		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
+		ExtractedSentence es = new ExtractedSentence(documentId, X_000001 + "|" + X_000001_SYN, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
 				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
@@ -224,13 +300,20 @@ public class SentenceExtractionConceptAllFnTest {
 	 */
 	@Test
 	public void testCatalogExtractedSentencesPreventDuplicates() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+
 		Set<String> keywords = CollectionsUtil.createSet("sentence");
 
 		// this is concept X but is part of the y ontology so it potentially creates a
 		// situation where an ExtractedSentence contains two references to concept X1.
 		conceptXAnnots.add(x3ReallyY1Sentence2Annot);
 
-		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
+				conceptYAnnots, sectionAnnots);
 
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
@@ -243,7 +326,9 @@ public class SentenceExtractionConceptAllFnTest {
 
 	}
 
-	private Set<ExtractedSentence> extractSentences(Set<String> keywords) {
+	private static Set<ExtractedSentence> extractSentences(Set<String> keywords,
+			List<TextAnnotation> sentenceAnnotations, List<TextAnnotation> conceptXAnnots,
+			List<TextAnnotation> conceptYAnnots, Collection<TextAnnotation> sectionAnnots) {
 		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
 				.buildSentenceToConceptMap(sentenceAnnotations, conceptXAnnots, conceptYAnnots);
 
@@ -255,9 +340,15 @@ public class SentenceExtractionConceptAllFnTest {
 
 	@Test
 	public void testCatalogExtractedSentencesNoKeyword() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 		Set<String> keywords = null;
 
-		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
+				conceptYAnnots, sectionAnnots);
 
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
@@ -276,6 +367,10 @@ public class SentenceExtractionConceptAllFnTest {
 	 */
 	@Test
 	public void testCatalogExtractedSentencesNoKeyword_DuplicatePlaceholder() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 		Set<String> keywords = null;
 
 		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = SentenceExtractionConceptAllFn
@@ -301,8 +396,14 @@ public class SentenceExtractionConceptAllFnTest {
 
 	@Test
 	public void testCatalogExtractedSentencesKeywordNotFound() {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> conceptXAnnots = populateXConceptAnnotations();
+		List<TextAnnotation> conceptYAnnots = populateYConceptAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 		Set<String> keywords = CollectionsUtil.createSet("notfound");
-		Set<ExtractedSentence> extractedSentences = extractSentences(keywords);
+		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
+				conceptYAnnots, sectionAnnots);
 
 		// keyword id not found, so no sentences are extracted
 		Set<ExtractedSentence> expectedExtractedSentences = new HashSet<ExtractedSentence>();
@@ -313,6 +414,9 @@ public class SentenceExtractionConceptAllFnTest {
 
 	@Test
 	public void testExtractSentences() throws IOException {
+		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+		List<TextAnnotation> sectionAnnots = Arrays
+				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 
 		DocumentCriteria textDc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
