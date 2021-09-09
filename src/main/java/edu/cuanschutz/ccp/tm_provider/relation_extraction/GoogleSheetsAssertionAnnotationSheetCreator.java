@@ -166,22 +166,28 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		List<Request> updateRequests = new ArrayList<Request>();
 		updateRequests.addAll(writeHeaderToSpreadsheet(biolinkAssociation, sheetsService, sheetId));
 
+		Set<String> hashesOutputInThisBatch = new HashSet<String>();
+		// this count is used to track what line a sentence ends up in the Google Sheet
 		int extractedSentenceCount = 1;
+		int sentenceCount = 0;
+		String previousSentenceText = null;
 		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
 				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
 				: new FileInputStream(inputSentenceFile);
 		StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null);
-		try (BufferedWriter alreadyAnnotatedWriter = FileWriterUtil.initBufferedWriter(previousSentenceIdsFile, UTF8,
-				WriteMode.APPEND, FileSuffixEnforcement.OFF)) {
-			while (lineIter.hasNext() && extractedSentenceCount < batchSize) {
+		try {
+			while (lineIter.hasNext() && hashesOutputInThisBatch.size() < batchSize) {
 				Line line = lineIter.next();
+				ExtractedSentence sentence = ExtractedSentence.fromTsv(line.getText(), true);
+				if (previousSentenceText == null || !previousSentenceText.equals(sentence.getSentenceText())) {
+					previousSentenceText = sentence.getSentenceText();
+					sentenceCount++;
+				}
 
-				if (indexesForNewBatch.contains((int) line.getLineNumber())) {
-					ExtractedSentence sentence = ExtractedSentence.fromTsv(line.getText(), true);
+				if (indexesForNewBatch.contains(sentenceCount)) {
 					String hash = computeHash(sentence);
 					if (!alreadyAnnotated.contains(hash)) {
-						alreadyAnnotated.add(hash);
-						alreadyAnnotatedWriter.write(hash + "\n");
+						hashesOutputInThisBatch.add(hash);
 						updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
 								extractedSentenceCount, biolinkAssociation));
 						extractedSentenceCount++;
@@ -192,7 +198,19 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			lineIter.close();
 		}
 
-		System.out.println("Update request count: " + updateRequests.size());
+		/*
+		 * save the hashes for sentences that were output during this batch to the file
+		 * that tracks sentence hashes that have already been exported to a sheet for
+		 * annotation
+		 */
+		try (BufferedWriter alreadyAnnotatedWriter = FileWriterUtil.initBufferedWriter(previousSentenceIdsFile, UTF8,
+				WriteMode.APPEND, FileSuffixEnforcement.OFF)) {
+			for (String hash : hashesOutputInThisBatch) {
+				alreadyAnnotatedWriter.write(hash + "\n");
+			}
+		}
+
+		System.out.println("Hashes output in this batch: " + hashesOutputInThisBatch.size());
 
 		// perform updates (formatting) on sentences
 		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
@@ -594,22 +612,32 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	protected static String computeHash(ExtractedSentence sentence) {
-		return DigestUtil.getBase64Sha1Digest(sentence.getSentenceWithPlaceholders());
+		return DigestUtil.getBase64Sha1Digest(sentence.getSentenceText());
 	}
 
 	/**
 	 * @param inputSentenceFile
-	 * @return the number of sentences in the specified file (as determined by
-	 *         counting lines that begin with #Text=)
+	 * @return the number of sentences in the specified file -- this is not just the
+	 *         line count, but the count of unique sentences. Many sentences appear
+	 *         multiple times (on multiple lines) because the contain multiple
+	 *         entities. This method does assume that the different entries for each
+	 *         particular sentence appear on consecutive lines in the input file.
 	 */
 	protected static int countSentences(File inputSentenceFile) throws IOException {
 		int sentenceCount = 0;
+		String previousSentenceText = null;
 		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
 				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
 				: new FileInputStream(inputSentenceFile);
+
 		for (StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null); lineIter.hasNext();) {
-			lineIter.next();
-			sentenceCount++;
+			Line line = lineIter.next();
+			String[] cols = line.getText().split("\\t");
+			String sentenceText = cols[10];
+			if (previousSentenceText == null || !previousSentenceText.equals(sentenceText)) {
+				sentenceCount++;
+				previousSentenceText = sentenceText;
+			}
 		}
 		return sentenceCount;
 	}
