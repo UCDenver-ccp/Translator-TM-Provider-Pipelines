@@ -5,6 +5,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CL_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NLMCHEM_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_CC_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_MF_DONE;
@@ -20,6 +21,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_NGD_KGX_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_DRUGBANK_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_BP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_CC_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_GO_MF_DONE;
@@ -72,6 +74,9 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	OGER_CL_DONE(STATUS_PROPERTY_OGER_CL_DONE),
+	
+	
+	OGER_DRUGBANK_DONE(STATUS_PROPERTY_OGER_DRUGBANK_DONE),
 	/**
 	 * 
 	 */
@@ -119,6 +124,7 @@ public enum ProcessingStatusFlag {
 	* 
 	*/
 	CRF_CHEBI_DONE(STATUS_PROPERTY_CRF_CHEBI_DONE),
+	CRF_NLMCHEM_DONE(STATUS_PROPERTY_CRF_NLMCHEM_DONE),
 	/**
 	* 
 	*/

@@ -149,6 +149,7 @@ public interface DatastoreConstants {
 
 	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
 	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
+	public static final String STATUS_PROPERTY_OGER_DRUGBANK_DONE = "oger_drugbank";
 	public static final String STATUS_PROPERTY_OGER_GO_BP_DONE = "oger_gobp";
 	public static final String STATUS_PROPERTY_OGER_GO_CC_DONE = "oger_gocc";
 	public static final String STATUS_PROPERTY_OGER_GO_MF_DONE = "oger_gomf";
@@ -166,6 +167,7 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 
 	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
+	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
 	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
 	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
 	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
