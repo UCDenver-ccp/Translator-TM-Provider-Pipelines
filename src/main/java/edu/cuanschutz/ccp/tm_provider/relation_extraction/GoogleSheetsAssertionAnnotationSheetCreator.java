@@ -210,8 +210,6 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			}
 		}
 
-		System.out.println("Hashes output in this batch: " + hashesOutputInThisBatch.size());
-
 		// perform updates (formatting) on sentences
 		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
 		content.setRequests(updateRequests);
@@ -437,10 +435,6 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		defaultFormat.setForegroundColor(black);
 		defaultFormat.setItalic(false);
 
-		System.out.println("Subject format: " + subjectFormat.getForegroundColor().toString());
-		System.out.println("Object format: " + objectFormat.getForegroundColor().toString());
-		System.out.println("Default format: " + defaultFormat.getForegroundColor().toString());
-
 		GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(extractedSentenceCount)
 				.setEndRowIndex(extractedSentenceCount + 1).setStartColumnIndex(SENTENCE_COLUMN)
 				.setEndColumnIndex(SENTENCE_COLUMN + 1);
@@ -459,17 +453,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		}
 //		Collections.sort(objectSpans, Span.ASCENDING());
 
-		System.out.println("\nUNSorted Map");
-		for (Entry<Span, TextFormat> entry : formatMap.entrySet()) {
-			System.out.println(entry.getKey().toString() + " -- " + entry.getValue().getForegroundColor().toString());
-		}
-
 		Map<Span, TextFormat> sortedFormatMap = sortMapByKeys(formatMap, Span.ASCENDING());
-
-		System.out.println("\nSorted Map");
-		for (Entry<Span, TextFormat> entry : sortedFormatMap.entrySet()) {
-			System.out.println(entry.getKey().toString() + " -- " + entry.getValue().getForegroundColor().toString());
-		}
 
 //		List<TextFormatRun> subjectFormatRuns = getFormatRuns(subjectFormatOn, formatOff, subjectSpans);
 //		List<TextFormatRun> objectFormatRuns = getFormatRuns(objectFormatOn, formatOff, objectSpans);
@@ -506,14 +490,11 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			formatOnRun.setStartIndex(span.getSpanStart());
 			formatRuns.add(formatOnRun);
 
-			System.out.println(span.getSpanStart() + " -- " + format.getForegroundColor().toString());
-
 			TextFormatRun formatOffRun = new TextFormatRun();
 			formatOffRun.setFormat(defaultFormat);
 			formatOffRun.setStartIndex(span.getSpanEnd());
 			formatRuns.add(formatOffRun);
 
-			System.out.println(span.getSpanEnd() + " -- " + defaultFormat.getForegroundColor().toString());
 		}
 		return formatRuns;
 	}
@@ -608,7 +589,6 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	private static String createNewSheet(Sheets sheetsService, String sheetTitle) throws IOException {
 		Spreadsheet spreadSheet = new Spreadsheet().setProperties(new SpreadsheetProperties().setTitle(sheetTitle));
 		Spreadsheet result = sheetsService.spreadsheets().create(spreadSheet).execute();
-		System.out.println("New sheet id: " + result.getSpreadsheetId());
 		return result.getSpreadsheetId();
 	}
 
