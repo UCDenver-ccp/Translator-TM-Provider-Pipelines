@@ -319,10 +319,6 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		}
 
 		String documentIdUri = "https://pubmed.ncbi.nlm.nih.gov/" + docId;
-		String subjectIdUri = "http://purl.obolibrary.org/obo/"
-				+ getSubjectId(sentence, biolinkAssociation).replace(":", "_");
-		String objectIdUri = "http://purl.obolibrary.org/obo/"
-				+ getObjectId(sentence, biolinkAssociation).replace(":", "_");
 
 		// document Id link
 		{
@@ -352,52 +348,62 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			updateRequests.add(r);
 		}
 
-		// subject Id link
+		// subject Id link - there could be more than one subject ID if there are
+		// overlapping annotations, so the code may make more than one hyperlink
 		{
-			TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(subjectIdUri));
-			GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
-					.setEndRowIndex(endRowIndex).setStartColumnIndex(SUBJECT_ID_COLUMN)
-					.setEndColumnIndex(SUBJECT_ID_COLUMN + 1);
-			TextFormatRun textFormatRun = new TextFormatRun();
-			textFormatRun.setFormat(linkFormat);
-			textFormatRun.setStartIndex(0);
-			CellData cellData = new CellData().setTextFormatRuns(Arrays.asList(textFormatRun));
-			List<CellData> cellDataList = Arrays.asList(cellData);
-			RowData rowData = new RowData().setValues(cellDataList);
-			List<RowData> rows = Arrays.asList(rowData);
+			int index = 0;
+			for (String subjectId : getSubjectId(sentence, biolinkAssociation).split("\\|")) {
+				String subjectIdUri = "http://purl.obolibrary.org/obo/" + subjectId.replace(":", "_");
+				TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(subjectIdUri));
+				GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
+						.setEndRowIndex(endRowIndex).setStartColumnIndex(SUBJECT_ID_COLUMN)
+						.setEndColumnIndex(SUBJECT_ID_COLUMN + 1);
+				TextFormatRun textFormatRun = new TextFormatRun();
+				textFormatRun.setFormat(linkFormat);
+				textFormatRun.setStartIndex(index);
+				CellData cellData = new CellData().setTextFormatRuns(Arrays.asList(textFormatRun));
+				List<CellData> cellDataList = Arrays.asList(cellData);
+				RowData rowData = new RowData().setValues(cellDataList);
+				List<RowData> rows = Arrays.asList(rowData);
 
-			UpdateCellsRequest updateCellRequest = new UpdateCellsRequest();
-			updateCellRequest.setRange(range);
-			updateCellRequest.setRows(rows);
-			updateCellRequest.setFields("textFormatRuns");
+				UpdateCellsRequest updateCellRequest = new UpdateCellsRequest();
+				updateCellRequest.setRange(range);
+				updateCellRequest.setRows(rows);
+				updateCellRequest.setFields("textFormatRuns");
 
-			Request r = new Request();
-			r.setUpdateCells(updateCellRequest);
-			updateRequests.add(r);
+				Request r = new Request();
+				r.setUpdateCells(updateCellRequest);
+				updateRequests.add(r);
+				index += subjectId.length() + 1;
+			}
 		}
 
 		// object Id link
 		{
-			TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(objectIdUri));
-			GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
-					.setEndRowIndex(endRowIndex).setStartColumnIndex(OBJECT_ID_COLUMN)
-					.setEndColumnIndex(OBJECT_ID_COLUMN + 1);
-			TextFormatRun textFormatRun = new TextFormatRun();
-			textFormatRun.setFormat(linkFormat);
-			textFormatRun.setStartIndex(0);
-			CellData cellData = new CellData().setTextFormatRuns(Arrays.asList(textFormatRun));
-			List<CellData> cellDataList = Arrays.asList(cellData);
-			RowData rowData = new RowData().setValues(cellDataList);
-			List<RowData> rows = Arrays.asList(rowData);
+			int index = 0;
+			for (String objectId : getObjectId(sentence, biolinkAssociation).split("\\|")) {
+				String objectIdUri = "http://purl.obolibrary.org/obo/" + objectId.replace(":", "_");
+				TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(objectIdUri));
+				GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
+						.setEndRowIndex(endRowIndex).setStartColumnIndex(OBJECT_ID_COLUMN)
+						.setEndColumnIndex(OBJECT_ID_COLUMN + 1);
+				TextFormatRun textFormatRun = new TextFormatRun();
+				textFormatRun.setFormat(linkFormat);
+				textFormatRun.setStartIndex(index);
+				CellData cellData = new CellData().setTextFormatRuns(Arrays.asList(textFormatRun));
+				List<CellData> cellDataList = Arrays.asList(cellData);
+				RowData rowData = new RowData().setValues(cellDataList);
+				List<RowData> rows = Arrays.asList(rowData);
 
-			UpdateCellsRequest updateCellRequest = new UpdateCellsRequest();
-			updateCellRequest.setRange(range);
-			updateCellRequest.setRows(rows);
-			updateCellRequest.setFields("textFormatRuns");
+				UpdateCellsRequest updateCellRequest = new UpdateCellsRequest();
+				updateCellRequest.setRange(range);
+				updateCellRequest.setRows(rows);
+				updateCellRequest.setFields("textFormatRuns");
 
-			Request r = new Request();
-			r.setUpdateCells(updateCellRequest);
-			updateRequests.add(r);
+				Request r = new Request();
+				r.setUpdateCells(updateCellRequest);
+				updateRequests.add(r);
+			}
 		}
 
 		return updateRequests;
