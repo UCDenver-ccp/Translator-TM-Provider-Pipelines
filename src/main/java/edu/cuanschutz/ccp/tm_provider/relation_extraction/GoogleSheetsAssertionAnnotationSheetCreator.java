@@ -288,8 +288,9 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	private static Collection<Request> writeSentenceToSpreadsheet(String sentenceId, ExtractedSentence sentence,
 			Sheets sheetsService, String sheetId, int extractedSentenceCount, BiolinkAssociation biolinkAssociation)
 			throws IOException {
-		List<List<Object>> values = Arrays.asList(Arrays.asList(sentenceId, sentence.getDocumentId(),
-				sentence.getEntityId1(), sentence.getEntityId2(), sentence.getSentenceText(), true, false, false));
+		List<List<Object>> values = Arrays
+				.asList(Arrays.asList(sentenceId, sentence.getDocumentId(), getSubjectId(sentence, biolinkAssociation),
+						getObjectId(sentence, biolinkAssociation), sentence.getSentenceText(), true, false, false));
 		ValueRange body = new ValueRange().setValues(values);
 
 		// USER_ENTERED could also be RAW: see
