@@ -117,11 +117,11 @@ public interface DatastoreConstants {
 	 * The document ID corresponding to this status data
 	 */
 	public static final String STATUS_PROPERTY_DOCUMENT_ID = "document_id";
-	
+
 	public static final String STATUS_PROPERTY_YEAR_PUBLISHED = "pub_year";
-	
+
 	public static final String STATUS_PROPERTY_PUBLICATION_TYPES = "pub_types";
-	
+
 	/**
 	 * 
 	 */
@@ -181,8 +181,17 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
 
 	////////////////////////////////////////////////////////////////
-	////////////////// BERT CONCEPT PROCESSING /////////////////////
+	///////////////////// SENTENCE EXPORT //////////////////////////
 	////////////////////////////////////////////////////////////////
+
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE = "sent_exp_blgtesa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_exp_bldtpfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_exp_blctdopfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE = "sent_exp_blgtda";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE = "sent_exp_blgtda_lfgf";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE = "sent_exp_blgrra";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE = "sent_exp_blctga";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE = "sent_exp_blgtgta";
 
 //	/**
 //	 * 

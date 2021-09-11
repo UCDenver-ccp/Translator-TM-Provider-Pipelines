@@ -5,7 +5,6 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CL_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NLMCHEM_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_CC_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_MF_DONE;
@@ -13,6 +12,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MONDO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MOP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NCBITAXON_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NLMCHEM_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_PR_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
@@ -36,6 +36,14 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SECTIONS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
 
@@ -56,7 +64,7 @@ public enum ProcessingStatusFlag {
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
 
 	CONCEPT_POST_PROCESSING_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE),
-	
+
 	CONCEPT_POST_PROCESSING_UNFILTERED_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE),
 
 	NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE(STATUS_PROPERTY_NGD_COUNTS_DONE),
@@ -74,8 +82,7 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	OGER_CL_DONE(STATUS_PROPERTY_OGER_CL_DONE),
-	
-	
+
 	OGER_DRUGBANK_DONE(STATUS_PROPERTY_OGER_DRUGBANK_DONE),
 	/**
 	 * 
@@ -97,7 +104,7 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	OGER_MOP_DONE(STATUS_PROPERTY_OGER_MOP_DONE),
-	
+
 	OGER_MP_DONE(STATUS_PROPERTY_OGER_MP_DONE),
 	/**
 	 * 
@@ -123,8 +130,7 @@ public enum ProcessingStatusFlag {
 	/**
 	* 
 	*/
-	CRF_CHEBI_DONE(STATUS_PROPERTY_CRF_CHEBI_DONE),
-	CRF_NLMCHEM_DONE(STATUS_PROPERTY_CRF_NLMCHEM_DONE),
+	CRF_CHEBI_DONE(STATUS_PROPERTY_CRF_CHEBI_DONE), CRF_NLMCHEM_DONE(STATUS_PROPERTY_CRF_NLMCHEM_DONE),
 	/**
 	* 
 	*/
@@ -222,9 +228,25 @@ public enum ProcessingStatusFlag {
 	 */
 	NOOP(null),
 
-	////////////////////////////////////////////////////////////////
-	//////////////////// RELATION PROCESSING ///////////////////////
-	////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////
+	//////////////////// RELATION PROCESSING - SENTENCE OUTPUT
+	////////////////////////////////////////////////////////////////////////////////// ///////////////////////
+	//////////////////////////////////////////////////////////////////////////////////
+
+	SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION(STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_GENE_TO_DISEASE_LOSS_GAIN_FUNCTION_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE),
+	SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION(
+			STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE),
+	SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION(STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE),
 
 	/**
 	 * 
