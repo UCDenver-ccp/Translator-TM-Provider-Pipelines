@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,8 +146,10 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 			yPrefix = xPrefix;
 		}
 
-		List<TextAnnotation> conceptXAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, xPrefix);
-		List<TextAnnotation> conceptYAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, yPrefix);
+		List<TextAnnotation> conceptXAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
+				Arrays.asList(xPrefix));
+		List<TextAnnotation> conceptYAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
+				Arrays.asList(yPrefix));
 
 		System.out.println("CONCEPT X: " + conceptXAnnots.size());
 		System.out.println("CONCEPT Y: " + conceptYAnnots.size());
@@ -185,8 +188,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 		Set<String> extractedSentences = new HashSet<String>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
 			TextAnnotation sentenceAnnot = entry.getKey();
-			String keywordInSentence = SentenceExtractionFn
-					.sentenceContainsKeyword(sentenceAnnot.getCoveredText(), keywords);
+			String keywordInSentence = SentenceExtractionFn.sentenceContainsKeyword(sentenceAnnot.getCoveredText(),
+					keywords);
 			if (keywords == null || keywords.isEmpty() || keywordInSentence != null) {
 				if (entry.getValue().size() > 1) {
 					// then this sentence contains at least 1 concept X and 1 concept Y

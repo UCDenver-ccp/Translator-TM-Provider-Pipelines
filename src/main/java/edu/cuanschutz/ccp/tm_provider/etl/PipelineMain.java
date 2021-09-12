@@ -375,7 +375,8 @@ public class PipelineMain {
 		 * Datastore but are simply exporting content to a bucket, e.g. the
 		 * ConceptAnnotationExportPipeline
 		 */
-		if (overwriteOutput == OverwriteOutput.NO && targetProcessStatusFlag != null) {
+		if (overwriteOutput == OverwriteOutput.NO && targetProcessStatusFlag != null
+				&& targetProcessStatusFlag != ProcessingStatusFlag.NOOP) {
 			filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(),
 					PropertyFilter.Operator.EQUAL, makeValue(false)).build());
 		}
@@ -710,7 +711,7 @@ public class PipelineMain {
 				makeValue(CollectionsUtil.createDelimitedString(publicationTypes, "|")).build());
 
 		String yearPublished = origEntity.getYearPublished();
-		if (yearPublished == null) {
+		if (yearPublished == null || yearPublished.equals("false")) {
 			yearPublished = "2155"; // max value of year in MySQL
 		}
 		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED,

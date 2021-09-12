@@ -130,25 +130,28 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
 		Collection<TextAnnotation> sectionAnnots = docTypeToContentMap.get(DocumentType.SECTIONS);
 
-		String xPrefix = null;
-		String yPrefix = null;
-		// there are only two prefixes in the map, e.g. CHEBI, CL, MONDO.
+		List<String> xPrefixes = new ArrayList<String>();
+		List<String> yPrefixes = new ArrayList<String>();
+		String xPlaceholder = null;
+		// there are only two placeholders in the map, e.g. @GENE$ so we use the
+		// placeholders to assign the prefixes to distinct lists
 		for (String prefix : prefixToPlaceholderMap.keySet()) {
-			if (xPrefix == null) {
-				xPrefix = prefix;
+			if (xPlaceholder == null || xPlaceholder.equals(prefixToPlaceholderMap.get(prefix))) {
+				xPrefixes.add(prefix);
+				xPlaceholder = prefixToPlaceholderMap.get(prefix);
 			} else {
-				yPrefix = prefix;
+				yPrefixes.add(prefix);
 			}
 		}
 
 		// if there is only one prefix - then we are looking for sentences that have two
 		// of the same kind of anntotation, e.g. two protein annotations
-		if (yPrefix == null) {
-			yPrefix = xPrefix;
+		if (yPrefixes.isEmpty()) {
+			yPrefixes.addAll(xPrefixes);
 		}
 
-		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefix);
-		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefix);
+		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes);
+		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes);
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
@@ -156,8 +159,9 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
 					sentenceAnnots, conceptXAnnots, conceptYAnnots);
 
-			String xPlaceholder = prefixToPlaceholderMap.get(xPrefix);
-			String yPlaceholder = prefixToPlaceholderMap.get(yPrefix);
+			// xPlaceholder was already set above
+//			String xPlaceholder = prefixToPlaceholderMap.get(xPrefixes.get(0));
+			String yPlaceholder = prefixToPlaceholderMap.get(yPrefixes.get(0));
 
 			extractedSentences
 					.addAll(catalogExtractedSentences(keywords, documentText, documentId, documentPublicationTypes,
@@ -175,12 +179,15 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	 * @param xPrefix
 	 * @return
 	 */
-	public static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots, String prefix) {
+	public static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots,
+			List<String> prefixes) {
 		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
 
 		for (TextAnnotation annot : conceptAnnots) {
-			if (annot.getClassMention().getMentionName().startsWith(prefix)) {
-				annots.add(annot);
+			for (String prefix : prefixes) {
+				if (annot.getClassMention().getMentionName().startsWith(prefix)) {
+					annots.add(annot);
+				}
 			}
 		}
 		return annots;
@@ -244,7 +251,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 		Map<List<Span>, TextAnnotation> spanToAnnotMap = new HashMap<List<Span>, TextAnnotation>();
 
 		System.out.println("Concept count (in): " + conceptAnnots.size());
-		
+
 		for (TextAnnotation annot : conceptAnnots) {
 			List<Span> spans = annot.getSpans();
 			if (spanToAnnotMap.containsKey(spans)) {
@@ -256,14 +263,11 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			}
 		}
 
-		System.out.println("Concept count (out): " + spanToAnnotMap.values().size());
 		return new HashSet<TextAnnotation>(spanToAnnotMap.values());
 
 	}
 
 	/**
-	 * TODO - to be implemented - need to bring in the section annotations in order
-	 * to determine that zone the sentence is in
 	 * 
 	 * @param sentenceAnnot
 	 * @return

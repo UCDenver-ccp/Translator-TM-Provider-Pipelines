@@ -62,7 +62,7 @@ public class SentenceExtractionPipeline {
 
 		void setKeywords(String keywords);
 
-		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X.")
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X. Can be a pipe-delimited list of multiple prefixes.")
 		String getPrefixX();
 
 		void setPrefixX(String prefix);
@@ -72,7 +72,7 @@ public class SentenceExtractionPipeline {
 
 		void setPlaceholderX(String placeholder);
 
-		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y.")
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y. Can be a pipe-delimited list of multiple prefixes.")
 		String getPrefixY();
 
 		void setPrefixY(String prefix);
@@ -156,13 +156,17 @@ public class SentenceExtractionPipeline {
 		// concept type is replaced by which placeholder.
 		Map<String, String> prefixToPlaceholderMap = new HashMap<String, String>();
 
-		prefixToPlaceholderMap.put(options.getPrefixX(), options.getPlaceholderX());
-		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
+		for (String xPrefix : options.getPrefixX().split("\\|")) {
+			prefixToPlaceholderMap.put(xPrefix, options.getPlaceholderX());
+		}
+		for (String yPrefix : options.getPrefixY().split("\\|")) {
+			prefixToPlaceholderMap.put(yPrefix, options.getPlaceholderY());
+		}
 
 		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
-		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords,
-				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
+		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
+				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
 				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
@@ -194,12 +198,18 @@ public class SentenceExtractionPipeline {
 		/*
 		 * update the status entities to reflect the work completed, and store in
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
+		 * 
+		 * We may run this pipeline manually to extract sentences to be part of training
+		 * sets. When doing so we'll use the NOOP flag so that the status is not flagged
+		 * as having its sentences extracted for classification.
 		 */
-		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
-				statusToOutputTsv.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
+		if (targetProcessingStatusFlag != ProcessingStatusFlag.NOOP) {
+			PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+					statusToOutputTsv.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
+			PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
+			nonredundantStatusEntities.apply("status_entity->datastore",
+					DatastoreIO.v1().write().withProjectId(options.getProject()));
+		}
 
 		// output sentences to file
 		PCollection<String> outputTsv = statusToOutputTsv
