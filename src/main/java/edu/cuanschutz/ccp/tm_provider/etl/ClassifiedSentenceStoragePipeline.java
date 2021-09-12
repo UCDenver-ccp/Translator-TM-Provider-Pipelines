@@ -91,13 +91,12 @@ public class ClassifiedSentenceStoragePipeline {
 	public static void main(String[] args) {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
-		
-		
+
 		System.out.println("bert output file: " + options.getBertOutputFilePath());
 		System.out.println("sentence metadata file: " + options.getSentenceMetadataFilePath());
-		
+
 		final double bertScoreInclusionMinimumThreshold = options.getBertScoreInclusionMinimumThreshold();
-		
+
 		final String bertOutputFilePath = options.getBertOutputFilePath();
 		PCollection<String> bertOutputLines = p.apply(TextIO.read().from(bertOutputFilePath));
 		PCollection<KV<String, String>> idToBertOutputLines = getKV(bertOutputLines, 0);
@@ -119,9 +118,6 @@ public class ClassifiedSentenceStoragePipeline {
 		final String projectId = options.getProject();
 		final String cloudSqlRegion = options.getCloudSqlRegion();
 		final BiolinkAssociation biolinkAssoc = options.getBiolinkAssociation();
-		
-		
-		
 
 		PCollection<SqlValues> sqlValues = result.apply("compile sql values",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, SqlValues>() {
@@ -143,9 +139,14 @@ public class ClassifiedSentenceStoragePipeline {
 						if (bertOutputLineIter.hasNext()) {
 							bertOutputLine = bertOutputLineIter.next();
 							if (bertOutputLineIter.hasNext()) {
-								throw new IllegalArgumentException(
-										"Did not expect another line to match from the BERT output file: "
-												+ bertOutputLineIter.next());
+								// if there is another line, check it just to make sure it's a redundant copy.
+								// If it's not identical, then error.
+								String nextBertOutputLine = bertOutputLineIter.next();
+								if (!nextBertOutputLine.equals(bertOutputLine)) {
+									throw new IllegalArgumentException(
+											"Did not expect another line to match from the BERT output file: "
+													+ bertOutputLine + " --- != --- " + nextBertOutputLine);
+								}
 							}
 						}
 
@@ -154,9 +155,14 @@ public class ClassifiedSentenceStoragePipeline {
 						if (metadataLineIter.hasNext()) {
 							metadataLine = metadataLineIter.next();
 							if (metadataLineIter.hasNext()) {
-								throw new IllegalArgumentException(
-										"Did not expect another line to match from the BERT output file: "
-												+ metadataLineIter.next());
+								// if there is another line, check it just to make sure it's a redundant copy.
+								// If it's not identical, then error.
+								String nextMetadataLine = metadataLineIter.next();
+								if (!nextMetadataLine.equals(metadataLine)) {
+									throw new IllegalArgumentException(
+											"Did not expect another line to match from the metadata file: "
+													+ metadataLine + " --- != --- " + nextMetadataLine);
+								}
 							}
 						}
 
@@ -165,7 +171,6 @@ public class ClassifiedSentenceStoragePipeline {
 
 							int index = 0;
 							String[] bertOutputCols = bertOutputLine.split("\\t");
-							@SuppressWarnings("unused")
 							String sentenceId1 = bertOutputCols[index++];
 							@SuppressWarnings("unused")
 							String sentenceWithPlaceholders1 = bertOutputCols[index++];
@@ -180,66 +185,74 @@ public class ClassifiedSentenceStoragePipeline {
 							for (String predicateCurie : getPredicateCuries(biolinkAssoc)) {
 								double score = Double.parseDouble(bertOutputCols[index++]);
 								predicateCurieToScore.put(predicateCurie, score);
-								if (!predicateCurie.equals("false")
-										&& score > bertScoreInclusionMinimumThreshold) {
+								if (!predicateCurie.equals("false") && score > bertScoreInclusionMinimumThreshold) {
 									hasScoreThatMeetsMinimumInclusionThreshold = true;
 								}
 							}
 
 							if (hasScoreThatMeetsMinimumInclusionThreshold) {
 								ExtractedSentence es = ExtractedSentence.fromTsv(metadataLine, true);
+								// ensure the sentence identifer in the metadata line equals that from the bert
+								// output line. This check is probably unnecessary since the lines were keyed
+								// together based on the sentence ID initially, but we'll check just in case.
+								if (es.getSentenceIdentifier().equals(sentenceId1)) {
+									String subjectCoveredText;
+									String subjectCurie;
+									String subjectSpanStr;
+									String objectCoveredText;
+									String objectCurie;
+									String objectSpanStr;
+									if (es.getEntityPlaceholder1().equals(biolinkAssoc.getSubjectPlaceholder())) {
+										subjectCurie = es.getEntityId1();
+										subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+										subjectCoveredText = es.getEntityCoveredText1();
+										objectCurie = es.getEntityId2();
+										objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+										objectCoveredText = es.getEntityCoveredText2();
+									} else {
+										subjectCurie = es.getEntityId2();
+										subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+										subjectCoveredText = es.getEntityCoveredText2();
+										objectCurie = es.getEntityId1();
+										objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+										objectCoveredText = es.getEntityCoveredText1();
+									}
 
-								String subjectCoveredText;
-								String subjectCurie;
-								String subjectSpanStr;
-								String objectCoveredText;
-								String objectCurie;
-								String objectSpanStr;
-								if (es.getEntityPlaceholder1().equals(biolinkAssoc.getSubjectPlaceholder())) {
-									subjectCurie = es.getEntityId1();
-									subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-									subjectCoveredText = es.getEntityCoveredText1();
-									objectCurie = es.getEntityId2();
-									objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-									objectCoveredText = es.getEntityCoveredText2();
-								} else {
-									subjectCurie = es.getEntityId2();
-									subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-									subjectCoveredText = es.getEntityCoveredText2();
-									objectCurie = es.getEntityId1();
-									objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-									objectCoveredText = es.getEntityCoveredText1();
+									String documentId = es.getDocumentId();
+									String sentence = es.getSentenceText();
+
+									String assertionId = DigestUtils
+											.sha256Hex(subjectCurie + objectCurie + biolinkAssoc.getAssociationId());
+									String evidenceId = DigestUtils.sha256Hex(documentId + sentence + subjectCurie
+											+ subjectSpanStr + objectCurie + objectSpanStr);
+									String subjectEntityId = DigestUtils
+											.sha256Hex(documentId + sentence + subjectCurie + subjectSpanStr);
+									String objectEntityId = DigestUtils
+											.sha256Hex(documentId + sentence + objectCurie + objectSpanStr);
+
+									int documentYearPublished = es.getDocumentYearPublished();
+									if (documentYearPublished > 2155) {
+										// 2155 is the max year value in MySQL
+										documentYearPublished = 2155;
+									}
+									SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
+											biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
+											subjectEntityId, objectEntityId, es.getDocumentZone(),
+											CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(),
+													"|"),
+											documentYearPublished, subjectSpanStr, objectSpanStr, subjectCoveredText,
+											objectCoveredText);
+
+									for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
+										sqlValues.addScore(entry.getKey(), entry.getValue());
+									}
+
+									c.output(sqlValues);
 								}
-
-								String documentId = es.getDocumentId();
-								String sentence = es.getSentenceText();
-
-								String assertionId = DigestUtils
-										.sha256Hex(subjectCurie + objectCurie + biolinkAssoc.getAssociationId());
-								String evidenceId = DigestUtils.sha256Hex(documentId + sentence + subjectCurie
-										+ subjectSpanStr + objectCurie + objectSpanStr);
-								String subjectEntityId = DigestUtils
-										.sha256Hex(documentId + sentence + subjectCurie + subjectSpanStr);
-								String objectEntityId = DigestUtils
-										.sha256Hex(documentId + sentence + objectCurie + objectSpanStr);
-
-								int documentYearPublished = es.getDocumentYearPublished();
-								if (documentYearPublished > 2155) {
-									// 2155 is the max year value in MySQL
-									documentYearPublished = 2155;
-								}
-								SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
-										biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
-										subjectEntityId, objectEntityId, es.getDocumentZone(),
-										CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(), "|"),
-										documentYearPublished, subjectSpanStr, objectSpanStr,
-										subjectCoveredText, objectCoveredText);
-
-								for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
-									sqlValues.addScore(entry.getKey(), entry.getValue());
-								}
-
-								c.output(sqlValues);
+							} else {
+								throw new IllegalStateException(
+										"Mismatch between the BERT output file and sentence metadata files detected. "
+												+ "Sentence identifiers do not match!!!");
 							}
 
 						}
