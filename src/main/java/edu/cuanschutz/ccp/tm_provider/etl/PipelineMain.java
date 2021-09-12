@@ -722,6 +722,18 @@ public class PipelineMain {
 		for (ProcessingStatusFlag flag : flagsToActivate) {
 			entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
 		}
+
+		/*
+		 * If there are new status flags available that did not exist when this status
+		 * entity was last updated, also add them and set them to false.
+		 */
+		Map<String, Value> propertiesMap = entityBuilder.getPropertiesMap();
+		for (ProcessingStatusFlag flag : ProcessingStatusFlag.values()) {
+			if (flag != ProcessingStatusFlag.NOOP && !propertiesMap.containsKey(flag.getDatastoreFlagPropertyName())) {
+				entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(false).build());
+			}
+		}
+
 		Entity entity = entityBuilder.build();
 		return entity;
 	}
