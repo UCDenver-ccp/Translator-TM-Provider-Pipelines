@@ -87,10 +87,12 @@ public interface DatastoreConstants {
 	 * The message provided by the exception that was indicated for the failure
 	 */
 	public static final String FAILURE_PROPERTY_MESSAGE = "message";
+	public static final String FAILURE_PROPERTY_CAUSE_MESSAGE = "cause_message";
 	/**
 	 * The stacktrace of the exception that was indicated for the failure
 	 */
 	public static final String FAILURE_PROPERTY_STACKTRACE = "stacktrace";
+	public static final String FAILURE_PROPERTY_CAUSE_STACKTRACE = "cause_stacktrace";
 	/**
 	 * The pipeline where the failure occurred
 	 */
@@ -184,14 +186,14 @@ public interface DatastoreConstants {
 	///////////////////// SENTENCE EXPORT //////////////////////////
 	////////////////////////////////////////////////////////////////
 
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE = "sent_exp_blgtesa";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_exp_bldtpfa";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_exp_blctdopfa";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE = "sent_exp_blgtda";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE = "sent_exp_blgtda_lfgf";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE = "sent_exp_blgrra";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE = "sent_exp_blctga";
-	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE = "sent_exp_blgtgta";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE = "sent_xprt_blgtesa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_xprt_bldtpfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_xprt_blctdopfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE = "sent_xprt_blgtda";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE = "sent_xprt_blgtda_lfgf";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE = "sent_xprt_blgrra";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE = "sent_xprt_blctga";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE = "sent_xprt_blgtgta";
 
 //	/**
 //	 * 
