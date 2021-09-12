@@ -25,6 +25,8 @@ public class EtlFailureData extends DoFn {
 	private final String message;
 	private final String documentId;
 	private final String stackTrace;
+	private final String causeStackTrace;
+	private final String causeMessage;
 	private final DocumentCriteria documentCriteria;
 	private final com.google.cloud.Timestamp timestamp;
 
@@ -35,6 +37,10 @@ public class EtlFailureData extends DoFn {
 		this.documentId = documentId;
 		this.stackTrace = (thrown == null) ? "" : Arrays.toString(thrown.getStackTrace());
 		this.timestamp = timestamp;
+		Throwable cause = thrown.getCause();
+		this.causeMessage = (cause == null) ? "" : cause.getMessage();
+		this.causeStackTrace = (cause == null) ? "" : Arrays.toString(cause.getStackTrace());
+		
 		logger.warn("TMPLOG -- Logging failure: " + getMessage() + " -- " + getStackTrace());
 	}
 

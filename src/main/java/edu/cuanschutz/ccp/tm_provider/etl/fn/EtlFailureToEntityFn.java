@@ -5,9 +5,11 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_MESSAGE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE_VERSION;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_STACKTRACE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_STACKTRACE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_TIMESTAMP;
 
 import java.io.UnsupportedEncodingException;
@@ -41,6 +43,8 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 		String docId = failure.getDocumentId();
 		String message = failure.getMessage();
 		String stackTrace = failure.getStackTrace();
+		String causeMessage = failure.getCauseMessage();
+		String causeStackTrace = (failure.getCauseStackTrace() == null) ? "" : failure.getCauseStackTrace();
 		PipelineKey pipeline = failure.getDocumentCriteria().getPipelineKey();
 		String pipelineVersion = failure.getDocumentCriteria().getPipelineVersion();
 		DocumentType documentType = failure.getDocumentCriteria().getDocumentType();
@@ -52,13 +56,14 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 
 		DocumentCriteria dc = new DocumentCriteria(documentType, documentFormat, pipeline, pipelineVersion);
 
-		Entity entity = buildFailureEntity(dc, docId, message, stackTrace, timestamp);
+		Entity entity = buildFailureEntity(dc, docId, message, stackTrace, causeMessage, causeStackTrace, timestamp);
 		out.output(KV.of(entity.getKey().toString(), entity));
 
 	}
 
 	static Entity buildFailureEntity(DocumentCriteria dc, String docId, String message, String stackTrace,
-			com.google.cloud.Timestamp timestamp) throws UnsupportedEncodingException {
+			String causeMessage, String causeStackTrace, com.google.cloud.Timestamp timestamp)
+			throws UnsupportedEncodingException {
 		com.google.datastore.v1.Key key = DatastoreKeyUtil.createFailureKey(docId, dc);
 
 		/*
@@ -66,6 +71,12 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 		 * blob and store it unindexed
 		 */
 		ByteString stackTraceBlob = ByteString.copyFrom(stackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
+		ByteString causeStackTraceBlob = (causeStackTrace == null) ? ByteString.EMPTY : ByteString.copyFrom(causeStackTrace,
+				CharacterEncoding.UTF_8.getCharacterSetName());
+		if (causeMessage == null) {
+			causeMessage = "";
+		}
+		
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
@@ -77,6 +88,9 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 		entityBuilder.putProperties(FAILURE_PROPERTY_MESSAGE, makeValue(message).build());
 		entityBuilder.putProperties(FAILURE_PROPERTY_STACKTRACE,
 				makeValue(stackTraceBlob).setExcludeFromIndexes(true).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_CAUSE_MESSAGE, makeValue(causeMessage).build());
+		entityBuilder.putProperties(FAILURE_PROPERTY_CAUSE_STACKTRACE,
+				makeValue(causeStackTraceBlob).setExcludeFromIndexes(true).build());
 
 		Entity entity = entityBuilder.build();
 		return entity;

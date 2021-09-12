@@ -51,9 +51,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.tools.ant.util.StringUtils;
-import org.checkerframework.checker.initialization.qual.Initialized;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
@@ -713,6 +710,9 @@ public class PipelineMain {
 				makeValue(CollectionsUtil.createDelimitedString(publicationTypes, "|")).build());
 
 		String yearPublished = origEntity.getYearPublished();
+		if (yearPublished == null) {
+			yearPublished = "2155"; // max value of year in MySQL
+		}
 		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED,
 				makeValue(yearPublished).build());
 
@@ -731,7 +731,9 @@ public class PipelineMain {
 	 * @param flagsToActivate
 	 * @return A collection of updated {@link Entity} objects whereby the specified
 	 *         ProcessingStatusFlags have been set to true and all other flag remain
-	 *         as they were.
+	 *         as they were. If there are new status flags available that were not
+	 *         when this status entity was last updated, also add them and set them
+	 *         to false.
 	 */
 	public static PCollection<Entity> updateStatusEntities(PCollection<ProcessingStatus> statusEntities,
 			ProcessingStatusFlag... flagsToActivate) {
@@ -1081,7 +1083,8 @@ public class PipelineMain {
 //
 //	}
 
-	public static PCollection<KV<String, Set<String>>> getCollectionMappings(PCollection<Entity> nonredundantStatusEntities) {
+	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
+			PCollection<Entity> nonredundantStatusEntities) {
 		return nonredundantStatusEntities.apply(ParDo.of(new DoFn<Entity, KV<String, Set<String>>>() {
 			private static final long serialVersionUID = 1L;
 
