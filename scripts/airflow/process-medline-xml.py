@@ -47,6 +47,7 @@ CHEBI_OGER_SERVICE_URL=os.environ.get('CHEBI_OGER_SERVICE_URL')
 CHEBI_CRF_SERVICE_URL=os.environ.get('CHEBI_CRF_SERVICE_URL')
 CL_OGER_SERVICE_URL=os.environ.get('CL_OGER_SERVICE_URL')
 CL_CRF_SERVICE_URL=os.environ.get('CL_CRF_SERVICE_URL')
+DRUGBANK_OGER_SERVICE_URL=os.environ.get('DRUGBANK_OGER_SERVICE_URL')
 GO_BP_OGER_SERVICE_URL=os.environ.get('GO_BP_OGER_SERVICE_URL')
 GO_BP_CRF_SERVICE_URL=os.environ.get('GO_BP_CRF_SERVICE_URL')
 GO_CC_OGER_SERVICE_URL=os.environ.get('GO_CC_OGER_SERVICE_URL')
@@ -220,6 +221,44 @@ cl_oger = DataflowCreateJavaJobOperator(
         'ogerOutputType': 'TSV',
         'targetProcessingStatusFlag': 'OGER_CL_DONE',
         'targetDocumentType': 'CONCEPT_CL',
+        'targetDocumentFormat': 'BIONLP',
+        'inputPipelineKey': INPUT_PIPELINE_KEY,
+        'inputPipelineVersion': INPUT_PIPELINE_VERSION,
+        'collection': COLLECTION,
+        'overwrite': 'NO',
+        'numWorkers': 25
+    },
+    poll_sleep=10,
+    job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
+    check_if_running=CheckJobRunning.IgnoreJob,
+    location=DATAFLOW_REGION,
+    retries=0,
+    dag=dag
+)
+
+
+# -------------- #
+#    DRUGBANK    #
+# -------------- #
+
+# prime the DRUGBANK OGER service by calling it once
+prime_drugbank_oger = BashOperator(
+    task_id='prime_drugbank_oger',
+    #bash_command="gcloud info",
+    bash_command="curl -H \"Authorization: Bearer $(gcloud auth print-identity-token)\" -d \"Metformin is a drug.\" $DRUGBANK_OGER_SERVICE_URL/upload/txt/tsv/12345",
+    env={'DRUGBANK_OGER_SERVICE_URL': DRUGBANK_OGER_SERVICE_URL},
+    dag=dag)
+
+## call dataflow to run the CL OGER pipeline
+drugbank_oger = DataflowCreateJavaJobOperator(
+    task_id="drugbank_oger",
+    jar=TM_PIPELINES_JAR,
+    job_name='{{task.task_id}}',
+    options={
+        'ogerServiceUri': DRUGBANK_OGER_SERVICE_URL,
+        'ogerOutputType': 'TSV',
+        'targetProcessingStatusFlag': 'OGER_DRUGBANK_DONE',
+        'targetDocumentType': 'CONCEPT_DRUGBANK',
         'targetDocumentFormat': 'BIONLP',
         'inputPipelineKey': INPUT_PIPELINE_KEY,
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
@@ -1060,7 +1099,7 @@ PR_PROMOTION_MAP_FILE_PATH=RESOURCES_BUCKET + "/ontology-resources/pr-promotion-
 NCBITAXON_PROMOTION_MAP_FILE_PATH=RESOURCES_BUCKET + "/ontology-resources/ncbitaxon-promotion-map.tsv.gz"
 EXTENSION_MAP_FILE_PATH=RESOURCES_BUCKET + "/ontology-resources/craft-mapping-files/*.txt.gz"
 
-INPUT_DOC_CRITERIA="TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";CONCEPT_CHEBI|BIONLP|OGER|0.1.0;CRF_CHEBI|BIONLP|CRF|0.1.0;CONCEPT_PR|BIONLP|OGER|0.1.0;CRF_PR|BIONLP|CRF|0.1.0;CONCEPT_CL|BIONLP|OGER|0.1.0;CRF_CL|BIONLP|CRF|0.1.0;CONCEPT_UBERON|BIONLP|OGER|0.1.0;CRF_UBERON|BIONLP|CRF|0.1.0;CONCEPT_GO_BP|BIONLP|OGER|0.1.0;CRF_GO_BP|BIONLP|CRF|0.1.0;CONCEPT_GO_CC|BIONLP|OGER|0.1.0;CRF_GO_CC|BIONLP|CRF|0.1.0;CONCEPT_GO_MF|BIONLP|OGER|0.1.0;CRF_GO_MF|BIONLP|CRF|0.1.0;CONCEPT_SO|BIONLP|OGER|0.1.0;CRF_SO|BIONLP|CRF|0.1.0;CONCEPT_NCBITAXON|BIONLP|OGER|0.1.0;CRF_NCBITAXON|BIONLP|CRF|0.1.0;CONCEPT_HP|BIONLP|OGER|0.1.0;CRF_HP|BIONLP|CRF|0.1.0;CONCEPT_MONDO|BIONLP|OGER|0.1.0;CRF_MONDO|BIONLP|CRF|0.1.0;CONCEPT_MOP|BIONLP|OGER|0.1.0;CRF_MOP|BIONLP|CRF|0.1.0"
+INPUT_DOC_CRITERIA="TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";CONCEPT_DRUGBANK|BIONLP|OGER|0.1.0;CONCEPT_CHEBI|BIONLP|OGER|0.1.0;CRF_CHEBI|BIONLP|CRF|0.1.0;CONCEPT_PR|BIONLP|OGER|0.1.0;CRF_PR|BIONLP|CRF|0.1.0;CONCEPT_CL|BIONLP|OGER|0.1.0;CRF_CL|BIONLP|CRF|0.1.0;CONCEPT_UBERON|BIONLP|OGER|0.1.0;CRF_UBERON|BIONLP|CRF|0.1.0;CONCEPT_GO_BP|BIONLP|OGER|0.1.0;CRF_GO_BP|BIONLP|CRF|0.1.0;CONCEPT_GO_CC|BIONLP|OGER|0.1.0;CRF_GO_CC|BIONLP|CRF|0.1.0;CONCEPT_GO_MF|BIONLP|OGER|0.1.0;CRF_GO_MF|BIONLP|CRF|0.1.0;CONCEPT_SO|BIONLP|OGER|0.1.0;CRF_SO|BIONLP|CRF|0.1.0;CONCEPT_NCBITAXON|BIONLP|OGER|0.1.0;CRF_NCBITAXON|BIONLP|CRF|0.1.0;CONCEPT_HP|BIONLP|OGER|0.1.0;CRF_HP|BIONLP|CRF|0.1.0;CONCEPT_MONDO|BIONLP|OGER|0.1.0;CRF_MONDO|BIONLP|CRF|0.1.0;CONCEPT_MOP|BIONLP|OGER|0.1.0;CRF_MOP|BIONLP|CRF|0.1.0"
 
 ## call dataflow to run concept post-processing
 concept_post_process = DataflowCreateJavaJobOperator(
@@ -1093,7 +1132,7 @@ concept_post_process = DataflowCreateJavaJobOperator(
 )
 
 ## _UNFILTERED refers to concept post-processing being done without filtering using the CRFs
-INPUT_DOC_CRITERIA_UNFILTERED="TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";CONCEPT_CHEBI|BIONLP|OGER|0.1.0;CONCEPT_PR|BIONLP|OGER|0.1.0;CONCEPT_CL|BIONLP|OGER|0.1.0;CONCEPT_UBERON|BIONLP|OGER|0.1.0;CONCEPT_GO_BP|BIONLP|OGER|0.1.0;CONCEPT_GO_CC|BIONLP|OGER|0.1.0;CONCEPT_GO_MF|BIONLP|OGER|0.1.0;CONCEPT_SO|BIONLP|OGER|0.1.0;CONCEPT_NCBITAXON|BIONLP|OGER|0.1.0;CONCEPT_HP|BIONLP|OGER|0.1.0;CONCEPT_MONDO|BIONLP|OGER|0.1.0;CONCEPT_MOP|BIONLP|OGER|0.1.0"
+INPUT_DOC_CRITERIA_UNFILTERED="TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";CONCEPT_DRUGBANK|BIONLP|OGER|0.1.0;CONCEPT_CHEBI|BIONLP|OGER|0.1.0;CONCEPT_PR|BIONLP|OGER|0.1.0;CONCEPT_CL|BIONLP|OGER|0.1.0;CONCEPT_UBERON|BIONLP|OGER|0.1.0;CONCEPT_GO_BP|BIONLP|OGER|0.1.0;CONCEPT_GO_CC|BIONLP|OGER|0.1.0;CONCEPT_GO_MF|BIONLP|OGER|0.1.0;CONCEPT_SO|BIONLP|OGER|0.1.0;CONCEPT_NCBITAXON|BIONLP|OGER|0.1.0;CONCEPT_HP|BIONLP|OGER|0.1.0;CONCEPT_MONDO|BIONLP|OGER|0.1.0;CONCEPT_MOP|BIONLP|OGER|0.1.0"
 
 ## call dataflow to run concept post-processing with NO CRF FILTERING
 concept_post_process_unfiltered = DataflowCreateJavaJobOperator(
@@ -1458,7 +1497,8 @@ classified_sentence_storage_bl_gene_regulatory_relationship = DataflowCreateJava
 ##### Execute full pipeline #####
 dataflow_medline_xml_sentences >> prime_chebi_oger
 prime_chebi_oger >> chebi_oger >> prime_cl_oger
-prime_cl_oger >> cl_oger >> prime_go_bp_oger
+prime_cl_oger >> cl_oger >> prime_drugbank_oger
+prime_drugbank_oger >> drugbank_oger >> prime_go_bp_oger
 prime_go_bp_oger >> go_bp_oger >> prime_go_cc_oger
 prime_go_cc_oger >> go_cc_oger >> prime_go_mf_oger
 prime_go_mf_oger >> go_mf_oger >> prime_hp_oger
