@@ -914,11 +914,12 @@ public class PipelineMain {
 			DocumentType type = entry.getKey();
 			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
 
-			if (filterFlag == FilterFlag.BY_CRF) {
+			// if there isn't a pair for the CONCEPT then output it without filtering
+			if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
 				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
 				Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
 				typeToAnnotMap.put(type, filteredAnnots);
-			} else if (filterFlag == FilterFlag.NONE) {
+			} else if (filterFlag == FilterFlag.NONE || entry.getValue().get(CrfOrConcept.CRF) == null) {
 				typeToAnnotMap.put(type, conceptAnnots);
 			} else {
 				throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
