@@ -111,6 +111,8 @@ public class PipelineMain {
 	private static final TupleTag<ProcessedDocument> documentTag23 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag24 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag25 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag26 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag27 = new TupleTag<>();
 
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
@@ -220,6 +222,8 @@ public class PipelineMain {
 		tagMap.put(23, documentTag23);
 		tagMap.put(24, documentTag24);
 		tagMap.put(25, documentTag25);
+		tagMap.put(26, documentTag26);
+		tagMap.put(27, documentTag27);
 
 		return tagMap;
 	}
