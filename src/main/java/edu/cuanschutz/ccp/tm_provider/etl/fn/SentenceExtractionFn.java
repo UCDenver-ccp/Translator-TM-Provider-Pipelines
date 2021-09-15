@@ -17,6 +17,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
@@ -66,18 +67,20 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria, Map<List<String>, String> prefixesToPlaceholderMap,
-			DocumentType conceptDocType) {
+			DocumentType conceptDocType, PCollectionView<Map<String, Set<String>>> ancestorsMapView,
+			Set<String> conceptIdsToExclude) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, ExtractedSentence>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(
-							@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
-							MultiOutputReceiver out) {
+					public void processElement(ProcessContext context, MultiOutputReceiver out) {
+						KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText = context.element();
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
+
+						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						Set<String> documentPublicationTypes = Collections.emptySet();
 						List<String> publicationTypes = statusEntity.getPublicationTypes();
@@ -99,7 +102,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 							Set<ExtractedSentence> extractedSentences = extractSentences(docId, documentText,
 									documentPublicationTypes, documentYearPublished, docTypeToContentMap, keywords,
-									prefixesToPlaceholderMap, conceptDocType);
+									prefixesToPlaceholderMap, conceptDocType, ancestorsMap, conceptIdsToExclude);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -117,18 +120,23 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 						}
 					}
 
-				}).withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+				}).withSideInputs(ancestorsMapView)
+				.withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
 	@VisibleForTesting
 	protected static Set<ExtractedSentence> extractSentences(String documentId, String documentText,
 			Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<List<String>, String> prefixesToPlaceholderMap, DocumentType conceptDocType) throws IOException {
+			Map<List<String>, String> prefixesToPlaceholderMap, DocumentType conceptDocType,
+			Map<String, Set<String>> ancestorMap, Set<String> conceptIdsToExclude) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
 		Collection<TextAnnotation> sectionAnnots = docTypeToContentMap.get(DocumentType.SECTIONS);
+
+		// remove concepts-to-exclude
+		conceptAnnots = removeConceptsToExclude(conceptAnnots, conceptIdsToExclude);
 
 		List<String> xPrefixes = new ArrayList<String>();
 		List<String> yPrefixes = new ArrayList<String>();
@@ -150,8 +158,8 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			yPrefixes.addAll(xPrefixes);
 		}
 
-		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes);
-		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes);
+		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes, ancestorMap);
+		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes, ancestorMap);
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
@@ -172,25 +180,73 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	}
 
 	/**
+	 * @param conceptAnnots
+	 * @param conceptIdsToExclude
+	 * @return collection of TextAnnotations, excluding any that reference concept
+	 *         CURIEs in the conceptIdsToExclude set
+	 */
+	private static Collection<TextAnnotation> removeConceptsToExclude(Collection<TextAnnotation> conceptAnnots,
+			Set<String> conceptIdsToExclude) {
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : conceptAnnots) {
+			String id = annot.getClassMention().getMentionName();
+			if (!conceptIdsToExclude.contains(id)) {
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	/**
 	 * filters the input collection of annotations by keeping only those that share
 	 * the specified prefix, e.g. CHEBI
+	 * 
+	 * Note: the prefix can now be just a prefix, e.g. "GO" or it can be a CURIE,
+	 * e.g. "GO:0005575" to indicate a subset of an ontology - in this case the
+	 * GO:cellular_component hierarchy. The ancestor map is used to ensure that any
+	 * concept identifier that starts with "GO:" is also a descendant of
+	 * "GO:0005575".
 	 * 
 	 * @param conceptAnnots
 	 * @param xPrefix
 	 * @return
 	 */
 	public static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots,
-			List<String> prefixes) {
-		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
+			List<String> prefixes, Map<String, Set<String>> ancestorMap) {
+		Set<TextAnnotation> annots = new HashSet<TextAnnotation>();
 
 		for (TextAnnotation annot : conceptAnnots) {
-			for (String prefix : prefixes) {
-				if (annot.getClassMention().getMentionName().startsWith(prefix)) {
-					annots.add(annot);
+			for (String prefixOrAncestorId : prefixes) {
+				String prefix = prefixOrAncestorId;
+				String ancestorId = null;
+				if (prefixOrAncestorId.contains(":")) {
+					prefix = prefixOrAncestorId.substring(0, prefixOrAncestorId.indexOf(":"));
+					ancestorId = prefixOrAncestorId;
+				}
+
+				String conceptId = annot.getClassMention().getMentionName();
+				if (ancestorId == null) {
+					// then the prefixOrAncestorId is simply a prefix, so we look to see if the
+					// concept ID also starts with that prefix
+					if (conceptId.startsWith(prefix)) {
+						annots.add(annot);
+					}
+				} else {
+					// the prefixOrAncestorId is an ancestor ID so we make sure the concept ID
+					// exists in the ancestor map and that the ancestor ID is an ancestor of the
+					// concept ID.
+					if (ancestorMap.containsKey(conceptId) && ancestorMap.get(conceptId).contains(ancestorId)
+							|| conceptId.equals(ancestorId)) {
+						annots.add(annot);
+					}
 				}
 			}
 		}
-		return annots;
+
+		List<TextAnnotation> annotList = new ArrayList<TextAnnotation>(annots);
+		Collections.sort(annotList, TextAnnotation.BY_SPAN());
+		return annotList;
 	}
 
 	@VisibleForTesting

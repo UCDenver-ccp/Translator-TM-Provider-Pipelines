@@ -14,9 +14,12 @@ import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
@@ -67,19 +70,20 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap,
-			DocumentType conceptDocumentType) {
+			DocumentType conceptDocumentType, PCollectionView<Map<String, Set<String>>> ancestorsMapView) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, String>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(
-							@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
-							MultiOutputReceiver out) {
+					public void processElement(ProcessContext context, MultiOutputReceiver out) {
+						KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText = context.element();
 						SimpleTokenizer tokenizer = new SimpleTokenizer();
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
+
+						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						try {
 							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
@@ -88,7 +92,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
 
 							Set<String> extractedSentences = extractSentences(docId, documentText, docTypeToContentMap,
-									keywords, prefixToPlaceholderMap, tokenizer, conceptDocumentType);
+									keywords, prefixToPlaceholderMap, tokenizer, conceptDocumentType, ancestorsMap);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -106,7 +110,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 						}
 					}
 
-				}).withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+				}).withSideInputs(ancestorsMapView).withOutputTags(EXTRACTED_SENTENCES_TAG,
+						TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
 	/**
@@ -123,8 +128,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 	@VisibleForTesting
 	protected static Set<String> extractSentences(String documentId, String documentText,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer, DocumentType conceptDocumentType)
-			throws IOException {
+			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer, DocumentType conceptDocumentType,
+			Map<String, Set<String>> ancestorMap) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocumentType);
@@ -147,9 +152,9 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 		}
 
 		List<TextAnnotation> conceptXAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
-				Arrays.asList(xPrefix));
+				Arrays.asList(xPrefix), ancestorMap);
 		List<TextAnnotation> conceptYAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
-				Arrays.asList(yPrefix));
+				Arrays.asList(yPrefix), ancestorMap);
 
 		System.out.println("CONCEPT X: " + conceptXAnnots.size());
 		System.out.println("CONCEPT Y: " + conceptYAnnots.size());

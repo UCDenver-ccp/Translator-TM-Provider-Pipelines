@@ -9,21 +9,26 @@ import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionWebAnnoFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -92,6 +97,21 @@ public class WebAnnoSentenceExtractionPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		String getAncestorMapFilePath();
+
+		void setAncestorMapFilePath(String path);
+
+		@Description("delimiter used to separate columns in the ancestor map file")
+		Delimiter getAncestorMapFileDelimiter();
+
+		void setAncestorMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		Delimiter getAncestorMapFileSetDelimiter();
+
+		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
+
 	}
 
 	public static void main(String[] args) {
@@ -122,6 +142,10 @@ public class WebAnnoSentenceExtractionPipeline {
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(conceptDocumentType, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);
 
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
+
 		// the extracted sentence output contains a version of the sentence where the
 		// concepts have been replaced by placeholders. This map determines which
 		// concept type is replaced by which placeholder.
@@ -131,7 +155,7 @@ public class WebAnnoSentenceExtractionPipeline {
 		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
 
 		PCollectionTuple output = SentenceExtractionWebAnnoFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
+				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType, ancestorMapView);
 
 		PCollection<KV<ProcessingStatus, String>> statusToOutputTsv = output
 				.get(SentenceExtractionWebAnnoFn.EXTRACTED_SENTENCES_TAG);

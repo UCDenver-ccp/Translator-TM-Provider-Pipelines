@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
@@ -18,17 +19,21 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -119,12 +124,35 @@ public class SentenceExtractionPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		String getAncestorMapFilePath();
+
+		void setAncestorMapFilePath(String path);
+
+		@Description("delimiter used to separate columns in the ancestor map file")
+		Delimiter getAncestorMapFileDelimiter();
+
+		void setAncestorMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		Delimiter getAncestorMapFileSetDelimiter();
+
+		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
+
+		@Description("CURIEs indicating concept identifiers that should be excluded from the extracted sentences")
+		String getConceptIdsToExclude();
+
+		void setConceptIdsToExclude(String path);
+
 	}
 
 	public static void main(String[] args) {
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+
+		Set<String> conceptIdsToExclude = new HashSet<String>(
+				Arrays.asList(options.getConceptIdsToExclude().split("\\|")));
 
 //		logger.info(" ---------------- Pipeline arguments for the SentenceExtractionPipeline ---------------- ");
 //		logger.info("Collection: " + options.getCollection());
@@ -156,17 +184,8 @@ public class SentenceExtractionPipeline {
 		// the extracted sentence output contains a version of the sentence where the
 		// concepts have been replaced by placeholders. This map determines which
 		// concept type is replaced by which placeholder.
-		Map<List<String>, String> prefixesToPlaceholderMap = new HashMap<List<String>, String>();
-		List<String> xPrefixes = Arrays.asList(options.getPrefixX().split("\\|"));
-		Collections.sort(xPrefixes);
-
-		List<String> yPrefixes = Arrays.asList(options.getPrefixY().split("\\|"));
-		Collections.sort(yPrefixes);
-
-		prefixesToPlaceholderMap.put(xPrefixes, options.getPlaceholderX());
-		if (prefixesToPlaceholderMap.containsKey(yPrefixes)) {
-			prefixesToPlaceholderMap.put(yPrefixes, options.getPlaceholderY());
-		}
+		Map<List<String>, String> prefixesToPlaceholderMap = buildPrefixToPlaceholderMap(options.getPrefixX(),
+				options.getPlaceholderX(), options.getPrefixY(), options.getPlaceholderY());
 //		for (String xPrefix : options.getPrefixX().split("\\|")) {
 //			prefixToPlaceholderMap.put(xPrefix, options.getPlaceholderX());
 //		}
@@ -176,8 +195,13 @@ public class SentenceExtractionPipeline {
 
 		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
+
 		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType);
+				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType, ancestorMapView,
+				conceptIdsToExclude);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
 				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
@@ -237,6 +261,22 @@ public class SentenceExtractionPipeline {
 				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		p.run().waitUntilFinish();
+	}
+
+	protected static Map<List<String>, String> buildPrefixToPlaceholderMap(String prefixesX, String placeholderX,
+			String prefixesY, String placeholderY) {
+		Map<List<String>, String> prefixesToPlaceholderMap = new HashMap<List<String>, String>();
+		List<String> xPrefixes = Arrays.asList(prefixesX.split("\\|"));
+		Collections.sort(xPrefixes);
+
+		List<String> yPrefixes = Arrays.asList(prefixesY.split("\\|"));
+		Collections.sort(yPrefixes);
+
+		prefixesToPlaceholderMap.put(xPrefixes, placeholderX);
+		if (!prefixesToPlaceholderMap.containsKey(yPrefixes)) {
+			prefixesToPlaceholderMap.put(yPrefixes, placeholderY);
+		}
+		return prefixesToPlaceholderMap;
 	}
 
 	private static DocumentType extractConceptDocumentTypeFromInputDocCriteria(Set<DocumentCriteria> inputDocCriteria) {

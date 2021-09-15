@@ -49,6 +49,10 @@ public class SentenceExtractionFnTest {
 	private static final String X_000001 = "X:000001";
 	private static final String X_000001_SYN = "X:000001_SYN";
 	private static final String X_000002 = "X:000002";
+	private static final String X_000003 = "X:000003";
+	private static final String X_000004 = "X:000004";
+	private static final String X_000005 = "X:000005";
+	private static final String X_000006 = "X:000006";
 
 	// 1 2 3 4
 	// 012345678901234567890123456789012345678901234567890123456789
@@ -184,8 +188,7 @@ public class SentenceExtractionFnTest {
 
 		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> expectedSentToConceptMap = new HashMap<TextAnnotation, Map<String, Set<TextAnnotation>>>();
 		Map<String, Set<TextAnnotation>> map1 = new HashMap<String, Set<TextAnnotation>>();
-		map1.put(SentenceExtractionFn.X_CONCEPTS,
-				CollectionsUtil.createSet(x1Sentence1Annot, x2Sentence1Annot));
+		map1.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(x1Sentence1Annot, x2Sentence1Annot));
 		expectedSentToConceptMap.put(sentence1Annot, map1);
 
 		Map<String, Set<TextAnnotation>> map2 = new HashMap<String, Set<TextAnnotation>>();
@@ -210,17 +213,14 @@ public class SentenceExtractionFnTest {
 		String expectedKeyword = "increasing";
 		assertEquals(expectedKeyword, keyword);
 
-		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence,
-				CollectionsUtil.createSet("DECREasing"));
+		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence, CollectionsUtil.createSet("DECREasing"));
 		expectedKeyword = "DECREasing";
 		assertEquals(expectedKeyword, keyword);
 
-		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence,
-				CollectionsUtil.createSet("notfound"));
+		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence, CollectionsUtil.createSet("notfound"));
 		assertNull(keyword);
 
-		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence,
-				CollectionsUtil.createSet("increas"));
+		keyword = SentenceExtractionFn.sentenceContainsKeyword(sentence, CollectionsUtil.createSet("increas"));
 		assertNull(keyword);
 
 	}
@@ -527,9 +527,9 @@ public class SentenceExtractionFnTest {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, map);
 
-		Set<ExtractedSentence> extractedSentences = SentenceExtractionFn.extractSentences(documentId,
-				documentText, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
-				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+		Set<ExtractedSentence> extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
+				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(), new HashSet<String>());
 		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
@@ -545,9 +545,9 @@ public class SentenceExtractionFnTest {
 
 		// no keywords
 		keywords = null;
-		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
-				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
-				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText, DOCUMENT_PUBLICATION_TYPES,
+				DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords, suffixToPlaceholderMap,
+				DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(), new HashSet<String>());
 		esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1", CollectionsUtil.createList(x1Sentence2Span),
 				PLACEHOLDER_X, Y_000001, "conceptY1", CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, null,
 				sentence2, documentText, DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
@@ -560,18 +560,18 @@ public class SentenceExtractionFnTest {
 
 		// no keywords
 		keywords = new HashSet<String>();
-		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
-				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
-				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText, DOCUMENT_PUBLICATION_TYPES,
+				DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords, suffixToPlaceholderMap,
+				DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(), new HashSet<String>());
 		assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		// b/c order is not guaranteed, we check for either case
 		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
 
 		// keyword not found so no sentence extracted
 		keywords = CollectionsUtil.createSet("notfound");
-		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
-				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
-				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL);
+		extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText, DOCUMENT_PUBLICATION_TYPES,
+				DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords, suffixToPlaceholderMap,
+				DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(), new HashSet<String>());
 		assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 
 	}
@@ -601,6 +601,104 @@ public class SentenceExtractionFnTest {
 		assertEquals("title", SentenceExtractionFn.determineDocumentZone(titleSentence, sectionAnnots));
 		assertEquals("abstract", SentenceExtractionFn.determineDocumentZone(abstractSentence, sectionAnnots));
 		assertEquals("methods", SentenceExtractionFn.determineDocumentZone(methodsSentence, sectionAnnots));
+	}
+
+	@Test
+	public void testGetAnnotsByPrefix() {
+		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
+		conceptAnnots.add(y1Sentence2Annot);
+		conceptAnnots.add(x2Sentence1Annot);
+		conceptAnnots.add(x1Sentence2Annot);
+
+		List<String> prefixes = new ArrayList<String>();
+		prefixes.add("X");
+
+		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
+		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
+
+		List<TextAnnotation> expectedAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot);
+
+		assertEquals(expectedAnnots, annots);
+
+	}
+
+	@Test
+	public void testGetAnnotsByPrefixUseAncestor() {
+		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
+		conceptAnnots.add(y1Sentence2Annot);
+		conceptAnnots.add(x2Sentence1Annot);
+		conceptAnnots.add(x1Sentence2Annot);
+		conceptAnnots.add(x1Sentence4Annot);
+
+		List<String> prefixes = new ArrayList<String>();
+		prefixes.add(X_000001);
+
+		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
+		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000001));
+		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
+
+		List<TextAnnotation> expectedAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
+
+		assertEquals(expectedAnnots.size(), annots.size());
+		assertEquals(expectedAnnots, annots);
+
+	}
+	
+	@Test
+	public void testGetAnnotsByPrefixUseAncestorY() {
+		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
+		conceptAnnots.add(y1Sentence2Annot);
+		conceptAnnots.add(x2Sentence1Annot);
+		conceptAnnots.add(x1Sentence2Annot);
+		conceptAnnots.add(x1Sentence4Annot);
+
+		List<String> prefixes = new ArrayList<String>();
+		prefixes.add("Y");
+
+		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
+		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000001));
+		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
+
+		List<TextAnnotation> expectedAnnots = Arrays.asList(y1Sentence2Annot);
+
+		assertEquals(expectedAnnots.size(), annots.size());
+		assertEquals(expectedAnnots, annots);
+
+	}
+
+	@Test
+	public void testGetAnnotsByPrefixUseAncestor2() {
+
+		TextAnnotation annot4 = factory.createAnnotation(0, 1, "4", X_000004);
+		TextAnnotation annot5 = factory.createAnnotation(10, 11, "5", X_000005);
+		TextAnnotation annot6 = factory.createAnnotation(20, 21, "6", X_000006);
+
+		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
+		conceptAnnots.add(y1Sentence2Annot);
+		conceptAnnots.add(x2Sentence1Annot);
+		conceptAnnots.add(x1Sentence2Annot);
+		conceptAnnots.add(x1Sentence4Annot);
+		conceptAnnots.add(annot4);
+		conceptAnnots.add(annot5);
+		conceptAnnots.add(annot6);
+
+		List<String> prefixes = new ArrayList<String>();
+		prefixes.add(X_000003);
+
+		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
+		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000001));
+		ancestorMap.put(X_000003, CollectionsUtil.createSet(X_000001, X_000002));
+		ancestorMap.put(X_000004, CollectionsUtil.createSet(X_000001, X_000002, X_000003));
+		ancestorMap.put(X_000005, CollectionsUtil.createSet(X_000001, X_000002, X_000003, X_000004));
+		ancestorMap.put(X_000006, CollectionsUtil.createSet(X_000001, X_000002, X_000003, X_000004, X_000005));
+
+		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
+
+		List<TextAnnotation> expectedAnnots = Arrays.asList(annot4, annot5, annot6);
+
+//		assertEquals(expectedAnnots.size(), annots.size());
+		assertEquals(expectedAnnots, annots);
+
 	}
 
 }
