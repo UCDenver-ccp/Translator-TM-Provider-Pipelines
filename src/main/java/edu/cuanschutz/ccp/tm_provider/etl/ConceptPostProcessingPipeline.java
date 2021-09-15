@@ -130,6 +130,21 @@ public class ConceptPostProcessingPipeline {
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
 
+		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		String getAncestorMapFilePath();
+
+		void setAncestorMapFilePath(String path);
+
+		@Description("delimiter used to separate columns in the ancestor map file")
+		Delimiter getAncestorMapFileDelimiter();
+
+		void setAncestorMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		Delimiter getAncestorMapFileSetDelimiter();
+
+		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
+
 	}
 
 	public static void main(String[] args) {
@@ -151,19 +166,24 @@ public class ConceptPostProcessingPipeline {
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		final PCollectionView<Map<String, Set<String>>> extensionToOboMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles(p, options.getExtensionMapFilePath(),
+				.fromKeyToSetTwoColumnFiles("ext-to-obo map",p, options.getExtensionMapFilePath(),
 						options.getExtensionMapFileDelimiter(), options.getExtensionMapFileSetDelimiter(),
 						Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
-		final PCollectionView<Map<String, String>> prPromotionMapView = PCollectionUtil.fromTwoColumnFiles(p,
+		final PCollectionView<Map<String, String>> prPromotionMapView = PCollectionUtil.fromTwoColumnFiles("pr-promotion map", p,
 				options.getPrPromotionMapFilePath(), options.getPrPromotionMapFileDelimiter(), Compression.GZIP)
 				.apply(View.<String, String>asMap());
 
 		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles(p, options.getNcbiTaxonPromotionMapFilePath(),
+				.fromKeyToSetTwoColumnFiles("ncbitaxon promotion map",p, options.getNcbiTaxonPromotionMapFilePath(),
 						options.getNcbiTaxonPromotionMapFileDelimiter(),
 						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
+				.apply(View.<String, Set<String>>asMap());
+
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
+				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
 		DocumentType outputDocumentType = DocumentType.CONCEPT_ALL;
@@ -175,7 +195,7 @@ public class ConceptPostProcessingPipeline {
 				PIPELINE_KEY, pipelineVersion);
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
-				inputDocCriteria, extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView,
+				inputDocCriteria, extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView, ancestorMapView,
 				options.getFilterFlag());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output

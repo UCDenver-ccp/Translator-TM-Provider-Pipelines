@@ -55,7 +55,7 @@ public class ConceptCountDistributionPipeline {
 		final PCollection<KV<String, Long>> conceptIdToCounts = NgdKgxPipeline
 				.getSingletonCountMapView(options.getSingletonFilePattern(), p);
 
-		final PCollectionView<Map<String, String>> conceptIdToLabelMap = PCollectionUtil.fromTwoColumnFiles(p,
+		final PCollectionView<Map<String, String>> conceptIdToLabelMap = PCollectionUtil.fromTwoColumnFiles("label map",p,
 				options.getLabelMapFilePattern(), options.getLabelMapFileDelimiter(), Compression.GZIP)
 				.apply(View.<String, String>asMap());
 

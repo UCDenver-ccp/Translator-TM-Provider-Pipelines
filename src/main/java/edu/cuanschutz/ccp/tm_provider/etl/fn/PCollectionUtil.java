@@ -37,9 +37,9 @@ public class PCollectionUtil {
 		}
 	}
 
-	public static PCollection<KV<String, String>> fromTwoColumnFiles(Pipeline p, String filePattern,
+	public static PCollection<KV<String, String>> fromTwoColumnFiles(String description, Pipeline p, String filePattern,
 			Delimiter delimiter, Compression compression) {
-		PCollection<String> lines = p.apply(TextIO.read().from(filePattern).withCompression(compression));
+		PCollection<String> lines = p.apply(description, TextIO.read().from(filePattern).withCompression(compression));
 		// parse each line to get a key/value pair
 		PCollection<KV<String, String>> column0Tocolumn1 = lines.apply(ParDo.of(new DoFn<String, KV<String, String>>() {
 			private static final long serialVersionUID = 1L;
@@ -60,9 +60,9 @@ public class PCollectionUtil {
 	 * @param delimiter
 	 * @return
 	 */
-	public static PCollection<KV<String, Set<String>>> fromKeyToSetTwoColumnFiles(Pipeline p, String filePattern,
+	public static PCollection<KV<String, Set<String>>> fromKeyToSetTwoColumnFiles(String description, Pipeline p, String filePattern,
 			Delimiter fileDelimiter, Delimiter setDelimiter, Compression compression) {
-		PCollection<String> lines = p.apply(TextIO.read().from(filePattern).withCompression(compression));
+		PCollection<String> lines = p.apply(description ,TextIO.read().from(filePattern).withCompression(compression));
 		// parse each line to get a key/value pair
 		PCollection<KV<String, Set<String>>> column0Tocolumn1 = lines
 				.apply(ParDo.of(new DoFn<String, KV<String, Set<String>>>() {
