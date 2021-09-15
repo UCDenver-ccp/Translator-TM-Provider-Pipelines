@@ -36,11 +36,13 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.BatchUpdate;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.AppendCellsRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BooleanCondition;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.Color;
 import com.google.api.services.sheets.v4.model.DataValidationRule;
+import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.Link;
 import com.google.api.services.sheets.v4.model.RepeatCellRequest;
@@ -57,6 +59,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkPredicate;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.SPO;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.digest.DigestUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileReaderUtil;
@@ -87,11 +90,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
 	private static final int SENTENCE_ID_COLUMN = 0;
-	private static final int DOCUMENT_ID_COLUMN = 1;
-	private static final int SUBJECT_ID_COLUMN = 2;
-	private static final int OBJECT_ID_COLUMN = 3;
-	private static final int SENTENCE_COLUMN = 4;
-	private static final int NO_RELATION_COLUMN = 5;
+	private static final int SENTENCE_WITH_PLACEHOLDER_COLUMN = 1;
+	private static final int DOCUMENT_ID_COLUMN = 2;
+	private static final int SUBJECT_ID_COLUMN = 3;
+	private static final int SUBJECT_TEXT_COLUMN = 4;
+	private static final int OBJECT_ID_COLUMN = 5;
+	private static final int OBJECT_TEXT_COLUMN = 6;
+	private static final int SENTENCE_COLUMN = 7;
+	private static final int NO_RELATION_COLUMN = 8;
 
 	/**
 	 * Global instance of the scopes required by this quickstart. If modifying these
@@ -99,13 +105,55 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 */
 	private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
 
+	private static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet("CHEBI:36080", "CL:0000000",
+			"PR:000000001", "MONDO:0000001", "DRUGBANK:DB00118");
+
+	private final TextFormat subjectFormat;
+
+	private final TextFormat objectFormat;
+
+	private final TextFormat defaultFormat;
+
 	/**
 	 * Used to store Google credentials/tokens
 	 */
 	private final DataStoreFactory dataStoreFactory;
+	private long timeIntervalStart;
+	private int requestCount = 0;
 
 	public GoogleSheetsAssertionAnnotationSheetCreator(File dataStoreDirectory) throws IOException {
 		dataStoreFactory = new FileDataStoreFactory(dataStoreDirectory);
+		timeIntervalStart = System.currentTimeMillis();
+
+		// orangish
+		Color subjectColor = new Color();
+		subjectColor.setRed(0.89f);
+		subjectColor.setGreen(0.71f);
+		subjectColor.setBlue(0.29f);
+
+		// greenish
+		Color objectColor = new Color();
+		objectColor.setRed(0.2f);
+		objectColor.setGreen(0.66f);
+		objectColor.setBlue(0.32f);
+
+		Color black = new Color();
+		black.setRed(0.0f);
+		black.setBlue(0.0f);
+		black.setGreen(0.0f);
+
+		subjectFormat = new TextFormat();
+		subjectFormat.setItalic(true);
+		subjectFormat.setForegroundColor(subjectColor);
+
+		objectFormat = new TextFormat();
+		objectFormat.setItalic(true);
+		objectFormat.setForegroundColor(objectColor);
+
+		defaultFormat = new TextFormat();
+		defaultFormat.setForegroundColor(black);
+		defaultFormat.setItalic(false);
+
 	}
 
 	/**
@@ -139,15 +187,21 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 * @param inputSentenceFile
 	 * @param outputSpreadsheetId
 	 * @param previousSubsetFiles
+	 * @param includeInverse      if true, then the subject and object entities are
+	 *                            the same type, so we need to output the inverse
+	 *                            (switch subject and object) for each sentence
 	 * @throws IOException
 	 * @throws GeneralSecurityException
+	 * @throws InterruptedException
 	 */
 	public void createNewSpreadsheet(File credentialsFile, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, File inputSentenceFile, File previousSentenceIdsFile)
-			throws IOException, GeneralSecurityException {
+			int batchSize, File inputSentenceFile, File previousSentenceIdsFile, boolean includeInverse)
+			throws IOException, GeneralSecurityException, InterruptedException {
 
 		String sheetTitle = biolinkAssociation.name() + "-" + batchId;
 		String applicationName = "annotation of " + biolinkAssociation.name();
+
+		System.out.println("Creating new spreadsheet: " + sheetTitle);
 
 		// Build a new authorized API client service.
 		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -161,7 +215,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		int maxSentenceCount = countSentences(inputSentenceFile);
 
-		Set<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize);
+		System.out.println("Max sentence count: " + maxSentenceCount);
+
+		List<Integer> indexesForNewBatch = new ArrayList<Integer>(getRandomIndexes(maxSentenceCount, batchSize));
+		Collections.sort(indexesForNewBatch);
+
+		for (int i = 0; i < 10; i++) {
+			System.out.println("random index: " + indexesForNewBatch.get(i));
+		}
 
 		List<Request> updateRequests = new ArrayList<Request>();
 		updateRequests.addAll(writeHeaderToSpreadsheet(biolinkAssociation, sheetsService, sheetId));
@@ -184,19 +245,33 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 					sentenceCount++;
 				}
 
-				if (indexesForNewBatch.contains(sentenceCount)) {
+				if (indexesForNewBatch.get(0) == sentenceCount) {
+					indexesForNewBatch.remove(0);
 					String hash = computeHash(sentence);
 					if (!alreadyAnnotated.contains(hash)) {
-						hashesOutputInThisBatch.add(hash);
-						updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
-								extractedSentenceCount, biolinkAssociation));
-						extractedSentenceCount++;
+						if (validateSubjectObject(sentence)) {
+							hashesOutputInThisBatch.add(hash);
+
+							updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
+									extractedSentenceCount, biolinkAssociation, false));
+							extractedSentenceCount++;
+							if (includeInverse) {
+								updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
+										extractedSentenceCount, biolinkAssociation, true));
+								extractedSentenceCount++;
+							}
+						}
 					}
 				}
 			}
 		} finally {
 			lineIter.close();
 		}
+
+		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
+		System.out.println("Sentence count: " + sentenceCount);
+		System.out.println("Extracted sentence count: " + extractedSentenceCount);
+		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
 		/*
 		 * save the hashes for sentences that were output during this batch to the file
@@ -210,7 +285,32 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			}
 		}
 
-		// perform updates (formatting) on sentences
+//		// perform updates (formatting) on sentences
+//		System.out.println("Update request count: " + updateRequests.size());
+//
+//		// we are limited to 500 writes per 100s so wait here if necessary
+//		long prevTime = System.currentTimeMillis();
+//		List<Request> requestBatch = new ArrayList<Request>();
+//		for (int i = 0; i < updateRequests.size(); i++) {
+//			requestBatch.add(updateRequests.get(i));
+//
+//			if (requestBatch.size() % 499 == 0) {
+//				System.out.println("Sending requests...");
+//				BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
+//				content.setRequests(requestBatch);
+//				BatchUpdate batchUpdate = sheetsService.spreadsheets().batchUpdate(sheetId, content);
+//				batchUpdate.execute();
+//
+//				long msToWait = 100000 - (System.currentTimeMillis() - prevTime);
+//				// sleep + 2s buffer
+//				System.out.println("Loaded " + requestBatch.size() + " of " + updateRequests.size()
+//						+ " -- Sleeping ms: " + msToWait);
+//				Thread.sleep(msToWait + 2000);
+//				prevTime = System.currentTimeMillis();
+//				requestBatch = new ArrayList<Request>();
+//			}
+//		}
+
 		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
 		content.setRequests(updateRequests);
 		BatchUpdate batchUpdate = sheetsService.spreadsheets().batchUpdate(sheetId, content);
@@ -219,6 +319,20 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// write checkboxes on spreadsheet
 		addCheckBoxesToSheet(sheetsService, sheetId, extractedSentenceCount, biolinkAssociation.getSpoTriples().length);
 
+	}
+
+	/**
+	 * simple filtering of sentences based on subject/object identifiers
+	 * 
+	 * @param sentence
+	 * @return
+	 */
+	private boolean validateSubjectObject(ExtractedSentence sentence) {
+		if (IDENTIFIERS_TO_EXCLUDE.contains(sentence.getEntityId1())
+				|| IDENTIFIERS_TO_EXCLUDE.contains(sentence.getEntityId2())) {
+			return false;
+		}
+		return true;
 	}
 
 	private static void addCheckBoxesToSheet(Sheets sheetsService, String sheetId, int maxRow, int predicateCount)
@@ -258,9 +372,12 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		List<Object> headerValues = new ArrayList<Object>();
 		headerValues.add("Sentence ID");
+		headerValues.add("Sentence With Placeholders");
 		headerValues.add("Document ID");
 		headerValues.add(association.getSubjectPlaceholder());
+		headerValues.add("Subject text");
 		headerValues.add(association.getObjectPlaceholder());
+		headerValues.add("Object text");
 		headerValues.add("Sentence");
 		headerValues.add("NO RELATION PRESENT");
 
@@ -277,35 +394,80 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		List<Request> updateRequests = new ArrayList<Request>();
 
-		// TODO: make the header row bold
-//		updateRequests.add();
+		return updateRequests;
+	}
+
+	private Collection<Request> writeSentenceToSpreadsheet(String sentenceId, ExtractedSentence sentence,
+			Sheets sheetsService, String sheetId, int extractedSentenceCount, BiolinkAssociation biolinkAssociation,
+			boolean swapSubjectObject) throws IOException, InterruptedException {
+		List<CellData> cellDataList = getSentenceCellData(sentenceId, sentence, biolinkAssociation, swapSubjectObject);
+
+		AppendCellsRequest appendCellsRequest = new AppendCellsRequest();
+
+		RowData rowData = new RowData().setValues(cellDataList);
+		appendCellsRequest.setFields("UserEnteredValue");
+		List<RowData> rowDataList = Arrays.asList(rowData);
+		appendCellsRequest.setRows(rowDataList);
+
+		List<Request> updateRequests = new ArrayList<Request>();
+		updateRequests.add(new Request().setAppendCells(appendCellsRequest));
+		updateRequests
+				.add(createColorColumnTextUpdateRequest(extractedSentenceCount, subjectFormat, SUBJECT_TEXT_COLUMN));
+		updateRequests
+				.add(createColorColumnTextUpdateRequest(extractedSentenceCount, objectFormat, OBJECT_TEXT_COLUMN));
+		updateRequests.add(createColorSentenceUpdateRequest(sentence, extractedSentenceCount, biolinkAssociation,
+				swapSubjectObject));
+		updateRequests.addAll(createEntityIdHyperlinkRequests(sentence, extractedSentenceCount, biolinkAssociation,
+				swapSubjectObject));
 
 		return updateRequests;
 	}
 
-	private static Collection<Request> writeSentenceToSpreadsheet(String sentenceId, ExtractedSentence sentence,
-			Sheets sheetsService, String sheetId, int extractedSentenceCount, BiolinkAssociation biolinkAssociation)
-			throws IOException {
-		List<List<Object>> values = Arrays
-				.asList(Arrays.asList(sentenceId, sentence.getDocumentId(), getSubjectId(sentence, biolinkAssociation),
-						getObjectId(sentence, biolinkAssociation), sentence.getSentenceText(), true, false, false));
-		ValueRange body = new ValueRange().setValues(values);
+	private List<CellData> getSentenceCellData(String sentenceId, ExtractedSentence sentence,
+			BiolinkAssociation biolinkAssociation, boolean swapSubjectObject) {
+		// -1 because there is always a triple representing no_relation
+		int relationCount = biolinkAssociation.getSpoTriples().length - 1;
 
-		// USER_ENTERED could also be RAW: see
-		// https://developers.google.com/sheets/api/guides/values
-		sheetsService.spreadsheets().values().append(sheetId, "Sheet1", body).setValueInputOption("USER_ENTERED")
-				.execute();
+		List<CellData> cellDataList = new ArrayList<CellData>();
+		cellDataList.add(new CellData().setUserEnteredValue(new ExtendedValue().setStringValue(sentenceId)));
+		cellDataList.add(new CellData()
+				.setUserEnteredValue(new ExtendedValue().setStringValue(sentence.getSentenceWithPlaceholders())));
+		cellDataList
+				.add(new CellData().setUserEnteredValue(new ExtendedValue().setStringValue(sentence.getDocumentId())));
 
-		List<Request> updateRequests = new ArrayList<Request>();
+		if (!swapSubjectObject) {
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getSubjectId(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getSubjectText(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getObjectId(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getObjectText(sentence, biolinkAssociation))));
+		} else {
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getObjectId(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getObjectText(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getSubjectId(sentence, biolinkAssociation))));
+			cellDataList.add(new CellData().setUserEnteredValue(
+					new ExtendedValue().setStringValue(getSubjectText(sentence, biolinkAssociation))));
+		}
 
-		updateRequests.add(createColorSentenceUpdateRequest(sentence, extractedSentenceCount, biolinkAssociation));
-		updateRequests.addAll(createEntityIdHyperlinkRequests(sentence, extractedSentenceCount, biolinkAssociation));
+		cellDataList.add(new CellData().setUserEnteredValue(
+				new ExtendedValue().setStringValue(sentence.getSentenceText() + "                  ")));
+		cellDataList.add(new CellData().setUserEnteredValue(new ExtendedValue().setBoolValue(true)));
 
-		return updateRequests;
+		// add a column for each relation
+		for (int i = 0; i < relationCount; i++) {
+			cellDataList.add(new CellData().setUserEnteredValue(new ExtendedValue().setBoolValue(false)));
+		}
+		return cellDataList;
 	}
 
 	private static Collection<? extends Request> createEntityIdHyperlinkRequests(ExtractedSentence sentence,
-			int extractedSentenceCount, BiolinkAssociation biolinkAssociation) {
+			int extractedSentenceCount, BiolinkAssociation biolinkAssociation, boolean swapSubjectObject) {
 
 		int sheetTabId = 0;
 		int startRowIndex = extractedSentenceCount;
@@ -352,8 +514,15 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// overlapping annotations, so the code may make more than one hyperlink
 		{
 			int index = 0;
-			for (String subjectId : getSubjectId(sentence, biolinkAssociation).split("\\|")) {
+			String subjectIds = getSubjectId(sentence, biolinkAssociation);
+			if (swapSubjectObject) {
+				subjectIds = getObjectId(sentence, biolinkAssociation);
+			}
+			for (String subjectId : subjectIds.split("\\|")) {
 				String subjectIdUri = "http://purl.obolibrary.org/obo/" + subjectId.replace(":", "_");
+				if (subjectId.startsWith("DRUGBANK")) {
+					subjectIdUri = "https://go.drugbank.com/drugs/" + subjectId.substring(subjectId.indexOf(":"));
+				}
 				TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(subjectIdUri));
 				GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
 						.setEndRowIndex(endRowIndex).setStartColumnIndex(SUBJECT_ID_COLUMN)
@@ -381,8 +550,15 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// object Id link
 		{
 			int index = 0;
-			for (String objectId : getObjectId(sentence, biolinkAssociation).split("\\|")) {
+			String objectIds = getObjectId(sentence, biolinkAssociation);
+			if (swapSubjectObject) {
+				objectIds = getSubjectId(sentence, biolinkAssociation);
+			}
+			for (String objectId : objectIds.split("\\|")) {
 				String objectIdUri = "http://purl.obolibrary.org/obo/" + objectId.replace(":", "_");
+				if (objectId.startsWith("DRUGBANK")) {
+					objectIdUri = "https://go.drugbank.com/drugs/" + objectId.substring(objectId.indexOf(":"));
+				}
 				TextFormat linkFormat = new TextFormat().setLink(new Link().setUri(objectIdUri));
 				GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(startRowIndex)
 						.setEndRowIndex(endRowIndex).setStartColumnIndex(OBJECT_ID_COLUMN)
@@ -403,6 +579,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 				Request r = new Request();
 				r.setUpdateCells(updateCellRequest);
 				updateRequests.add(r);
+				index += objectId.length() + 1;
 			}
 		}
 
@@ -410,36 +587,9 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 	}
 
-	private static Request createColorSentenceUpdateRequest(ExtractedSentence sentence, int extractedSentenceCount,
-			BiolinkAssociation biolinkAssociation) {
+	private Request createColorSentenceUpdateRequest(ExtractedSentence sentence, int extractedSentenceCount,
+			BiolinkAssociation biolinkAssociation, boolean swapSubjectObject) {
 		int sheetTabId = 0;
-
-		Color red = new Color();
-		red.setRed(1.0f);
-		red.setBlue(0.0f);
-		red.setGreen(0.0f);
-
-		Color blue = new Color();
-		blue.setRed(0.0f);
-		blue.setBlue(1.0f);
-		blue.setGreen(0.0f);
-
-		Color black = new Color();
-		black.setRed(0.0f);
-		black.setBlue(0.0f);
-		black.setGreen(0.0f);
-
-		TextFormat subjectFormat = new TextFormat();
-		subjectFormat.setItalic(true);
-		subjectFormat.setForegroundColor(red);
-
-		TextFormat objectFormat = new TextFormat();
-		objectFormat.setItalic(true);
-		objectFormat.setForegroundColor(blue);
-
-		TextFormat defaultFormat = new TextFormat();
-		defaultFormat.setForegroundColor(black);
-		defaultFormat.setItalic(false);
 
 		GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(extractedSentenceCount)
 				.setEndRowIndex(extractedSentenceCount + 1).setStartColumnIndex(SENTENCE_COLUMN)
@@ -447,14 +597,29 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		Map<Span, TextFormat> formatMap = new HashMap<Span, TextFormat>();
 
+		int sentenceLength = sentence.getSentenceText().length();
+
 		List<Span> subjectSpans = getSubjectSpan(sentence, biolinkAssociation);
+		List<Span> objectSpans = getObjectSpan(sentence, biolinkAssociation);
+		if (swapSubjectObject) {
+			subjectSpans = getObjectSpan(sentence, biolinkAssociation);
+			objectSpans = getSubjectSpan(sentence, biolinkAssociation);
+		}
+
 		for (Span span : subjectSpans) {
+			if (span.getSpanStart() > sentenceLength) {
+				throw new IllegalStateException("start > sentence length: " + span.getSpanStart() + " > "
+						+ sentenceLength + " " + span.toString() + " -- " + sentence.getSentenceText());
+			}
 			formatMap.put(span, subjectFormat);
 		}
 //		Collections.sort(subjectSpans, Span.ASCENDING());
 
-		List<Span> objectSpans = getObjectSpan(sentence, biolinkAssociation);
 		for (Span span : objectSpans) {
+			if (span.getSpanStart() > sentenceLength) {
+				throw new IllegalStateException("start > sentence length: " + span.getSpanStart() + " > "
+						+ sentenceLength + " " + span.toString() + " -- " + sentence.getSentenceText());
+			}
 			formatMap.put(span, objectFormat);
 		}
 //		Collections.sort(objectSpans, Span.ASCENDING());
@@ -467,6 +632,35 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		List<TextFormatRun> textFormatRuns = getTextFormatRuns(sortedFormatMap, defaultFormat);
 //		textFormatRuns.addAll(subjectFormatRuns);
 //		textFormatRuns.addAll(objectFormatRuns);
+
+		CellData cellData = new CellData().setTextFormatRuns(textFormatRuns);
+		List<CellData> cellDataList = Arrays.asList(cellData);
+		RowData rowData = new RowData().setValues(cellDataList);
+		List<RowData> rows = Arrays.asList(rowData);
+
+		UpdateCellsRequest updateCellRequest = new UpdateCellsRequest();
+		updateCellRequest.setRange(range);
+		updateCellRequest.setRows(rows);
+		updateCellRequest.setFields("textFormatRuns");
+
+		Request r = new Request();
+		r.setUpdateCells(updateCellRequest);
+
+		return r;
+	}
+
+	private Request createColorColumnTextUpdateRequest(int extractedSentenceCount, TextFormat textFormat,
+			int columnIndex) {
+		int sheetTabId = 0;
+
+		GridRange range = new GridRange().setSheetId(sheetTabId).setStartRowIndex(extractedSentenceCount)
+				.setEndRowIndex(extractedSentenceCount + 1).setStartColumnIndex(columnIndex)
+				.setEndColumnIndex(columnIndex + 1);
+
+		TextFormatRun formatOnRun = new TextFormatRun();
+		formatOnRun.setFormat(textFormat);
+		formatOnRun.setStartIndex(0);
+		List<TextFormatRun> textFormatRuns = Arrays.asList(formatOnRun);
 
 		CellData cellData = new CellData().setTextFormatRuns(textFormatRuns);
 		List<CellData> cellDataList = Arrays.asList(cellData);
@@ -560,6 +754,22 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 //
 //	}
 
+	private String getSubjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
+		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
+			return sentence.getEntityCoveredText1();
+		}
+		return sentence.getEntityCoveredText2();
+	}
+
+	private String getObjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
+		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
+			return sentence.getEntityCoveredText1();
+		}
+		return sentence.getEntityCoveredText2();
+	}
+
 	private static List<Span> getSubjectSpan(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
 		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
@@ -635,7 +845,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// add 100 extra just in case there are collisions with previous extracted
 		// sentences
 		Random rand = new Random();
-		while (randomIndexes.size() < batchSize + 100) {
+		while (randomIndexes.size() < batchSize + 10000) {
 			randomIndexes.add(rand.nextInt(maxSentenceCount) + 1);
 		}
 
