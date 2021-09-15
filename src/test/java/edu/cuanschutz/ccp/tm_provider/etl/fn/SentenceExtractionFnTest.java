@@ -520,9 +520,9 @@ public class SentenceExtractionFnTest {
 
 		// the word sentence appears in all of the sentences
 		Set<String> keywords = CollectionsUtil.createSet("sentence");
-		Map<String, String> suffixToPlaceholderMap = new HashMap<String, String>();
-		suffixToPlaceholderMap.put("X", PLACEHOLDER_X);
-		suffixToPlaceholderMap.put("Y", PLACEHOLDER_Y);
+		Map<List<String>, String> suffixToPlaceholderMap = new HashMap<List<String>, String>();
+		suffixToPlaceholderMap.put(Arrays.asList("X"), PLACEHOLDER_X);
+		suffixToPlaceholderMap.put(Arrays.asList("Y"), PLACEHOLDER_Y);
 
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, map);

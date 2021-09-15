@@ -65,7 +65,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap,
+			Set<DocumentCriteria> requiredDocumentCriteria, Map<List<String>, String> prefixesToPlaceholderMap,
 			DocumentType conceptDocType) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
@@ -99,7 +99,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 							Set<ExtractedSentence> extractedSentences = extractSentences(docId, documentText,
 									documentPublicationTypes, documentYearPublished, docTypeToContentMap, keywords,
-									prefixToPlaceholderMap, conceptDocType);
+									prefixesToPlaceholderMap, conceptDocType);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -124,7 +124,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	protected static Set<ExtractedSentence> extractSentences(String documentId, String documentText,
 			Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<String, String> prefixToPlaceholderMap, DocumentType conceptDocType) throws IOException {
+			Map<List<String>, String> prefixesToPlaceholderMap, DocumentType conceptDocType) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
@@ -135,12 +135,12 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 		String xPlaceholder = null;
 		// there are only two placeholders in the map, e.g. @GENE$ so we use the
 		// placeholders to assign the prefixes to distinct lists
-		for (String prefix : prefixToPlaceholderMap.keySet()) {
-			if (xPlaceholder == null || xPlaceholder.equals(prefixToPlaceholderMap.get(prefix))) {
-				xPrefixes.add(prefix);
-				xPlaceholder = prefixToPlaceholderMap.get(prefix);
+		for (List<String> prefixes : prefixesToPlaceholderMap.keySet()) {
+			if (xPlaceholder == null || xPlaceholder.equals(prefixesToPlaceholderMap.get(prefixes))) {
+				xPrefixes.addAll(prefixes);
+				xPlaceholder = prefixesToPlaceholderMap.get(prefixes);
 			} else {
-				yPrefixes.add(prefix);
+				yPrefixes.addAll(prefixes);
 			}
 		}
 
@@ -161,7 +161,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 			// xPlaceholder was already set above
 //			String xPlaceholder = prefixToPlaceholderMap.get(xPrefixes.get(0));
-			String yPlaceholder = prefixToPlaceholderMap.get(yPrefixes.get(0));
+			String yPlaceholder = prefixesToPlaceholderMap.get(yPrefixes);
 
 			extractedSentences
 					.addAll(catalogExtractedSentences(keywords, documentText, documentId, documentPublicationTypes,

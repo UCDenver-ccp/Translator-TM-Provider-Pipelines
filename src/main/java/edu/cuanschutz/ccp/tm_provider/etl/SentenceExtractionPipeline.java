@@ -1,9 +1,11 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -154,19 +156,28 @@ public class SentenceExtractionPipeline {
 		// the extracted sentence output contains a version of the sentence where the
 		// concepts have been replaced by placeholders. This map determines which
 		// concept type is replaced by which placeholder.
-		Map<String, String> prefixToPlaceholderMap = new HashMap<String, String>();
+		Map<List<String>, String> prefixesToPlaceholderMap = new HashMap<List<String>, String>();
+		List<String> xPrefixes = Arrays.asList(options.getPrefixX().split("\\|"));
+		Collections.sort(xPrefixes);
 
-		for (String xPrefix : options.getPrefixX().split("\\|")) {
-			prefixToPlaceholderMap.put(xPrefix, options.getPlaceholderX());
+		List<String> yPrefixes = Arrays.asList(options.getPrefixY().split("\\|"));
+		Collections.sort(yPrefixes);
+
+		prefixesToPlaceholderMap.put(xPrefixes, options.getPlaceholderX());
+		if (prefixesToPlaceholderMap.containsKey(yPrefixes)) {
+			prefixesToPlaceholderMap.put(yPrefixes, options.getPlaceholderY());
 		}
-		for (String yPrefix : options.getPrefixY().split("\\|")) {
-			prefixToPlaceholderMap.put(yPrefix, options.getPlaceholderY());
-		}
+//		for (String xPrefix : options.getPrefixX().split("\\|")) {
+//			prefixToPlaceholderMap.put(xPrefix, options.getPlaceholderX());
+//		}
+//		for (String yPrefix : options.getPrefixY().split("\\|")) {
+//			prefixToPlaceholderMap.put(yPrefix, options.getPlaceholderY());
+//		}
 
 		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
 		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);
+				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
 				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
