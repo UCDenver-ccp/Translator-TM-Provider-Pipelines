@@ -2,8 +2,12 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBLICATION_TYPES;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,9 +53,23 @@ public class DatastoreProcessingStatusUtil {
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
-	
 	public static String getDocumentId(com.google.datastore.v1.Entity statusEntity) {
 		return statusEntity.getPropertiesMap().get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
+	}
+
+	public static String getYearPublished(com.google.datastore.v1.Entity statusEntity) {
+		if (statusEntity.getPropertiesMap().containsKey(STATUS_PROPERTY_YEAR_PUBLISHED)) {
+			return statusEntity.getPropertiesMap().get(STATUS_PROPERTY_YEAR_PUBLISHED).getStringValue();
+		}
+		return null;
+	}
+
+	public static List<String> getPublicationTypes(com.google.datastore.v1.Entity statusEntity) {
+		if (statusEntity.getPropertiesMap().containsKey(STATUS_PROPERTY_PUBLICATION_TYPES)) {
+			return Arrays.asList(statusEntity.getPropertiesMap().get(STATUS_PROPERTY_PUBLICATION_TYPES).getStringValue()
+					.split("\\|"));
+		}
+		return Collections.emptyList();
 	}
 
 	/**

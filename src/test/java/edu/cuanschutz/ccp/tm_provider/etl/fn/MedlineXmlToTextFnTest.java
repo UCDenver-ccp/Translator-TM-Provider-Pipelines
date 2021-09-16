@@ -31,10 +31,12 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
+import org.medline.MedlineDate;
 import org.medline.PubmedArticle;
 import org.medline.PubmedArticleSet;
 import org.xml.sax.SAXException;
 
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -86,7 +88,7 @@ public class MedlineXmlToTextFnTest {
 		};
 	}
 
-	private List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
+	public static List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
 		List<PubmedArticle> articles = new ArrayList<PubmedArticle>();
 		InputStream is = new GZIPInputStream(ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class,
 				"sample-pubmed20n0001.xml.gz"));
@@ -185,8 +187,8 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, timestamp, collection,
+				docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
@@ -230,8 +232,8 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, timestamp, collection,
+				docIdsAlreadyStoredView, OverwriteOutput.YES);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedPmid_2 = "PMID:31839728";
@@ -281,8 +283,8 @@ public class MedlineXmlToTextFnTest {
 				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("PMID:31839728")))
 				.apply(View.<Set<String>>asSingleton());
 
-		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria,
-				timestamp, collection, docIdsAlreadyStoredView);
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, timestamp, collection,
+				docIdsAlreadyStoredView, OverwriteOutput.NO);
 
 		String expectedPmid_1 = "PMID:1";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
@@ -302,6 +304,20 @@ public class MedlineXmlToTextFnTest {
 						KV.of(expectedPmid_3, Arrays.asList(expectedText_3)));
 
 		pipeline.run();
+	}
+
+	@Test
+	public void testExtractYearFromMedlineDate() {
+		MedlineDate md = new MedlineDate();
+		md.setvalue("2000 Nov-Dec");
+		String extractedYear = MedlineXmlToTextFn.extractYearFromMedlineDate(md);
+		assertEquals("2000", extractedYear);
+
+		md = new MedlineDate();
+		md.setvalue("1998 Dec-1999 Jan");
+		extractedYear = MedlineXmlToTextFn.extractYearFromMedlineDate(md);
+		assertEquals("1998", extractedYear);
+
 	}
 
 }

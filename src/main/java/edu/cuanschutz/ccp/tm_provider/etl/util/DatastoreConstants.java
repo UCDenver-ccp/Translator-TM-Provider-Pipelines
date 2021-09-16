@@ -87,10 +87,12 @@ public interface DatastoreConstants {
 	 * The message provided by the exception that was indicated for the failure
 	 */
 	public static final String FAILURE_PROPERTY_MESSAGE = "message";
+	public static final String FAILURE_PROPERTY_CAUSE_MESSAGE = "cause_message";
 	/**
 	 * The stacktrace of the exception that was indicated for the failure
 	 */
 	public static final String FAILURE_PROPERTY_STACKTRACE = "stacktrace";
+	public static final String FAILURE_PROPERTY_CAUSE_STACKTRACE = "cause_stacktrace";
 	/**
 	 * The pipeline where the failure occurred
 	 */
@@ -117,6 +119,11 @@ public interface DatastoreConstants {
 	 * The document ID corresponding to this status data
 	 */
 	public static final String STATUS_PROPERTY_DOCUMENT_ID = "document_id";
+
+	public static final String STATUS_PROPERTY_YEAR_PUBLISHED = "pub_year";
+
+	public static final String STATUS_PROPERTY_PUBLICATION_TYPES = "pub_types";
+
 	/**
 	 * 
 	 */
@@ -130,6 +137,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
 
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE = "concept_pp";
+	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
 
 	/**
 	 * NGD = Normalized Google Distance
@@ -143,12 +151,14 @@ public interface DatastoreConstants {
 
 	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
 	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
+	public static final String STATUS_PROPERTY_OGER_DRUGBANK_DONE = "oger_drugbank";
 	public static final String STATUS_PROPERTY_OGER_GO_BP_DONE = "oger_gobp";
 	public static final String STATUS_PROPERTY_OGER_GO_CC_DONE = "oger_gocc";
 	public static final String STATUS_PROPERTY_OGER_GO_MF_DONE = "oger_gomf";
 	public static final String STATUS_PROPERTY_OGER_HP_DONE = "oger_hp";
 	public static final String STATUS_PROPERTY_OGER_MONDO_DONE = "oger_mondo";
 	public static final String STATUS_PROPERTY_OGER_MOP_DONE = "oger_mop";
+	public static final String STATUS_PROPERTY_OGER_MP_DONE = "oger_mp";
 	public static final String STATUS_PROPERTY_OGER_NCBITAXON_DONE = "oger_ncbitaxon";
 	public static final String STATUS_PROPERTY_OGER_SO_DONE = "oger_so";
 	public static final String STATUS_PROPERTY_OGER_PR_DONE = "oger_pr";
@@ -159,6 +169,7 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 
 	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
+	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
 	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
 	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
 	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
@@ -172,8 +183,17 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
 
 	////////////////////////////////////////////////////////////////
-	////////////////// BERT CONCEPT PROCESSING /////////////////////
+	///////////////////// SENTENCE EXPORT //////////////////////////
 	////////////////////////////////////////////////////////////////
+
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE = "sent_xprt_blgtesa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_xprt_bldtpfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION_DONE = "sent_xprt_blctdopfa";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_DONE = "sent_xprt_blgtda";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_DISEASE_ASSOCIATION_LOSS_GAIN_FUNCTION_DONE = "sent_xprt_blgtda_lfgf";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION_DONE = "sent_xprt_blgrra";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_CHEMICAL_TO_GENE_ASSOCIATION_DONE = "sent_xprt_blctga";
+	public static final String STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE = "sent_xprt_blgtgta";
 
 //	/**
 //	 * 

@@ -38,11 +38,18 @@ public class EtlFailureToEntityFnTest {
 
 		String stacktrace = null;
 		Throwable t = null;
+		String causeStacktrace = null;
+		String causeMessage = null;
 		try {
 			throw new IOException(message);
 		} catch (IOException e) {
 			t = e;
 			stacktrace = Arrays.toString(e.getStackTrace());
+			Throwable cause = t.getCause();
+			if (cause != null) {
+				causeMessage = cause.getMessage();
+				causeStacktrace = Arrays.toString(cause.getStackTrace());
+			}
 		}
 
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.BIOC, DocumentFormat.BIOCXML, pipelineKey,
@@ -56,7 +63,7 @@ public class EtlFailureToEntityFnTest {
 		EtlFailureToEntityFn fn = new EtlFailureToEntityFn();
 		PCollection<KV<String, Entity>> output = input.apply(ParDo.of(fn));
 		Entity expectedEntity = EtlFailureToEntityFn.buildFailureEntity(dc, docId, expectedMessage, stacktrace,
-				timestamp);
+				causeMessage, causeStacktrace, timestamp);
 		PAssert.that(output).containsInAnyOrder(KV.of(expectedEntity.getKey().toString(), expectedEntity));
 
 		pipeline.run();

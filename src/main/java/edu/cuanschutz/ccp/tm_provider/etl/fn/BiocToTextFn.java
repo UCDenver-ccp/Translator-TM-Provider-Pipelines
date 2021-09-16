@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +21,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverter;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -39,7 +41,7 @@ import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
  *
  */
 public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
-
+//	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextFn.class);
 	private static final long serialVersionUID = 1L;
 	/**
 	 * The value in the returned KV pair is a list because it is possible that the
@@ -66,7 +68,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public static PCollectionTuple process(PCollection<KV<String, String>> docIdToBiocXml,
 			DocumentCriteria outputTextDocCriteria, DocumentCriteria outputAnnotationDocCriteria,
-			com.google.cloud.Timestamp timestamp, String collection, PCollectionView<Set<String>> existingDocumentIds) {
+			com.google.cloud.Timestamp timestamp, String collection, PCollectionView<Set<String>> existingDocumentIds,
+			OverwriteOutput overwriteOutput) {
 
 		return docIdToBiocXml.apply("Convert BioC XML to plain text -- reserve section annotations",
 				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
@@ -82,7 +85,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 						try {
 							Map<String, TextDocument> docIdToDocumentMap = BiocToTextConverter
-									.convert(new ByteArrayInputStream(biocXml.getBytes()));
+									.convert(new InputStreamReader(new ByteArrayInputStream(biocXml.getBytes("UTF-8")),
+											"UTF-8"));
 
 							Set<String> alreadyStoredDocIds = context.sideInput(existingDocumentIds);
 							/*
@@ -93,7 +97,7 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								String docId = entry.getKey();
 
 								// if the document id has already been stored, then don't store it again
-								if (alreadyStoredDocIds.contains(docId)) {
+								if (overwriteOutput == OverwriteOutput.NO && alreadyStoredDocIds.contains(docId)) {
 									continue;
 								}
 								String plainText = entry.getValue().getText();

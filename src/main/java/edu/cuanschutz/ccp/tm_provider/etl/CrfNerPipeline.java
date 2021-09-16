@@ -14,9 +14,11 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
@@ -124,17 +126,6 @@ public class CrfNerPipeline {
 		PCollection<EtlFailureData> failures = output.get(CrfNerFn.ETL_FAILURE_TAG);
 
 		/*
-		 * store the serialized annotation document content in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
-		 */
-		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
-				.deduplicateDocuments(statusEntityToAnnotation);
-		nonredundantDocIdToAnnotations
-				.apply("annotations->annot_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection())))
-				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		/*
 		 * update the status entities to reflect the work completed, and store in
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
 		 */
@@ -143,6 +134,21 @@ public class CrfNerPipeline {
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
+
+		/*
+		 * store the serialized annotation document content in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToAnnotation);
+		nonredundantDocIdToAnnotations
+				.apply("annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
+				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is

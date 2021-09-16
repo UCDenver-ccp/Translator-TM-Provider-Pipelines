@@ -16,7 +16,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.cuanschutz.ccp.tm_provider.etl.util.BiocToTextConverterTest;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFnTest;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
@@ -55,7 +55,7 @@ public class SentenceCooccurrenceBuilderTest {
 
 	@Test
 	public void testIsAsExpected() throws IOException {
-		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class,
+		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class,
 				"PMC1790863.txt", CharacterEncoding.UTF_8);
 		assertEquals(version1.trim(), text.trim());
 	}

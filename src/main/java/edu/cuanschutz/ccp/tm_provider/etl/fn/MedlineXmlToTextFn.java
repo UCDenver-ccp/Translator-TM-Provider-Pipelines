@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -15,11 +16,14 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.medline.Abstract;
 import org.medline.AbstractText;
+import org.medline.MedlineCitation;
+import org.medline.PublicationType;
 import org.medline.PubmedArticle;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -27,6 +31,8 @@ import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Outputs four {@link PCollection} objects
@@ -43,7 +49,12 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
  */
 public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<String>>> {
 
+	// 2155 is the max year value type in MySQL
+	public static final String DEFAULT_PUB_YEAR = "2155";
+
 	private static final long serialVersionUID = 1L;
+
+	public static final String UNKNOWN_PUBLICATION_TYPE = "Unknown";
 
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<String, List<String>>> plainTextTag = new TupleTag<KV<String, List<String>>>() {
@@ -69,29 +80,34 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 */
 	public static PCollectionTuple process(PCollection<PubmedArticle> pubmedArticles,
 			DocumentCriteria outputTextDocCriteria, com.google.cloud.Timestamp timestamp, String collection,
-			PCollectionView<Set<String>> docIdsAlreadyInDatastore) {
+			PCollectionView<Set<String>> docIdsAlreadyInDatastore, OverwriteOutput overwrite) {
 
-		return pubmedArticles.apply("Extract title/abstract -- preserve section annotations",
+		return pubmedArticles.apply("Extract section annotations",
 				ParDo.of(new DoFn<PubmedArticle, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext context) {
 						PubmedArticle pubmedArticle = context.element();
-						Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
-						TextDocument td = buildDocument(pubmedArticle);
-
-						// only store new documents
-						if (!alreadyStoredDocIds.contains(td.getSourceid())) {
-							try {
-								outputDocument(context, td, collection);
-							} catch (Throwable t) {
-								EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
-										"Likely failure during Medline processing.", td.getSourceid(), t, timestamp);
-								context.output(etlFailureTag, failure);
+						/* pubmedArticle was observed to be null in the daily update files */
+						if (pubmedArticle != null) {
+							Set<String> alreadyStoredDocIds = context.sideInput(docIdsAlreadyInDatastore);
+							TextDocumentWithMetadata td = buildDocument(pubmedArticle);
+							if (td != null) {
+								// only store new documents unless overwrite = OverwriteOutput.YES
+								if (overwrite == OverwriteOutput.YES
+										|| !alreadyStoredDocIds.contains(td.getSourceid())) {
+									try {
+										outputDocument(context, td, collection);
+									} catch (Throwable t) {
+										EtlFailureData failure = new EtlFailureData(outputTextDocCriteria,
+												"Likely failure during Medline processing.", td.getSourceid(), t,
+												timestamp);
+										context.output(etlFailureTag, failure);
+									}
+								}
 							}
 						}
-
 					}
 				}).withSideInputs(docIdsAlreadyInDatastore).withOutputTags(plainTextTag,
 						TupleTagList.of(sectionAnnotationsTag).and(etlFailureTag).and(processingStatusTag)));
@@ -102,28 +118,82 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @return a {@link TextDocument} containing the title/abstract text and
 	 *         corresponding section annotations
 	 */
-	static TextDocument buildDocument(PubmedArticle pubmedArticle) {
-		String pmid = "PMID:" + pubmedArticle.getMedlineCitation().getPMID().getvalue();
-		String title = pubmedArticle.getMedlineCitation().getArticle().getArticleTitle().getvalue();
-		String abstractText = getAbstractText(pubmedArticle);
-		String documentText = (abstractText == null || abstractText.isEmpty()) ? title
-				: String.format("%s\n\n%s", title, abstractText);
+	static TextDocumentWithMetadata buildDocument(PubmedArticle pubmedArticle) {
+		MedlineCitation medlineCitation = pubmedArticle.getMedlineCitation();
+		/*
+		 * There are cases when processing Medline update files where either the
+		 * MedlineCitation or the PMID are null. This is likely when processing the
+		 * DeleteCitation entries at the bottom of each update file. To handle these
+		 * cases, we check for nulls here and skip any documents where the
+		 * MedlineCitation or PMID are null
+		 */
+		if (medlineCitation != null && medlineCitation.getPMID() != null) {
+			String pmid = "PMID:" + medlineCitation.getPMID().getvalue();
+			String title = medlineCitation.getArticle().getArticleTitle().getvalue();
+			String abstractText = getAbstractText(pubmedArticle);
+			String documentText = (abstractText == null || abstractText.isEmpty()) ? title
+					: String.format("%s\n\n%s", title, abstractText);
 
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
-		TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
-		TextAnnotation abstractAnnotation = null;
-		if (abstractText != null && !abstractText.isEmpty()) {
-			int abstractStart = title.length() + 2;
-			int abstractEnd = abstractStart + abstractText.length();
-			abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
-		}
+			String yearPublished = getYearPublished(medlineCitation);
+			List<String> publicationTypes = getPublicationTypes(medlineCitation);
 
-		TextDocument td = new TextDocument(pmid, "PubMed", documentText);
-		td.addAnnotation(titleAnnotation);
-		if (abstractAnnotation != null) {
-			td.addAnnotation(abstractAnnotation);
+			TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(pmid);
+			TextAnnotation titleAnnotation = factory.createAnnotation(0, title.length(), title, "title");
+			TextAnnotation abstractAnnotation = null;
+			if (abstractText != null && !abstractText.isEmpty()) {
+				int abstractStart = title.length() + 2;
+				int abstractEnd = abstractStart + abstractText.length();
+				abstractAnnotation = factory.createAnnotation(abstractStart, abstractEnd, abstractText, "abstract");
+			}
+
+			TextDocumentWithMetadata td = new TextDocumentWithMetadata(pmid, "PubMed", documentText);
+			td.addAnnotation(titleAnnotation);
+			if (abstractAnnotation != null) {
+				td.addAnnotation(abstractAnnotation);
+			}
+			td.setYearPublished(yearPublished);
+			for (String pubType : publicationTypes) {
+				td.addPublicationType(pubType);
+			}
+			return td;
 		}
-		return td;
+		return null;
+	}
+
+	public static String getYearPublished(MedlineCitation medlineCitation) {
+		List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate = medlineCitation.getArticle().getJournal().getJournalIssue()
+				.getPubDate().getYearOrMonthOrDayOrSeasonOrMedlineDate();
+		for (Object obj : yearOrMonthOrDayOrSeasonOrMedlineDate) {
+			if (obj instanceof org.medline.Year) {
+				org.medline.Year year = (org.medline.Year) obj;
+				return year.getvalue();
+			}
+			if (obj instanceof org.medline.MedlineDate) {
+				org.medline.MedlineDate md = (org.medline.MedlineDate) obj;
+				return extractYearFromMedlineDate(md);
+			}
+
+		}
+		return DEFAULT_PUB_YEAR;
+	}
+
+	protected static String extractYearFromMedlineDate(org.medline.MedlineDate md) {
+		// <MedlineDate>1998 Dec-1999 Jan</MedlineDate>
+		// <MedlineDate>2015 Nov-Dec</MedlineDate>
+		/* year should be 1st four characters */
+		String yearStr = md.getvalue().split(" ")[0];
+		if (yearStr.matches("[1-2][0-9][0-9][0-9]")) {
+			return yearStr;
+		}
+		return DEFAULT_PUB_YEAR;
+	}
+
+	public static List<String> getPublicationTypes(MedlineCitation medlineCitation) {
+		List<String> pTypes = new ArrayList<String>();
+		for (PublicationType pt : medlineCitation.getArticle().getPublicationTypeList().getPublicationType()) {
+			pTypes.add(pt.getvalue());
+		}
+		return pTypes;
 	}
 
 	/**
@@ -146,7 +216,8 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		return sb.toString();
 	}
 
-	private static void outputDocument(ProcessContext context, TextDocument td, String collection) throws IOException {
+	private static void outputDocument(ProcessContext context, TextDocumentWithMetadata td, String collection)
+			throws IOException {
 		String docId = td.getSourceid();
 		String plainText = td.getText();
 
@@ -169,6 +240,18 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		 * output a {@link ProcessingStatus} for the document
 		 */
 		ProcessingStatus status = new ProcessingStatus(docId);
+		if (td.getYearPublished() != null) {
+			status.setYearPublished(td.getYearPublished());
+		} else {
+			status.setYearPublished(DEFAULT_PUB_YEAR);
+		}
+		if (td.getPublicationTypes() != null && !td.getPublicationTypes().isEmpty()) {
+			for (String pt : td.getPublicationTypes()) {
+				status.addPublicationType(pt);
+			}
+		} else {
+			status.addPublicationType(UNKNOWN_PUBLICATION_TYPE);
+		}
 		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 		status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
 
@@ -176,6 +259,25 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			status.addCollection(collection);
 		}
 		context.output(processingStatusTag, status);
+	}
+
+	private static class TextDocumentWithMetadata extends TextDocument {
+
+		@Setter
+		@Getter
+		private String yearPublished;
+
+		@Getter
+		private List<String> publicationTypes = new ArrayList<String>();
+
+		public TextDocumentWithMetadata(String sourceid, String sourcedb, String text) {
+			super(sourceid, sourcedb, text);
+		}
+
+		public void addPublicationType(String pubType) {
+			publicationTypes.add(pubType);
+		}
+
 	}
 
 }

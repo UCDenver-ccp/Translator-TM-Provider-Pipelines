@@ -35,15 +35,20 @@ import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
 import org.apache.beam.sdk.transforms.GroupByKey;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.tools.ant.util.StringUtils;
 
@@ -55,6 +60,8 @@ import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
+import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
+import edu.cuanschutz.ccp.tm_provider.etl.update.UpdateMedlineEntitiesPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil;
@@ -104,6 +111,8 @@ public class PipelineMain {
 	private static final TupleTag<ProcessedDocument> documentTag23 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag24 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag25 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag26 = new TupleTag<>();
+	private static final TupleTag<ProcessedDocument> documentTag27 = new TupleTag<>();
 
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
@@ -125,8 +134,14 @@ public class PipelineMain {
 			case CRF:
 				CrfNerPipeline.main(pipelineArgs);
 				break;
+			case CONCEPT_COUNT_DISTRIBUTION:
+				ConceptCountDistributionPipeline.main(pipelineArgs);
+				break;
 			case CONCEPT_POST_PROCESS:
 				ConceptPostProcessingPipeline.main(pipelineArgs);
+				break;
+			case CONCEPT_ANNOTATION_EXPORT:
+				ConceptAnnotationExportPipeline.main(pipelineArgs);
 				break;
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);
@@ -157,6 +172,15 @@ public class PipelineMain {
 				break;
 			case SENTENCE_COOCCURRENCE_EXPORT:
 				SentenceCooccurrencePipeline.main(pipelineArgs);
+				break;
+			case WEBANNO_SENTENCE_EXTRACTION:
+				WebAnnoSentenceExtractionPipeline.main(pipelineArgs);
+				break;
+			case CLASSIFIED_SENTENCE_STORAGE:
+				ClassifiedSentenceStoragePipeline.main(pipelineArgs);
+				break;
+			case UPDATE_MEDLINE_STATUS_ENTITIES:
+				UpdateMedlineEntitiesPipeline.main(pipelineArgs);
 				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
@@ -198,6 +222,8 @@ public class PipelineMain {
 		tagMap.put(23, documentTag23);
 		tagMap.put(24, documentTag24);
 		tagMap.put(25, documentTag25);
+		tagMap.put(26, documentTag26);
+		tagMap.put(27, documentTag27);
 
 		return tagMap;
 	}
@@ -347,7 +373,14 @@ public class PipelineMain {
 			filters.add(filter);
 		}
 
-		if (overwriteOutput == OverwriteOutput.NO) {
+		/*
+		 * targetProcessStatusFlag is null when we won't be updating the status document
+		 * on the results of this processing run, e.g. when we are not adding data to
+		 * Datastore but are simply exporting content to a bucket, e.g. the
+		 * ConceptAnnotationExportPipeline
+		 */
+		if (overwriteOutput == OverwriteOutput.NO && targetProcessStatusFlag != null
+				&& targetProcessStatusFlag != ProcessingStatusFlag.NOOP) {
 			filters.add(makeFilter(targetProcessStatusFlag.getDatastoreFlagPropertyName(),
 					PropertyFilter.Operator.EQUAL, makeValue(false)).build());
 		}
@@ -659,7 +692,6 @@ public class PipelineMain {
 	 * @return an updated version of the input {@link Entity} with the specified
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
-	@VisibleForTesting
 	private static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
 		String documentId = origEntity.getDocumentId();
 		Key key = DatastoreKeyUtil.createStatusKey(documentId);
@@ -678,12 +710,35 @@ public class PipelineMain {
 		}
 		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID, makeValue(documentId).build());
 
+		List<String> publicationTypes = origEntity.getPublicationTypes();
+		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_PUBLICATION_TYPES,
+				makeValue(CollectionsUtil.createDelimitedString(publicationTypes, "|")).build());
+
+		String yearPublished = origEntity.getYearPublished();
+		if (yearPublished == null || yearPublished.equals("false")) {
+			yearPublished = "2155"; // max value of year in MySQL
+		}
+		entityBuilder.putProperties(DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED,
+				makeValue(yearPublished).build());
+
 		for (Entry<String, Boolean> entry : origEntity.getFlagPropertiesMap().entrySet()) {
 			entityBuilder.putProperties(entry.getKey(), makeValue(entry.getValue()).build());
 		}
 		for (ProcessingStatusFlag flag : flagsToActivate) {
 			entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
 		}
+
+		/*
+		 * If there are new status flags available that did not exist when this status
+		 * entity was last updated, also add them and set them to false.
+		 */
+		Map<String, Value> propertiesMap = entityBuilder.getPropertiesMap();
+		for (ProcessingStatusFlag flag : ProcessingStatusFlag.values()) {
+			if (flag != ProcessingStatusFlag.NOOP && !propertiesMap.containsKey(flag.getDatastoreFlagPropertyName())) {
+				entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(false).build());
+			}
+		}
+
 		Entity entity = entityBuilder.build();
 		return entity;
 	}
@@ -693,7 +748,9 @@ public class PipelineMain {
 	 * @param flagsToActivate
 	 * @return A collection of updated {@link Entity} objects whereby the specified
 	 *         ProcessingStatusFlags have been set to true and all other flag remain
-	 *         as they were.
+	 *         as they were. If there are new status flags available that were not
+	 *         when this status entity was last updated, also add them and set them
+	 *         to false.
 	 */
 	public static PCollection<Entity> updateStatusEntities(PCollection<ProcessingStatus> statusEntities,
 			ProcessingStatusFlag... flagsToActivate) {
@@ -845,8 +902,12 @@ public class PipelineMain {
 		}
 	}
 
+	public enum FilterFlag {
+		NONE, BY_CRF
+	}
+
 	public static Map<DocumentType, Collection<TextAnnotation>> filterConceptAnnotations(
-			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap) {
+			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap, FilterFlag filterFlag) {
 		Map<DocumentType, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 
 		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> map = pairConceptWithCrfAnnots(
@@ -855,12 +916,18 @@ public class PipelineMain {
 		for (Entry<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> entry : map.entrySet()) {
 
 			DocumentType type = entry.getKey();
-			Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
 			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
 
-			Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
-
-			typeToAnnotMap.put(type, filteredAnnots);
+			// if there isn't a pair for the CONCEPT then output it without filtering
+			if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
+				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
+				Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
+				typeToAnnotMap.put(type, filteredAnnots);
+			} else if (filterFlag == FilterFlag.NONE || entry.getValue().get(CrfOrConcept.CRF) == null) {
+				typeToAnnotMap.put(type, conceptAnnots);
+			} else {
+				throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+			}
 
 		}
 		return typeToAnnotMap;
@@ -977,6 +1044,75 @@ public class PipelineMain {
 			ta.addSpan(new Span(origSpans.get(i).getSpanStart(), origSpans.get(i).getSpanEnd()));
 		}
 		return ta;
+	}
+
+	/**
+	 * Returns a collection of existing document identifiers, unless the
+	 * OverwriteOutput flag is set to YES, in which case it returns an empty set.
+	 * 
+	 * @param options
+	 * @param p
+	 * @return
+	 */
+	public static PCollectionView<Set<String>> catalogExistingDocuments(String project, String collection,
+			OverwriteOutput overwrite, Pipeline p) {
+		/*
+		 * if OverwriteOutput == YES, then there is no need to catalog te existing
+		 * documents as they will be overwritten if they exist
+		 */
+		if (overwrite == OverwriteOutput.YES) {
+			return p.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+					.apply(View.<Set<String>>asSingleton());
+		}
+
+		// catalog documents that have already been stored so that we can exclude
+		// loading redundant documents. There will be cases in the PubMed/Medline update
+		// files where records are included due to changes, e.g. modification date, but
+		// are not new documents, so they should be excluded from being loaded into
+		// datastore here.
+
+		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
+				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE), project,
+				collection, OverwriteOutput.YES);
+
+		// create a set of document IDs already present in Datastore to be used as a
+		// side input
+		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
+		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
+		final PCollectionView<Set<String>> existingDocumentIds = docIdsSet.apply(View.<Set<String>>asSingleton());
+		return existingDocumentIds;
+	}
+
+//	/**
+//	 * @param statusEntity
+//	 * @return a mapping from document ID to collection names
+//	 */
+//	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
+//			PCollection<ProcessingStatus> statusEntity) {
+//		return statusEntity.apply(ParDo.of(new DoFn<ProcessingStatus, KV<String, Set<String>>>() {
+//			private static final long serialVersionUID = 1L;
+//
+//			@ProcessElement
+//			public void processElement(ProcessContext c) {
+//				ProcessingStatus ps = c.element();
+//				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
+//			}
+//		}));
+//
+//	}
+
+	public static PCollection<KV<String, Set<String>>> getCollectionMappings(
+			PCollection<Entity> nonredundantStatusEntities) {
+		return nonredundantStatusEntities.apply(ParDo.of(new DoFn<Entity, KV<String, Set<String>>>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(ProcessContext c) {
+				Entity statusEntity = c.element();
+				ProcessingStatus ps = new ProcessingStatus(statusEntity);
+				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
+			}
+		}));
 	}
 
 }

@@ -1,18 +1,24 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.ListCoder;
+import org.apache.beam.sdk.coders.MapCoder;
+import org.apache.beam.sdk.coders.SetCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -38,6 +44,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a bioc document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String biocXml = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.xml",
@@ -48,8 +55,16 @@ public class DocumentToEntityFnTest {
 
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.BIOC, DocumentFormat.BIOCXML, PipelineKey.ORIG,
 				pipelineVersion);
-		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection);
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
+
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+		PCollectionView<Map<String, Set<String>>> docIdsToCollectionsMapView = pipeline
+				.apply("Create schema view",
+						Create.<Map<String, Set<String>>>of(map)
+								.withCoder(MapCoder.of(StringUtf8Coder.of(), SetCoder.of(StringUtf8Coder.of()))))
+				.apply(View.<Map<String, Set<String>>>asSingleton());
+
+		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, docIdsToCollectionsMapView);
+		PCollection<Entity> output = input.apply(ParDo.of(fn).withSideInputs(docIdsToCollectionsMapView));
 		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, biocXml, collections);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
@@ -61,6 +76,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.txt",
@@ -72,8 +88,15 @@ public class DocumentToEntityFnTest {
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
 				pipelineVersion);
 
-		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection);
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+		PCollectionView<Map<String, Set<String>>> docIdsToCollectionsMapView = pipeline
+				.apply("Create schema view",
+						Create.<Map<String, Set<String>>>of(map)
+								.withCoder(MapCoder.of(StringUtf8Coder.of(), SetCoder.of(StringUtf8Coder.of()))))
+				.apply(View.<Map<String, Set<String>>>asSingleton());
+
+		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, docIdsToCollectionsMapView);
+		PCollection<Entity> output = input.apply(ParDo.of(fn).withSideInputs(docIdsToCollectionsMapView));
 		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, text, collections);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
@@ -85,6 +108,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String sectionAnnotationsInBioNLPFormat = ClassPathUtil.getContentsFromClasspathResource(
@@ -95,9 +119,18 @@ public class DocumentToEntityFnTest {
 
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.SECTIONS, DocumentFormat.BIONLP,
 				PipelineKey.BIOC_TO_TEXT, pipelineVersion);
-		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection);
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
-		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, sectionAnnotationsInBioNLPFormat, collections);
+
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+		PCollectionView<Map<String, Set<String>>> docIdsToCollectionsMapView = pipeline
+				.apply("Create schema view",
+						Create.<Map<String, Set<String>>>of(map)
+								.withCoder(MapCoder.of(StringUtf8Coder.of(), SetCoder.of(StringUtf8Coder.of()))))
+				.apply(View.<Map<String, Set<String>>>asSingleton());
+
+		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, docIdsToCollectionsMapView);
+		PCollection<Entity> output = input.apply(ParDo.of(fn).withSideInputs(docIdsToCollectionsMapView));
+		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, sectionAnnotationsInBioNLPFormat,
+				collections);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
 		pipeline.run();
@@ -108,6 +141,7 @@ public class DocumentToEntityFnTest {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection);
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = "this is some text";
@@ -118,21 +152,27 @@ public class DocumentToEntityFnTest {
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
 				pipelineVersion);
 
-		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection);
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+		PCollectionView<Map<String, Set<String>>> docIdsToCollectionsMapView = pipeline
+				.apply("Create schema view",
+						Create.<Map<String, Set<String>>>of(map)
+								.withCoder(MapCoder.of(StringUtf8Coder.of(), SetCoder.of(StringUtf8Coder.of()))))
+				.apply(View.<Map<String, Set<String>>>asSingleton());
+
+		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, docIdsToCollectionsMapView);
+		PCollection<Entity> output = input.apply(ParDo.of(fn).withSideInputs(docIdsToCollectionsMapView));
 		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, text, collections);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 
 		pipeline.run();
 	}
-	
-	
-	
+
 	@Test
 	public void testPlainTextDocumentToEntityConversionFnWithAdditionalCollectionName() throws IOException {
 		/* test creation of a plain text document Cloud Datastore entity */
 		String collection = "PMC";
 		Set<String> collections = CollectionsUtil.createSet(collection, "NEW COLLECTION: PMC1790863");
+		collections.add(ToEntityFnUtils.getDateCollectionName());
 		String docId = "PMC1790863";
 		String pipelineVersion = "0.1.0";
 		String text = ClassPathUtil.getContentsFromClasspathResource(BiocToTextConverterTest.class, "PMC1790863.txt",
@@ -144,11 +184,17 @@ public class DocumentToEntityFnTest {
 		DocumentCriteria dc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.BIOC_TO_TEXT,
 				pipelineVersion);
 
-		
 		SerializableFunction<String, String> collectionFn = parameter -> "NEW COLLECTION: " + parameter;
-		
-		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, collectionFn);
-		PCollection<Entity> output = input.apply(ParDo.of(fn));
+
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+		PCollectionView<Map<String, Set<String>>> docIdsToCollectionsMapView = pipeline
+				.apply("Create schema view",
+						Create.<Map<String, Set<String>>>of(map)
+								.withCoder(MapCoder.of(StringUtf8Coder.of(), SetCoder.of(StringUtf8Coder.of()))))
+				.apply(View.<Map<String, Set<String>>>asSingleton());
+
+		DocumentToEntityFn fn = new DocumentToEntityFn(dc, collection, collectionFn, docIdsToCollectionsMapView);
+		PCollection<Entity> output = input.apply(ParDo.of(fn).withSideInputs(docIdsToCollectionsMapView));
 		Entity expectedEntity = DocumentToEntityFn.createEntity(docId, 0, 1, dc, text, collections);
 		PAssert.that(output).containsInAnyOrder(expectedEntity);
 

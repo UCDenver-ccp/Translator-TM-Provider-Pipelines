@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.ConceptPair;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -253,7 +255,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
 		CooccurLevel level = CooccurLevel.SENTENCE;
 		NormalizedGoogleDistanceFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
-				singletonConceptIds, pairedConceptIds, level);
+				singletonConceptIds, pairedConceptIds, level, AddSuperClassAnnots.YES, DocumentType.CONCEPT_ALL);
 
 		Set<String> expectedSingletonConceptIds = CollectionsUtil.createSet(X_000000, X_000001, X_000002, Y_000000,
 				Y_000001);
@@ -361,7 +363,7 @@ public class NormalizedGoogleDistanceFnTest {
 		}
 
 		Map<DocumentType, Collection<TextAnnotation>> outputAnnotMap = PipelineMain
-				.filterConceptAnnotations(docTypeToContentMap);
+				.filterConceptAnnotations(docTypeToContentMap, FilterFlag.BY_CRF);
 
 		Map<DocumentType, Collection<TextAnnotation>> expectedAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 		expectedAnnotMap.put(DocumentType.CONCEPT_CHEBI, Arrays.asList(x2Sentence1Annot, x1Sentence2Annot));

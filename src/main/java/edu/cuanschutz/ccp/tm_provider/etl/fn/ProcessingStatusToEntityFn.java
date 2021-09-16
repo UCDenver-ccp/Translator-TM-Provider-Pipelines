@@ -3,8 +3,11 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_COLLECTIONS;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBLICATION_TYPES;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +18,13 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import com.google.datastore.v1.Entity;
-import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -59,12 +62,16 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 
 	}
 
-	public static Entity buildStatusEntity(ProcessingStatus status)  {
-		Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
+	public static Entity buildStatusEntity(ProcessingStatus status) {
+		com.google.datastore.v1.Key key = DatastoreKeyUtil.createStatusKey(status.getDocumentId());
 
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(STATUS_PROPERTY_DOCUMENT_ID, makeValue(status.getDocumentId()).build());
+
+		entityBuilder.putProperties(STATUS_PROPERTY_YEAR_PUBLISHED, makeValue(status.getYearPublished()).build());
+		String serializedPubTypes = serializePublicationTypes(status.getPublicationTypes());
+		entityBuilder.putProperties(STATUS_PROPERTY_PUBLICATION_TYPES, makeValue(serializedPubTypes).build());
 
 		Set<String> setFlagProperties = new HashSet<String>();
 		for (String flagProperty : status.getFlagProperties()) {
@@ -99,13 +106,32 @@ public class ProcessingStatusToEntityFn extends DoFn<ProcessingStatus, KV<String
 		return entity;
 	}
 
+	private static String serializePublicationTypes(List<String> publicationTypes) {
+		return CollectionsUtil.createDelimitedString(publicationTypes, "|");
+	}
+
+	public static List<String> deserializePublicationTypes(String serializedPubTypes) {
+		return Arrays.asList(serializedPubTypes.split("\\|"));
+	}
+
 	static ProcessingStatus getStatus(Entity entity) {
 
 		Map<String, Value> propertiesMap = entity.getPropertiesMap();
 		String documentId = propertiesMap.get(STATUS_PROPERTY_DOCUMENT_ID).getStringValue();
 		ProcessingStatus status = new ProcessingStatus(documentId);
 
+		String yearPublished = propertiesMap.get(STATUS_PROPERTY_YEAR_PUBLISHED).getStringValue();
+		status.setYearPublished(yearPublished);
+
+		String serializedPubTypes = propertiesMap.get(STATUS_PROPERTY_PUBLICATION_TYPES).getStringValue();
+		for (String pubType : deserializePublicationTypes(serializedPubTypes)) {
+			status.addPublicationType(pubType);
+		}
+
 		propertiesMap.remove(STATUS_PROPERTY_DOCUMENT_ID);
+		propertiesMap.remove(STATUS_PROPERTY_YEAR_PUBLISHED);
+		propertiesMap.remove(STATUS_PROPERTY_PUBLICATION_TYPES);
+
 		for (Entry<String, Value> entry : propertiesMap.entrySet()) {
 			String propertyName = entry.getKey();
 			if (propertyName.endsWith("_DONE")) {

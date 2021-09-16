@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -32,6 +33,7 @@ import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -57,7 +59,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			Set<DocumentCriteria> requiredDocumentCriteria,
 			PCollectionView<Map<String, Set<String>>> extensionToOboMapView,
 			PCollectionView<Map<String, String>> prPromotionMapView,
-			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView) {
+			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView,
+			PCollectionView<Map<String, Set<String>>> oboToAncestorsMapView, FilterFlag filterFlag) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -72,6 +75,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						Map<String, Set<String>> extensionToOboMap = context.sideInput(extensionToOboMapView);
 						Map<String, String> prPromotionMap = context.sideInput(prPromotionMapView);
 						Map<String, Set<String>> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
+						Map<String, Set<String>> oboToAncestorsMap = context.sideInput(oboToAncestorsMapView);
 
 						try {
 							// check to see if all documents are present
@@ -88,7 +92,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 										.getDocTypeToContentMap(statusEntity.getDocumentId(),
 												statusEntityToText.getValue());
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
-										.filterConceptAnnotations(docTypeToContentMap);
+										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
@@ -96,6 +100,11 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								allAnnots = promotePrAnnots(allAnnots, prPromotionMap);
 								allAnnots = excludeSelectNcbiTaxonAnnots(allAnnots);
 								allAnnots = promoteNcbiTaxonAnnots(allAnnots, ncbitaxonPromotionMap);
+								allAnnots = removeNcbiStopWords(allAnnots);
+								allAnnots = removeIrrelevantHpConcepts(allAnnots, oboToAncestorsMap);
+								allAnnots = removeIrrelevantMondoConcepts(allAnnots, oboToAncestorsMap);
+								allAnnots = removeIrrelevantUberonConcepts(allAnnots, oboToAncestorsMap);
+								allAnnots = removeIrrelevantChebiConcepts(allAnnots, oboToAncestorsMap);
 
 								String documentText = PipelineMain.getDocumentText(docs);
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
@@ -116,8 +125,131 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						}
 					}
 
-				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonAncestorMapView)
+				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonAncestorMapView,
+						oboToAncestorsMapView)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * only keep descendants of chemical substance or role
+	 * (http://purl.obolibrary.org/obo/CHEBI_59999,
+	 * http://purl.obolibrary.org/obo/CHEBI_50906)
+	 * 
+	 * @param annots
+	 * @param oboToAncestorsMap
+	 * @return
+	 */
+	private static Set<TextAnnotation> removeIrrelevantChebiConcepts(Set<TextAnnotation> annots,
+			Map<String, Set<String>> oboToAncestorsMap) {
+		String chemicalSubstance = "CHEBI:59999";
+		String role = "CHEBI:50906";
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : annots) {
+			String id = annot.getClassMention().getMentionName();
+			if (id.startsWith("CHEBI")) {
+				if (oboToAncestorsMap.get(id).contains(chemicalSubstance) || oboToAncestorsMap.get(id).contains(role)) {
+					toKeep.add(annot);
+				}
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	/**
+	 * only keep descendants of anatomical entity
+	 * (http://purl.obolibrary.org/obo/UBERON_0001062)
+	 * 
+	 * @param annots
+	 * @param oboToAncestorsMap
+	 * @return
+	 */
+	private static Set<TextAnnotation> removeIrrelevantUberonConcepts(Set<TextAnnotation> annots,
+			Map<String, Set<String>> oboToAncestorsMap) {
+		String anatomicalEntity = "UBERON:0001062";
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : annots) {
+			String id = annot.getClassMention().getMentionName();
+			if (id.startsWith("UBERON")) {
+				if (oboToAncestorsMap.get(id).contains(anatomicalEntity)) {
+					toKeep.add(annot);
+				}
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	/**
+	 * only keep descendants of Disease or Disorder
+	 * (http://purl.obolibrary.org/obo/MONDO_0000001)
+	 * 
+	 * @param annots
+	 * @param oboToAncestorsMap
+	 * @return
+	 */
+	private static Set<TextAnnotation> removeIrrelevantMondoConcepts(Set<TextAnnotation> annots,
+			Map<String, Set<String>> oboToAncestorsMap) {
+		String diseaseOrDisorder = "MONDO:0000001";
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : annots) {
+			String id = annot.getClassMention().getMentionName();
+			if (id.startsWith("MONDO")) {
+				if (oboToAncestorsMap.get(id).contains(diseaseOrDisorder)) {
+					toKeep.add(annot);
+				}
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	/**
+	 * only keep descendants of Phenotypic Abnormality
+	 * (http://purl.obolibrary.org/obo/HP_0000118)
+	 * 
+	 * @param annots
+	 * @param oboToAncestorsMap
+	 * @return
+	 */
+	private static Set<TextAnnotation> removeIrrelevantHpConcepts(Set<TextAnnotation> annots,
+			Map<String, Set<String>> oboToAncestorsMap) {
+
+		String phenotypicAbnormality = "HP:0000118";
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		for (TextAnnotation annot : annots) {
+			String id = annot.getClassMention().getMentionName();
+			if (id.startsWith("HP")) {
+				if (oboToAncestorsMap.get(id).contains(phenotypicAbnormality)) {
+					toKeep.add(annot);
+				}
+			} else {
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
+	}
+
+	@VisibleForTesting
+	protected static Set<TextAnnotation> removeNcbiStopWords(Set<TextAnnotation> annots) {
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
+		Set<String> stopwords = new HashSet<String>(StopWordUtil.STOPWORDS);
+		for (TextAnnotation annot : annots) {
+			String coveredText = annot.getCoveredText();
+			if (coveredText.length() > 2 && !stopwords.contains(coveredText.toLowerCase())) {
+				// keep annotations that are not in the stopword list
+				toKeep.add(annot);
+			}
+		}
+
+		return toKeep;
 	}
 
 	@VisibleForTesting

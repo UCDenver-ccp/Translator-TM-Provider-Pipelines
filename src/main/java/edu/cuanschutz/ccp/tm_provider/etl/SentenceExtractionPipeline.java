@@ -1,14 +1,17 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
@@ -16,17 +19,21 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionConceptAllFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -41,6 +48,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 public class SentenceExtractionPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.SENTENCE_EXTRACTION;
+
+//	private static final Logger logger = Logger.getLogger(SentenceExtractionPipeline.class);
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
@@ -60,7 +69,7 @@ public class SentenceExtractionPipeline {
 
 		void setKeywords(String keywords);
 
-		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X.")
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X. Can be a pipe-delimited list of multiple prefixes.")
 		String getPrefixX();
 
 		void setPrefixX(String prefix);
@@ -70,7 +79,7 @@ public class SentenceExtractionPipeline {
 
 		void setPlaceholderX(String placeholder);
 
-		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y.")
+		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y. Can be a pipe-delimited list of multiple prefixes.")
 		String getPrefixY();
 
 		void setPrefixY(String prefix);
@@ -115,12 +124,45 @@ public class SentenceExtractionPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		String getAncestorMapFilePath();
+
+		void setAncestorMapFilePath(String path);
+
+		@Description("delimiter used to separate columns in the ancestor map file")
+		Delimiter getAncestorMapFileDelimiter();
+
+		void setAncestorMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		Delimiter getAncestorMapFileSetDelimiter();
+
+		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
+
+		@Description("CURIEs indicating concept identifiers that should be excluded from the extracted sentences")
+		String getConceptIdsToExclude();
+
+		void setConceptIdsToExclude(String path);
+
 	}
 
 	public static void main(String[] args) {
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+
+		Set<String> conceptIdsToExclude = new HashSet<String>(
+				Arrays.asList(options.getConceptIdsToExclude().split("\\|")));
+
+//		logger.info(" ---------------- Pipeline arguments for the SentenceExtractionPipeline ---------------- ");
+//		logger.info("Collection: " + options.getCollection());
+//		logger.info("Keywords: " + options.getKeywords().toString());
+//		logger.info("Placeholder X: " + options.getPlaceholderX());
+//		logger.info("Placeholder Y: " + options.getPlaceholderY());
+//		logger.info("Prefix X: " + options.getPrefixX());
+//		logger.info("Prefix Y: " + options.getPrefixY());
+//		logger.info("Input Doc Criteria: " + options.getInputDocumentCriteria().toString());
+//		logger.info("Output bucket: " + options.getOutputBucket());
 
 		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		Pipeline p = Pipeline.create(options);
@@ -142,17 +184,28 @@ public class SentenceExtractionPipeline {
 		// the extracted sentence output contains a version of the sentence where the
 		// concepts have been replaced by placeholders. This map determines which
 		// concept type is replaced by which placeholder.
-		Map<String, String> prefixToPlaceholderMap = new HashMap<String, String>();
+		Map<List<String>, String> prefixesToPlaceholderMap = buildPrefixToPlaceholderMap(options.getPrefixX(),
+				options.getPlaceholderX(), options.getPrefixY(), options.getPlaceholderY());
+//		for (String xPrefix : options.getPrefixX().split("\\|")) {
+//			prefixToPlaceholderMap.put(xPrefix, options.getPlaceholderX());
+//		}
+//		for (String yPrefix : options.getPrefixY().split("\\|")) {
+//			prefixToPlaceholderMap.put(yPrefix, options.getPlaceholderY());
+//		}
 
-		prefixToPlaceholderMap.put(options.getPrefixX(), options.getPlaceholderX());
-		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
+		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
-		PCollectionTuple output = SentenceExtractionConceptAllFn.process(statusEntity2Content, keywords,
-				outputDocCriteria, timestamp, inputDocCriteria, prefixToPlaceholderMap);
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
+
+		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
+				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType, ancestorMapView,
+				conceptIdsToExclude);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
-				.get(SentenceExtractionConceptAllFn.EXTRACTED_SENTENCES_TAG);
-		PCollection<EtlFailureData> failures = output.get(SentenceExtractionConceptAllFn.ETL_FAILURE_TAG);
+				.get(SentenceExtractionFn.EXTRACTED_SENTENCES_TAG);
+		PCollection<EtlFailureData> failures = output.get(SentenceExtractionFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from sentence extraction
@@ -180,12 +233,18 @@ public class SentenceExtractionPipeline {
 		/*
 		 * update the status entities to reflect the work completed, and store in
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
+		 * 
+		 * We may run this pipeline manually to extract sentences to be part of training
+		 * sets. When doing so we'll use the NOOP flag so that the status is not flagged
+		 * as having its sentences extracted for classification.
 		 */
-		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
-				statusToOutputTsv.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
+		if (targetProcessingStatusFlag != ProcessingStatusFlag.NOOP) {
+			PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
+					statusToOutputTsv.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
+			PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
+			nonredundantStatusEntities.apply("status_entity->datastore",
+					DatastoreIO.v1().write().withProjectId(options.getProject()));
+		}
 
 		// output sentences to file
 		PCollection<String> outputTsv = statusToOutputTsv
@@ -202,6 +261,34 @@ public class SentenceExtractionPipeline {
 				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		p.run().waitUntilFinish();
+	}
+
+	protected static Map<List<String>, String> buildPrefixToPlaceholderMap(String prefixesX, String placeholderX,
+			String prefixesY, String placeholderY) {
+		Map<List<String>, String> prefixesToPlaceholderMap = new HashMap<List<String>, String>();
+		List<String> xPrefixes = Arrays.asList(prefixesX.split("\\|"));
+		Collections.sort(xPrefixes);
+
+		List<String> yPrefixes = Arrays.asList(prefixesY.split("\\|"));
+		Collections.sort(yPrefixes);
+
+		prefixesToPlaceholderMap.put(xPrefixes, placeholderX);
+		if (!prefixesToPlaceholderMap.containsKey(yPrefixes)) {
+			prefixesToPlaceholderMap.put(yPrefixes, placeholderY);
+		}
+		return prefixesToPlaceholderMap;
+	}
+
+	private static DocumentType extractConceptDocumentTypeFromInputDocCriteria(Set<DocumentCriteria> inputDocCriteria) {
+		for (DocumentCriteria dc : inputDocCriteria) {
+			if (dc.getDocumentType() == DocumentType.CONCEPT_ALL) {
+				return DocumentType.CONCEPT_ALL;
+			} else if (dc.getDocumentType() == DocumentType.CONCEPT_ALL_UNFILTERED) {
+				return DocumentType.CONCEPT_ALL_UNFILTERED;
+			}
+		}
+		throw new IllegalArgumentException(
+				"No concept document type was specified in the input document criteria. Processing cannot continue.");
 	}
 
 	@VisibleForTesting

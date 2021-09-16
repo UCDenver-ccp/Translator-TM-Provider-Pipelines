@@ -48,6 +48,29 @@ public class OgerDictFileFactory {
 		}
 	}
 
+	// this block commented as it depends on an update to the datasource fileparser
+	// library to make the Synonym class visible.
+//	public static void createOgerDictFileFromDrugbank(File drugbankXmlFile, File dictFile) throws IOException {
+//		Set<String> alreadyWritten = new HashSet<String>();
+//		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+//			for (DrugbankXmlFileRecordReader rr = new DrugbankXmlFileRecordReader(drugbankXmlFile); rr.hasNext();) {
+//				DrugBankDrugRecord record = rr.next();
+//
+//				String drugbankId = record.getDrugBankId().toString();
+//				String drugName = record.getDrugName();
+//				Set<Synonym> synonyms = record.getSynonyms();
+//				
+//				String dictLine = getDictLine("DrugBank", drugbankId, drugName, drugName, "drug", false);
+//				writeDictLine(alreadyWritten, writer, dictLine);
+//
+//				for (Synonym synonym : synonyms) {
+//					dictLine = getDictLine("DrugBank", drugbankId, drugName, synonym.getSynonym(), "drug", false);
+//					writeDictLine(alreadyWritten, writer, dictLine);
+//				}
+//			}
+//		}
+//	}
+
 	public static void createOgerDictFileFromHGNC(File hgncDownloadFile, File dictFile) throws IOException {
 
 		Set<String> alreadyWritten = new HashSet<String>();
@@ -129,47 +152,6 @@ public class OgerDictFileFactory {
 		}
 
 		return label.trim();
-	}
-
-	public static void main(String[] args) {
-//		File ontologyFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/ontologies/doid.owl");
-//		File dictFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/vocab/DOID.tsv");
-//		String ontMainType = "disease";
-//		String ontKey = "DIOD";
-
-//		File ontologyFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/ontologies/pr.owl");
-//		File dictFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/vocab/PR.tsv");
-//		String ontMainType = "gene/protein";
-//		String ontKey = "PR";
-
-//		File hgncDownloadFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/ontologies/hgnc_download.tsv");
-//		File dictFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/oger-craft-resources/vocab/HGNC.tsv");
-
-		File ontologyFile = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/mondo.owl");
-		File dictFile = new File("/Users/bill/projects/ncats-translator/prototype/oger-docker.git/dict/MONDO.tsv");
-		String ontMainType = "disease";
-		String ontKey = "MONDO";
-
-//		File ontologyFile = new File(
-//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/hp.owl");
-//		File dictFile = new File(
-//				"/Users/bill/projects/ncats-translator/prototype/oger-docker.git/dict/HP.tsv");
-//		String ontMainType = "phenotype";
-//		String ontKey = "HP";
-
-		try {
-			createOgerDictionaryFile(ontologyFile, dictFile, ontMainType, ontKey);
-//			createOgerDictFileFromHGNC(hgncDownloadFile, dictFile);
-		} catch (OWLOntologyCreationException | IOException e) {
-//		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 }

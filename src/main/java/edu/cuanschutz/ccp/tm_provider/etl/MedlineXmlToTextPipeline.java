@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -15,7 +16,6 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
@@ -36,10 +36,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 public class MedlineXmlToTextPipeline {
 
@@ -60,6 +58,10 @@ public class MedlineXmlToTextPipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous imported documents")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
 	}
 
 	public static void main(String[] args) {
@@ -71,11 +73,11 @@ public class MedlineXmlToTextPipeline {
 
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		String medlineXmlFilePattern = options.getMedlineXmlDir() + "/*.xml.gz";
-		PCollection<ReadableFile> files = p.apply(FileIO.match().filepattern(medlineXmlFilePattern))
+		PCollection<ReadableFile> files = p.apply("get XML files to load",FileIO.match().filepattern(medlineXmlFilePattern))
 				.apply(FileIO.readMatches().withCompression(Compression.GZIP));
 
 		PCollection<PubmedArticle> pubmedArticles = files
-				.apply(XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet")
+				.apply("XML --> PubmedArticle",XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet")
 						.withRecordElement("PubmedArticle").withRecordClass(PubmedArticle.class));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
@@ -83,24 +85,11 @@ public class MedlineXmlToTextPipeline {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		// catalog documents that have already been stored so that we can exclude
-		// loading redundant documents. There will be cases in the PubMed/Medline update
-		// files where records are included due to changes, e.g. modification date, but
-		// are not new documents, so they should be excluded from being loaded into
-		// datastore here.
-
-		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
-				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE),
-				options.getProject(), options.getCollection(), OverwriteOutput.YES);
-
-		// create a set of document IDs already present in Datastore to be used as a
-		// side input
-		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
-		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
-		final PCollectionView<Set<String>> docIdsSetView = docIdsSet.apply(View.<Set<String>>asSingleton());
+		final PCollectionView<Set<String>> docIdsSetView = PipelineMain.catalogExistingDocuments(options.getProject(),
+				options.getCollection(), options.getOverwrite(), p);
 
 		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria, timestamp,
-				options.getCollection(), docIdsSetView);
+				options.getCollection(), docIdsSetView, options.getOverwrite());
 
 		/*
 		 * Processing of the Medline XML documents resulted in at least two, and
@@ -126,6 +115,19 @@ public class MedlineXmlToTextPipeline {
 		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
 
 		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+		
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(nonredundantStatusEntities)
+				.apply(View.<String, Set<String>>asMap());
+
+		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
 		 */
@@ -133,7 +135,8 @@ public class MedlineXmlToTextPipeline {
 				.deduplicateDocumentsByStringKey(statusEntityToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn,
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -145,7 +148,7 @@ public class MedlineXmlToTextPipeline {
 		nonredundantStatusEntityToAnnotations
 				.apply("annotations->annot_entity",
 						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
-								collectionFn)))
+								collectionFn, documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -158,16 +161,7 @@ public class MedlineXmlToTextPipeline {
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		/*
-		 * store the processing status document for this pipeline in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
-		 */
-		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
-
+		
 		p.run().waitUntilFinish();
 
 	}

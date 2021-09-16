@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -12,8 +13,6 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Combine;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -22,10 +21,10 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.apache.log4j.Logger;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.BiocToTextFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -35,14 +34,12 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 public class BiocToTextPipeline {
 
-//	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());
+	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextPipeline.class);
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.BIOC_TO_TEXT;
 
@@ -58,9 +55,15 @@ public class BiocToTextPipeline {
 
 		void setCollection(String value);
 
+		@Description("Overwrite any previous imported documents")
+		OverwriteOutput getOverwrite();
+
+		void setOverwrite(OverwriteOutput value);
+
 	}
 
 	public static void main(String[] args) {
+		logger.debug("TMPLOG -- Instantiating BIOC-TO-TEXT pipeline");
 		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
@@ -88,24 +91,12 @@ public class BiocToTextPipeline {
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		// catalog documents that have already been stored so that we can exclude
-		// loading redundant documents. There will be cases in the PubMed/Medline update
-		// files where records are included due to changes, e.g. modification date, but
-		// are not new documents, so they should be excluded from being loaded into
-		// datastore here.
-
-		PCollection<KV<String, ProcessingStatus>> docIdToStatusEntity = PipelineMain.getStatusEntitiesToProcess(p,
-				ProcessingStatusFlag.NOOP, CollectionsUtil.createSet(ProcessingStatusFlag.TEXT_DONE),
-				options.getProject(), options.getCollection(), OverwriteOutput.YES);
-
-		// create a set of document IDs already present in Datastore to be used as a
-		// side input
-		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
-		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
-		final PCollectionView<Set<String>> existingDocumentIds = docIdsSet.apply(View.<Set<String>>asSingleton());
+		final PCollectionView<Set<String>> existingDocumentIds = PipelineMain
+				.catalogExistingDocuments(options.getProject(), options.getCollection(), options.getOverwrite(), p);
 
 		PCollectionTuple output = BiocToTextFn.process(fileIdAndContent, outputTextDocCriteria,
-				outputAnnotationDocCriteria, timestamp, options.getCollection(), existingDocumentIds);
+				outputAnnotationDocCriteria, timestamp, options.getCollection(), existingDocumentIds,
+				options.getOverwrite());
 
 		/*
 		 * Processing of the BioC XML documents resulted in at least two, and possibly
@@ -125,6 +116,19 @@ public class BiocToTextPipeline {
 		SerializableFunction<String, String> collectionFn = parameter -> getSubCollectionName(parameter);
 
 		/*
+		 * store the processing status document for this pipeline in Cloud Datastore -
+		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
+				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
+		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
+		nonredundantStatusEntities.apply("status_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
+
+		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
 		 * necessary to avoid Datastore non-transactional commit errors
 		 */
@@ -132,7 +136,8 @@ public class BiocToTextPipeline {
 				.deduplicateDocumentsByStringKey(docIdToPlainText);
 		nonredundantPlainText
 				.apply("plaintext->document_entity",
-						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn)))
+						ParDo.of(new DocumentToEntityFn(outputTextDocCriteria, options.getCollection(), collectionFn,
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -144,7 +149,7 @@ public class BiocToTextPipeline {
 		nonredundantAnnotations
 				.apply("annotations->annot_entity",
 						ParDo.of(new DocumentToEntityFn(outputAnnotationDocCriteria, options.getCollection(),
-								collectionFn)))
+								collectionFn, documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -155,16 +160,6 @@ public class BiocToTextPipeline {
 				ParDo.of(new EtlFailureToEntityFn()));
 		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
-				DatastoreIO.v1().write().withProjectId(options.getProject()));
-
-		/*
-		 * store the processing status document for this pipeline in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
-		 */
-		PCollection<KV<String, Entity>> statusEntities = status.apply("status->status_entity",
-				ParDo.of(new ProcessingStatusToEntityFn(collectionFn)));
-		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
-		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		p.run().waitUntilFinish();

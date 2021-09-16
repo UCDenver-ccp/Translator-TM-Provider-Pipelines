@@ -21,6 +21,7 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
@@ -67,6 +68,16 @@ public class NgdStoreCountsPipeline {
 
 		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
+		@Description("If YES, then when counting concepts, all superclasses for a given concept are also added and counted.")
+		AddSuperClassAnnots getAddSuperClassAnnots();
+
+		void setAddSuperClassAnnots(AddSuperClassAnnots value);
+
+		@Description("The document type, e.g. CONCEPT_ALL, CONCEPT_MP, etc., indicating the document type containing the annotations that will be counted. This document type must be in the InputDocumentCriteria input parameter.")
+		DocumentType getDocTypeToCount();
+
+		void setDocTypeToCount(DocumentType value);
+
 		@Description("The document collection to process")
 		String getCollection();
 
@@ -87,6 +98,24 @@ public class NgdStoreCountsPipeline {
 
 		void setCooccurLevel(CooccurLevel value);
 
+		@Description("If YES, then this is using the NGD machinery to produce only a subset of the output - concept ids linked to document ids")
+		CountType getCountType();
+
+		void setCountType(CountType value);
+
+	}
+
+	public enum CountType {
+		/**
+		 * Select NGD to produce the counts required for the Normalized Google Distance
+		 * computations
+		 */
+		NGD,
+		/**
+		 * A selection of "SIMPLE" will result in only the concept id -to- document id
+		 * data being serialized.
+		 */
+		SIMPLE
 	}
 
 	public static void main(String[] args) {
@@ -108,21 +137,19 @@ public class NgdStoreCountsPipeline {
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles(p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
 						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);
 
-		// TODO NOTE: where is the ancestor map coming from?? load from files and
-		// convert to map view -- use as side input
 		PCollectionTuple output = NormalizedGoogleDistanceFn.computeCounts(statusEntity2Content, outputDocCriteria,
-				timestamp, inputDocCriteria, options.getCooccurLevel(), ancestorMapView);
+				timestamp, inputDocCriteria, options.getCooccurLevel(), options.getAddSuperClassAnnots(),
+				options.getDocTypeToCount(), options.getCountType(), ancestorMapView);
 
 		PCollection<String> conceptIdToDocId = output.get(NormalizedGoogleDistanceFn.SINGLETON_TO_DOCID);
-		PCollection<String> conceptPairIdToDocId = output.get(NormalizedGoogleDistanceFn.PAIR_TO_DOCID);
-		PCollection<String> docIdToConceptCount = output.get(NormalizedGoogleDistanceFn.DOCID_TO_CONCEPT_COUNT);
+
 		PCollection<EtlFailureData> failures = output.get(NormalizedGoogleDistanceFn.ETL_FAILURE_TAG);
 
 		/*
@@ -142,13 +169,17 @@ public class NgdStoreCountsPipeline {
 						+ String.format("/concept-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
 						.withSuffix(".tsv"));
 
-		conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
-				+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-				.withSuffix(".tsv"));
+		if (options.getCountType() == CountType.NGD) {
+			PCollection<String> conceptPairIdToDocId = output.get(NormalizedGoogleDistanceFn.PAIR_TO_DOCID);
+			PCollection<String> docIdToConceptCount = output.get(NormalizedGoogleDistanceFn.DOCID_TO_CONCEPT_COUNT);
+			conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
+					+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
+					.withSuffix(".tsv"));
 
-		docIdToConceptCount.apply("write doc-id to concept count file", TextIO.write().to(options.getOutputBucket()
-				+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), options.getCooccurLevel()))
-				.withSuffix(".tsv"));
+			docIdToConceptCount.apply("write doc-id to concept count file", TextIO.write().to(options.getOutputBucket()
+					+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), options.getCooccurLevel()))
+					.withSuffix(".tsv"));
+		}
 
 		p.run().waitUntilFinish();
 	}

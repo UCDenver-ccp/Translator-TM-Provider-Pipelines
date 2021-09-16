@@ -11,7 +11,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 public class ProcessingStatusTest {
 
 	@Test
-	public void test() {
+	public void testEnableFlag() {
 		String documentId = "PMC12345";
 		ProcessingStatus status = new ProcessingStatus(documentId);
 		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
@@ -25,6 +25,21 @@ public class ProcessingStatusTest {
 		assertEquals(documentId, status.getDocumentId());
 		assertFalse(status.getFlagPropertyValue(ProcessingStatusFlag.TEXT_DONE.getDatastoreFlagPropertyName()));
 		assertFalse(status.getFlagPropertyValue(ProcessingStatusFlag.OGER_CHEBI_DONE.getDatastoreFlagPropertyName()));
+	}
+
+	@Test
+	public void testConstructorWithProcessingStatusInput() {
+		String documentId = "PMC12345";
+		ProcessingStatus status = new ProcessingStatus(documentId);
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+		status.addCollection("collection1");
+		status.setYearPublished("1999");
+		status.addPublicationType("Journal Article");
+
+		ProcessingStatus statusCopy = new ProcessingStatus(status);
+
+		assertEquals(status, statusCopy);
+
 	}
 
 }
