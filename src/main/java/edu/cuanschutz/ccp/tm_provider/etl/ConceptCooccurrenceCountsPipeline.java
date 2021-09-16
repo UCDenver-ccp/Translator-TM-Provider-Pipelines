@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,10 +20,10 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.AddSuperClassAnnots;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
@@ -93,12 +94,12 @@ public class ConceptCooccurrenceCountsPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("'level' of cooccurrence, e.g. Document, Sentence, etc.")
-		CooccurLevel getCooccurLevel();
+		@Description("'levels' of cooccurrence for which to compute counts, e.g. Document, Sentence, etc. This paramter should be pipe-delimited values from the CooccurLevel enum.")
+		String getCooccurLevels();
 
-		void setCooccurLevel(CooccurLevel value);
+		void setCooccurLevels(String value);
 
-		@Description("If YES, then this is using the NGD machinery to produce only a subset of the output - concept ids linked to document ids")
+		@Description("If SIMPLE, then this will produce only a subset of all possible counts. If FULL, then all counts are produced")
 		CountType getCountType();
 
 		void setCountType(CountType value);
@@ -107,10 +108,10 @@ public class ConceptCooccurrenceCountsPipeline {
 
 	public enum CountType {
 		/**
-		 * Select NGD to produce the counts required for the Normalized Google Distance
-		 * computations
+		 * A select of "FULL" will compute all concept counts needed for various
+		 * cooccurrence metrics
 		 */
-		NGD,
+		FULL,
 		/**
 		 * A selection of "SIMPLE" will result in only the concept id -to- document id
 		 * data being serialized.
@@ -126,6 +127,11 @@ public class ConceptCooccurrenceCountsPipeline {
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE;
 		Pipeline p = Pipeline.create(options);
 
+		Set<CooccurLevel> cooccurLevels = new HashSet<CooccurLevel>();
+		for (String level : options.getCooccurLevels().split("\\|")) {
+			cooccurLevels.add(CooccurLevel.valueOf(level));
+		}
+
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = PipelineMain
 				.compileRequiredProcessingStatusFlags(options.getRequiredProcessingStatusFlags());
 
@@ -136,49 +142,117 @@ public class ConceptCooccurrenceCountsPipeline {
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
-						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
-				.apply(View.<String, Set<String>>asMap());
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);
 
 		PCollectionTuple output = ConceptCooccurrenceCountsFn.computeCounts(statusEntity2Content, outputDocCriteria,
-				timestamp, inputDocCriteria, options.getCooccurLevel(), options.getAddSuperClassAnnots(),
+				timestamp, inputDocCriteria, cooccurLevels, options.getAddSuperClassAnnots(),
 				options.getDocTypeToCount(), options.getCountType(), ancestorMapView);
-
-		PCollection<String> conceptIdToDocId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_DOCID);
-
-		PCollection<EtlFailureData> failures = output.get(ConceptCooccurrenceCountsFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from sentence extraction
 		 */
+		PCollection<EtlFailureData> failures = output.get(ConceptCooccurrenceCountsFn.ETL_FAILURE_TAG);
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("ngd count failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
 		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		// TODO NOTE: only write doc-id if it is the doc-id - could be sentence id
+		/* ==== Store counts below ==== */
 
-		// output count files
-		conceptIdToDocId.apply("write concept-id to doc-id file",
-				TextIO.write().to(options.getOutputBucket()
-						+ String.format("/concept-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
+		if (cooccurLevels.contains(CooccurLevel.DOCUMENT)) {
+			PCollection<String> conceptIdToDocId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_DOC_ID);
+			conceptIdToDocId.apply("write concept-id to doc-id",
+					TextIO.write().to(options.getOutputBucket()
+							+ String.format("/concept-to-doc.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
+							.withSuffix(".tsv"));
+		}
+
+		if (cooccurLevels.contains(CooccurLevel.TITLE)) {
+			PCollection<String> conceptIdToTitleId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_TITLE_ID);
+			conceptIdToTitleId.apply("write concept-id to title-id",
+					TextIO.write().to(options.getOutputBucket()
+							+ String.format("/concept-to-title.%s.%s", options.getCollection(), CooccurLevel.TITLE))
+							.withSuffix(".tsv"));
+		}
+
+		if (cooccurLevels.contains(CooccurLevel.SENTENCE)) {
+			PCollection<String> conceptIdToSentenceId = output
+					.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_SENTENCE_ID);
+			conceptIdToSentenceId.apply("write concept-id to sentence-id", TextIO.write().to(options.getOutputBucket()
+					+ String.format("/concept-to-sentence.%s.%s", options.getCollection(), CooccurLevel.SENTENCE))
+					.withSuffix(".tsv"));
+		}
+
+		if (cooccurLevels.contains(CooccurLevel.ABSTRACT)) {
+			PCollection<String> conceptIdToAbstractId = output
+					.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_ABSTRACT_ID);
+			conceptIdToAbstractId.apply("write concept-id to abstract-id", TextIO.write().to(options.getOutputBucket()
+					+ String.format("/concept-to-abstract.%s.%s", options.getCollection(), CooccurLevel.ABSTRACT))
+					.withSuffix(".tsv"));
+		}
+
+		if (options.getCountType() == CountType.FULL) {
+
+			if (cooccurLevels.contains(CooccurLevel.DOCUMENT)) {
+				PCollection<String> conceptPairIdToDocId = output.get(ConceptCooccurrenceCountsFn.PAIR_TO_DOC_ID);
+				PCollection<String> docIdToConceptCount = output
+						.get(ConceptCooccurrenceCountsFn.DOC_ID_TO_CONCEPT_COUNT);
+
+				conceptPairIdToDocId.apply("write concept pair to doc-id", TextIO.write().to(options.getOutputBucket()
+						+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
 						.withSuffix(".tsv"));
 
-		if (options.getCountType() == CountType.NGD) {
-			PCollection<String> conceptPairIdToDocId = output.get(ConceptCooccurrenceCountsFn.PAIR_TO_DOCID);
-			PCollection<String> docIdToConceptCount = output.get(ConceptCooccurrenceCountsFn.DOCID_TO_CONCEPT_COUNT);
-			conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-					.withSuffix(".tsv"));
+				docIdToConceptCount.apply("write doc-id to concept count", TextIO.write().to(options.getOutputBucket()
+						+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
+						.withSuffix(".tsv"));
+			}
 
-			docIdToConceptCount.apply("write doc-id to concept count file", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), options.getCooccurLevel()))
-					.withSuffix(".tsv"));
+			if (cooccurLevels.contains(CooccurLevel.TITLE)) {
+				PCollection<String> conceptPairIdToTitleId = output.get(ConceptCooccurrenceCountsFn.PAIR_TO_TITLE_ID);
+				PCollection<String> titleIdToConceptCount = output
+						.get(ConceptCooccurrenceCountsFn.TITLE_ID_TO_CONCEPT_COUNT);
+				conceptPairIdToTitleId.apply("write concept pair to title-id",
+						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-title.%s.%s",
+								options.getCollection(), CooccurLevel.TITLE)).withSuffix(".tsv"));
+
+				titleIdToConceptCount.apply("write title-id to concept count",
+						TextIO.write().to(options.getOutputBucket() + String.format("/title-to-concept-count.%s.%s",
+								options.getCollection(), CooccurLevel.TITLE)).withSuffix(".tsv"));
+			}
+
+			if (cooccurLevels.contains(CooccurLevel.SENTENCE)) {
+				PCollection<String> conceptPairIdToSentenceId = output
+						.get(ConceptCooccurrenceCountsFn.PAIR_TO_SENTENCE_ID);
+				PCollection<String> sentenceIdToConceptCount = output
+						.get(ConceptCooccurrenceCountsFn.SENTENCE_ID_TO_CONCEPT_COUNT);
+				conceptPairIdToSentenceId.apply("write concept pair to sentence-id",
+						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-sentence.%s.%s",
+								options.getCollection(), CooccurLevel.SENTENCE)).withSuffix(".tsv"));
+
+				sentenceIdToConceptCount.apply("write sentence-id to concept count",
+						TextIO.write().to(options.getOutputBucket() + String.format("/sentence-to-concept-count.%s.%s",
+								options.getCollection(), CooccurLevel.SENTENCE)).withSuffix(".tsv"));
+			}
+
+			if (cooccurLevels.contains(CooccurLevel.ABSTRACT)) {
+				PCollection<String> conceptPairIdToAbstractId = output
+						.get(ConceptCooccurrenceCountsFn.PAIR_TO_ABSTRACT_ID);
+				PCollection<String> abstractIdToConceptCount = output
+						.get(ConceptCooccurrenceCountsFn.ABSTRACT_ID_TO_CONCEPT_COUNT);
+				conceptPairIdToAbstractId.apply("write concept pair to abstract-id",
+						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-abstract.%s.%s",
+								options.getCollection(), CooccurLevel.ABSTRACT)).withSuffix(".tsv"));
+
+				abstractIdToConceptCount.apply("write abstract-id to concept count",
+						TextIO.write().to(options.getOutputBucket() + String.format("/abstract-to-concept-count.%s.%s",
+								options.getCollection(), CooccurLevel.ABSTRACT)).withSuffix(".tsv"));
+			}
 		}
 
 		p.run().waitUntilFinish();

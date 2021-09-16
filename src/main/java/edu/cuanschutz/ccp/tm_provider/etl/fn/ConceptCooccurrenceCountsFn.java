@@ -19,6 +19,7 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -44,8 +45,36 @@ import lombok.RequiredArgsConstructor;
 public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public enum CooccurLevel {
-		DOCUMENT, SENTENCE, TITLE, ABSTRACT// , PARAGRAPH -- will require code to make sure all text is covered by a
+		DOCUMENT(SINGLETON_TO_DOC_ID, PAIR_TO_DOC_ID, DOC_ID_TO_CONCEPT_COUNT),
+		SENTENCE(SINGLETON_TO_SENTENCE_ID, PAIR_TO_SENTENCE_ID, SENTENCE_ID_TO_CONCEPT_COUNT),
+		TITLE(SINGLETON_TO_TITLE_ID, PAIR_TO_TITLE_ID, TITLE_ID_TO_CONCEPT_COUNT),
+		ABSTRACT(SINGLETON_TO_ABSTRACT_ID, PAIR_TO_ABSTRACT_ID, ABSTRACT_ID_TO_CONCEPT_COUNT);
+
+		// , PARAGRAPH -- will require code to make sure all text is covered by a
 		// paragraph in full text docs
+
+		private final TupleTag<String> singletonTag;
+		private final TupleTag<String> pairTag;
+		private final TupleTag<String> idToCountTag;
+
+		private CooccurLevel(TupleTag<String> singletonTag, TupleTag<String> pairTag, TupleTag<String> idToCountTag) {
+			this.singletonTag = singletonTag;
+			this.pairTag = pairTag;
+			this.idToCountTag = idToCountTag;
+		}
+
+		public TupleTag<String> getSingletonTag() {
+			return this.singletonTag;
+		}
+
+		public TupleTag<String> getPairTag() {
+			return this.pairTag;
+		}
+
+		public TupleTag<String> getIdToCountTag() {
+			return this.idToCountTag;
+		}
+
 	}
 
 	public enum AddSuperClassAnnots {
@@ -57,14 +86,45 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 	public static Delimiter OUTPUT_FILE_DELIMITER = Delimiter.TAB;
 
 	@SuppressWarnings("serial")
-	public static TupleTag<String> SINGLETON_TO_DOCID = new TupleTag<String>() {
+	public static TupleTag<String> SINGLETON_TO_DOC_ID = new TupleTag<String>() {
 	};
 	@SuppressWarnings("serial")
-	public static TupleTag<String> PAIR_TO_DOCID = new TupleTag<String>() {
+	public static TupleTag<String> PAIR_TO_DOC_ID = new TupleTag<String>() {
 	};
 	@SuppressWarnings("serial")
-	public static TupleTag<String> DOCID_TO_CONCEPT_COUNT = new TupleTag<String>() {
+	public static TupleTag<String> DOC_ID_TO_CONCEPT_COUNT = new TupleTag<String>() {
 	};
+
+	@SuppressWarnings("serial")
+	public static TupleTag<String> SINGLETON_TO_TITLE_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> PAIR_TO_TITLE_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> TITLE_ID_TO_CONCEPT_COUNT = new TupleTag<String>() {
+	};
+
+	@SuppressWarnings("serial")
+	public static TupleTag<String> SINGLETON_TO_SENTENCE_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> PAIR_TO_SENTENCE_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> SENTENCE_ID_TO_CONCEPT_COUNT = new TupleTag<String>() {
+	};
+
+	@SuppressWarnings("serial")
+	public static TupleTag<String> SINGLETON_TO_ABSTRACT_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> PAIR_TO_ABSTRACT_ID = new TupleTag<String>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> ABSTRACT_ID_TO_CONCEPT_COUNT = new TupleTag<String>() {
+	};
+
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
@@ -72,8 +132,8 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 	public static PCollectionTuple computeCounts(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots,
-			DocumentType docTypeToCount, CountType countType,
+			Set<DocumentCriteria> requiredDocumentCriteria, Set<CooccurLevel> levels,
+			AddSuperClassAnnots addSuperClassAnnots, DocumentType docTypeToCount, CountType countType,
 			PCollectionView<Map<String, Set<String>>> ancestorMapView) {
 
 		return statusEntityToText.apply("Identify concept annotations",
@@ -90,28 +150,47 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 						String docId = statusEntity.getDocumentId();
 						try {
 
-							Set<String> singletonConceptIds = new HashSet<String>();
-							Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
+							// If the loaded document types don't match the required types, then throw an
+							// exception which will get logged as a failure in datastore
+							validatePresenceOfRequiredDocuments(docId, statusEntityToText.getValue(),
+									requiredDocumentCriteria);
 
-							validateDocuments(docId, statusEntityToText.getValue(), requiredDocumentCriteria);
+							for (CooccurLevel level : levels) {
 
-							countConcepts(docId, statusEntityToText.getValue(), ancestorMap, singletonConceptIds,
-									pairedConceptIds, level, addSuperClassAnnots, docTypeToCount);
+								Map<String, Set<String>> textIdToSingletonConceptIds = new HashMap<String, Set<String>>();
+								Map<String, Set<ConceptPair>> textIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
 
-							for (String conceptId : singletonConceptIds) {
-								context.output(SINGLETON_TO_DOCID,
-										String.format("%s%s%s", conceptId, OUTPUT_FILE_DELIMITER.delimiter(), docId));
-							}
+								countConcepts(docId, statusEntityToText.getValue(), ancestorMap,
+										textIdToSingletonConceptIds, textIdToPairedConceptIds, level,
+										addSuperClassAnnots, docTypeToCount);
 
-							// the following aren't necessary for the SIMPLE count type
-							if (countType == CountType.NGD) {
-								for (ConceptPair pair : pairedConceptIds) {
-									context.output(PAIR_TO_DOCID, String.format("%s%s%s", pair.toReproducibleKey(),
-											OUTPUT_FILE_DELIMITER.delimiter(), docId));
+								for (Entry<String, Set<String>> entry : textIdToSingletonConceptIds.entrySet()) {
+									String textId = entry.getKey();
+									Set<String> singletonConceptIds = entry.getValue();
+									for (String conceptId : singletonConceptIds) {
+										context.output(level.getSingletonTag(), String.format("%s%s%s", conceptId,
+												OUTPUT_FILE_DELIMITER.delimiter(), textId));
+									}
+									// the following isn't necessary for the SIMPLE count type
+									if (countType == CountType.FULL) {
+										context.output(level.getIdToCountTag(), String.format("%s%s%d", textId,
+												OUTPUT_FILE_DELIMITER.delimiter(), singletonConceptIds.size()));
+									}
 								}
 
-								context.output(DOCID_TO_CONCEPT_COUNT, String.format("%s%s%d", docId,
-										OUTPUT_FILE_DELIMITER.delimiter(), singletonConceptIds.size()));
+								// the following isn't necessary for the SIMPLE count type
+								if (countType == CountType.FULL) {
+									for (Entry<String, Set<ConceptPair>> entry : textIdToPairedConceptIds.entrySet()) {
+										String textId = entry.getKey();
+										Set<ConceptPair> pairedConceptIds = entry.getValue();
+										for (ConceptPair pair : pairedConceptIds) {
+											context.output(level.getPairTag(),
+													String.format("%s%s%s", pair.toReproducibleKey(),
+															OUTPUT_FILE_DELIMITER.delimiter(), textId));
+										}
+									}
+
+								}
 							}
 						} catch (Throwable t) {
 							EtlFailureData failure = PipelineMain.initFailure("Failure while counting concepts.",
@@ -129,36 +208,43 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 					 * @param docs
 					 * @param requiredDocumentCriteria
 					 */
-					private void validateDocuments(String documentId, Map<DocumentCriteria, String> docs,
-							Set<DocumentCriteria> requiredDocumentCriteria) {
-						if (!docs.keySet().equals(requiredDocumentCriteria)) {
+					private void validatePresenceOfRequiredDocuments(String documentId,
+							Map<DocumentCriteria, String> docs, Set<DocumentCriteria> requiredDocumentCriteria) {
 
-							throw new IllegalArgumentException("Invalid document input (" + documentId + "). HAS: "
-									+ docs.keySet().toString() + " BUT NEEDED: " + requiredDocumentCriteria.toString());
-
+						for (DocumentCriteria requiredCriteria : requiredDocumentCriteria) {
+							if (!docs.keySet().contains(requiredCriteria)) {
+								throw new IllegalArgumentException(
+										"Invalid document input (" + documentId + "). HAS: " + docs.keySet().toString()
+												+ " BUT NEEDED: " + requiredDocumentCriteria.toString());
+							}
 						}
 
 					}
 
-				}).withOutputTags(SINGLETON_TO_DOCID,
-						TupleTagList.of(PAIR_TO_DOCID).and(DOCID_TO_CONCEPT_COUNT).and(ETL_FAILURE_TAG))
+				}).withOutputTags(SINGLETON_TO_ABSTRACT_ID,
+						TupleTagList.of(ETL_FAILURE_TAG).and(SINGLETON_TO_DOC_ID).and(SINGLETON_TO_SENTENCE_ID)
+								.and(SINGLETON_TO_TITLE_ID).and(PAIR_TO_ABSTRACT_ID).and(PAIR_TO_DOC_ID)
+								.and(PAIR_TO_SENTENCE_ID).and(PAIR_TO_TITLE_ID).and(ABSTRACT_ID_TO_CONCEPT_COUNT)
+								.and(DOC_ID_TO_CONCEPT_COUNT).and(SENTENCE_ID_TO_CONCEPT_COUNT)
+								.and(TITLE_ID_TO_CONCEPT_COUNT))
 						.withSideInputs(ancestorMapView));
 	}
 
 	@VisibleForTesting
 	protected static void countConcepts(String documentId, Map<DocumentCriteria, String> docs,
-			Map<String, Set<String>> superClassMap, Set<String> singletonConceptIds, Set<ConceptPair> pairedConceptIds,
-			CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots, DocumentType docTypeToCount)
-			throws IOException {
+			Map<String, Set<String>> superClassMap, Map<String, Set<String>> textIdToSingletonConceptIds,
+			Map<String, Set<ConceptPair>> textIdToPairedConceptIds, CooccurLevel level,
+			AddSuperClassAnnots addSuperClassAnnots, DocumentType docTypeToCount) throws IOException {
 
 		String documentText = PipelineMain.getDocumentText(docs);
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, docs);
 
+		// levelAnnots is a list of annotations at the specified level, so if level ==
+		// document then it's a single annotation representing the entire document.If
+		// level == sentence, then it's the list of all sentences found in the document.
 		List<TextAnnotation> levelAnnots = getLevelAnnotations(documentId, level, documentText, docTypeToContentMap);
 
-//		DocumentType dt = (filterFlag == FilterFlag.NONE) ? DocumentType.CONCEPT_ALL_UNFILTERED
-//				: DocumentType.CONCEPT_ALL;
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(docTypeToCount);
 
 		if (addSuperClassAnnots == AddSuperClassAnnots.YES) {
@@ -167,9 +253,30 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 
 		conceptAnnots = removeAnnotsWithMissingTypes(conceptAnnots);
 
-		singletonConceptIds.addAll(getUniqueConceptIds(conceptAnnots));
-		pairedConceptIds.addAll(getConceptPairs(conceptAnnots, levelAnnots));
+		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
+				conceptAnnots);
 
+		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
+			TextAnnotation levelAnnot = entry.getKey();
+			Set<TextAnnotation> conceptAnnotsInLevel = entry.getValue();
+
+			String textId = computeUniqueTextIdentifier(documentId, level, levelAnnot);
+			Set<String> uniqueConceptsInLevelAnnot = getUniqueConceptIds(conceptAnnotsInLevel);
+			Set<ConceptPair> conceptPairsInLevelAnnot = getConceptPairs(conceptAnnotsInLevel);
+			if (!uniqueConceptsInLevelAnnot.isEmpty()) {
+				textIdToSingletonConceptIds.put(textId, uniqueConceptsInLevelAnnot);
+			}
+			if (!conceptPairsInLevelAnnot.isEmpty()) {
+				textIdToPairedConceptIds.put(textId, conceptPairsInLevelAnnot);
+			}
+		}
+
+	}
+
+	protected static String computeUniqueTextIdentifier(String documentId, CooccurLevel level,
+			TextAnnotation levelAnnot) {
+		return documentId + "_" + level.name().toLowerCase() + "_" + DigestUtils
+				.sha256Hex(levelAnnot.getAggregateSpan().toString() + levelAnnot.getCoveredText().substring(0, 8));
 	}
 
 	/**
@@ -191,26 +298,26 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 	}
 
 	@VisibleForTesting
-	protected static Set<ConceptPair> getConceptPairs(Collection<TextAnnotation> conceptAnnots,
-			Collection<TextAnnotation> levelAnnots) {
+	protected static Set<ConceptPair> getConceptPairs(Collection<TextAnnotation> conceptAnnots) {
+		// Collection<TextAnnotation> levelAnnots) {
 		Set<ConceptPair> pairs = new HashSet<ConceptPair>();
 
-		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
-				conceptAnnots);
+//		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
+//				conceptAnnots);
 
-		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
-			for (TextAnnotation annot1 : entry.getValue()) {
-				for (TextAnnotation annot2 : entry.getValue()) {
-					String type1 = annot1.getClassMention().getMentionName();
-					String type2 = annot2.getClassMention().getMentionName();
-					// we require the types to be different and the annotation spans to also be
-					// different
-					if (!type1.equals(type2) && !annot1.getSpans().equals(annot2.getSpans())) {
-						pairs.add(new ConceptPair(type1, type2));
-					}
+//		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
+		for (TextAnnotation annot1 : conceptAnnots) {
+			for (TextAnnotation annot2 : conceptAnnots) {
+				String type1 = annot1.getClassMention().getMentionName();
+				String type2 = annot2.getClassMention().getMentionName();
+				// we require the types to be different and the annotation spans to also be
+				// different
+				if (!type1.equals(type2) && !annot1.getSpans().equals(annot2.getSpans())) {
+					pairs.add(new ConceptPair(type1, type2));
 				}
 			}
 		}
+//		}
 
 		return pairs;
 	}
@@ -260,7 +367,7 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 		return map;
 	}
 
-	private static Collection<? extends String> getUniqueConceptIds(Collection<TextAnnotation> conceptAnnots) {
+	private static Set<String> getUniqueConceptIds(Collection<TextAnnotation> conceptAnnots) {
 		Set<String> conceptIds = new HashSet<String>();
 		for (TextAnnotation annot : conceptAnnots) {
 			conceptIds.add(annot.getClassMention().getMentionName());
@@ -299,7 +406,6 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 			String conceptPrefix = null;
 			if (conceptId.contains(":")) {
 				conceptPrefix = conceptId.substring(0, conceptId.indexOf(":") + 1);
-				System.out.println("PREFIX= " + conceptPrefix);
 			}
 			Set<String> superClassIds = superClassMap.get(conceptId);
 			if (superClassIds != null) {
@@ -409,6 +515,22 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 			} else {
 				throw new IllegalArgumentException(
 						"Cooccurrence level = TITLE, however there are no section annotations in the input for document "
+								+ documentId);
+			}
+			break;
+
+		case ABSTRACT:
+			if (docTypeToContentMap.containsKey(DocumentType.SECTIONS)) {
+				for (TextAnnotation annot : docTypeToContentMap.get(DocumentType.SECTIONS)) {
+					String sectionType = annot.getClassMention().getMentionName();
+					if (sectionType.equalsIgnoreCase("abstract")) {
+						levelAnnots.add(annot);
+						break;
+					}
+				}
+			} else {
+				throw new IllegalArgumentException(
+						"Cooccurrence level = ABSTRACT, however there are no section annotations in the input for document "
 								+ documentId);
 			}
 			break;
