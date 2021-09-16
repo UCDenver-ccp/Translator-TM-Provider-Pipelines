@@ -51,27 +51,27 @@ public class OgerDictFileFactory {
 		}
 	}
 	
-	
-	public static void createOgerDictFileFromDrugbank(File drugbankXmlFile, File dictFile) throws IOException {
-		Set<String> alreadyWritten = new HashSet<String>();
-		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
-			for (DrugbankXmlFileRecordReader rr = new DrugbankXmlFileRecordReader(drugbankXmlFile); rr.hasNext();) {
-				DrugBankDrugRecord record = rr.next();
-
-				String drugbankId = record.getDrugBankId().toString();
-				String drugName = record.getDrugName();
-				Set<Synonym> synonyms = record.getSynonyms();
-				
-				String dictLine = getDictLine("DrugBank", drugbankId, drugName, drugName, "drug", false);
-				writeDictLine(alreadyWritten, writer, dictLine);
-
-				for (Synonym synonym : synonyms) {
-					dictLine = getDictLine("DrugBank", drugbankId, drugName, synonym.getSynonym(), "drug", false);
-					writeDictLine(alreadyWritten, writer, dictLine);
-				}
-			}
-		}
-	}
+	// this block commented as it depends on an update to the datasource fileparser library to make the Synonym class visible.
+//	public static void createOgerDictFileFromDrugbank(File drugbankXmlFile, File dictFile) throws IOException {
+//		Set<String> alreadyWritten = new HashSet<String>();
+//		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+//			for (DrugbankXmlFileRecordReader rr = new DrugbankXmlFileRecordReader(drugbankXmlFile); rr.hasNext();) {
+//				DrugBankDrugRecord record = rr.next();
+//
+//				String drugbankId = record.getDrugBankId().toString();
+//				String drugName = record.getDrugName();
+//				Set<Synonym> synonyms = record.getSynonyms();
+//				
+//				String dictLine = getDictLine("DrugBank", drugbankId, drugName, drugName, "drug", false);
+//				writeDictLine(alreadyWritten, writer, dictLine);
+//
+//				for (Synonym synonym : synonyms) {
+//					dictLine = getDictLine("DrugBank", drugbankId, drugName, synonym.getSynonym(), "drug", false);
+//					writeDictLine(alreadyWritten, writer, dictLine);
+//				}
+//			}
+//		}
+//	}
 
 	public static void createOgerDictFileFromHGNC(File hgncDownloadFile, File dictFile) throws IOException {
 
