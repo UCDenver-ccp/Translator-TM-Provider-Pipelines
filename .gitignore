@@ -20,3 +20,4 @@ tmp/
 *.bak
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/InceptionInputFileCreatorMain.java
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/GoogleSheetsAssertionAnnotationSheetCreatorMain.java
+src/main/java/edu/cuanschutz/ccp/tm_provider/oger/util/OgerDictFileFactoryMain.java
