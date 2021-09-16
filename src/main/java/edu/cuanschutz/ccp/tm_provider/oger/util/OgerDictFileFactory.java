@@ -15,9 +15,6 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.string.StringUtil;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord.Synonym;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugbankXmlFileRecordReader;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil.SynonymType;
 
@@ -50,8 +47,9 @@ public class OgerDictFileFactory {
 			}
 		}
 	}
-	
-	// this block commented as it depends on an update to the datasource fileparser library to make the Synonym class visible.
+
+	// this block commented as it depends on an update to the datasource fileparser
+	// library to make the Synonym class visible.
 //	public static void createOgerDictFileFromDrugbank(File drugbankXmlFile, File dictFile) throws IOException {
 //		Set<String> alreadyWritten = new HashSet<String>();
 //		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
@@ -155,7 +153,5 @@ public class OgerDictFileFactory {
 
 		return label.trim();
 	}
-
-	
 
 }
