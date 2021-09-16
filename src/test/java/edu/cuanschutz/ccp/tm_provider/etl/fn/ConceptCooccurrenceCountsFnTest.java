@@ -21,9 +21,9 @@ import org.junit.Test;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.ConceptPair;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.AddSuperClassAnnots;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.ConceptPair;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -35,7 +35,7 @@ import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
-public class NormalizedGoogleDistanceFnTest {
+public class ConceptCooccurrenceCountsFnTest {
 
 	private static final String Y_000001 = "Y:000001";
 	private static final String X_000001 = "X:000001";
@@ -254,7 +254,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Set<String> singletonConceptIds = new HashSet<String>();
 		Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
 		CooccurLevel level = CooccurLevel.SENTENCE;
-		NormalizedGoogleDistanceFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
+		ConceptCooccurrenceCountsFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
 				singletonConceptIds, pairedConceptIds, level, AddSuperClassAnnots.YES, DocumentType.CONCEPT_ALL);
 
 		Set<String> expectedSingletonConceptIds = CollectionsUtil.createSet(X_000000, X_000001, X_000002, Y_000000,
@@ -286,7 +286,7 @@ public class NormalizedGoogleDistanceFnTest {
 
 	@Test
 	public void testGetConceptPairs() {
-		Set<ConceptPair> outputPairs = NormalizedGoogleDistanceFn.getConceptPairs(conceptAnnots, sentenceAnnots);
+		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptAnnots, sentenceAnnots);
 		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
 				new ConceptPair(X_000001, Y_000001));
 		assertEquals(expectedPairs.size(), outputPairs.size());
@@ -297,7 +297,7 @@ public class NormalizedGoogleDistanceFnTest {
 	public void testGetConceptPairsWithAncestors() {
 		List<TextAnnotation> conceptWithAncestorAnnots = new ArrayList<TextAnnotation>(conceptAnnots);
 		conceptWithAncestorAnnots.addAll(conceptAncestorAnnots);
-		Set<ConceptPair> outputPairs = NormalizedGoogleDistanceFn.getConceptPairs(conceptWithAncestorAnnots,
+		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptWithAncestorAnnots,
 				sentenceAnnots);
 		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
 				new ConceptPair(X_000001, X_000000), new ConceptPair(X_000000, X_000002),
@@ -311,7 +311,7 @@ public class NormalizedGoogleDistanceFnTest {
 	@Test
 	public void testMatchConceptsToLevelAnnots() {
 		List<TextAnnotation> levelAnnots = sentenceAnnots;
-		Map<TextAnnotation, Set<TextAnnotation>> outputMap = NormalizedGoogleDistanceFn
+		Map<TextAnnotation, Set<TextAnnotation>> outputMap = ConceptCooccurrenceCountsFn
 				.matchConceptsToLevelAnnots(levelAnnots, conceptAnnots);
 
 		Map<TextAnnotation, Set<TextAnnotation>> expectedMap = new HashMap<TextAnnotation, Set<TextAnnotation>>();
@@ -324,7 +324,7 @@ public class NormalizedGoogleDistanceFnTest {
 
 	@Test
 	public void testAddSuperClassAnnotations() {
-		Set<TextAnnotation> outputSet = NormalizedGoogleDistanceFn.addSuperClassAnnotations(documentId, conceptAnnots,
+		Set<TextAnnotation> outputSet = ConceptCooccurrenceCountsFn.addSuperClassAnnotations(documentId, conceptAnnots,
 				ancestorMap);
 		Set<TextAnnotation> expectedSet = new HashSet<TextAnnotation>(conceptAnnots);
 		expectedSet.addAll(conceptAncestorAnnots);
@@ -379,7 +379,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, docCriteriaToContentMapPostCrfFiltering);
 
-		List<TextAnnotation> outputList = NormalizedGoogleDistanceFn.getLevelAnnotations(documentId,
+		List<TextAnnotation> outputList = ConceptCooccurrenceCountsFn.getLevelAnnotations(documentId,
 				CooccurLevel.DOCUMENT, documentText, docTypeToContentMap);
 
 		List<TextAnnotation> expectedList = Arrays.asList(documentAnnot);
@@ -392,7 +392,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, docCriteriaToContentMapPostCrfFiltering);
 
-		List<TextAnnotation> outputList = NormalizedGoogleDistanceFn.getLevelAnnotations(documentId,
+		List<TextAnnotation> outputList = ConceptCooccurrenceCountsFn.getLevelAnnotations(documentId,
 				CooccurLevel.SENTENCE, documentText, docTypeToContentMap);
 
 		List<TextAnnotation> expectedList = new ArrayList<TextAnnotation>(sentenceAnnots);
@@ -414,7 +414,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Map<String, Map<CrfOrConcept, String>> map = new HashMap<String, Map<CrfOrConcept, String>>();
 		String doc1 = "doc1";
 		String type1 = "CHEBI";
-		NormalizedGoogleDistanceFn.addToMap(map, doc1, type1, CrfOrConcept.CRF);
+		ConceptCooccurrenceCountsFn.addToMap(map, doc1, type1, CrfOrConcept.CRF);
 
 		Map<String, Map<CrfOrConcept, String>> expectedMap = new HashMap<String, Map<CrfOrConcept, String>>();
 		Map<CrfOrConcept, String> innerMap1 = new HashMap<CrfOrConcept, String>();
@@ -425,7 +425,7 @@ public class NormalizedGoogleDistanceFnTest {
 
 		String doc2 = "doc2";
 		String type2 = "CL";
-		NormalizedGoogleDistanceFn.addToMap(map, doc2, type2, CrfOrConcept.CONCEPT);
+		ConceptCooccurrenceCountsFn.addToMap(map, doc2, type2, CrfOrConcept.CONCEPT);
 
 		Map<CrfOrConcept, String> innerMap2 = new HashMap<CrfOrConcept, String>();
 		innerMap2.put(CrfOrConcept.CONCEPT, doc2);
@@ -434,7 +434,7 @@ public class NormalizedGoogleDistanceFnTest {
 		assertEquals(expectedMap, map);
 
 		String doc3 = "doc3";
-		NormalizedGoogleDistanceFn.addToMap(map, doc3, type2, CrfOrConcept.CRF);
+		ConceptCooccurrenceCountsFn.addToMap(map, doc3, type2, CrfOrConcept.CRF);
 		innerMap2.put(CrfOrConcept.CRF, doc3);
 
 		assertEquals(expectedMap, map);

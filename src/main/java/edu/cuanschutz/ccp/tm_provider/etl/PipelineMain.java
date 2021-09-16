@@ -146,8 +146,8 @@ public class PipelineMain {
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);
 				break;
-			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS:
-				NgdStoreCountsPipeline.main(pipelineArgs);
+			case CONCEPT_COOCCURRENCE_COUNTS:
+				ConceptCooccurrenceCountsPipeline.main(pipelineArgs);
 				break;
 			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX:
 				NgdKgxPipeline.main(pipelineArgs);

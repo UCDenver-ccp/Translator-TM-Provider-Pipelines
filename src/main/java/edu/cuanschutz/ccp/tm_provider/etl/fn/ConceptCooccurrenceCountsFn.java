@@ -23,7 +23,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.NgdStoreCountsPipeline.CountType;
+import edu.cuanschutz.ccp.tm_provider.etl.ConceptCooccurrenceCountsPipeline.CountType;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<String, String>> {
+public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public enum CooccurLevel {
 		DOCUMENT, SENTENCE, TITLE, ABSTRACT// , PARAGRAPH -- will require code to make sure all text is covered by a

@@ -25,7 +25,7 @@ OUTPUT_BUCKET="${BUCKET}/output/mp-concept-counts"
 INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_MP|BIONLP|OGER|0.1.0'
 REQUIRED_FLAGS='OGER_MP_DONE'
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS \
+java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_COOCCURRENCE_COUNTS \
 --jobName="$JOB_NAME" \
 --inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
 --requiredProcessingStatusFlags="$REQUIRED_FLAGS" \

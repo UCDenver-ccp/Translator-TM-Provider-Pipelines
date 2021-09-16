@@ -20,9 +20,9 @@ import org.apache.beam.sdk.values.PCollectionView;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.AddSuperClassAnnots;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
@@ -36,9 +36,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 /**
  * Computes normalized google distance between concepts
  */
-public class NgdStoreCountsPipeline {
+public class ConceptCooccurrenceCountsPipeline {
 
-	private static final PipelineKey PIPELINE_KEY = PipelineKey.NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS;
+	private static final PipelineKey PIPELINE_KEY = PipelineKey.CONCEPT_COOCCURRENCE_COUNTS;
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
@@ -144,13 +144,13 @@ public class NgdStoreCountsPipeline {
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);
 
-		PCollectionTuple output = NormalizedGoogleDistanceFn.computeCounts(statusEntity2Content, outputDocCriteria,
+		PCollectionTuple output = ConceptCooccurrenceCountsFn.computeCounts(statusEntity2Content, outputDocCriteria,
 				timestamp, inputDocCriteria, options.getCooccurLevel(), options.getAddSuperClassAnnots(),
 				options.getDocTypeToCount(), options.getCountType(), ancestorMapView);
 
-		PCollection<String> conceptIdToDocId = output.get(NormalizedGoogleDistanceFn.SINGLETON_TO_DOCID);
+		PCollection<String> conceptIdToDocId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_DOCID);
 
-		PCollection<EtlFailureData> failures = output.get(NormalizedGoogleDistanceFn.ETL_FAILURE_TAG);
+		PCollection<EtlFailureData> failures = output.get(ConceptCooccurrenceCountsFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from sentence extraction
@@ -170,8 +170,8 @@ public class NgdStoreCountsPipeline {
 						.withSuffix(".tsv"));
 
 		if (options.getCountType() == CountType.NGD) {
-			PCollection<String> conceptPairIdToDocId = output.get(NormalizedGoogleDistanceFn.PAIR_TO_DOCID);
-			PCollection<String> docIdToConceptCount = output.get(NormalizedGoogleDistanceFn.DOCID_TO_CONCEPT_COUNT);
+			PCollection<String> conceptPairIdToDocId = output.get(ConceptCooccurrenceCountsFn.PAIR_TO_DOCID);
+			PCollection<String> docIdToConceptCount = output.get(ConceptCooccurrenceCountsFn.DOCID_TO_CONCEPT_COUNT);
 			conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
 					+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
 					.withSuffix(".tsv"));
