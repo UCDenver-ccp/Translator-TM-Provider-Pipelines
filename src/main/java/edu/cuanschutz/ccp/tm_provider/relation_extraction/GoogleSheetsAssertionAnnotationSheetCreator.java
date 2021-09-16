@@ -75,10 +75,13 @@ import lombok.Data;
  * Takes as input a file containing sentences pulled using the
  * SentenceExtractionPipeline which produces a TSV file containing metadata that
  * accompanies each sentence/assertion.
+ * 
+ * Originally designed to read output from the SentenceExtractionPipeline and
+ * create a Google Sheet that can be quickly annotated (manually) to generate
+ * training data for building relation extraction models.
  *
- */
-/**
- * @author bill
+ * Borrows heavily from:
+ * https://developers.google.com/sheets/api/quickstart/java
  *
  */
 @Data
