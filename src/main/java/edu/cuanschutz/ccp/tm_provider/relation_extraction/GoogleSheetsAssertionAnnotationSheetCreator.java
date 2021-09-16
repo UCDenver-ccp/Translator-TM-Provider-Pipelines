@@ -195,7 +195,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 * @throws InterruptedException
 	 */
 	public void createNewSpreadsheet(File credentialsFile, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, File inputSentenceFile, File previousSentenceIdsFile, boolean includeInverse)
+			int batchSize, List<File> inputSentenceFiles, File previousSentenceIdsFile, boolean includeInverse)
 			throws IOException, GeneralSecurityException, InterruptedException {
 
 		String sheetTitle = biolinkAssociation.name() + "-" + batchId;
@@ -213,7 +213,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		Set<String> alreadyAnnotated = new HashSet<String>(
 				FileReaderUtil.loadLinesFromFile(previousSentenceIdsFile, UTF8));
 
-		int maxSentenceCount = countSentences(inputSentenceFile);
+		int maxSentenceCount = countSentences(inputSentenceFiles);
 
 		System.out.println("Max sentence count: " + maxSentenceCount);
 
@@ -232,40 +232,44 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		int extractedSentenceCount = 1;
 		int sentenceCount = 0;
 		String previousSentenceText = null;
-		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
-				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
-				: new FileInputStream(inputSentenceFile);
-		StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null);
-		try {
-			while (lineIter.hasNext() && hashesOutputInThisBatch.size() < batchSize) {
-				Line line = lineIter.next();
-				ExtractedSentence sentence = ExtractedSentence.fromTsv(line.getText(), true);
-				if (previousSentenceText == null || !previousSentenceText.equals(sentence.getSentenceText())) {
-					previousSentenceText = sentence.getSentenceText();
-					sentenceCount++;
-				}
+		for (File inputSentenceFile : inputSentenceFiles) {
+			System.out.println("pulling data from: " + inputSentenceFile.getName());
+			InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
+					? new GZIPInputStream(new FileInputStream(inputSentenceFile))
+					: new FileInputStream(inputSentenceFile);
+			StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null);
+			try {
+				while (lineIter.hasNext() && hashesOutputInThisBatch.size() < batchSize) {
+					Line line = lineIter.next();
+					ExtractedSentence sentence = ExtractedSentence.fromTsv(line.getText(), true);
+					if (previousSentenceText == null || !previousSentenceText.equals(sentence.getSentenceText())) {
+						previousSentenceText = sentence.getSentenceText();
+						sentenceCount++;
+					}
 
-				if (indexesForNewBatch.get(0) == sentenceCount) {
-					indexesForNewBatch.remove(0);
-					String hash = computeHash(sentence);
-					if (!alreadyAnnotated.contains(hash)) {
-						if (validateSubjectObject(sentence)) {
-							hashesOutputInThisBatch.add(hash);
+					if (indexesForNewBatch.get(0) == sentenceCount) {
+						indexesForNewBatch.remove(0);
+						String hash = computeHash(sentence);
+						if (!alreadyAnnotated.contains(hash)) {
+							if (validateSubjectObject(sentence)) {
+								hashesOutputInThisBatch.add(hash);
 
-							updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
-									extractedSentenceCount, biolinkAssociation, false));
-							extractedSentenceCount++;
-							if (includeInverse) {
 								updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
-										extractedSentenceCount, biolinkAssociation, true));
+										extractedSentenceCount, biolinkAssociation, false));
 								extractedSentenceCount++;
+								if (includeInverse) {
+									updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
+											sheetId, extractedSentenceCount, biolinkAssociation, true));
+									extractedSentenceCount++;
+								}
 							}
 						}
 					}
 				}
+
+			} finally {
+				lineIter.close();
 			}
-		} finally {
-			lineIter.close();
 		}
 
 		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
@@ -820,20 +824,24 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 *         entities. This method does assume that the different entries for each
 	 *         particular sentence appear on consecutive lines in the input file.
 	 */
-	protected static int countSentences(File inputSentenceFile) throws IOException {
+	protected static int countSentences(List<File> inputSentenceFiles) throws IOException {
 		int sentenceCount = 0;
 		String previousSentenceText = null;
-		InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
-				? new GZIPInputStream(new FileInputStream(inputSentenceFile))
-				: new FileInputStream(inputSentenceFile);
 
-		for (StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null); lineIter.hasNext();) {
-			Line line = lineIter.next();
-			String[] cols = line.getText().split("\\t");
-			String sentenceText = cols[10];
-			if (previousSentenceText == null || !previousSentenceText.equals(sentenceText)) {
-				sentenceCount++;
-				previousSentenceText = sentenceText;
+		for (File inputSentenceFile : inputSentenceFiles) {
+			try (InputStream is = (inputSentenceFile.getName().endsWith(".gz"))
+					? new GZIPInputStream(new FileInputStream(inputSentenceFile))
+					: new FileInputStream(inputSentenceFile)) {
+
+				for (StreamLineIterator lineIter = new StreamLineIterator(is, UTF8, null); lineIter.hasNext();) {
+					Line line = lineIter.next();
+					String[] cols = line.getText().split("\\t");
+					String sentenceText = cols[10];
+					if (previousSentenceText == null || !previousSentenceText.equals(sentenceText)) {
+						sentenceCount++;
+						previousSentenceText = sentenceText;
+					}
+				}
 			}
 		}
 		return sentenceCount;
@@ -845,8 +853,9 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// add 100 extra just in case there are collisions with previous extracted
 		// sentences
 		Random rand = new Random();
-		while (randomIndexes.size() < batchSize + 10000) {
+		while (randomIndexes.size() < maxSentenceCount && randomIndexes.size() < batchSize + 10000) {
 			randomIndexes.add(rand.nextInt(maxSentenceCount) + 1);
+
 		}
 
 		return randomIndexes;

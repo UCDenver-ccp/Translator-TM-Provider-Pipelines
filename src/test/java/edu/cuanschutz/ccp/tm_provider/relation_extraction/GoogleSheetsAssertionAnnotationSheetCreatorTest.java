@@ -31,7 +31,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreatorTest {
 
 		FileWriterUtil.printLines(lines, sentenceFile, CharacterEncoding.UTF_8);
 
-		int sentenceCount = GoogleSheetsAssertionAnnotationSheetCreator.countSentences(sentenceFile);
+		int sentenceCount = GoogleSheetsAssertionAnnotationSheetCreator.countSentences(Arrays.asList(sentenceFile));
 
 		assertEquals("expected 5 unique sentences", 5, sentenceCount);
 
