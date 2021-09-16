@@ -255,7 +255,7 @@ public class NormalizedGoogleDistanceFnTest {
 		Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
 		CooccurLevel level = CooccurLevel.SENTENCE;
 		NormalizedGoogleDistanceFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
-				singletonConceptIds, pairedConceptIds, level, AddSuperClassAnnots.YES, FilterFlag.BY_CRF);
+				singletonConceptIds, pairedConceptIds, level, AddSuperClassAnnots.YES, DocumentType.CONCEPT_ALL);
 
 		Set<String> expectedSingletonConceptIds = CollectionsUtil.createSet(X_000000, X_000001, X_000002, Y_000000,
 				Y_000001);

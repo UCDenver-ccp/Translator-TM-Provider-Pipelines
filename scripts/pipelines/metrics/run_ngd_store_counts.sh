@@ -8,6 +8,7 @@ BUCKET=$5
 
 
 ZONE='us-central1-c'
+REGION='us-central1'
 JOB_NAME=$(echo "NGD-STORE-COUNTS-${COLLECTION}" | tr '_' '-')
 #DISK_TYPE="compute.googleapis.com/projects/${PROJECT}/zones/${ZONE}/diskTypes/pd-ssd"
 #DISK_SIZE_GB=50
@@ -18,11 +19,11 @@ echo "JOB_NAME: $JOB_NAME"
 echo "DISK_TYPE: $DISK_TYPE"
 
 ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
-OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-counts"
 
-INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0'
-REQUIRED_FLAGS='CONCEPT_POST_PROCESSING_DONE'
-
+# NOTE: this is set up to counting only concepts from MP ontology
+OUTPUT_BUCKET="${BUCKET}/output/mp-concept-counts"
+INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_MP|BIONLP|OGER|0.1.0'
+REQUIRED_FLAGS='OGER_MP_DONE'
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS \
 --jobName="$JOB_NAME" \
@@ -32,18 +33,50 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED
 --ancestorMapFileDelimiter='TAB' \
 --ancestorMapFileSetDelimiter='PIPE' \
 --cooccurLevel='DOCUMENT' \
---addSuperClassAnnots="YES" \
---filterFlag="BY_CRF" \
---countType="NGD" \
+--addSuperClassAnnots="NO" \
+--docTypeToCount="CONCEPT_MP" \
+--countType="SIMPLE" \
 --collection="$COLLECTION" \
 --overwrite='YES' \
 --outputBucket="$OUTPUT_BUCKET" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
---zone="$ZONE" \
+--workerZone="$ZONE" \
+--region="$REGION" \
 --numWorkers=10 \
 --maxNumWorkers=100 \
 --runner=DataflowRunner
-#--diskSizeGb=$DISK_SIZE_GB \
-#--workerDiskType=$DISK_TYPE \
+
+
+
+
+# Default settings below
+#OUTPUT_BUCKET="${BUCKET}/output/ngd-concept-counts"
+# INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0'
+# REQUIRED_FLAGS='CONCEPT_POST_PROCESSING_DONE'
+
+# java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS \
+# --jobName="$JOB_NAME" \
+# --inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
+# --requiredProcessingStatusFlags="$REQUIRED_FLAGS" \
+# --ancestorMapFilePath="$ANCESTOR_MAP_FILE_PATH" \
+# --ancestorMapFileDelimiter='TAB' \
+# --ancestorMapFileSetDelimiter='PIPE' \
+# --cooccurLevel='DOCUMENT' \
+# --addSuperClassAnnots="YES" \
+# --docTypeToCount="CONCEPT_ALL" \
+# --countType="NGD" \
+# --collection="$COLLECTION" \
+# --overwrite='YES' \
+# --outputBucket="$OUTPUT_BUCKET" \
+# --project="${PROJECT}" \
+# --stagingLocation="$STAGE_LOCATION" \
+# --gcpTempLocation="$TMP_LOCATION" \
+# --workerZone="$ZONE" \
+# --region="$REGION" \
+# --numWorkers=10 \
+# --maxNumWorkers=100 \
+# --runner=DataflowRunner
+# #--diskSizeGb=$DISK_SIZE_GB \
+# #--workerDiskType=$DISK_TYPE \

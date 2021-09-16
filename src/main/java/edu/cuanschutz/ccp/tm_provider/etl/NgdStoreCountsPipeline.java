@@ -19,7 +19,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
@@ -74,10 +73,10 @@ public class NgdStoreCountsPipeline {
 
 		void setAddSuperClassAnnots(AddSuperClassAnnots value);
 
-		@Description("If NONE, then the CONCEPT_ALL_UNFILTERED document type, other with CONCEPT_ALL is used.")
-		FilterFlag getFilterFlag();
+		@Description("The document type, e.g. CONCEPT_ALL, CONCEPT_MP, etc., indicating the document type containing the annotations that will be counted. This document type must be in the InputDocumentCriteria input parameter.")
+		DocumentType getDocTypeToCount();
 
-		void setFilterFlag(FilterFlag value);
+		void setDocTypeToCount(DocumentType value);
 
 		@Description("The document collection to process")
 		String getCollection();
@@ -138,18 +137,16 @@ public class NgdStoreCountsPipeline {
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles(p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
 						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);
 
-		// TODO NOTE: where is the ancestor map coming from?? load from files and
-		// convert to map view -- use as side input
 		PCollectionTuple output = NormalizedGoogleDistanceFn.computeCounts(statusEntity2Content, outputDocCriteria,
 				timestamp, inputDocCriteria, options.getCooccurLevel(), options.getAddSuperClassAnnots(),
-				options.getFilterFlag(), ancestorMapView);
+				options.getDocTypeToCount(), options.getCountType(), ancestorMapView);
 
 		PCollection<String> conceptIdToDocId = output.get(NormalizedGoogleDistanceFn.SINGLETON_TO_DOCID);
 
