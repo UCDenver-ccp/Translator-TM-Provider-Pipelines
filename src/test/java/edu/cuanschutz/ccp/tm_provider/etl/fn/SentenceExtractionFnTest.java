@@ -703,7 +703,7 @@ public class SentenceExtractionFnTest {
 	}
 
 	@Test
-	public void testExtractSentencesDebuggingRealExample() throws IOException {
+	public void testExtractSentencesRealExample() throws IOException {
 		// @formatter:off
 		String documentId = "PMID:31111513";
 		String documentText = "PTEN loss in prostatic adenocarcinoma correlates with specific adverse histologic features (intraductal carcinoma, cribriform Gleason pattern 4 and stromogenic carcinoma).\n" + 
@@ -762,9 +762,9 @@ public class SentenceExtractionFnTest {
 				"T14	sentence 2128 2210	This is the first study showing the association of PTEN loss with stromogenic PCa.";
 		// @formatter:on
 
-		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
-		List<TextAnnotation> sectionAnnots = Arrays
-				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+//		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+//		List<TextAnnotation> sectionAnnots = Arrays
+//				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
 
 		DocumentCriteria textDc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
