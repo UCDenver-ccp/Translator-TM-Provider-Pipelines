@@ -218,21 +218,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		int maxSentenceCount = countSentences(inputSentenceFiles);
 
-		System.out.println("Max sentence count: " + maxSentenceCount);
-
-		List<Integer> indexesForNewBatch = new ArrayList<Integer>(getRandomIndexes(maxSentenceCount, batchSize));
-		Collections.sort(indexesForNewBatch);
-
-		for (int i = 0; i < 10; i++) {
-			System.out.println("random index: " + indexesForNewBatch.get(i));
-		}
+		Set<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize);
 
 		List<Request> updateRequests = new ArrayList<Request>();
 		updateRequests.addAll(writeHeaderToSpreadsheet(biolinkAssociation, sheetsService, sheetId));
 
 		Set<String> hashesOutputInThisBatch = new HashSet<String>();
 		// this count is used to track what line a sentence ends up in the Google Sheet
-		int extractedSentenceCount = 1;
+		int sheetRow = 1;
 		int sentenceCount = 0;
 		String previousSentenceText = null;
 		for (File inputSentenceFile : inputSentenceFiles) {
@@ -250,24 +243,35 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 						sentenceCount++;
 					}
 
-					if (indexesForNewBatch.get(0) == sentenceCount) {
-						indexesForNewBatch.remove(0);
+					if (indexesForNewBatch.contains(sentenceCount)) {
 						String hash = computeHash(sentence);
 						if (!alreadyAnnotated.contains(hash)) {
 							if (validateSubjectObject(sentence)) {
 								hashesOutputInThisBatch.add(hash);
 
 								updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
-										extractedSentenceCount, biolinkAssociation, false));
-								extractedSentenceCount++;
+										sheetRow, biolinkAssociation, false));
+								sheetRow++;
 								if (includeInverse) {
 									updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
-											sheetId, extractedSentenceCount, biolinkAssociation, true));
-									extractedSentenceCount++;
+											sheetId, sheetRow, biolinkAssociation, true));
+									sheetRow++;
 								}
 							}
 						}
 					}
+
+					// cannot send more than 100,000 requests in an update, so we check to see if we
+					// are near the limit and send the update request if we are.
+					if (updateRequests.size() > 90000) {
+						System.out.println("Sending intermediate batch of update requests.");
+						BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
+						content.setRequests(updateRequests);
+						BatchUpdate batchUpdate = sheetsService.spreadsheets().batchUpdate(sheetId, content);
+						batchUpdate.execute();
+						updateRequests = new ArrayList<Request>();
+					}
+
 				}
 
 			} finally {
@@ -277,7 +281,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
 		System.out.println("Sentence count: " + sentenceCount);
-		System.out.println("Extracted sentence count: " + extractedSentenceCount);
+		System.out.println("Extracted sentence count: " + sheetRow);
 		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
 		/*
@@ -292,39 +296,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 			}
 		}
 
-//		// perform updates (formatting) on sentences
-//		System.out.println("Update request count: " + updateRequests.size());
-//
-//		// we are limited to 500 writes per 100s so wait here if necessary
-//		long prevTime = System.currentTimeMillis();
-//		List<Request> requestBatch = new ArrayList<Request>();
-//		for (int i = 0; i < updateRequests.size(); i++) {
-//			requestBatch.add(updateRequests.get(i));
-//
-//			if (requestBatch.size() % 499 == 0) {
-//				System.out.println("Sending requests...");
-//				BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
-//				content.setRequests(requestBatch);
-//				BatchUpdate batchUpdate = sheetsService.spreadsheets().batchUpdate(sheetId, content);
-//				batchUpdate.execute();
-//
-//				long msToWait = 100000 - (System.currentTimeMillis() - prevTime);
-//				// sleep + 2s buffer
-//				System.out.println("Loaded " + requestBatch.size() + " of " + updateRequests.size()
-//						+ " -- Sleeping ms: " + msToWait);
-//				Thread.sleep(msToWait + 2000);
-//				prevTime = System.currentTimeMillis();
-//				requestBatch = new ArrayList<Request>();
-//			}
-//		}
-
+		System.out.println("Sending final batch of update requests.");
 		BatchUpdateSpreadsheetRequest content = new BatchUpdateSpreadsheetRequest();
 		content.setRequests(updateRequests);
 		BatchUpdate batchUpdate = sheetsService.spreadsheets().batchUpdate(sheetId, content);
 		batchUpdate.execute();
 
 		// write checkboxes on spreadsheet
-		addCheckBoxesToSheet(sheetsService, sheetId, extractedSentenceCount, biolinkAssociation.getSpoTriples().length);
+		addCheckBoxesToSheet(sheetsService, sheetId, sheetRow, biolinkAssociation.getSpoTriples().length);
 
 	}
 
