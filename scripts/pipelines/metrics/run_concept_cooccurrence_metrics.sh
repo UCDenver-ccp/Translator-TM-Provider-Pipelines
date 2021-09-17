@@ -20,7 +20,7 @@ echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX \
+java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_COOCCURRENCE_METRICS \
 --jobName="$JOB_NAME" \
 --singletonFilePattern="$SINGLETON_FILE_PATTERN" \
 --pairFilePattern="$PAIR_FILE_PATTERN" \

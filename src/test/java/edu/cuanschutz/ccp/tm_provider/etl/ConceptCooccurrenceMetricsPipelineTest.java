@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class NGDProcessCountsPipelineTest {
+public class ConceptCooccurrenceMetricsPipelineTest {
 
 	/**
 	 * Test values come from Shakespeare example from Wikipedia: https://en.wikipedia.org/wiki/Normalized_Google_distance
@@ -17,7 +17,7 @@ public class NGDProcessCountsPipelineTest {
 		long fxy = 20800000l;
 		long N = 25270000000000l;
 
-		double ngd = NgdKgxPipeline.normalizedGoogleDistance(N, fx, fy, fxy);
+		double ngd = ConceptCooccurrenceMetricsPipeline.normalizedGoogleDistance(N, fx, fy, fxy);
 
 		assertEquals(0.13, ngd, 0.005);
 	}

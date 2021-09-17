@@ -149,8 +149,8 @@ public class PipelineMain {
 			case CONCEPT_COOCCURRENCE_COUNTS:
 				ConceptCooccurrenceCountsPipeline.main(pipelineArgs);
 				break;
-			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX:
-				NgdKgxPipeline.main(pipelineArgs);
+			case CONCEPT_COOCCURRENCE_METRICS:
+				ConceptCooccurrenceMetricsPipeline.main(pipelineArgs);
 				break;
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);

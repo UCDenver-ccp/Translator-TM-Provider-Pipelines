@@ -52,7 +52,7 @@ public class ConceptCountDistributionPipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		final PCollection<KV<String, Long>> conceptIdToCounts = NgdKgxPipeline
+		final PCollection<KV<String, Long>> conceptIdToCounts = ConceptCooccurrenceMetricsPipeline
 				.getSingletonCountMapView(options.getSingletonFilePattern(), p);
 
 		final PCollectionView<Map<String, String>> conceptIdToLabelMap = PCollectionUtil.fromTwoColumnFiles("label map",p,
