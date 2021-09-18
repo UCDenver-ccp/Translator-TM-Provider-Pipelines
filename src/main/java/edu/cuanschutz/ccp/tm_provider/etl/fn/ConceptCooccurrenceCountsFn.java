@@ -32,6 +32,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.common.digest.DigestUtil;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
@@ -275,6 +276,10 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 
 	protected static String computeUniqueTextIdentifier(String documentId, CooccurLevel level,
 			TextAnnotation levelAnnot) {
+		// if the level is DOCUMENT then there isn't a need to create longer identifiers
+		if (level == CooccurLevel.DOCUMENT) {
+			return documentId;
+		}
 		return documentId + "_" + level.name().toLowerCase() + "_" + DigestUtils
 				.sha256Hex(levelAnnot.getAggregateSpan().toString() + levelAnnot.getCoveredText().substring(0, 8));
 	}
@@ -579,6 +584,10 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 		public static ConceptPair fromReproducibleKey(String s) {
 			String[] cols = s.split("\\|");
 			return new ConceptPair(cols[0], cols[1]);
+		}
+
+		public String getPairId() {
+			return DigestUtil.getBase64Sha1Digest(toReproducibleKey());
 		}
 
 		@Override

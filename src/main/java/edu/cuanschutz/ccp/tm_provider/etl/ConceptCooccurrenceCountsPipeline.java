@@ -40,6 +40,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 public class ConceptCooccurrenceCountsPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.CONCEPT_COOCCURRENCE_COUNTS;
+	protected static final String CONCEPT_ID_TO_DOC_FILE_PREFIX = "concept-to-";
+	protected static final String CONCEPT_PAIR_TO_DOC_FILE_PREFIX = "concept-pair-to-";
+	protected static final String LEVEL_TO_CONCEPT_COUNT_FILE_PREFIX = "-to-concept-count";
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
@@ -168,33 +171,39 @@ public class ConceptCooccurrenceCountsPipeline {
 		if (cooccurLevels.contains(CooccurLevel.DOCUMENT)) {
 			PCollection<String> conceptIdToDocId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_DOC_ID);
 			conceptIdToDocId.apply("write concept-id to doc-id",
-					TextIO.write().to(options.getOutputBucket()
-							+ String.format("/concept-to-doc.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
+					TextIO.write()
+							.to(options.getOutputBucket() + "/"
+									+ getConceptIdToLevelFileNamePrefix(CooccurLevel.DOCUMENT, options.getCollection()))
 							.withSuffix(".tsv"));
 		}
 
 		if (cooccurLevels.contains(CooccurLevel.TITLE)) {
 			PCollection<String> conceptIdToTitleId = output.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_TITLE_ID);
 			conceptIdToTitleId.apply("write concept-id to title-id",
-					TextIO.write().to(options.getOutputBucket()
-							+ String.format("/concept-to-title.%s.%s", options.getCollection(), CooccurLevel.TITLE))
+					TextIO.write()
+							.to(options.getOutputBucket() + "/"
+									+ getConceptIdToLevelFileNamePrefix(CooccurLevel.TITLE, options.getCollection()))
 							.withSuffix(".tsv"));
 		}
 
 		if (cooccurLevels.contains(CooccurLevel.SENTENCE)) {
 			PCollection<String> conceptIdToSentenceId = output
 					.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_SENTENCE_ID);
-			conceptIdToSentenceId.apply("write concept-id to sentence-id", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/concept-to-sentence.%s.%s", options.getCollection(), CooccurLevel.SENTENCE))
-					.withSuffix(".tsv"));
+			conceptIdToSentenceId.apply("write concept-id to sentence-id",
+					TextIO.write()
+							.to(options.getOutputBucket() + "/"
+									+ getConceptIdToLevelFileNamePrefix(CooccurLevel.SENTENCE, options.getCollection()))
+							.withSuffix(".tsv"));
 		}
 
 		if (cooccurLevels.contains(CooccurLevel.ABSTRACT)) {
 			PCollection<String> conceptIdToAbstractId = output
 					.get(ConceptCooccurrenceCountsFn.SINGLETON_TO_ABSTRACT_ID);
-			conceptIdToAbstractId.apply("write concept-id to abstract-id", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/concept-to-abstract.%s.%s", options.getCollection(), CooccurLevel.ABSTRACT))
-					.withSuffix(".tsv"));
+			conceptIdToAbstractId.apply("write concept-id to abstract-id",
+					TextIO.write()
+							.to(options.getOutputBucket() + "/"
+									+ getConceptIdToLevelFileNamePrefix(CooccurLevel.ABSTRACT, options.getCollection()))
+							.withSuffix(".tsv"));
 		}
 
 		if (options.getCountType() == CountType.FULL) {
@@ -204,13 +213,15 @@ public class ConceptCooccurrenceCountsPipeline {
 				PCollection<String> docIdToConceptCount = output
 						.get(ConceptCooccurrenceCountsFn.DOC_ID_TO_CONCEPT_COUNT);
 
-				conceptPairIdToDocId.apply("write concept pair to doc-id", TextIO.write().to(options.getOutputBucket()
-						+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
-						.withSuffix(".tsv"));
+				conceptPairIdToDocId.apply("write concept pair to doc-id",
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getConceptPairToLevelFileNamePrefix(CooccurLevel.DOCUMENT, options.getCollection()))
+								.withSuffix(".tsv"));
 
-				docIdToConceptCount.apply("write doc-id to concept count", TextIO.write().to(options.getOutputBucket()
-						+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), CooccurLevel.DOCUMENT))
-						.withSuffix(".tsv"));
+				docIdToConceptCount.apply("write doc-id to concept count",
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getLevelToConceptCountFileNamePrefix(CooccurLevel.DOCUMENT, options.getCollection()))
+								.withSuffix(".tsv"));
 			}
 
 			if (cooccurLevels.contains(CooccurLevel.TITLE)) {
@@ -218,12 +229,14 @@ public class ConceptCooccurrenceCountsPipeline {
 				PCollection<String> titleIdToConceptCount = output
 						.get(ConceptCooccurrenceCountsFn.TITLE_ID_TO_CONCEPT_COUNT);
 				conceptPairIdToTitleId.apply("write concept pair to title-id",
-						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-title.%s.%s",
-								options.getCollection(), CooccurLevel.TITLE)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getConceptPairToLevelFileNamePrefix(CooccurLevel.TITLE, options.getCollection()))
+								.withSuffix(".tsv"));
 
 				titleIdToConceptCount.apply("write title-id to concept count",
-						TextIO.write().to(options.getOutputBucket() + String.format("/title-to-concept-count.%s.%s",
-								options.getCollection(), CooccurLevel.TITLE)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getLevelToConceptCountFileNamePrefix(CooccurLevel.TITLE, options.getCollection()))
+								.withSuffix(".tsv"));
 			}
 
 			if (cooccurLevels.contains(CooccurLevel.SENTENCE)) {
@@ -232,12 +245,14 @@ public class ConceptCooccurrenceCountsPipeline {
 				PCollection<String> sentenceIdToConceptCount = output
 						.get(ConceptCooccurrenceCountsFn.SENTENCE_ID_TO_CONCEPT_COUNT);
 				conceptPairIdToSentenceId.apply("write concept pair to sentence-id",
-						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-sentence.%s.%s",
-								options.getCollection(), CooccurLevel.SENTENCE)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getConceptPairToLevelFileNamePrefix(CooccurLevel.SENTENCE, options.getCollection()))
+								.withSuffix(".tsv"));
 
 				sentenceIdToConceptCount.apply("write sentence-id to concept count",
-						TextIO.write().to(options.getOutputBucket() + String.format("/sentence-to-concept-count.%s.%s",
-								options.getCollection(), CooccurLevel.SENTENCE)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getLevelToConceptCountFileNamePrefix(CooccurLevel.SENTENCE, options.getCollection()))
+								.withSuffix(".tsv"));
 			}
 
 			if (cooccurLevels.contains(CooccurLevel.ABSTRACT)) {
@@ -246,16 +261,42 @@ public class ConceptCooccurrenceCountsPipeline {
 				PCollection<String> abstractIdToConceptCount = output
 						.get(ConceptCooccurrenceCountsFn.ABSTRACT_ID_TO_CONCEPT_COUNT);
 				conceptPairIdToAbstractId.apply("write concept pair to abstract-id",
-						TextIO.write().to(options.getOutputBucket() + String.format("/concept-pair-to-abstract.%s.%s",
-								options.getCollection(), CooccurLevel.ABSTRACT)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getConceptPairToLevelFileNamePrefix(CooccurLevel.ABSTRACT, options.getCollection()))
+								.withSuffix(".tsv"));
 
 				abstractIdToConceptCount.apply("write abstract-id to concept count",
-						TextIO.write().to(options.getOutputBucket() + String.format("/abstract-to-concept-count.%s.%s",
-								options.getCollection(), CooccurLevel.ABSTRACT)).withSuffix(".tsv"));
+						TextIO.write().to(options.getOutputBucket() + "/"
+								+ getLevelToConceptCountFileNamePrefix(CooccurLevel.ABSTRACT, options.getCollection()))
+								.withSuffix(".tsv"));
 			}
 		}
 
 		p.run().waitUntilFinish();
+	}
+
+	protected static String getLevelToConceptCountFileNamePrefix(CooccurLevel level, String collection) {
+		return getLevelToConceptCountFileNamePrefix(level) + collection;
+	}
+
+	public static String getLevelToConceptCountFileNamePrefix(CooccurLevel level) {
+		return String.format("%s%s.", level.name().toLowerCase(), LEVEL_TO_CONCEPT_COUNT_FILE_PREFIX);
+	}
+
+	protected static String getConceptPairToLevelFileNamePrefix(CooccurLevel level, String collection) {
+		return getConceptPairToLevelFileNamePrefix(level) + collection;
+	}
+
+	public static String getConceptPairToLevelFileNamePrefix(CooccurLevel level) {
+		return String.format("%s%s.", CONCEPT_PAIR_TO_DOC_FILE_PREFIX, level.name().toLowerCase());
+	}
+
+	protected static String getConceptIdToLevelFileNamePrefix(CooccurLevel level, String collection) {
+		return getConceptIdToLevelFileNamePrefix(level) + collection;
+	}
+
+	public static String getConceptIdToLevelFileNamePrefix(CooccurLevel level) {
+		return String.format("%s%s.", CONCEPT_ID_TO_DOC_FILE_PREFIX, level.name().toLowerCase());
 	}
 
 }

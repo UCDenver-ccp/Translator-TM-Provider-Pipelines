@@ -15,6 +15,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 
@@ -53,7 +54,7 @@ public class ConceptCountDistributionPipeline {
 		Pipeline p = Pipeline.create(options);
 
 		final PCollection<KV<String, Long>> conceptIdToCounts = ConceptCooccurrenceMetricsPipeline
-				.getSingletonCountMapView(options.getSingletonFilePattern(), p);
+				.getSingletonCountMapView(options.getSingletonFilePattern(), CooccurLevel.DOCUMENT, p);
 
 		final PCollectionView<Map<String, String>> conceptIdToLabelMap = PCollectionUtil.fromTwoColumnFiles("label map",p,
 				options.getLabelMapFilePattern(), options.getLabelMapFileDelimiter(), Compression.GZIP)

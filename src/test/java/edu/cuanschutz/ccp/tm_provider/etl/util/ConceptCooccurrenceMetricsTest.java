@@ -18,7 +18,7 @@ public class ConceptCooccurrenceMetricsTest {
 		long fxy = 20800000l;
 		long N = 25270000000000l;
 
-		double ngd = ConceptCooccurrenceMetrics.normalizedGoogleDistance(N, fx, fy, fxy);
+		double ngd = ConceptCooccurrenceMetrics.normalizedGoogleDistance(fx, fy, fxy, N);
 
 		assertEquals(0.1329, ngd, 0.005);
 	}
@@ -29,11 +29,12 @@ public class ConceptCooccurrenceMetricsTest {
 		long yConceptCount = 15458;
 		long pairCount = 6899;
 		long totalDocCount = 3478657;
+		long totalConceptCount = totalDocCount * 1000;
 
-		double pmi = ConceptCooccurrenceMetrics.normalizedGoogleDistance(totalDocCount, xConceptCount, yConceptCount,
-				pairCount);
+		double pmi = ConceptCooccurrenceMetrics.normalizedGoogleDistance(xConceptCount, yConceptCount,
+				pairCount, totalConceptCount);
 
-		assertEquals(0.1396, pmi, 0.0005);
+		assertEquals(0.0636, pmi, 0.0005);
 
 	}
 
@@ -104,6 +105,81 @@ public class ConceptCooccurrenceMetricsTest {
 				yConceptCount, pairCount);
 
 		assertEquals(-7.4731, lfmd, 0.0005);
+
+	}
+	
+	
+	@Test
+	public void testPointwiseMutualInformation2() {
+		long xConceptCount = 4;
+		long yConceptCount = 4;
+		long pairCount = 4;
+		long totalDocCount = 4;
+
+		double pmi = ConceptCooccurrenceMetrics.pointwiseMutualInformation(totalDocCount, xConceptCount, yConceptCount,
+				pairCount);
+
+		assertEquals(0.0, pmi, 0.0005);
+
+	}
+
+	@Test
+	public void testNormalizedPointwiseMutualInformation2() {
+		long xConceptCount = 4;
+		long yConceptCount = 4;
+		long pairCount = 4;
+		long totalDocCount = 4;
+
+
+		double pmi = ConceptCooccurrenceMetrics.normalizedPointwiseMutualInformation(totalDocCount, xConceptCount,
+				yConceptCount, pairCount);
+
+		assertEquals(0.0, pmi, 0.0005);
+
+	}
+
+	@Test
+	public void testMutualDependence2() {
+		long xConceptCount = 4;
+		long yConceptCount = 4;
+		long pairCount = 4;
+		long totalDocCount = 4;
+
+
+		double pmi = ConceptCooccurrenceMetrics.mutualDependence(totalDocCount, xConceptCount, yConceptCount,
+				pairCount);
+
+		assertEquals(0.0, pmi, 0.0005);
+
+	}
+
+	@Test
+	public void testNormalizedPointwiseMutualInformationMaxDenom2() {
+		long xConceptCount = 4;
+		long yConceptCount = 4;
+		long pairCount = 4;
+		long totalDocCount = 4;
+
+
+		double pmiNormMax = ConceptCooccurrenceMetrics.normalizedPointwiseMutualInformationMaxDenom(totalDocCount,
+				xConceptCount, yConceptCount, pairCount);
+
+		assertEquals(0.0, pmiNormMax, 0.0005);
+
+	}
+
+	@Test
+	public void testLogFrequencyBiasedMutualDependence2() {
+		long xConceptCount = 4;
+		long yConceptCount = 4;
+		long pairCount = 4;
+		long totalDocCount = 4;
+
+
+		double lfmd = ConceptCooccurrenceMetrics.logFrequencyBiasedMutualDependence(totalDocCount, xConceptCount,
+				yConceptCount, pairCount);
+
+		assertEquals(0.0, lfmd, 0.0005);
 
 	}
 
