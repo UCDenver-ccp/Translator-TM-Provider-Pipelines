@@ -127,7 +127,7 @@ public class ConceptCooccurrenceCountsPipeline {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
-		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE;
+		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.CONCEPT_COOCCURRENCE_COUNTS_DONE;
 		Pipeline p = Pipeline.create(options);
 
 		Set<CooccurLevel> cooccurLevels = new HashSet<CooccurLevel>();

@@ -270,9 +270,12 @@ public class ConceptCooccurrenceCountsFnTest {
 				CollectionsUtil.createSet(X_000001, X_000000, Y_000000, Y_000001));
 
 		Map<String, Set<ConceptPair>> expectedTextIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
+		expectedTextIdToPairedConceptIds.put(sentenceId1, CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
+				new ConceptPair(X_000000, X_000002), new ConceptPair(X_000000, X_000001)));
 		expectedTextIdToPairedConceptIds.put(sentenceId2,
 				CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001), new ConceptPair(X_000000, Y_000000),
-						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000000, Y_000001)));
+						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000000, Y_000001),
+						new ConceptPair(X_000000, X_000001), new ConceptPair(Y_000000, Y_000001)));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
@@ -300,10 +303,10 @@ public class ConceptCooccurrenceCountsFnTest {
 		Map<String, Set<ConceptPair>> expectedTextIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
 		expectedTextIdToPairedConceptIds.put(docId,
 				CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001), new ConceptPair(X_000000, Y_000000),
-						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000001, Y_000001),
-						new ConceptPair(X_000000, Y_000001), new ConceptPair(X_000001, X_000002),
-						new ConceptPair(X_000000, X_000002), new ConceptPair(X_000002, Y_000000),
-						new ConceptPair(X_000002, Y_000001), new ConceptPair(X_000000, X_000001)));
+						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000000, Y_000001),
+						new ConceptPair(X_000001, X_000002), new ConceptPair(X_000000, X_000002),
+						new ConceptPair(X_000002, Y_000000), new ConceptPair(X_000002, Y_000001),
+						new ConceptPair(X_000000, X_000001), new ConceptPair(Y_000000, Y_000001)));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
@@ -329,7 +332,7 @@ public class ConceptCooccurrenceCountsFnTest {
 	@Test
 	public void testGetConceptPairs() {
 		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn
-				.getConceptPairs(CollectionsUtil.createSet(x1Sentence1Annot, x2Sentence1Annot));
+				.getConceptPairs(CollectionsUtil.createSet(X_000001, X_000002));
 		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002));
 		assertEquals(expectedPairs.size(), outputPairs.size());
 		assertEquals(expectedPairs, outputPairs);
@@ -337,10 +340,8 @@ public class ConceptCooccurrenceCountsFnTest {
 
 	@Test
 	public void testGetConceptPairsWithAncestorsXX() {
-		List<TextAnnotation> conceptWithAncestorAnnots = new ArrayList<TextAnnotation>(
-				CollectionsUtil.createSet(x1Sentence1Annot, x2Sentence1Annot));
-		conceptWithAncestorAnnots.addAll(Arrays.asList(x1Sentence1Ancestor0Annot, x2Sentence1Ancestor0Annot));
-		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptWithAncestorAnnots);
+		Set<String> conceptIdsWithAncestors = CollectionsUtil.createSet(X_000001, X_000002, X_000000);
+		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptIdsWithAncestors);
 		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
 				new ConceptPair(X_000001, X_000000), new ConceptPair(X_000000, X_000002));
 
@@ -350,13 +351,12 @@ public class ConceptCooccurrenceCountsFnTest {
 
 	@Test
 	public void testGetConceptPairsWithAncestorsXY() {
-		List<TextAnnotation> conceptWithAncestorAnnots = new ArrayList<TextAnnotation>(
-				CollectionsUtil.createSet(x1Sentence2Annot, y1Sentence2Annot));
-		conceptWithAncestorAnnots.addAll(Arrays.asList(x1Sentence2Ancestor0Annot, y1Sentence2Ancestor0Annot));
-		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptWithAncestorAnnots);
+		Set<String> conceptIdsWithAncestors = CollectionsUtil.createSet(X_000001, X_000000, Y_000001, Y_000000);
+		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptIdsWithAncestors);
 		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001),
 				new ConceptPair(X_000000, Y_000000), new ConceptPair(X_000001, Y_000000),
-				new ConceptPair(Y_000001, X_000000));
+				new ConceptPair(Y_000001, X_000000), new ConceptPair(X_000001, X_000000),
+				new ConceptPair(Y_000001, Y_000000));
 
 		assertEquals(expectedPairs.size(), outputPairs.size());
 		assertEquals(expectedPairs, outputPairs);
@@ -364,7 +364,13 @@ public class ConceptCooccurrenceCountsFnTest {
 
 	@Test
 	public void testMatchConceptsToLevelAnnots() {
-		List<TextAnnotation> levelAnnots = sentenceAnnots;
+		
+		List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot,
+				x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
+		
+		List<TextAnnotation> levelAnnots = Arrays.asList(sentence1Annot, sentence2Annot, sentence3Annot,
+				sentence4Annot);
+		
 		Map<TextAnnotation, Set<TextAnnotation>> outputMap = ConceptCooccurrenceCountsFn
 				.matchConceptsToLevelAnnots(levelAnnots, conceptAnnots);
 
@@ -504,6 +510,16 @@ public class ConceptCooccurrenceCountsFnTest {
 		String key = cp.toReproducibleKey();
 		String expectedKey = id2 + "|" + id1;
 		assertEquals(expectedKey, key);
+	}
+
+	@Test
+	public void testConceptPairEquals() {
+		ConceptPair cp1 = new ConceptPair("X:0001", "Y:0002");
+		ConceptPair cp2 = new ConceptPair("Y:0002", "X:0001");
+
+		assertEquals(cp1.hashCode(), cp2.hashCode());
+		assertEquals(cp1, cp2);
+
 	}
 
 }

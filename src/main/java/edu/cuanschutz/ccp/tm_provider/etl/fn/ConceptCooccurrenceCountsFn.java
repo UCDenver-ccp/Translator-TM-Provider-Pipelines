@@ -263,7 +263,7 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 
 			String textId = computeUniqueTextIdentifier(documentId, level, levelAnnot);
 			Set<String> uniqueConceptsInLevelAnnot = getUniqueConceptIds(conceptAnnotsInLevel);
-			Set<ConceptPair> conceptPairsInLevelAnnot = getConceptPairs(conceptAnnotsInLevel);
+			Set<ConceptPair> conceptPairsInLevelAnnot = getConceptPairs(uniqueConceptsInLevelAnnot);
 			if (!uniqueConceptsInLevelAnnot.isEmpty()) {
 				textIdToSingletonConceptIds.put(textId, uniqueConceptsInLevelAnnot);
 			}
@@ -303,29 +303,43 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 	}
 
 	@VisibleForTesting
-	protected static Set<ConceptPair> getConceptPairs(Collection<TextAnnotation> conceptAnnots) {
-		// Collection<TextAnnotation> levelAnnots) {
+	protected static Set<ConceptPair> getConceptPairs(Set<String> conceptIds) {
 		Set<ConceptPair> pairs = new HashSet<ConceptPair>();
 
-//		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
-//				conceptAnnots);
-
-//		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
-		for (TextAnnotation annot1 : conceptAnnots) {
-			for (TextAnnotation annot2 : conceptAnnots) {
-				String type1 = annot1.getClassMention().getMentionName();
-				String type2 = annot2.getClassMention().getMentionName();
-				// we require the types to be different and the annotation spans to also be
-				// different
-				if (!type1.equals(type2) && !annot1.getSpans().equals(annot2.getSpans())) {
-					pairs.add(new ConceptPair(type1, type2));
+		for (String conceptId1 : conceptIds) {
+			for (String conceptId2 : conceptIds) {
+				if (!conceptId1.equals(conceptId2)) {
+					pairs.add(new ConceptPair(conceptId1, conceptId2));
 				}
 			}
 		}
-//		}
-
 		return pairs;
 	}
+
+//	@VisibleForTesting
+//	protected static Set<ConceptPair> getConceptPairs(Collection<TextAnnotation> conceptAnnots) {
+//		// Collection<TextAnnotation> levelAnnots) {
+//		Set<ConceptPair> pairs = new HashSet<ConceptPair>();
+//
+////		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
+////				conceptAnnots);
+//
+////		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
+//		for (TextAnnotation annot1 : conceptAnnots) {
+//			for (TextAnnotation annot2 : conceptAnnots) {
+//				String type1 = annot1.getClassMention().getMentionName();
+//				String type2 = annot2.getClassMention().getMentionName();
+//				// we require the types to be different and the annotation spans to also be
+//				// different
+//				if (!type1.equals(type2) && !annot1.getSpans().equals(annot2.getSpans())) {
+//					pairs.add(new ConceptPair(type1, type2));
+//				}
+//			}
+//		}
+////		}
+//
+//		return pairs;
+//	}
 
 	/**
 	 * Given a list of concept annotations and a list of cooccurrence-level
