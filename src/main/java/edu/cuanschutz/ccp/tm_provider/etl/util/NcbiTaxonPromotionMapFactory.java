@@ -65,9 +65,9 @@ public class NcbiTaxonPromotionMapFactory {
 
 	public static void main(String[] args) {
 		File ncbitaxonOwlFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/ncbitaxon.owl.gz");
+				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon.owl.gz");
 		File outputFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/ncbitaxon-promotion-map.tsv");
+				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon-promotion-map.tsv");
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
 			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ncbitaxonOwlFile)));
