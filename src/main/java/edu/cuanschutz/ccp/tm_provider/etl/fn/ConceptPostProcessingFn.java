@@ -147,7 +147,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		for (TextAnnotation annot : annots) {
 			String id = annot.getClassMention().getMentionName();
 			if (id.startsWith("CHEBI")) {
-				if (oboToAncestorsMap.get(id).contains(chemicalSubstance) || oboToAncestorsMap.get(id).contains(role)) {
+				if (oboToAncestorsMap.containsKey(id) && (oboToAncestorsMap.get(id).contains(chemicalSubstance)
+						|| oboToAncestorsMap.get(id).contains(role))) {
 					toKeep.add(annot);
 				}
 			} else {
@@ -173,7 +174,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		for (TextAnnotation annot : annots) {
 			String id = annot.getClassMention().getMentionName();
 			if (id.startsWith("UBERON")) {
-				if (oboToAncestorsMap.get(id).contains(anatomicalEntity)) {
+				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(anatomicalEntity)) {
 					toKeep.add(annot);
 				}
 			} else {
@@ -199,7 +200,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		for (TextAnnotation annot : annots) {
 			String id = annot.getClassMention().getMentionName();
 			if (id.startsWith("MONDO")) {
-				if (oboToAncestorsMap.get(id).contains(diseaseOrDisorder)) {
+				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(diseaseOrDisorder)) {
 					toKeep.add(annot);
 				}
 			} else {
@@ -226,7 +227,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		for (TextAnnotation annot : annots) {
 			String id = annot.getClassMention().getMentionName();
 			if (id.startsWith("HP")) {
-				if (oboToAncestorsMap.get(id).contains(phenotypicAbnormality)) {
+				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(phenotypicAbnormality)) {
 					toKeep.add(annot);
 				}
 			} else {

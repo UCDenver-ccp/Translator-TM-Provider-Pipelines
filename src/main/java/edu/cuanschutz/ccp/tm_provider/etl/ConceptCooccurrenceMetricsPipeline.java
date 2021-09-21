@@ -35,6 +35,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.ConceptPair;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ConceptCooccurrenceMetrics;
 import lombok.Data;
 
@@ -66,6 +67,21 @@ public class ConceptCooccurrenceMetricsPipeline {
 		String getCountFileBucket();
 
 		void setCountFileBucket(String bucketPath);
+
+		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		String getAncestorMapFilePath();
+
+		void setAncestorMapFilePath(String path);
+
+		@Description("delimiter used to separate columns in the ancestor map file")
+		Delimiter getAncestorMapFileDelimiter();
+
+		void setAncestorMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		Delimiter getAncestorMapFileSetDelimiter();
+
+		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("The name of the database")
 		String getDatabaseName();
@@ -113,37 +129,56 @@ public class ConceptCooccurrenceMetricsPipeline {
 		final DataSourceConfiguration dbConfig = JdbcIO.DataSourceConfiguration.create("com.mysql.cj.jdbc.Driver",
 				jdbcUrl);
 
+		// enhance each set of concept IDs by adding all ancestor IDs.
+		// load a map from concept IDs to ancestor concept IDs
+		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
+
 		Set<CooccurLevel> cooccurLevelsToProcess = new HashSet<CooccurLevel>();
 		for (String l : options.getCooccurLevelsToProcess().split("\\|")) {
 			cooccurLevelsToProcess.add(CooccurLevel.valueOf(l));
 		}
 
 		for (final CooccurLevel level : cooccurLevelsToProcess) {
-			String conceptIdToCountFilePrefix = options.getCountFileBucket() + "/"
-					+ ConceptCooccurrenceCountsPipeline.getConceptIdToLevelFileNamePrefix(level) + "*";
-			String levelToConceptCountFilePrefix = options.getCountFileBucket() + "/"
-					+ ConceptCooccurrenceCountsPipeline.getLevelToConceptCountFileNamePrefix(level) + "*";
-			String conceptPairToLevelFilePrefix = options.getCountFileBucket() + "/"
-					+ ConceptCooccurrenceCountsPipeline.getConceptPairToLevelFileNamePrefix(level) + "*";
 
-			final PCollection<KV<String, Long>> conceptIdToCounts = getSingletonCountMapView(conceptIdToCountFilePrefix,
-					level, p);
+			// load a file containing a mapping from document identifier to all of the
+			// concepts in that particular document. Here, document can refer to an entire
+			// document, but it may also refer to a sentence, title, abstract, etc.
+			//
+			// input format is one document per line
+			// DOCUMENT_ID [tab] CONCEPT1_ID|CONCEPT2_ID|...
 
+			String docIdToConceptIdFilePattern = options.getCountFileBucket() + "/"
+					+ ConceptCooccurrenceCountsPipeline.getDocumentIdToConceptIdsFileNamePrefix(level) + "*";
+
+			PCollection<KV<String, Set<String>>> textIdToConceptIdCollection = PCollectionUtil
+					.fromKeyToSetTwoColumnFiles("load docid to conceptid - " + level.name().toLowerCase(), p,
+							docIdToConceptIdFilePattern, ConceptCooccurrenceCountsFn.OUTPUT_FILE_COLUMN_DELIMITER,
+							ConceptCooccurrenceCountsFn.OUTPUT_FILE_SET_DELIMITER, Compression.UNCOMPRESSED);
+
+			// then supplement each concept id set with all ancestor ids
+			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection = addAncestorConceptIds(p,
+					level, textIdToConceptIdCollection, ancestorMapView);
+
+			// create a mapping from each concept ID to the number of documents in which it
+			// was observed, then convert it into a View
+			final PCollection<KV<String, Long>> conceptIdToCounts = countConceptObservations(p, level,
+					textIdToConceptIdWithAncestorsCollection);
 			final PCollectionView<Map<String, Long>> singletonCountMap = conceptIdToCounts
 					.apply(View.<String, Long>asMap());
 
-			final PCollectionView<Long> totalConceptCount = getTotalConceptCountView(levelToConceptCountFilePrefix,
-					level, p);
+			// calculate the total number of concepts present in all documents
+			final PCollectionView<Long> totalConceptCount = countTotalConcepts(p, level, conceptIdToCounts);
 
-			final PCollectionView<Long> totalDocumentCount = getTotalDocumentCountView(levelToConceptCountFilePrefix,
-					level, p);
+			// calculate the total number of documents that were processed
+			final PCollectionView<Long> totalDocumentCount = countTotalDocumentsView(p, level,
+					textIdToConceptIdWithAncestorsCollection);
 
-			PCollection<KV<String, String>> pairToDocId = PCollectionUtil.fromTwoColumnFiles(
-					"pair file - " + level.name().toLowerCase(), p, conceptPairToLevelFilePrefix,
-					ConceptCooccurrenceCountsFn.OUTPUT_FILE_DELIMITER, Compression.UNCOMPRESSED);
-
-			PCollection<KV<String, Iterable<String>>> pairToDocIds = pairToDocId
-					.apply("group-by-concept-id-" + level.name().toLowerCase(), GroupByKey.<String, String>create());
+			// create a mapping from concept pairs (an identifier representing the pair) to
+			// the document IDs in which the pair was observed
+			PCollection<KV<String, Set<String>>> pairToDocIds = computeConceptPairs(p, level,
+					textIdToConceptIdWithAncestorsCollection);
 
 			/* compute the scores for all concept cooccurrence metrics */
 			PCollectionTuple scoresAndPubs = getConceptIdPairToCooccurrenceMetrics(level, singletonCountMap,
@@ -256,6 +291,195 @@ public class ConceptCooccurrenceMetricsPipeline {
 		p.run().waitUntilFinish();
 	}
 
+	protected static PCollection<KV<String, Set<String>>> computeConceptPairs(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+
+		PCollection<KV<String, String>> conceptPairIdToTextId = textIdToConceptIdWithAncestorsCollection.apply(
+				"pair concepts - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, String>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext context) {
+						KV<String, Set<String>> documentIdToConceptIds = context.element();
+						String documentId = documentIdToConceptIds.getKey();
+						Set<String> conceptIds = documentIdToConceptIds.getValue();
+
+						Set<ConceptPair> pairs = new HashSet<ConceptPair>();
+						for (String conceptId1 : conceptIds) {
+							for (String conceptId2 : conceptIds) {
+								if (!conceptId1.equals(conceptId2)) {
+									pairs.add(new ConceptPair(conceptId1, conceptId2));
+								}
+							}
+						}
+
+						for (ConceptPair pair : pairs) {
+							context.output(KV.of(pair.toReproducibleKey(), documentId));
+						}
+					}
+				}));
+
+		PCollection<KV<String, Iterable<String>>> col = conceptPairIdToTextId
+				.apply("group-by-pair - " + level.name().toLowerCase(), GroupByKey.<String, String>create());
+
+		return col.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, Set<String>>>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(ProcessContext context) {
+				KV<String, Iterable<String>> pairIdToDocIds = context.element();
+				String pairId = pairIdToDocIds.getKey();
+				Iterable<String> docIds = pairIdToDocIds.getValue();
+
+				Set<String> docIdSet = new HashSet<String>();
+				for (String docId : docIds) {
+					docIdSet.add(docId);
+				}
+				context.output(KV.of(pairId, docIdSet));
+			}
+		}));
+
+	}
+
+	/**
+	 * counts all unique document IDs (keys) in the input PCollection
+	 * 
+	 * @param p
+	 * @param level
+	 * @param textIdToConceptIdWithAncestorsCollection
+	 * @return
+	 */
+	protected static PCollection<Long> countTotalDocuments(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+		// dedup in case some documents got processed multiple times
+		PCollection<KV<String, Iterable<Set<String>>>> nonredundant = textIdToConceptIdWithAncestorsCollection
+				.apply("group-by-key", GroupByKey.<String, Set<String>>create());
+		PCollection<String> documentIds = nonredundant.apply(Keys.<String>create());
+		return documentIds.apply("count total docs - " + level.name().toLowerCase(), Count.globally());
+
+	}
+
+	private static PCollectionView<Long> countTotalDocumentsView(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+		return countTotalDocuments(p, level, textIdToConceptIdWithAncestorsCollection).apply(View.asSingleton());
+	}
+
+	/**
+	 * sums up all concept counts in the input map
+	 * 
+	 * @param p
+	 * @param level
+	 * @param conceptIdToCounts
+	 * @return
+	 */
+	protected static PCollectionView<Long> countTotalConcepts(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Long>> conceptIdToCounts) {
+		// dedup in case some concepts got processed multiple times
+		PCollection<Long> conceptCounts = PipelineMain.deduplicateByKey(conceptIdToCounts);
+		return conceptCounts.apply("count total concepts - " + level.name().toLowerCase(),
+				Sum.longsGlobally().asSingletonView());
+	}
+
+	/**
+	 * take the input mapping from document ID to concept ID and return a mapping
+	 * from concept ID to the count of the number of documents in which that concept
+	 * appears
+	 * 
+	 * @param p
+	 * @param level
+	 * @param textIdToConceptIdWithAncestorsCollection
+	 * @return
+	 */
+	protected static PCollection<KV<String, Long>> countConceptObservations(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+
+		PCollection<KV<String, String>> conceptIdToDocumentIdMapping = textIdToConceptIdWithAncestorsCollection.apply(
+				"count concepts - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, String>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext context) {
+						KV<String, Set<String>> documentIdToConceptIds = context.element();
+						String documentId = documentIdToConceptIds.getKey();
+						Set<String> conceptIds = documentIdToConceptIds.getValue();
+						for (String conceptId : conceptIds) {
+							context.output(KV.of(conceptId, documentId));
+						}
+					}
+				}));
+
+		// group by concept-id so that we now map from concept-id to all of its
+		// content-ids
+		PCollection<KV<String, Iterable<String>>> conceptIdToDocIds = conceptIdToDocumentIdMapping
+				.apply("group-by-concept-id", GroupByKey.<String, String>create());
+		// return mapping of concept id to the number of documents (or sentences, etc.)
+		// in which it was observed
+		PCollection<KV<String, Long>> conceptIdToCounts = conceptIdToDocIds
+				.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, Long>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						KV<String, Iterable<String>> element = c.element();
+
+						long count = StreamSupport.stream(element.getValue().spliterator(), false).count();
+
+						c.output(KV.of(element.getKey(), count));
+					}
+				}));
+
+		return conceptIdToCounts;
+
+	}
+
+	/**
+	 * augment the input concept IDs with all ancestor IDs
+	 * 
+	 * @param p
+	 * @param level
+	 * @param textIdToConceptIdCollection
+	 * @param ancestorMapView
+	 * @return
+	 */
+	protected static PCollection<KV<String, Set<String>>> addAncestorConceptIds(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdCollection,
+			PCollectionView<Map<String, Set<String>>> ancestorMapView) {
+
+		return textIdToConceptIdCollection.apply("add ancestors - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, Set<String>>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext context) {
+						Map<String, Set<String>> ancestorMap = context.sideInput(ancestorMapView);
+
+						KV<String, Set<String>> documentIdToConceptIds = context.element();
+						String documentId = documentIdToConceptIds.getKey();
+						Set<String> conceptIds = new HashSet<String>(documentIdToConceptIds.getValue());
+						Set<String> ancestorIds = new HashSet<String>();
+						for (String conceptId : conceptIds) {
+							if (ancestorMap.containsKey(conceptId)) {
+								Set<String> ancestors = ancestorMap.get(conceptId);
+								for (String ancestorId : ancestors) {
+									// in case there are any blank id's exclude them -- this was observed at one
+									// time
+									if (!ancestorId.trim().isEmpty()) {
+										ancestorIds.add(ancestorId);
+									}
+								}
+							}
+						}
+
+						conceptIds.addAll(ancestorIds);
+
+						context.output(KV.of(documentId, conceptIds));
+					}
+				}).withSideInputs(ancestorMapView));
+
+	}
+
 	/**
 	 * @param totalDocumentCountView
 	 * @param conceptIdToCounts
@@ -297,14 +521,14 @@ public class ConceptCooccurrenceMetricsPipeline {
 	private static PCollectionTuple getConceptIdPairToCooccurrenceMetrics(CooccurLevel level,
 			final PCollectionView<Map<String, Long>> singletonCountMap,
 			final PCollectionView<Long> totalConceptCountView, PCollectionView<Long> totalDocumentCountView,
-			PCollection<KV<String, Iterable<String>>> pairToDocIds) {
+			PCollection<KV<String, Set<String>>> pairToDocIds) {
 		return pairToDocIds.apply("metrics - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Iterable<String>>, CooccurrencePublication>() {
+				ParDo.of(new DoFn<KV<String, Set<String>>, CooccurrencePublication>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext c) {
-						KV<String, Iterable<String>> element = c.element();
+						KV<String, Set<String>> element = c.element();
 						ConceptPair pair = ConceptPair.fromReproducibleKey(element.getKey());
 						long totalConceptCount = c.sideInput(totalConceptCountView);
 						long totalDocumentCount = c.sideInput(totalDocumentCountView);
@@ -371,137 +595,6 @@ public class ConceptCooccurrenceMetricsPipeline {
 				}).withOutputTags(PAIR_PUBLICATIONS_TAG, TupleTagList.of(SCORES_TAG)).withSideInputs(singletonCountMap,
 						totalConceptCountView, totalDocumentCountView));
 
-	}
-
-//	private static PCollection<String> createKgxEdgeLines(
-//			final PCollectionView<Map<String, String>> conceptIdToLabelMap,
-//			final PCollectionView<Map<String, String>> conceptIdToCategoryMap,
-//			PCollection<KV<String, Double>> pairToNgd) {
-//		PCollection<String> edgeTsv = pairToNgd.apply(ParDo.of(new DoFn<KV<String, Double>, String>() {
-//			private static final long serialVersionUID = 1L;
-//
-//			@ProcessElement
-//			public void processElement(ProcessContext c) {
-//				KV<String, Double> pairToNgd = c.element();
-//
-//				String pairKey = pairToNgd.getKey();
-//				ConceptPair pair = ConceptPair.fromReproducibleKey(pairKey);
-//
-//				String subjectId = pair.getConceptId1();
-//				String objectId = pair.getConceptId2();
-//				String edgeLabel = KGX_OUTPUT_EDGE_LABEL;
-//				String relation = KGX_OUTPUT_RELATION;
-//				String associationType = KGX_ASSOCIATION_TYPE;
-//				Double ngd = pairToNgd.getValue();
-//				String associationId = DigestUtils.sha256Hex(pairKey);
-//
-//				String kgxEdgeStr = String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s", subjectId, edgeLabel, objectId,
-//						relation, associationId, associationType, ngd);
-//
-//				c.output(kgxEdgeStr);
-//			}
-//
-//		}).withSideInputs(conceptIdToLabelMap, conceptIdToCategoryMap));
-//		return edgeTsv;
-//	}
-
-//	private static PCollection<String> createKgxNodeLines(final PCollection<KV<String, Long>> conceptIdToCounts,
-//			final PCollectionView<Map<String, String>> conceptIdToLabelMap,
-//			final PCollectionView<Map<String, String>> conceptIdToCategoryMap) {
-//		PCollection<String> nodeTsv = conceptIdToCounts.apply(Keys.<String>create())
-//				.apply(ParDo.of(new DoFn<String, String>() {
-//					private static final long serialVersionUID = 1L;
-//
-//					@ProcessElement
-//					public void processElement(ProcessContext c) {
-//						String conceptId = c.element();
-//						Map<String, String> conceptLabelMap = c.sideInput(conceptIdToLabelMap);
-//						Map<String, String> conceptCategoryMap = c.sideInput(conceptIdToCategoryMap);
-//
-//						String label = conceptLabelMap.get(conceptId);
-//						String category = conceptCategoryMap.get(conceptId);
-//
-//						if (label == null) {
-//							label = "UKNOWN";
-//						}
-//						if (category == null) {
-//							category = "UKNOWN";
-//						}
-//						String kgxNodeStr = String.format("%s\t%s\t%s", conceptId, label, category);
-//
-//						c.output(kgxNodeStr);
-//					}
-//
-//				}).withSideInputs(conceptIdToLabelMap, conceptIdToCategoryMap));
-//		return nodeTsv;
-//	}
-
-	private static PCollectionView<Long> getTotalConceptCountView(String docIdToConceptCountFilePattern,
-			CooccurLevel level, Pipeline p) {
-		// compute the total number of concepts observed (N)
-		PCollection<KV<String, String>> docIdToConceptCountStr = PCollectionUtil.fromTwoColumnFiles(
-				"total concept count - " + level.name().toLowerCase(), p, docIdToConceptCountFilePattern,
-				ConceptCooccurrenceCountsFn.OUTPUT_FILE_DELIMITER, Compression.UNCOMPRESSED);
-		PCollection<KV<String, Long>> docIdToConceptCount = docIdToConceptCountStr
-				.apply(ParDo.of(new DoFn<KV<String, String>, KV<String, Long>>() {
-					private static final long serialVersionUID = 1L;
-
-					@ProcessElement
-					public void processElement(ProcessContext c) {
-						KV<String, String> element = c.element();
-						c.output(KV.of(element.getKey(), Long.parseLong(element.getValue())));
-					}
-				}));
-		// dedup in case some documents got processed multiple times
-		PCollection<Long> conceptCounts = PipelineMain.deduplicateByKey(docIdToConceptCount);
-		final PCollectionView<Long> totalConceptCount = conceptCounts.apply(Sum.longsGlobally().asSingletonView());
-		return totalConceptCount;
-	}
-
-	private static PCollectionView<Long> getTotalDocumentCountView(String docIdToConceptCountFilePattern,
-			CooccurLevel level, Pipeline p) {
-		// compute the total number of concepts observed (N)
-		PCollection<KV<String, String>> docIdToConceptCountStr = PCollectionUtil.fromTwoColumnFiles(
-				"total doc count - " + level.name().toLowerCase(), p, docIdToConceptCountFilePattern,
-				ConceptCooccurrenceCountsFn.OUTPUT_FILE_DELIMITER, Compression.UNCOMPRESSED);
-
-		// dedup in case some documents got processed multiple times
-		PCollection<KV<String, Iterable<String>>> nonredundant = docIdToConceptCountStr.apply("group-by-key",
-				GroupByKey.<String, String>create());
-		PCollection<String> documentIds = nonredundant.apply(Keys.<String>create());
-
-		final PCollectionView<Long> totalDocumentCount = documentIds.apply(Count.globally()).apply(View.asSingleton());
-		return totalDocumentCount;
-	}
-
-	public static PCollection<KV<String, Long>> getSingletonCountMapView(String singletonFilePattern,
-			CooccurLevel level, Pipeline p) {
-		// get lines that link concept identifiers to content identifiers (could be a
-		// document id, but could also be a sentence id, or something else).
-		PCollection<KV<String, String>> conceptIdToDocId = PCollectionUtil.fromTwoColumnFiles(
-				"singletons " + level.name().toLowerCase(), p, singletonFilePattern,
-				ConceptCooccurrenceCountsFn.OUTPUT_FILE_DELIMITER, Compression.UNCOMPRESSED);
-		// group by concept-id so that we now map from concept-id to all of its
-		// content-ids
-		PCollection<KV<String, Iterable<String>>> conceptIdToDocIds = conceptIdToDocId.apply("group-by-concept-id",
-				GroupByKey.<String, String>create());
-		// return mapping of concept id to the number of documents (or sentences, etc.)
-		// in which it was observed
-		PCollection<KV<String, Long>> conceptIdToCounts = conceptIdToDocIds
-				.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, Long>>() {
-					private static final long serialVersionUID = 1L;
-
-					@ProcessElement
-					public void processElement(ProcessContext c) {
-						KV<String, Iterable<String>> element = c.element();
-
-						long count = StreamSupport.stream(element.getValue().spliterator(), false).count();
-
-						c.output(KV.of(element.getKey(), count));
-					}
-				}));
-
-		return conceptIdToCounts;
 	}
 
 	@Data

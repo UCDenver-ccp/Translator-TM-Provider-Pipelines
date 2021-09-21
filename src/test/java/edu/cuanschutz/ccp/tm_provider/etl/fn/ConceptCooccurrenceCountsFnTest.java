@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,7 +20,6 @@ import org.junit.Test;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.AddSuperClassAnnots;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.ConceptPair;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -78,12 +76,12 @@ public class ConceptCooccurrenceCountsFnTest {
 	private static TextAnnotation x1Sentence4Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000001);
 	private static TextAnnotation y1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
-	private static TextAnnotation x1Sentence1Ancestor0Annot = factory.createAnnotation(18, 27, "conceptX1", X_000000);
-	private static TextAnnotation x2Sentence1Ancestor1Annot = factory.createAnnotation(32, 41, "conceptX2", X_000001);
-	private static TextAnnotation x2Sentence1Ancestor0Annot = factory.createAnnotation(32, 41, "conceptX2", X_000000);
-	private static TextAnnotation x1Sentence2Ancestor0Annot = factory.createAnnotation(43, 52, "ConceptX1", X_000000);
-	private static TextAnnotation x1Sentence4Ancestor0Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000000);
-	private static TextAnnotation y1Sentence2Ancestor0Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000000);
+//	private static TextAnnotation x1Sentence1Ancestor0Annot = factory.createAnnotation(18, 27, "conceptX1", X_000000);
+//	private static TextAnnotation x2Sentence1Ancestor1Annot = factory.createAnnotation(32, 41, "conceptX2", X_000001);
+//	private static TextAnnotation x2Sentence1Ancestor0Annot = factory.createAnnotation(32, 41, "conceptX2", X_000000);
+//	private static TextAnnotation x1Sentence2Ancestor0Annot = factory.createAnnotation(43, 52, "ConceptX1", X_000000);
+//	private static TextAnnotation x1Sentence4Ancestor0Annot = factory.createAnnotation(135, 144, "ConceptX1", X_000000);
+//	private static TextAnnotation y1Sentence2Ancestor0Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000000);
 
 	private static TextAnnotation sentence1Annot = factory.createAnnotation(0, 42, sentence1, SENTENCE);
 	private static TextAnnotation sentence2Annot = factory.createAnnotation(43, 94, sentence2, SENTENCE);
@@ -94,8 +92,8 @@ public class ConceptCooccurrenceCountsFnTest {
 	private static TextAnnotation abstractSectionAnnot = factory.createAnnotation(43, 165, sentence1, "abstract");
 	private static TextAnnotation documentAnnot = factory.createAnnotation(0, 165, sentence1, "document");
 
-	private static List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot,
-			x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
+//	private static List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot,
+//			x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
 
 	private static List<TextAnnotation> conceptXAnnots = Arrays.asList(x1Sentence1Annot, x2Sentence1Annot,
 			x1Sentence2Annot, x1Sentence4Annot);
@@ -106,9 +104,9 @@ public class ConceptCooccurrenceCountsFnTest {
 	private static List<TextAnnotation> allConceptsPostCrfFilter = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot,
 			y1Sentence2Annot);
 
-	private static List<TextAnnotation> conceptAncestorAnnots = Arrays.asList(y1Sentence2Ancestor0Annot,
-			x1Sentence1Ancestor0Annot, x2Sentence1Ancestor0Annot, x2Sentence1Ancestor1Annot, x1Sentence2Ancestor0Annot,
-			x1Sentence4Ancestor0Annot);
+//	private static List<TextAnnotation> conceptAncestorAnnots = Arrays.asList(y1Sentence2Ancestor0Annot,
+//			x1Sentence1Ancestor0Annot, x2Sentence1Ancestor0Annot, x2Sentence1Ancestor1Annot, x1Sentence2Ancestor0Annot,
+//			x1Sentence4Ancestor0Annot);
 	private static List<TextAnnotation> sentenceAnnots = Arrays.asList(sentence1Annot, sentence2Annot, sentence3Annot,
 			sentence4Annot);
 	private static List<TextAnnotation> sectionAnnots = Arrays.asList(titleSectionAnnot, abstractSectionAnnot);
@@ -251,67 +249,39 @@ public class ConceptCooccurrenceCountsFnTest {
 	@Test
 	public void testCountConceptsSentenceLevel() throws IOException {
 
-		Map<String, Set<String>> textIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
-		Map<String, Set<ConceptPair>> textIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
 		CooccurLevel level = CooccurLevel.SENTENCE;
-		ConceptCooccurrenceCountsFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
-				textIdToSingletonConceptIdsMap, textIdToPairedConceptIds, level, AddSuperClassAnnots.YES,
-				DocumentType.CONCEPT_ALL);
+		Map<String, Set<String>> textIdToSingletonConceptIdsMap = ConceptCooccurrenceCountsFn.countConcepts(documentId,
+				docCriteriaToContentMapPostCrfFiltering, level, DocumentType.CONCEPT_ALL);
 
 		String sentenceId1 = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, sentence1Annot);
 		String sentenceId2 = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, sentence2Annot);
-//		String sentenceId3 = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, sentence3Annot);
-//		String sentenceId4 = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, sentence4Annot);
 
 		Map<String, Set<String>> expectedTextIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
 		expectedTextIdToSingletonConceptIdsMap.put(sentenceId1,
-				CollectionsUtil.createSet(X_000002, X_000001, X_000000));
+				CollectionsUtil.createSet(X_000002));
 		expectedTextIdToSingletonConceptIdsMap.put(sentenceId2,
-				CollectionsUtil.createSet(X_000001, X_000000, Y_000000, Y_000001));
-
-		Map<String, Set<ConceptPair>> expectedTextIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
-		expectedTextIdToPairedConceptIds.put(sentenceId1, CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
-				new ConceptPair(X_000000, X_000002), new ConceptPair(X_000000, X_000001)));
-		expectedTextIdToPairedConceptIds.put(sentenceId2,
-				CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001), new ConceptPair(X_000000, Y_000000),
-						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000000, Y_000001),
-						new ConceptPair(X_000000, X_000001), new ConceptPair(Y_000000, Y_000001)));
+				CollectionsUtil.createSet(X_000001, Y_000001));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
-		assertEquals(expectedTextIdToPairedConceptIds.size(), textIdToPairedConceptIds.size());
-		assertEquals(expectedTextIdToPairedConceptIds, textIdToPairedConceptIds);
 
 	}
 
 	@Test
 	public void testCountConceptsDocumentLevel() throws IOException {
 
-		Map<String, Set<String>> textIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
-		Map<String, Set<ConceptPair>> textIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
 		CooccurLevel level = CooccurLevel.DOCUMENT;
-		ConceptCooccurrenceCountsFn.countConcepts(documentId, docCriteriaToContentMapPostCrfFiltering, ancestorMap,
-				textIdToSingletonConceptIdsMap, textIdToPairedConceptIds, level, AddSuperClassAnnots.YES,
-				DocumentType.CONCEPT_ALL);
+		Map<String, Set<String>> textIdToSingletonConceptIdsMap = ConceptCooccurrenceCountsFn.countConcepts(documentId,
+				docCriteriaToContentMapPostCrfFiltering, level, DocumentType.CONCEPT_ALL);
 
 		String docId = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, documentAnnot);
 
 		Map<String, Set<String>> expectedTextIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
 		expectedTextIdToSingletonConceptIdsMap.put(docId,
-				CollectionsUtil.createSet(X_000002, X_000001, X_000000, Y_000000, Y_000001));
-
-		Map<String, Set<ConceptPair>> expectedTextIdToPairedConceptIds = new HashMap<String, Set<ConceptPair>>();
-		expectedTextIdToPairedConceptIds.put(docId,
-				CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001), new ConceptPair(X_000000, Y_000000),
-						new ConceptPair(X_000001, Y_000000), new ConceptPair(X_000000, Y_000001),
-						new ConceptPair(X_000001, X_000002), new ConceptPair(X_000000, X_000002),
-						new ConceptPair(X_000002, Y_000000), new ConceptPair(X_000002, Y_000001),
-						new ConceptPair(X_000000, X_000001), new ConceptPair(Y_000000, Y_000001)));
+				CollectionsUtil.createSet(X_000002, X_000001, Y_000001));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
-		assertEquals(expectedTextIdToPairedConceptIds.size(), textIdToPairedConceptIds.size());
-		assertEquals(expectedTextIdToPairedConceptIds, textIdToPairedConceptIds);
 
 	}
 
@@ -330,47 +300,14 @@ public class ConceptCooccurrenceCountsFnTest {
 	}
 
 	@Test
-	public void testGetConceptPairs() {
-		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn
-				.getConceptPairs(CollectionsUtil.createSet(X_000001, X_000002));
-		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002));
-		assertEquals(expectedPairs.size(), outputPairs.size());
-		assertEquals(expectedPairs, outputPairs);
-	}
-
-	@Test
-	public void testGetConceptPairsWithAncestorsXX() {
-		Set<String> conceptIdsWithAncestors = CollectionsUtil.createSet(X_000001, X_000002, X_000000);
-		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptIdsWithAncestors);
-		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, X_000002),
-				new ConceptPair(X_000001, X_000000), new ConceptPair(X_000000, X_000002));
-
-		assertEquals(expectedPairs.size(), outputPairs.size());
-		assertEquals(expectedPairs, outputPairs);
-	}
-
-	@Test
-	public void testGetConceptPairsWithAncestorsXY() {
-		Set<String> conceptIdsWithAncestors = CollectionsUtil.createSet(X_000001, X_000000, Y_000001, Y_000000);
-		Set<ConceptPair> outputPairs = ConceptCooccurrenceCountsFn.getConceptPairs(conceptIdsWithAncestors);
-		Set<ConceptPair> expectedPairs = CollectionsUtil.createSet(new ConceptPair(X_000001, Y_000001),
-				new ConceptPair(X_000000, Y_000000), new ConceptPair(X_000001, Y_000000),
-				new ConceptPair(Y_000001, X_000000), new ConceptPair(X_000001, X_000000),
-				new ConceptPair(Y_000001, Y_000000));
-
-		assertEquals(expectedPairs.size(), outputPairs.size());
-		assertEquals(expectedPairs, outputPairs);
-	}
-
-	@Test
 	public void testMatchConceptsToLevelAnnots() {
-		
-		List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot,
-				x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
-		
+
+		List<TextAnnotation> conceptAnnots = Arrays.asList(y1Sentence2Annot, x1Sentence1Annot, x2Sentence1Annot,
+				x1Sentence2Annot, x1Sentence4Annot);
+
 		List<TextAnnotation> levelAnnots = Arrays.asList(sentence1Annot, sentence2Annot, sentence3Annot,
 				sentence4Annot);
-		
+
 		Map<TextAnnotation, Set<TextAnnotation>> outputMap = ConceptCooccurrenceCountsFn
 				.matchConceptsToLevelAnnots(levelAnnots, conceptAnnots);
 
@@ -380,18 +317,6 @@ public class ConceptCooccurrenceCountsFnTest {
 		expectedMap.put(sentence4Annot, CollectionsUtil.createSet(x1Sentence4Annot));
 
 		assertEquals(expectedMap, outputMap);
-	}
-
-	@Test
-	public void testAddSuperClassAnnotations() {
-		Set<TextAnnotation> outputSet = ConceptCooccurrenceCountsFn.addSuperClassAnnotations(documentId, conceptAnnots,
-				ancestorMap);
-		Set<TextAnnotation> expectedSet = new HashSet<TextAnnotation>(conceptAnnots);
-		expectedSet.addAll(conceptAncestorAnnots);
-
-		assertEquals(expectedSet.size(), outputSet.size());
-		assertEquals(expectedSet, outputSet);
-
 	}
 
 	// TODO: move test to PipelineMainTest as this method was moved into

@@ -13,6 +13,7 @@ CLOUD_SQL_REGION=${10}
 
 JOB_NAME='CONCEPT-METRICS'
 COUNT_FILE_BUCKET="${BUCKET}/output/sample-count-output"
+ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
 
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
@@ -21,6 +22,9 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --jobName="$JOB_NAME" \
 --cooccurLevelsToProcess="$COOCCUR_LEVELS_TO_PROCESS" \
 --countFileBucket="$COUNT_FILE_BUCKET" \
+--ancestorMapFilePath="$ANCESTOR_MAP_FILE_PATH" \
+--ancestorMapFileDelimiter='TAB' \
+--ancestorMapFileSetDelimiter='PIPE' \
 --databaseName="$DATABASE_NAME" \
 --dbUsername="$DB_USER_NAME" \
 --dbPassword="$DB_PASSWORD" \
@@ -33,4 +37,5 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=200 \
+--autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner

@@ -15,8 +15,6 @@ echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
-
 Default settings below
 OUTPUT_BUCKET="${BUCKET}/output/concept-cooccurrence-counts"
 INPUT_DOC_CRITERIA='TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;SECTIONS|BIONLP|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0;SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0'
@@ -26,13 +24,8 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --jobName="$JOB_NAME" \
 --inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
 --requiredProcessingStatusFlags="$REQUIRED_FLAGS" \
---ancestorMapFilePath="$ANCESTOR_MAP_FILE_PATH" \
---ancestorMapFileDelimiter='TAB' \
---ancestorMapFileSetDelimiter='PIPE' \
---cooccurLevels='ABSTRACT|DOCUMENT|SENTENCE|TITLE' \
---addSuperClassAnnots="YES" \
+--cooccurLevels='DOCUMENT|SENTENCE|TITLE|ABSTRACT' \
 --docTypeToCount="CONCEPT_ALL" \
---countType="FULL" \
 --collection="$COLLECTION" \
 --overwrite='YES' \
 --outputBucket="$OUTPUT_BUCKET" \
@@ -42,7 +35,8 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --workerZone="$ZONE" \
 --region="$REGION" \
 --numWorkers=10 \
---maxNumWorkers=125 \
+--maxNumWorkers=150 \
+--autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner
 
 
