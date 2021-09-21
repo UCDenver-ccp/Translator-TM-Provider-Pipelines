@@ -108,7 +108,9 @@ public class ConceptCooccurrenceMetricsPipelineTest {
 
 		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
 		ancestorMap.put("AA:1", new HashSet<String>(Arrays.asList("AA:0", "AA:00")));
-		ancestorMap.put("ZZ:3", new HashSet<String>(Arrays.asList("BB:0", "BB:00")));
+		// note that BB:00 should get excluded when ancestor concept IDs are added since
+		// it has a different prefix than the ZZ concepts
+		ancestorMap.put("ZZ:3", new HashSet<String>(Arrays.asList("ZZ:0", "BB:00")));
 
 		PCollectionView<Map<String, Set<String>>> ancestorMapView = pipeline
 				.apply("ancestor view", Create.of(ancestorMap)).apply(View.asMap());
@@ -119,10 +121,10 @@ public class ConceptCooccurrenceMetricsPipelineTest {
 		List<KV<String, Set<String>>> expectedOutput = new ArrayList<KV<String, Set<String>>>();
 
 		expectedOutput.add(KV.of("PMID:1", CollectionsUtil.createSet("AA:0", "AA:00", "AA:1", "AA:2", "AA:3", "AA:4",
-				"ZZ:1", "ZZ:2", "BB:0", "BB:00", "ZZ:3", "ZZ:4")));
-		expectedOutput.add(KV.of("PMID:2",
-				CollectionsUtil.createSet("AA:2", "AA:3", "AA:4", "ZZ:2", "BB:0", "BB:00", "ZZ:3", "ZZ:4")));
-		expectedOutput.add(KV.of("PMID:3", CollectionsUtil.createSet("AA:3", "AA:4", "BB:0", "BB:00", "ZZ:3", "ZZ:4")));
+				"ZZ:1", "ZZ:2", "ZZ:0", "ZZ:3", "ZZ:4")));
+		expectedOutput.add(
+				KV.of("PMID:2", CollectionsUtil.createSet("AA:2", "AA:3", "AA:4", "ZZ:2", "ZZ:0", "ZZ:3", "ZZ:4")));
+		expectedOutput.add(KV.of("PMID:3", CollectionsUtil.createSet("AA:3", "AA:4", "ZZ:0", "ZZ:3", "ZZ:4")));
 		expectedOutput.add(KV.of("PMID:4", CollectionsUtil.createSet("AA:4", "ZZ:4")));
 
 		PAssert.that(output).containsInAnyOrder(expectedOutput);
@@ -176,37 +178,65 @@ public class ConceptCooccurrenceMetricsPipelineTest {
 				.computeConceptPairs(pipeline, CooccurLevel.DOCUMENT, textIdToConceptIdWithAncestorsCollection);
 
 		Set<KV<String, Set<String>>> expectedOutput = new HashSet<KV<String, Set<String>>>();
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "AA:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "AA:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "AA:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "AA:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "AA:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:3", "AA:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3")));
-		
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:1", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:1", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:1", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:2", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:2", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("ZZ:3", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3")));
-		
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:1", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3")));
-		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1","PMID:2","PMID:3", "PMID:4")));
-		
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "AA:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "AA:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "AA:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:2", "AA:3").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:2", "AA:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:3", "AA:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3")));
+
+		expectedOutput
+				.add(KV.of(new ConceptPair("ZZ:1", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("ZZ:1", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("ZZ:1", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput.add(KV.of(new ConceptPair("ZZ:2", "ZZ:3").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("ZZ:2", "ZZ:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("ZZ:3", "ZZ:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3")));
+
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "ZZ:2").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "ZZ:3").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:1", "ZZ:4").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:2", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:2").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:3").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:2", "ZZ:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:3", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:2").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:3").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:3", "ZZ:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3")));
+		expectedOutput
+				.add(KV.of(new ConceptPair("AA:4", "ZZ:1").toReproducibleKey(), CollectionsUtil.createSet("PMID:1")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:2").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:3").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3")));
+		expectedOutput.add(KV.of(new ConceptPair("AA:4", "ZZ:4").toReproducibleKey(),
+				CollectionsUtil.createSet("PMID:1", "PMID:2", "PMID:3", "PMID:4")));
+
 		PAssert.that(pairToDocIds).containsInAnyOrder(expectedOutput);
 
 		pipeline.run();

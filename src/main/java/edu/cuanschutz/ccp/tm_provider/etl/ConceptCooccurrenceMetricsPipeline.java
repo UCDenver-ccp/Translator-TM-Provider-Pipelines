@@ -460,12 +460,22 @@ public class ConceptCooccurrenceMetricsPipeline {
 						Set<String> conceptIds = new HashSet<String>(documentIdToConceptIds.getValue());
 						Set<String> ancestorIds = new HashSet<String>();
 						for (String conceptId : conceptIds) {
+							String conceptPrefix = null;
+							if (conceptId.contains(":")) {
+								conceptPrefix = conceptId.substring(0, conceptId.indexOf(":"));
+							}
 							if (ancestorMap.containsKey(conceptId)) {
 								Set<String> ancestors = ancestorMap.get(conceptId);
 								for (String ancestorId : ancestors) {
 									// in case there are any blank id's exclude them -- this was observed at one
-									// time
-									if (!ancestorId.trim().isEmpty()) {
+									// time. Also, avoid adding ancestors that have a different prefix. This avoids,
+									// for example, adding upper-level BFO concepts that are ancestors of GO
+									// concepts as we have no real need for upper-level concepts in our application.
+									// This also limits the amount of concepts that will be used to generate concept
+									// pairs which will reduce, albeit only slightly, the computational load of
+									// computing pairs.
+									if (!ancestorId.trim().isEmpty()
+											&& (conceptPrefix == null || ancestorId.startsWith(conceptPrefix))) {
 										ancestorIds.add(ancestorId);
 									}
 								}
