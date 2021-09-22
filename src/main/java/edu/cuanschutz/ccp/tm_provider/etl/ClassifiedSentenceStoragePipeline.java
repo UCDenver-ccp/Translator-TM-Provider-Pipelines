@@ -235,27 +235,39 @@ public class ClassifiedSentenceStoragePipeline {
 										// 2155 is the max year value in MySQL
 										documentYearPublished = 2155;
 									}
-									SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
-											biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
-											subjectEntityId, objectEntityId, es.getDocumentZone(),
-											CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(),
-													"|"),
-											documentYearPublished, subjectSpanStr, objectSpanStr, subjectCoveredText,
-											objectCoveredText);
 
-									for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
-										sqlValues.addScore(entry.getKey(), entry.getValue());
+									/*
+									 * for efficiency purposes, if there were multiple ontologies IDs identified for
+									 * the same span of text, those identifiers were spliced together into a
+									 * pipe-delimited list so that sentence only needed to be classified once. Here
+									 * we unsplice any spliced identifiers and create separate sqlvalues for each.
+									 */
+									for (String sub : subjectCurie.split("\\|")) {
+										for (String obj : objectCurie.split("\\|")) {
+											SqlValues sqlValues = new SqlValues(assertionId, sub, obj,
+													biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
+													subjectEntityId, objectEntityId, es.getDocumentZone(),
+													CollectionsUtil.createDelimitedString(
+															es.getDocumentPublicationTypes(), "|"),
+													documentYearPublished, subjectSpanStr, objectSpanStr,
+													subjectCoveredText, objectCoveredText);
+
+											for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
+												sqlValues.addScore(entry.getKey(), entry.getValue());
+											}
+
+											c.output(sqlValues);
+										}
 									}
-
-									c.output(sqlValues);
+								} else {
+									throw new IllegalStateException(
+											"Mismatch between the BERT output file and sentence metadata files detected. "
+													+ "Sentence identifiers do not match!!! "
+													+ es.getSentenceIdentifier() + " != " + sentenceId1);
 								}
-							} else {
-								throw new IllegalStateException(
-										"Mismatch between the BERT output file and sentence metadata files detected. "
-												+ "Sentence identifiers do not match!!!");
 							}
-
 						}
+
 					}
 
 				}));
