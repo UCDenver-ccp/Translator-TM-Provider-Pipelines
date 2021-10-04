@@ -318,6 +318,9 @@
 			<version>${beam.version}</version>
 		</dependency>
 
+		
+
+
 		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -495,6 +498,14 @@
 			<version>1.39.2</version> </dependency> -->
 
 
+<!-- https://mvnrepository.com/artifact/com.spotify/scio-core -->
+		<dependency>
+			<groupId>com.spotify</groupId>
+			<artifactId>scio-core_2.13</artifactId>
+			<version>0.9.3</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -559,7 +570,6 @@
 			<artifactId>google-oauth-client-jetty</artifactId>
 			<version>1.23.0</version>
 		</dependency>
-
 
 
 
