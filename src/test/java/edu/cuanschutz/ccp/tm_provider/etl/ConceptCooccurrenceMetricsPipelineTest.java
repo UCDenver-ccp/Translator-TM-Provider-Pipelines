@@ -42,13 +42,8 @@ public class ConceptCooccurrenceMetricsPipelineTest {
 
 	@Test
 	public void testRounding() {
-		double d = 2.0 / 3.0;
-		System.out.println(d);
-
-		BigDecimal a = new BigDecimal(d).setScale(8, BigDecimal.ROUND_HALF_UP);
-		System.out.println(a);
-
-		System.out.println(a.doubleValue());
+		BigDecimal a = new BigDecimal("0.6666666666666666666666666").setScale(8, BigDecimal.ROUND_HALF_UP);
+		assertEquals(new BigDecimal(0.66666667).doubleValue(), a.doubleValue(), 0.000000001);
 	}
 
 	@Test
