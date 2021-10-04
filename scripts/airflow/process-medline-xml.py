@@ -189,7 +189,9 @@ chebi_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -226,7 +228,9 @@ cl_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -264,7 +268,9 @@ drugbank_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -301,7 +307,9 @@ go_bp_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -338,7 +346,9 @@ go_cc_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -375,7 +385,9 @@ go_mf_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -412,7 +424,9 @@ hp_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -449,7 +463,9 @@ mondo_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -486,7 +502,9 @@ mop_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -523,7 +541,9 @@ ncbitaxon_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -560,7 +580,9 @@ pr_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -597,7 +619,9 @@ so_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -634,7 +658,9 @@ uberon_oger = DataflowCreateJavaJobOperator(
         'inputPipelineVersion': INPUT_PIPELINE_VERSION,
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.OgerPipeline',
@@ -683,7 +709,9 @@ chebi_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -719,7 +747,9 @@ cl_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -754,7 +784,9 @@ go_bp_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -789,7 +821,9 @@ go_cc_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -824,7 +858,9 @@ go_mf_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -859,7 +895,9 @@ hp_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -894,7 +932,9 @@ mondo_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -929,7 +969,9 @@ mop_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -964,7 +1006,9 @@ ncbitaxon_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -999,7 +1043,9 @@ pr_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -1034,7 +1080,9 @@ so_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -1069,7 +1117,9 @@ uberon_crf = DataflowCreateJavaJobOperator(
         'inputSentencePipelineVersion':'0.1.0',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 25
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.CrfNerPipeline',
@@ -1121,7 +1171,9 @@ concept_post_process = DataflowCreateJavaJobOperator(
         'targetProcessingStatusFlag': 'CONCEPT_POST_PROCESSING_DONE',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.ConceptPostProcessingPipeline',
@@ -1154,7 +1206,9 @@ concept_post_process_unfiltered = DataflowCreateJavaJobOperator(
         'targetProcessingStatusFlag': 'CONCEPT_POST_PROCESSING_UNFILTERED_DONE',
         'collection': COLLECTION,
         'overwrite': 'NO',
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.ConceptPostProcessingPipeline',
@@ -1224,7 +1278,7 @@ sentence_extraction_bl_chemical_to_gene = DataflowCreateJavaJobOperator(
     job_name='{{task.task_id}}',
     options={
         'targetProcessingStatusFlag': 'SENTENCE_DONE',
-        'inputDocumentCriteria': "TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";SECTIONS|BIONLP|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION +";SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL_UNFILTERED|BIONLP|CONCEPT_POST_PROCESS|0.1.0",
+        'inputDocumentCriteria': "TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";SECTIONS|BIONLP|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION +";SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0",
         'keywords':"",
         'outputBucket': SENTENCE_FILE_PREFIX,
         'prefixX': PREFIX_X,
@@ -1233,7 +1287,9 @@ sentence_extraction_bl_chemical_to_gene = DataflowCreateJavaJobOperator(
         'placeholderY': PLACEHOLDER_Y,
         'collection': COLLECTION,
         'overwrite': 'YES',
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.SentenceExtractionPipeline',
@@ -1319,7 +1375,9 @@ classified_sentence_storage_bl_chemical_to_gene = DataflowCreateJavaJobOperator(
         'mySqlInstanceName': CLOUD_SQL_INSTANCE_NAME,
         'cloudSqlRegion': CLOUD_SQL_REGION,
         'bertScoreInclusionMinimumThreshold' : BERT_SCORE_INCLUSION_THRESHOLD,
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.ClassifiedSentenceStoragePipeline',
@@ -1385,7 +1443,7 @@ sentence_extraction_bl_gene_regulatory_relationship = DataflowCreateJavaJobOpera
     job_name='{{task.task_id}}',
     options={
         'targetProcessingStatusFlag': 'SENTENCE_DONE',
-        'inputDocumentCriteria': "TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";SECTIONS|BIONLP|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION +";SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL_UNFILTERED|BIONLP|CONCEPT_POST_PROCESS|0.1.0",
+        'inputDocumentCriteria': "TEXT|TEXT|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION+";SECTIONS|BIONLP|"+INPUT_PIPELINE_KEY+"|"+INPUT_PIPELINE_VERSION +";SENTENCE|BIONLP|SENTENCE_SEGMENTATION|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0",
         'keywords':"",
         'outputBucket': SENTENCE_FILE_PREFIX,
         'prefixX': PREFIX_X,
@@ -1394,7 +1452,9 @@ sentence_extraction_bl_gene_regulatory_relationship = DataflowCreateJavaJobOpera
         'placeholderY': PLACEHOLDER_Y,
         'collection': COLLECTION,
         'overwrite': 'YES',
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.SentenceExtractionPipeline',
@@ -1480,7 +1540,9 @@ classified_sentence_storage_bl_gene_regulatory_relationship = DataflowCreateJava
         'mySqlInstanceName': CLOUD_SQL_INSTANCE_NAME,
         'cloudSqlRegion': CLOUD_SQL_REGION,
         'bertScoreInclusionMinimumThreshold' : BERT_SCORE_INCLUSION_THRESHOLD,
-        'numWorkers': 10
+        'numWorkers': 25,
+        'maxWorkers': 50,
+        'autoscalingAlgorithm': "THROUGHPUT_BASED"
     },
     poll_sleep=10,
     job_class='edu.cuanschutz.ccp.tm_provider.etl.ClassifiedSentenceStoragePipeline',

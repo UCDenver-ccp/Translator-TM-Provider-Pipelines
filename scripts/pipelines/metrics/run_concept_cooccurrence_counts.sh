@@ -35,7 +35,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --workerZone="$ZONE" \
 --region="$REGION" \
 --numWorkers=10 \
---maxNumWorkers=150 \
+--maxNumWorkers=50 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner
 
