@@ -160,7 +160,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes, ancestorMap);
 		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes, ancestorMap);
-
+		
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
 
@@ -305,8 +305,6 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 	private static Set<TextAnnotation> mergeOverlappingConcepts(Set<TextAnnotation> conceptAnnots) {
 		Map<List<Span>, TextAnnotation> spanToAnnotMap = new HashMap<List<Span>, TextAnnotation>();
-
-		System.out.println("Concept count (in): " + conceptAnnots.size());
 
 		for (TextAnnotation annot : conceptAnnots) {
 			List<Span> spans = annot.getSpans();

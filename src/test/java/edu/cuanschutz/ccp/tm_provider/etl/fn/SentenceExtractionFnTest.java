@@ -529,7 +529,8 @@ public class SentenceExtractionFnTest {
 
 		Set<ExtractedSentence> extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
 				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
-				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(), new HashSet<String>());
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(),
+				new HashSet<String>());
 		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
@@ -643,7 +644,7 @@ public class SentenceExtractionFnTest {
 		assertEquals(expectedAnnots, annots);
 
 	}
-	
+
 	@Test
 	public void testGetAnnotsByPrefixUseAncestorY() {
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
@@ -699,6 +700,128 @@ public class SentenceExtractionFnTest {
 //		assertEquals(expectedAnnots.size(), annots.size());
 		assertEquals(expectedAnnots, annots);
 
+	}
+
+	@Test
+	public void testExtractSentencesRealExample() throws IOException {
+		// @formatter:off
+		String documentId = "PMID:31111513";
+		String documentText = "PTEN loss in prostatic adenocarcinoma correlates with specific adverse histologic features (intraductal carcinoma, cribriform Gleason pattern 4 and stromogenic carcinoma).\n" + 
+				"\n" + 
+				"The loss of PTEN tumor suppressor gene is one of the most common somatic genetic aberrations in prostate cancer (PCa) and is frequently associated with high-risk disease. Deletion or mutation of at least one PTEN allele has been reported to occur in 20% to 40% of localized PCa and up to 60% of metastases. The goal of this study was to determine if somatic alteration detected by PTEN immunohistochemical loss of expression is associated with specific histologic features.\n" + 
+				"Two hundred sixty prostate core needle biopsies with PCa were assessed for PTEN loss using an analytically validated immunohistochemical assay. Blinded to PTEN status, each tumor was assessed for the Grade Group (GG) and the presence or absence of nine epithelial features. Presence of stromogenic PCa was also assessed and defined as grade 3 reactive tumor stroma as previously described: the presence of carcinoma associated stromal response with epithelial to stroma ratio of greater than 50% reactive stroma.\n" + 
+				"Eight-eight (34%) cases exhibited PTEN loss while 172 (66%) had intact PTEN. PTEN loss was significantly (P < 0.05) associated with increasing GG, poorly formed glands (74% of total cases with loss vs 49% of intact), and three well-validated unfavorable pathological features: intraductal carcinoma of the prostate (IDC-P) (69% of total cases with loss vs 12% of intact), cribriform Gleason pattern 4 (38% of total cases with loss vs 10% of intact) and stromogenic PCa (23% of total cases with loss vs 6% of intact). IDC-P had the highest relative risk (4.993, 95% confidence interval, 3.451-7.223, P < 0.001) for PTEN loss. At least one of these three unfavorable pathological features were present in 67% of PCa exhibiting PTEN loss, while only 11% of PCa exhibited PTEN loss when none of these three unfavorable pathological features were present.\n" + 
+				"PCa with PTEN loss demonstrates a strong correlation with known unfavorable histologic features, particularly IDC-P. This is the first study showing the association of PTEN loss with stromogenic PCa.";
+		String sectionAnnotsBionlp = "T1	title 0 171	PTEN loss in prostatic adenocarcinoma correlates with specific adverse histologic features (intraductal carcinoma, cribriform Gleason pattern 4 and stromogenic carcinoma).\n" + 
+				"T2	abstract 173 2210	The loss of PTEN tumor suppressor gene is one of the most common somatic genetic aberrations in prostate cancer (PCa) and is frequently associated with high-risk disease. Deletion or mutation of at least one PTEN allele has been reported to occur in 20% to 40% of localized PCa and up to 60% of metastases. The goal of this study was to determine if somatic alteration detected by PTEN immunohistochemical loss of expression is associated with specific histologic features. Two hundred sixty prostate core needle biopsies with PCa were assessed for PTEN loss using an analytically validated immunohistochemical assay. Blinded to PTEN status, each tumor was assessed for the Grade Group (GG) and the presence or absence of nine epithelial features. Presence of stromogenic PCa was also assessed and defined as grade 3 reactive tumor stroma as previously described: the presence of carcinoma associated stromal response with epithelial to stroma ratio of greater than 50% reactive stroma. Eight-eight (34%) cases exhibited PTEN loss while 172 (66%) had intact PTEN. PTEN loss was significantly (P < 0.05) associated with increasing GG, poorly formed glands (74% of total cases with loss vs 49% of intact), and three well-validated unfavorable pathological features: intraductal carcinoma of the prostate (IDC-P) (69% of total cases with loss vs 12% of intact), cribriform Gleason pattern 4 (38% of total cases with loss vs 10% of intact) and stromogenic PCa (23% of total cases with loss vs 6% of intact). IDC-P had the highest relative risk (4.993, 95% confidence interval, 3.451-7.223, P < 0.001) for PTEN loss. At least one of these three unfavorable pathological features were present in 67% of PCa exhibiting PTEN loss, while only 11% of PCa exhibited PTEN loss when none of these three unfavorable pathological features were present. PCa with PTEN loss demonstrates a strong correlation with known unfavorable histologic features, particularly IDC-P. This is the first study showing the association of PTEN loss with stromogenic PCa.\n";
+		String conceptAnnotsBionlp = "T1	MONDO:0004970 23 37	adenocarcinoma\n" + 
+				"T2	MONDO:0005023 92 113	intraductal carcinoma\n" + 
+				"T3	HP:0030731 104 113	carcinoma\n" + 
+				"T4	MONDO:0004993 160 169	carcinoma\n" + 
+				"T5	HP:0030731 160 169	carcinoma\n" + 
+				"T6	PR:000028746 185 189	PTEN\n" + 
+				"T7	MONDO:0005070 190 195	tumor\n" + 
+				"T8	HP:0002664 190 195	tumor\n" + 
+				"T9	SO:0000704 207 211	gene\n" + 
+				"T10	UBERON:0002367 269 277	prostate\n" + 
+				"T11	HP:0012125 269 284	prostate cancer\n" + 
+				"T12	MONDO:0008315 269 284	prostate cancer\n" + 
+				"T13	DRUGBANK:DB03088 286 289	PCa\n" + 
+				"T14	SO:0000159 344 352	Deletion\n" + 
+				"T15	SO:0001023 386 392	allele\n" + 
+				"T16	DRUGBANK:DB03088 447 450	PCa\n" + 
+				"T17	DRUGBANK:DB03088 700 703	PCa\n" + 
+				"T18	MONDO:0005070 820 825	tumor\n" + 
+				"T19	HP:0002664 820 825	tumor\n" + 
+				"T20	DRUGBANK:DB03088 945 948	PCa\n" + 
+				"T21	MONDO:0005070 999 1004	tumor\n" + 
+				"T22	HP:0002664 999 1004	tumor\n" + 
+				"T23	HP:0030731 1053 1062	carcinoma\n" + 
+				"T24	MONDO:0004993 1053 1062	carcinoma\n" + 
+				"T25	UBERON:0003891 1152 1158	stroma\n" + 
+				"T26	MONDO:0005023 1437 1458	intraductal carcinoma\n" + 
+				"T27	MONDO:0005159 1449 1474	carcinoma of the prostate\n" + 
+				"T28	DRUGBANK:DB03088 1625 1628	PCa\n" + 
+				"T29	DRUGBANK:DB03088 1870 1873	PCa\n" + 
+				"T30	DRUGBANK:DB03088 1914 1917	PCa\n" + 
+				"T31	DRUGBANK:DB03088 2011 2014	PCa\n" + 
+				"T32	DRUGBANK:DB03088 2206 2209	PCa";
+		String sentenceAnnotsBionlp = "T1	sentence 0 171	PTEN loss in prostatic adenocarcinoma correlates with specific adverse histologic features (intraductal carcinoma, cribriform Gleason pattern 4 and stromogenic carcinoma).\n" + 
+				"T2	sentence 173 343	The loss of PTEN tumor suppressor gene is one of the most common somatic genetic aberrations in prostate cancer (PCa) and is frequently associated with high-risk disease.\n" + 
+				"T3	sentence 344 479	Deletion or mutation of at least one PTEN allele has been reported to occur in 20% to 40% of localized PCa and up to 60% of metastases.\n" + 
+				"T4	sentence 480 646	The goal of this study was to determine if somatic alteration detected by PTEN immunohistochemical loss of expression is associated with specific histologic features.\n" + 
+				"T5	sentence 647 790	Two hundred sixty prostate core needle biopsies with PCa were assessed for PTEN loss using an analytically validated immunohistochemical assay.\n" + 
+				"T6	sentence 791 920	Blinded to PTEN status, each tumor was assessed for the Grade Group (GG) and the presence or absence of nine epithelial features.\n" + 
+				"T7	sentence 921 1159	Presence of stromogenic PCa was also assessed and defined as grade 3 reactive tumor stroma as previously described: the presence of carcinoma associated stromal response with epithelial to stroma ratio of greater than 50% reactive stroma.\n" + 
+				"T8	sentence 1160 1236	Eight-eight (34%) cases exhibited PTEN loss while 172 (66%) had intact PTEN.\n" + 
+				"T9	sentence 1237 1676	PTEN loss was significantly (P < 0.05) associated with increasing GG, poorly formed glands (74% of total cases with loss vs 49% of intact), and three well-validated unfavorable pathological features: intraductal carcinoma of the prostate (IDC-P) (69% of total cases with loss vs 12% of intact), cribriform Gleason pattern 4 (38% of total cases with loss vs 10% of intact) and stromogenic PCa (23% of total cases with loss vs 6% of intact).\n" + 
+				"T10	sentence 1677 1758	IDC-P had the highest relative risk (4.993, 95% confidence interval, 3.451-7.223,\n" + 
+				"T11	sentence 1759 1784	P < 0.001) for PTEN loss.\n" + 
+				"T12	sentence 1785 2010	At least one of these three unfavorable pathological features were present in 67% of PCa exhibiting PTEN loss, while only 11% of PCa exhibited PTEN loss when none of these three unfavorable pathological features were present.\n" + 
+				"T13	sentence 2011 2127	PCa with PTEN loss demonstrates a strong correlation with known unfavorable histologic features, particularly IDC-P.\n" + 
+				"T14	sentence 2128 2210	This is the first study showing the association of PTEN loss with stromogenic PCa.";
+		// @formatter:on
+
+//		List<TextAnnotation> sentenceAnnotations = populateSentenceAnnotations();
+//		List<TextAnnotation> sectionAnnots = Arrays
+//				.asList(factory.createAnnotation(0, 165, documentText, "introduction"));
+
+		DocumentCriteria textDc = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
+		DocumentCriteria sentenceDc = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
+				PipelineKey.SENTENCE_SEGMENTATION, "0.1.0");
+		DocumentCriteria conceptAllDc = new DocumentCriteria(DocumentType.CONCEPT_ALL, DocumentFormat.BIONLP,
+				PipelineKey.CONCEPT_POST_PROCESS, "0.1.0");
+		DocumentCriteria sectionDc = new DocumentCriteria(DocumentType.SECTIONS, DocumentFormat.BIONLP,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
+
+		ProcessingStatus status = new ProcessingStatus(documentId);
+		status.addCollection("PUBMED");
+		status.addCollection("PUBMED_SUB_31");
+
+		status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
+		status.enableFlag(ProcessingStatusFlag.SENTENCE_DONE);
+		status.enableFlag(ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE);
+
+		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
+		map.put(textDc, documentText);
+		map.put(sentenceDc, sentenceAnnotsBionlp);
+		map.put(conceptAllDc, conceptAnnotsBionlp);
+		map.put(sectionDc, sectionAnnotsBionlp);
+
+		// the word sentence appears in all of the sentences
+		Set<String> keywords = new HashSet<String>(
+				Arrays.asList("loss of function", "loss-of-function", "gain of function", "gain-of-function", "loss",
+						"loses", "lose", "lost", "losing", "gain", "gains", "gained", "gaining"));
+		Map<List<String>, String> suffixToPlaceholderMap = new HashMap<List<String>, String>();
+		suffixToPlaceholderMap.put(Arrays.asList("PR"), "@GENE$");
+		suffixToPlaceholderMap.put(Arrays.asList("MONDO", "HP"), "@DISEASE$");
+
+		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
+				.getDocTypeToContentMap(documentId, map);
+
+		Set<ExtractedSentence> extractedSentences = SentenceExtractionFn.extractSentences(documentId, documentText,
+				DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED, docTypeToContentMap, keywords,
+				suffixToPlaceholderMap, DocumentType.CONCEPT_ALL, new HashMap<String, Set<String>>(),
+				new HashSet<String>());
+
+//		ExtractedSentence esXfirst = new ExtractedSentence(documentId, X_000001, "ConceptX1",
+//				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, Y_000001, "conceptY1",
+//				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, "sentence", sentence2, documentText,
+//				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
+//		ExtractedSentence esYfirst = new ExtractedSentence(documentId, Y_000001, "conceptY1",
+//				CollectionsUtil.createList(y1Sentence2Span), PLACEHOLDER_Y, X_000001, "ConceptX1",
+//				CollectionsUtil.createList(x1Sentence2Span), PLACEHOLDER_X, "sentence", sentence2, documentText,
+//				DOCUMENT_ZONE, DOCUMENT_PUBLICATION_TYPES, DOCUMENT_YEAR_PUBLISHED);
+
+		
+		for (ExtractedSentence sent : extractedSentences) {
+			System.out.println(sent.getSentenceWithPlaceholders());
+		}
+		
+		assertEquals("there should be two extracted sentences", 2, extractedSentences.size());
+//		// b/c order is not guaranteed, we check for either case
+//		assertTrue(extractedSentences.contains(esXfirst) || extractedSentences.contains(esYfirst));
 	}
 
 }
