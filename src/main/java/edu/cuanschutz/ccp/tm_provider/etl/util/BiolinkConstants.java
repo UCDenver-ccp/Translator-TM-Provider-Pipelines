@@ -27,7 +27,7 @@ public class BiolinkConstants {
 		BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE(BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
 				CHEMICAL_PLACEHOLDER, DISEASE_PLACEHOLDER,
 				new SPO[] { new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_TREATS, DISEASE_PLACEHOLDER),
-						new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
+//						new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_CHEMICAL_TO_GENE(BL_CHEMICAL_TO_GENE_ASSOCIATION, CHEMICAL_PLACEHOLDER, GENE_PLACEHOLDER, new SPO[] {
@@ -55,9 +55,9 @@ public class BiolinkConstants {
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 		
 		
-		BL_GENE_TO_DISEASE_LOSS_GAIN_OF_FUNCTION(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
-				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_LOSS_OF_FUNTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
-						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_GAIN_OF_FUNTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
+		BL_GENE_LOSS_GAIN_OF_FUNCTION_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
+				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
+						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_GENE_TO_EXPRESSION_SITE(BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION, GENE_PLACEHOLDER, LOCATION_PLACEHOLDER,
@@ -111,13 +111,13 @@ public class BiolinkConstants {
 		 * This is a placeholder for the column that is typically labeled "false" in the
 		 * BERT output to signify that no relation was predicted.
 		 */
-		NO_RELATION_PRESENT(null, null),
+		NO_RELATION_PRESENT(null, "false"),
 		BL_ENTITY_POSITIVELY_REGULATES_ENTITY("biolink:entity_positively_regulates_entity", "pos-reg"),
 		BL_ENTITY_NEGATIVELY_REGULATES_ENTITY("biolink:entity_negatively_regulates_entity", "neg-reg"),
 		BL_TREATS("biolink:treats", "treats"), BL_EXPRESSED_IN("biolink:expressed_in", "expressed_in"),
 		BL_CONTRIBUTES_TO("biolink:contributes_to", "contributes_to"),
-		BL_LOSS_OF_FUNTION_CONTRIBUTES_TO("biolink:loss_of_function_contributes_to", "contributes_to"),
-		BL_GAIN_OF_FUNTION_CONTRIBUTES_TO("biolink:gain_of_function_contributes_to", "contributes_to"),
+		BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO("biolink:loss_of_function_contributes_to", "contributes_to_via_loss_of_function"),
+		BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO("biolink:gain_of_function_contributes_to", "contributes_to_via_gain_of_function"),
 		
 		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype");
 
