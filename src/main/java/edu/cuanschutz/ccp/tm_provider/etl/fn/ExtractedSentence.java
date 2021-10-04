@@ -91,7 +91,7 @@ public class ExtractedSentence extends DoFn {
 	}
 
 	public String getSentenceIdentifier() {
-		return DigestUtils.sha256Hex(documentId + entityId1 + entitySpan1 + entityId2 + entitySpan2 + sentenceText);
+		return DigestUtils.sha256Hex(documentId + documentZone + entityId1 + entitySpan1 + entityId2 + entitySpan2 + sentenceText);
 	}
 
 	public String getSentenceWithPlaceholders() {
@@ -212,6 +212,7 @@ public class ExtractedSentence extends DoFn {
 		int documentYearPublished = Integer.parseInt(cols[index++]);
 		String sentenceContext = cols[index++];
 
+		
 		int entity1Start = entitySpan1.get(0).getSpanStart();
 		int entity2Start = entitySpan2.get(0).getSpanStart();
 
