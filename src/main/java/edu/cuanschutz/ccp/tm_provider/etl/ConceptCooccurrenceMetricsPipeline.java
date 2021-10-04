@@ -1,8 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +14,8 @@ import java.util.stream.StreamSupport;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.jdbc.JdbcIO;
 import org.apache.beam.sdk.io.jdbc.JdbcIO.DataSourceConfiguration;
@@ -24,12 +28,15 @@ import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Sum;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+
+import com.spotify.scio.transforms.RateLimiterDoFn;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.ConceptPair;
@@ -49,12 +56,19 @@ public class ConceptCooccurrenceMetricsPipeline {
 
 	private static final Logger LOGGER = Logger.getLogger(ConceptCooccurrenceMetricsPipeline.class.getName());
 
+	protected static final int PUBLICATION_STORAGE_LIMIT = 25;
+
 	@SuppressWarnings("serial")
-	public static TupleTag<CooccurrencePublication> PAIR_PUBLICATIONS_TAG = new TupleTag<CooccurrencePublication>() {
+	public static TupleTag<KV<String, CooccurrencePublication>> PAIR_PUBLICATIONS_TAG = new TupleTag<KV<String, CooccurrencePublication>>() {
 	};
+
 	@SuppressWarnings("serial")
-	public static TupleTag<CooccurrenceScores> SCORES_TAG = new TupleTag<CooccurrenceScores>() {
+	public static TupleTag<KV<String, String>> PAIR_KEY_TO_DOC_ID_TAG = new TupleTag<KV<String, String>>() {
 	};
+
+//	@SuppressWarnings("serial")
+//	public static TupleTag<CooccurrenceScores> SCORES_TAG = new TupleTag<CooccurrenceScores>() {
+//	};
 
 	public interface Options extends DataflowPipelineOptions {
 
@@ -67,6 +81,11 @@ public class ConceptCooccurrenceMetricsPipeline {
 		String getCountFileBucket();
 
 		void setCountFileBucket(String bucketPath);
+
+		@Description("if true, concept ancestors are added to the cooccurrence computation when they appear. Note that this increases the computational intensiveness of computing coocccurrence metrics immensely.")
+		boolean getAddAncestors();
+
+		void setAddAncestors(boolean value);
 
 		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
 		String getAncestorMapFilePath();
@@ -107,6 +126,11 @@ public class ConceptCooccurrenceMetricsPipeline {
 		String getCloudSqlRegion();
 
 		void setCloudSqlRegion(String value);
+
+		@Description("A pipe-delimited list of concept prefixes to include")
+		String getConceptPrefixesToInclude();
+
+		void setConceptPrefixesToInclude(String value);
 
 	}
 
@@ -158,8 +182,8 @@ public class ConceptCooccurrenceMetricsPipeline {
 							ConceptCooccurrenceCountsFn.OUTPUT_FILE_SET_DELIMITER, Compression.UNCOMPRESSED);
 
 			// then supplement each concept id set with all ancestor ids
-			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection = addAncestorConceptIds(p,
-					level, textIdToConceptIdCollection, ancestorMapView);
+			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection = addAncestorConceptIds(p,
+					level, textIdToConceptIdCollection, options.getAddAncestors(), ancestorMapView);
 
 			// create a mapping from each concept ID to the number of documents in which it
 			// was observed, then convert it into a View
@@ -175,66 +199,129 @@ public class ConceptCooccurrenceMetricsPipeline {
 			final PCollectionView<Long> totalDocumentCount = countTotalDocumentsView(p, level,
 					textIdToConceptIdWithAncestorsCollection);
 
+			final Set<String> conceptPrefixesToInclude = new HashSet<String>(
+					Arrays.asList(options.getConceptPrefixesToInclude().split("\\|")));
+
 			// create a mapping from concept pairs (an identifier representing the pair) to
 			// the document IDs in which the pair was observed
-			PCollection<KV<String, Set<String>>> pairToDocIds = computeConceptPairs(p, level,
-					textIdToConceptIdWithAncestorsCollection);
+			PCollectionTuple pairsAndPubs = computeConceptPairs(p, level, textIdToConceptIdWithAncestorsCollection,
+					ancestorMapView, conceptPrefixesToInclude);
+
+			PCollection<KV<String, CooccurrencePublication>> pairKeyToPublications = pairsAndPubs
+					.get(PAIR_PUBLICATIONS_TAG);
+			PCollection<KV<String, String>> conceptPairIdToTextId = pairsAndPubs.get(PAIR_KEY_TO_DOC_ID_TAG);
+
+			PCollection<CooccurrencePublication> publications = limitPublicationsByPairId(level, pairKeyToPublications);
+
+			PCollection<KV<String, Set<String>>> pairToDocIds = groupByPairId(level, conceptPairIdToTextId);
 
 			/* compute the scores for all concept cooccurrence metrics */
-			PCollectionTuple scoresAndPubs = getConceptIdPairToCooccurrenceMetrics(level, singletonCountMap,
+			PCollection<CooccurrenceScores> scores = getConceptIdPairToCooccurrenceMetrics(level, singletonCountMap,
 					totalConceptCount, totalDocumentCount, pairToDocIds);
-
-			PCollection<CooccurrenceScores> scores = scoresAndPubs.get(SCORES_TAG);
-			PCollection<CooccurrencePublication> publications = scoresAndPubs.get(PAIR_PUBLICATIONS_TAG);
 
 			/* compute the inverse document frequency for all concepts */
 			PCollection<KV<String, Double>> conceptIdToIdf = getConceptIdf(totalDocumentCount, conceptIdToCounts,
 					level);
 
+//			///////////////////////
+//
+//			PCollection<String> idf = conceptIdToIdf.apply(ParDo.of(new DoFn<KV<String, Double>, String>() {
+//				private static final long serialVersionUID = 1L;
+//
+//				@ProcessElement
+//				public void processElement(ProcessContext context) {
+//					KV<String, Double> element = context.element();
+//					context.output(element.getKey() + "\t" + element.getValue());
+//				}
+//			}));
+//
+//			idf.apply("idf output - " + level.name().toLowerCase(), TextIO.write()
+//					.to("gs://translator-text-workflow-dev_work/output/test-metrics/idf").withSuffix(".tsv"));
+//
+//			PCollection<String> scoreStr = scores.apply(ParDo.of(new DoFn<CooccurrenceScores, String>() {
+//				private static final long serialVersionUID = 1L;
+//
+//				@ProcessElement
+//				public void processElement(ProcessContext context) {
+//					CooccurrenceScores scores = context.element();
+//
+//					String outStr = CollectionsUtil.createDelimitedString(
+//							Arrays.asList(scores.getPair().toReproducibleKey(), scores.getNgd(), scores.getPmi(),
+//									scores.getNpmi(), scores.getNpmim(), scores.getMd(), scores.getLfmd(),
+//									scores.getConceptCount1(), scores.getConceptCount2(), scores.getPairCount()),
+//							"\t");
+//					context.output(outStr);
+//				}
+//			}));
+//			
+//			scoreStr.apply("scores output - " + level.name().toLowerCase(), TextIO.write()
+//					.to("gs://translator-text-workflow-dev_work/output/test-metrics/scores").withSuffix(".tsv"));
+//
+//			///////////////////////
+
 			/* ---- INSERT INTO DATABASE BELOW ---- */
 
+//			final double recordsPerSecond = 3.0/200.0; 
+			final double recordsPerSecond = 14.5;
+
 			/* Insert into concept_idf table */
-			// @formatter:off
-			conceptIdToIdf.apply("insert concept_idf - " + level.name().toLowerCase(), JdbcIO.<KV<String, Double>>write().withDataSourceConfiguration(dbConfig)
-					.withStatement("INSERT INTO concept_idf (concept_curie,level,idf) \n"
+			final PCollection<Void> afterConceptIdf = conceptIdToIdf
+					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
+					.apply("insert concept_idf - " + level.name().toLowerCase(),
+							JdbcIO.<KV<String, Double>>write().withDataSourceConfiguration(dbConfig)
+									.withStatement("INSERT INTO concept_idf (concept_curie,level,idf) \n"
+									// @formatter:off
 							+ "values(?,?,?) ON DUPLICATE KEY UPDATE\n" 
 							+ "    concept_curie = VALUES(concept_curie),\n"
 							+ "    level = VALUES(level),\n"
 							+ "    idf = VALUES(idf)")
-					.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<KV<String, Double>>() {
-						private static final long serialVersionUID = 1L;
-	
-						public void setParameters(KV<String, Double> conceptIdToIdf, PreparedStatement query) throws SQLException {
-							query.setString(1, conceptIdToIdf.getKey());
-							query.setString(2, level.name().toLowerCase());
-							query.setDouble(3, conceptIdToIdf.getValue());
-						}
-					}));
-			// @formatter:on
+							// @formatter:on
+									.withPreparedStatementSetter(
+											new JdbcIO.PreparedStatementSetter<KV<String, Double>>() {
+												private static final long serialVersionUID = 1L;
+
+												public void setParameters(KV<String, Double> conceptIdToIdf,
+														PreparedStatement query) throws SQLException {
+													query.setString(1, conceptIdToIdf.getKey());
+													query.setString(2, level.name().toLowerCase());
+													query.setDouble(3, conceptIdToIdf.getValue());
+												}
+											})
+									.withResults());
 
 			/* Insert into cooccurrence table */
-			// @formatter:off
-			scores.apply("insert cooccurrence - " + level.name().toLowerCase(), JdbcIO.<CooccurrenceScores>write().withDataSourceConfiguration(dbConfig)
-					.withStatement("INSERT INTO cooccurrence (cooccurrence_id,entity1_curie,entity2_curie) \n"
+			PCollection<Void> afterCooccurrenceLoad = scores
+					.apply("waiton concept_idf - " + level.name().toLowerCase(), Wait.on(afterConceptIdf))
+					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
+					.apply("insert cooccurrence - " + level.name().toLowerCase(), JdbcIO.<CooccurrenceScores>write()
+							.withDataSourceConfiguration(dbConfig)
+							.withStatement("INSERT INTO cooccurrence (cooccurrence_id,entity1_curie,entity2_curie) \n"
+							// @formatter:off
 							+ "values(?,?,?) ON DUPLICATE KEY UPDATE\n" 
 							+ "    cooccurrence_id = VALUES(cooccurrence_id),\n"
 							+ "    entity1_curie = VALUES(entity1_curie),\n" 
 							+ "    entity2_curie = VALUES(entity2_curie)")
-					.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrenceScores>() {
-						private static final long serialVersionUID = 1L;
-	
-						public void setParameters(CooccurrenceScores scores, PreparedStatement query) throws SQLException {
-							query.setString(1, scores.getCooccurrenceId());
-							query.setString(2, scores.getPair().getConceptId1());
-							query.setString(3, scores.getPair().getConceptId2());
-						}
-					}));
-			// @formatter:on
+							// @formatter:on
+							.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrenceScores>() {
+								private static final long serialVersionUID = 1L;
+
+								public void setParameters(CooccurrenceScores scores, PreparedStatement query)
+										throws SQLException {
+									query.setString(1, scores.getCooccurrenceId());
+									query.setString(2, scores.getPair().getConceptId1());
+									query.setString(3, scores.getPair().getConceptId2());
+								}
+							}).withResults());
 
 			/* Insert into cooccurrence_scores table */
-			// @formatter:off
-			scores.apply("insert cooccurrence_scores - " + level.name().toLowerCase(), JdbcIO.<CooccurrenceScores>write().withDataSourceConfiguration(dbConfig)
-					.withStatement("INSERT INTO cooccurrence_scores (cooccurrence_id,level,concept1_count,concept2_count,pair_count,ngd,pmi,pmi_norm,pmi_norm_max,mutual_dependence,lfmd) \n"
+			PCollection<Void> afterCooccurrenceScoresLoad = scores
+					.apply("waiton insert cooccurrence - " + level.name().toLowerCase(), Wait.on(afterCooccurrenceLoad))
+					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
+					.apply("insert cooccurrence_scores - " + level.name().toLowerCase(), JdbcIO
+							.<CooccurrenceScores>write().withDataSourceConfiguration(dbConfig).withBatchSize(5000)
+							.withStatement(
+									"INSERT INTO cooccurrence_scores (cooccurrence_id,level,concept1_count,concept2_count,pair_count,ngd,pmi,pmi_norm,pmi_norm_max,mutual_dependence,lfmd) \n"
+									// @formatter:off
 							+ "values(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE\n" 
 							+ "    cooccurrence_id = VALUES(cooccurrence_id),\n"
 							+ "    level = VALUES(level),\n"
@@ -247,99 +334,253 @@ public class ConceptCooccurrenceMetricsPipeline {
 							+ "    pmi_norm_max = VALUES(pmi_norm_max),\n"
 							+ "    mutual_dependence = VALUES(mutual_dependence),\n"
 							+ "    lfmd = VALUES(lfmd)")
-					.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrenceScores>() {
-						private static final long serialVersionUID = 1L;
-	
-						public void setParameters(CooccurrenceScores scores, PreparedStatement query) throws SQLException {
-							query.setString(1, scores.getCooccurrenceId());
-							query.setString(2, level.name().toLowerCase());
-							query.setLong(3, scores.getConceptCount1());
-							query.setLong(4, scores.getConceptCount2());
-							query.setLong(5, scores.getPairCount());
-							query.setDouble(6, scores.getNgd());
-							query.setDouble(7, scores.getPmi());
-							query.setDouble(8, scores.getNpmi());
-							query.setDouble(9, scores.getNpmim());
-							query.setDouble(10, scores.getMd());
-							query.setDouble(11, scores.getLfmd());
-						}
-					}));
-			// @formatter:on
+							// @formatter:on
+							.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrenceScores>() {
+								private static final long serialVersionUID = 1L;
+
+								public void setParameters(CooccurrenceScores scores, PreparedStatement query)
+										throws SQLException {
+									query.setString(1, scores.getCooccurrenceId());
+									query.setString(2, level.name().toLowerCase());
+									query.setLong(3, scores.getConceptCount1());
+									query.setLong(4, scores.getConceptCount2());
+									query.setLong(5, scores.getPairCount());
+									query.setDouble(6, scores.getNgd());
+									query.setDouble(7, scores.getPmi());
+									query.setDouble(8, scores.getNpmi());
+									query.setDouble(9, scores.getNpmim());
+									query.setDouble(10, scores.getMd());
+									query.setDouble(11, scores.getLfmd());
+								}
+							}).withResults());
 
 			/* Insert into cooccurrence_publication table */
-			// @formatter:off
-			publications.apply("insert cooccurrence_publication - " + level.name().toLowerCase(), JdbcIO.<CooccurrencePublication>write()
-					.withDataSourceConfiguration(dbConfig)
-					.withStatement("INSERT INTO cooccurrence_publication (cooccurrence_id,level,document_id) \n"
+			publications
+					.apply("waiton insert cooccurrence scores - " + level.name().toLowerCase(),
+							Wait.on(afterCooccurrenceScoresLoad))
+					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
+					.apply("insert cooccurrence_publication - " + level.name().toLowerCase(), JdbcIO
+							.<CooccurrencePublication>write().withDataSourceConfiguration(dbConfig).withBatchSize(5000)
+							.withStatement("INSERT INTO cooccurrence_publication (cooccurrence_id,level,document_id) \n"
+							// @formatter:off
 							+ "values(?,?,?) ON DUPLICATE KEY UPDATE\n" 
 							+ "    cooccurrence_id = VALUES(cooccurrence_id),\n"
 							+ "    level = VALUES(level),\n" 
 							+ "    document_id = VALUES(document_id)")
-					.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrencePublication>() {
-						private static final long serialVersionUID = 1L;
-	
-						public void setParameters(CooccurrencePublication pub, PreparedStatement query)
-								throws SQLException {
-							query.setString(1, pub.getCooccurrenceId());
-							query.setString(2, level.name().toLowerCase());
-							query.setString(3, pub.getDocumentId());
-						}
-					}));
-			// @formatter:on
+							// @formatter:on
+							.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<CooccurrencePublication>() {
+								private static final long serialVersionUID = 1L;
+
+								public void setParameters(CooccurrencePublication pub, PreparedStatement query)
+										throws SQLException {
+									query.setString(1, pub.getCooccurrenceId());
+									query.setString(2, level.name().toLowerCase());
+									query.setString(3, pub.getDocumentId());
+								}
+							}));
 		}
 
 		p.run().waitUntilFinish();
 	}
 
-	protected static PCollection<KV<String, Set<String>>> computeConceptPairs(Pipeline p, CooccurLevel level,
-			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+	/**
+	 * limits the number of publication IDs that get stored for each cooccurrence
+	 * pair to PUBLICATION_STORAGE_LIMIT
+	 * 
+	 * @param level
+	 * @param pairIdToPublication
+	 * @return
+	 */
+	protected static PCollection<CooccurrencePublication> limitPublicationsByPairId(final CooccurLevel level,
+			PCollection<KV<String, CooccurrencePublication>> pairIdToPublication) {
+		PCollection<KV<String, Iterable<CooccurrencePublication>>> col = pairIdToPublication.apply(
+				"group-pubs-by-pair - " + level.name().toLowerCase(),
+				GroupByKey.<String, CooccurrencePublication>create());
 
-		PCollection<KV<String, String>> conceptPairIdToTextId = textIdToConceptIdWithAncestorsCollection.apply(
-				"pair concepts - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, String>>() {
+		return col.apply("limit-stored-pubs - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Iterable<CooccurrencePublication>>, CooccurrencePublication>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext context) {
-						KV<String, Set<String>> documentIdToConceptIds = context.element();
+						KV<String, Iterable<CooccurrencePublication>> pairIdToPublications = context.element();
+						Iterable<CooccurrencePublication> pubs = pairIdToPublications.getValue();
+
+						Set<CooccurrencePublication> pubSet = new HashSet<CooccurrencePublication>();
+						for (CooccurrencePublication pub : pubs) {
+							pubSet.add(pub);
+							if (pubSet.size() > PUBLICATION_STORAGE_LIMIT) {
+								break;
+							}
+						}
+
+						for (CooccurrencePublication pub : pubSet) {
+							context.output(pub);
+						}
+					}
+
+				}));
+	}
+
+	protected static PCollection<KV<String, Set<String>>> groupByPairId(final CooccurLevel level,
+			PCollection<KV<String, String>> conceptPairIdToTextId) {
+		PCollection<KV<String, Iterable<String>>> col = conceptPairIdToTextId
+				.apply("group-by-pair - " + level.name().toLowerCase(), GroupByKey.<String, String>create());
+
+		PCollection<KV<String, Set<String>>> pairToDocIds = col.apply(
+				"combine-docid-by-pair - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, Set<String>>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext context) {
+						KV<String, Iterable<String>> pairIdToDocIds = context.element();
+						String pairId = pairIdToDocIds.getKey();
+						Iterable<String> docIds = pairIdToDocIds.getValue();
+
+						Set<String> docIdSet = new HashSet<String>();
+						for (String docId : docIds) {
+							docIdSet.add(docId);
+						}
+
+						context.output(KV.of(pairId, docIdSet));
+					}
+
+				}));
+		return pairToDocIds;
+	}
+
+	protected static PCollectionTuple computeConceptPairs(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection,
+			PCollectionView<Map<String, Set<String>>> ancestorMapView, Set<String> conceptPrefixesToInclude) {
+
+//		PCollection<KV<String, String>> conceptPairIdToTextId = 
+
+		return textIdToConceptIdWithAncestorsCollection.apply("pair concepts - " + level.name().toLowerCase(),
+				ParDo.of(new DoFn<KV<String, Set<ConceptId>>, KV<String, String>>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext context) {
+						KV<String, Set<ConceptId>> documentIdToConceptIds = context.element();
 						String documentId = documentIdToConceptIds.getKey();
-						Set<String> conceptIds = documentIdToConceptIds.getValue();
+						Set<ConceptId> conceptIds = documentIdToConceptIds.getValue();
 
 						Set<ConceptPair> pairs = new HashSet<ConceptPair>();
-						for (String conceptId1 : conceptIds) {
-							for (String conceptId2 : conceptIds) {
-								if (!conceptId1.equals(conceptId2)) {
-									pairs.add(new ConceptPair(conceptId1, conceptId2));
+						if (conceptIds.size() > 1) {
+
+							Map<String, Set<String>> ancestorMap = context.sideInput(ancestorMapView);
+
+							// exclude if the concept identifiers are the same or if one of the concepts is
+							// an ancestor of the other; if there is an ancestor relationship between a pair
+							// of concepts then that pair will always occur together so there's no need to
+							// keep track. We will also exclude certain concepts based on prefix for now
+							// simply to limit the number of cooccurrences.
+							for (ConceptId conceptId1 : conceptIds) {
+								for (ConceptId conceptId2 : conceptIds) {
+									if (!(excludeConceptIdByPrefix(conceptId1, conceptPrefixesToInclude)
+											|| excludeConceptIdByPrefix(conceptId2, conceptPrefixesToInclude))) {
+										if (!conceptId1.equals(conceptId2)
+												&& !areAncestors(conceptId1, conceptId2, ancestorMap)) {
+											ConceptPair pair = new ConceptPair(conceptId1.getId(), conceptId2.getId());
+
+											// only link the pair of concepts that originally appeared in the document
+											// with
+											// the document ID
+											if (conceptId1.isOriginalConcept() && conceptId2.isOriginalConcept()
+													&& !pairs.contains(pair)) {
+
+												String docIdToStore = getDocumentIdToStore(documentId);
+												// ensure that the document ID will fit in the database column
+												if (docIdToStore.length() < 16) {
+													CooccurrencePublication pub = new CooccurrencePublication(pair,
+															docIdToStore);
+													context.output(PAIR_PUBLICATIONS_TAG,
+															KV.of(pair.toReproducibleKey(), pub));
+												} else {
+													LOGGER.log(Level.WARNING,
+															"Encountered document ID too long to store for pair: "
+																	+ pair.toString() + " -- " + docIdToStore);
+//													throw new IllegalStateException(
+//															"Encountered document ID too long to store for pair: "
+//																	+ pair.toString() + " -- " + docIdToStore);
+												}
+											}
+
+											pairs.add(pair);
+										}
+									}
 								}
 							}
 						}
 
 						for (ConceptPair pair : pairs) {
-							context.output(KV.of(pair.toReproducibleKey(), documentId));
+							context.output(PAIR_KEY_TO_DOC_ID_TAG, KV.of(pair.toReproducibleKey(), documentId));
 						}
 					}
-				}));
 
-		PCollection<KV<String, Iterable<String>>> col = conceptPairIdToTextId
-				.apply("group-by-pair - " + level.name().toLowerCase(), GroupByKey.<String, String>create());
+					private boolean excludeConceptIdByPrefix(ConceptId conceptId,
+							Set<String> conceptPrefixesToInclude) {
 
-		return col.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, Set<String>>>() {
-			private static final long serialVersionUID = 1L;
+						// if the prefix list is empty, then include all prefixes
+						if (conceptPrefixesToInclude == null || conceptPrefixesToInclude.isEmpty()) {
+							return false;
+						}
 
-			@ProcessElement
-			public void processElement(ProcessContext context) {
-				KV<String, Iterable<String>> pairIdToDocIds = context.element();
-				String pairId = pairIdToDocIds.getKey();
-				Iterable<String> docIds = pairIdToDocIds.getValue();
+						if (conceptPrefixesToInclude != null) {
+							for (String prefix : conceptPrefixesToInclude) {
+								if (conceptId.getId().startsWith(prefix)) {
+									return false;
+								}
+							}
+						}
+						return true;
+					}
 
-				Set<String> docIdSet = new HashSet<String>();
-				for (String docId : docIds) {
-					docIdSet.add(docId);
-				}
-				context.output(KV.of(pairId, docIdSet));
-			}
-		}));
+					/**
+					 * @param conceptId1
+					 * @param conceptId2
+					 * @param ancestorMap
+					 * @return true if one of the input concept IDs is the ancestor of the other
+					 */
+					private boolean areAncestors(ConceptId conceptId1, ConceptId conceptId2,
+							Map<String, Set<String>> ancestorMap) {
 
+						Set<String> concept1Ancestors = ancestorMap.get(conceptId1.getId());
+						if (concept1Ancestors != null && concept1Ancestors.contains(conceptId2.getId())) {
+							return true;
+						}
+
+						Set<String> concept2Ancestors = ancestorMap.get(conceptId2.getId());
+						if (concept2Ancestors != null && concept2Ancestors.contains(conceptId1.getId())) {
+							return true;
+						}
+
+						return false;
+
+					}
+
+				}).withOutputTags(PAIR_KEY_TO_DOC_ID_TAG, TupleTagList.of(PAIR_PUBLICATIONS_TAG))
+						.withSideInputs(ancestorMapView));
+
+	}
+
+	/**
+	 * The document ID may be something like PMID:12345678, but it may also be
+	 * something like
+	 * PMID:208421_title_3593a05b85c4d250540e29ee7c16addf32ab026eb2461005f40234d4fa4623c9.
+	 * We only want to store the base document ID as the title and sentence IDs, for
+	 * example, are only used internally in this code base and have no external
+	 * meaning.
+	 * 
+	 * @param documentId
+	 * @param level
+	 * @return
+	 */
+	protected static String getDocumentIdToStore(String documentId) {
+		// just return the first part of the document ID which should be the
+		// "base" id, e.g. PMID.
+		return documentId.split("_")[0];
 	}
 
 	/**
@@ -351,17 +592,17 @@ public class ConceptCooccurrenceMetricsPipeline {
 	 * @return
 	 */
 	protected static PCollection<Long> countTotalDocuments(Pipeline p, CooccurLevel level,
-			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection) {
 		// dedup in case some documents got processed multiple times
-		PCollection<KV<String, Iterable<Set<String>>>> nonredundant = textIdToConceptIdWithAncestorsCollection
-				.apply("group-by-key", GroupByKey.<String, Set<String>>create());
+		PCollection<KV<String, Iterable<Set<ConceptId>>>> nonredundant = textIdToConceptIdWithAncestorsCollection
+				.apply("group-by-key", GroupByKey.<String, Set<ConceptId>>create());
 		PCollection<String> documentIds = nonredundant.apply(Keys.<String>create());
 		return documentIds.apply("count total docs - " + level.name().toLowerCase(), Count.globally());
 
 	}
 
 	private static PCollectionView<Long> countTotalDocumentsView(Pipeline p, CooccurLevel level,
-			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection) {
 		return countTotalDocuments(p, level, textIdToConceptIdWithAncestorsCollection).apply(View.asSingleton());
 	}
 
@@ -392,20 +633,20 @@ public class ConceptCooccurrenceMetricsPipeline {
 	 * @return
 	 */
 	protected static PCollection<KV<String, Long>> countConceptObservations(Pipeline p, CooccurLevel level,
-			PCollection<KV<String, Set<String>>> textIdToConceptIdWithAncestorsCollection) {
+			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection) {
 
 		PCollection<KV<String, String>> conceptIdToDocumentIdMapping = textIdToConceptIdWithAncestorsCollection.apply(
 				"count concepts - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, String>>() {
+				ParDo.of(new DoFn<KV<String, Set<ConceptId>>, KV<String, String>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext context) {
-						KV<String, Set<String>> documentIdToConceptIds = context.element();
+						KV<String, Set<ConceptId>> documentIdToConceptIds = context.element();
 						String documentId = documentIdToConceptIds.getKey();
-						Set<String> conceptIds = documentIdToConceptIds.getValue();
-						for (String conceptId : conceptIds) {
-							context.output(KV.of(conceptId, documentId));
+						Set<ConceptId> conceptIds = documentIdToConceptIds.getValue();
+						for (ConceptId conceptId : conceptIds) {
+							context.output(KV.of(conceptId.getId(), documentId));
 						}
 					}
 				}));
@@ -443,12 +684,12 @@ public class ConceptCooccurrenceMetricsPipeline {
 	 * @param ancestorMapView
 	 * @return
 	 */
-	protected static PCollection<KV<String, Set<String>>> addAncestorConceptIds(Pipeline p, CooccurLevel level,
-			PCollection<KV<String, Set<String>>> textIdToConceptIdCollection,
+	protected static PCollection<KV<String, Set<ConceptId>>> addAncestorConceptIds(Pipeline p, CooccurLevel level,
+			PCollection<KV<String, Set<String>>> textIdToConceptIdCollection, boolean addAncestors,
 			PCollectionView<Map<String, Set<String>>> ancestorMapView) {
 
 		return textIdToConceptIdCollection.apply("add ancestors - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, Set<String>>>() {
+				ParDo.of(new DoFn<KV<String, Set<String>>, KV<String, Set<ConceptId>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -457,32 +698,38 @@ public class ConceptCooccurrenceMetricsPipeline {
 
 						KV<String, Set<String>> documentIdToConceptIds = context.element();
 						String documentId = documentIdToConceptIds.getKey();
-						Set<String> conceptIds = new HashSet<String>(documentIdToConceptIds.getValue());
-						Set<String> ancestorIds = new HashSet<String>();
-						for (String conceptId : conceptIds) {
-							String conceptPrefix = null;
-							if (conceptId.contains(":")) {
-								conceptPrefix = conceptId.substring(0, conceptId.indexOf(":"));
-							}
-							if (ancestorMap.containsKey(conceptId)) {
-								Set<String> ancestors = ancestorMap.get(conceptId);
-								for (String ancestorId : ancestors) {
-									// in case there are any blank id's exclude them -- this was observed at one
-									// time. Also, avoid adding ancestors that have a different prefix. This avoids,
-									// for example, adding upper-level BFO concepts that are ancestors of GO
-									// concepts as we have no real need for upper-level concepts in our application.
-									// This also limits the amount of concepts that will be used to generate concept
-									// pairs which will reduce, albeit only slightly, the computational load of
-									// computing pairs.
-									if (!ancestorId.trim().isEmpty()
-											&& (conceptPrefix == null || ancestorId.startsWith(conceptPrefix))) {
-										ancestorIds.add(ancestorId);
+						Set<ConceptId> conceptIds = new HashSet<ConceptId>();
+						for (String id : documentIdToConceptIds.getValue()) {
+							conceptIds.add(new ConceptId(id, true));
+						}
+
+						if (addAncestors) {
+							Set<ConceptId> ancestorIds = new HashSet<ConceptId>();
+							for (String conceptId : documentIdToConceptIds.getValue()) {
+								String conceptPrefix = null;
+								if (conceptId.contains(":")) {
+									conceptPrefix = conceptId.substring(0, conceptId.indexOf(":"));
+								}
+								if (ancestorMap.containsKey(conceptId)) {
+									Set<String> ancestors = ancestorMap.get(conceptId);
+									for (String ancestorId : ancestors) {
+										// in case there are any blank id's exclude them -- this was observed at one
+										// time. Also, avoid adding ancestors that have a different prefix. This avoids,
+										// for example, adding upper-level BFO concepts that are ancestors of GO
+										// concepts as we have no real need for upper-level concepts in our application.
+										// This also limits the amount of concepts that will be used to generate concept
+										// pairs which will reduce, albeit only slightly, the computational load of
+										// computing pairs.
+										if (!ancestorId.trim().isEmpty()
+												&& (conceptPrefix == null || ancestorId.startsWith(conceptPrefix))) {
+											ancestorIds.add(new ConceptId(ancestorId, false));
+										}
 									}
 								}
 							}
-						}
 
-						conceptIds.addAll(ancestorIds);
+							conceptIds.addAll(ancestorIds);
+						}
 
 						context.output(KV.of(documentId, conceptIds));
 					}
@@ -508,7 +755,10 @@ public class ConceptCooccurrenceMetricsPipeline {
 						long count = conceptIdToCount.getValue();
 						long totalDocumentCount = c.sideInput(totalDocumentCountView);
 						double idf = Math.log((double) totalDocumentCount / (double) count);
-						c.output(KV.of(conceptId, idf));
+
+						BigDecimal d = new BigDecimal(idf).setScale(8, BigDecimal.ROUND_HALF_UP);
+
+						c.output(KV.of(conceptId, d.doubleValue()));
 					}
 				}).withSideInputs(totalDocumentCountView));
 	}
@@ -528,12 +778,12 @@ public class ConceptCooccurrenceMetricsPipeline {
 //		return filePrefix + period + level.name().toLowerCase() + ".*";
 //	}
 
-	private static PCollectionTuple getConceptIdPairToCooccurrenceMetrics(CooccurLevel level,
+	private static PCollection<CooccurrenceScores> getConceptIdPairToCooccurrenceMetrics(CooccurLevel level,
 			final PCollectionView<Map<String, Long>> singletonCountMap,
 			final PCollectionView<Long> totalConceptCountView, PCollectionView<Long> totalDocumentCountView,
 			PCollection<KV<String, Set<String>>> pairToDocIds) {
 		return pairToDocIds.apply("metrics - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Set<String>>, CooccurrencePublication>() {
+				ParDo.of(new DoFn<KV<String, Set<String>>, CooccurrenceScores>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
@@ -554,24 +804,29 @@ public class ConceptCooccurrenceMetricsPipeline {
 						// false).count();
 
 						Iterable<String> documentIdIterable = element.getValue();
-						long pairCount = 0;
-						for (String documentId : documentIdIterable) {
-							// if the level is DOCUMENT then the documentId should simply be the id of the
-							// document, e.g. PMID:12345678, however if the level is something other than
-							// DOCUMENT, then the documentId will be a mashup of the documentId_level_hash
-							// where the hash is a unique id for part of a document, e.g. sentence, title.
-							// Since the hash ID is internal to our database, we only need to output the
-							// document id itself, so we parse the documentId to extract it.
-							String docId = documentId;
-							if (level != CooccurLevel.DOCUMENT) {
-								if (documentId.contains("_")) {
-									docId = documentId.substring(0, documentId.indexOf("_"));
-								}
-							}
-							CooccurrencePublication pub = new CooccurrencePublication(pair, docId);
-							c.output(PAIR_PUBLICATIONS_TAG, pub);
-							pairCount++;
-						}
+						long pairCount = StreamSupport.stream(documentIdIterable.spliterator(), false).count();
+//						for (String documentId : documentIdIterable) {
+//							// if the level is DOCUMENT then the documentId should simply be the id of the
+//							// document, e.g. PMID:12345678, however if the level is something other than
+//							// DOCUMENT, then the documentId will be a mashup of the documentId_level_hash
+//							// where the hash is a unique id for part of a document, e.g. sentence, title.
+//							// Since the hash ID is internal to our database, we only need to output the
+//							// document id itself, so we parse the documentId to extract it.
+//
+//							// Also, we are only going to save a sample of the publications. There are way
+//							// too many otherwise. So we'll save up to 2 for each pair.
+//							if (pairCount < 2) {
+//								String docId = documentId;
+//								if (level != CooccurLevel.DOCUMENT) {
+//									if (documentId.contains("_")) {
+//										docId = documentId.substring(0, documentId.indexOf("_"));
+//									}
+//								}
+//								CooccurrencePublication pub = new CooccurrencePublication(pair, docId);
+//								c.output(PAIR_PUBLICATIONS_TAG, pub);
+//							}
+//							pairCount++;
+//						}
 
 						if (xConceptCount == null) {
 							LOGGER.log(Level.WARNING,
@@ -596,14 +851,23 @@ public class ConceptCooccurrenceMetricsPipeline {
 							double lfmd = ConceptCooccurrenceMetrics.logFrequencyBiasedMutualDependence(
 									totalDocumentCount, xConceptCount, yConceptCount, pairCount);
 
+							// limit number of decimal places so they can be stored in the database
+
+							BigDecimal ngdD = new BigDecimal(ngd).setScale(8, BigDecimal.ROUND_HALF_UP);
+							BigDecimal pmiD = new BigDecimal(pmi).setScale(8, BigDecimal.ROUND_HALF_UP);
+							BigDecimal npmiD = new BigDecimal(npmi).setScale(8, BigDecimal.ROUND_HALF_UP);
+							BigDecimal npmimD = new BigDecimal(npmim).setScale(8, BigDecimal.ROUND_HALF_UP);
+							BigDecimal mdD = new BigDecimal(md).setScale(8, BigDecimal.ROUND_HALF_UP);
+							BigDecimal lfmdD = new BigDecimal(lfmd).setScale(8, BigDecimal.ROUND_HALF_UP);
+
 							CooccurrenceScores scores = new CooccurrenceScores(pair, xConceptCount, yConceptCount,
-									pairCount, ngd, pmi, npmi, npmim, md, lfmd);
-							c.output(SCORES_TAG, scores);
+									pairCount, ngdD.doubleValue(), pmiD.doubleValue(), npmiD.doubleValue(),
+									npmimD.doubleValue(), mdD.doubleValue(), lfmdD.doubleValue());
+							c.output(scores);
 						}
 					}
 
-				}).withOutputTags(PAIR_PUBLICATIONS_TAG, TupleTagList.of(SCORES_TAG)).withSideInputs(singletonCountMap,
-						totalConceptCountView, totalDocumentCountView));
+				}).withSideInputs(singletonCountMap, totalConceptCountView, totalDocumentCountView));
 
 	}
 
@@ -628,7 +892,7 @@ public class ConceptCooccurrenceMetricsPipeline {
 	}
 
 	@Data
-	private static class CooccurrencePublication implements Serializable {
+	protected static class CooccurrencePublication implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private final ConceptPair pair;
@@ -637,6 +901,19 @@ public class ConceptCooccurrenceMetricsPipeline {
 		public String getCooccurrenceId() {
 			return pair.getPairId();
 		}
+	}
+
+	@DefaultCoder(SerializableCoder.class)
+	@Data
+	protected static class ConceptId implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private final String id;
+		/**
+		 * set to true if this concept was explicitly observed in the text. If the
+		 * concept represents an ancestor, set it to false;
+		 */
+		private final boolean isOriginalConcept;
 	}
 
 }
