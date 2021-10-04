@@ -236,7 +236,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		Set<String> hashesOutputInThisBatch = new HashSet<String>();
 		// this count is used to track what line a sentence ends up in the Google Sheet
-		int sheetRow = 1;
+		int extractedSentenceCount = 1;
 		int sentenceCount = 0;
 		String previousSentenceText = null;
 		for (File inputSentenceFile : inputSentenceFiles) {
@@ -325,7 +325,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
 		System.out.println("Sentence count: " + sentenceCount);
-		System.out.println("Extracted sentence count: " + sheetRow);
+		System.out.println("Extracted sentence count: " + extractedSentenceCount);
 		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
 		/*
@@ -347,7 +347,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		batchUpdate.execute();
 
 		// write checkboxes on spreadsheet
-		addCheckBoxesToSheet(sheetsService, sheetId, sheetRow, biolinkAssociation.getSpoTriples().length);
+		addCheckBoxesToSheet(sheetsService, sheetId, extractedSentenceCount, biolinkAssociation.getSpoTriples().length);
 
 	}
 
