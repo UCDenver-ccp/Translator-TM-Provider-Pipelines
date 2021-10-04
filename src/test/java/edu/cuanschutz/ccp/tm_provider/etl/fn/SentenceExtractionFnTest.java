@@ -81,7 +81,7 @@ public class SentenceExtractionFnTest {
 
 	private static TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(documentId);
 
-	private TextAnnotation x1Sentence1Annot = createX1Sentence1Annot();
+//	private TextAnnotation x1Sentence1Annot = createX1Sentence1Annot();
 	private static Span x1Sentence1Span = new Span(18, 27);
 
 	private static TextAnnotation createX1Sentence1Annot() {
@@ -89,7 +89,7 @@ public class SentenceExtractionFnTest {
 				X_000001);
 	}
 
-	private TextAnnotation x2Sentence1Annot = createX2Sentence1Annot();
+//	private TextAnnotation x2Sentence1Annot = createX2Sentence1Annot();
 	private static Span x2Sentence1Span = new Span(32, 41);
 
 	private static TextAnnotation createX2Sentence1Annot() {
@@ -97,20 +97,20 @@ public class SentenceExtractionFnTest {
 				X_000002);
 	}
 
-	private static TextAnnotation x1Sentence2Annot = createX1Sentence2Annot();
+//	private static TextAnnotation x1Sentence2Annot = createX1Sentence2Annot();
 	private static Span x1Sentence2Span = new Span(43 - 43, 52 - 43);
 
 	private static TextAnnotation createX1Sentence2Annot() {
 		return factory.createAnnotation(43, 52, "ConceptX1", X_000001);
 	}
 
-	private static TextAnnotation x1Sentence2SynonymAnnot = createX1Sentence2SynonymAnnot();
+//	private static TextAnnotation x1Sentence2SynonymAnnot = createX1Sentence2SynonymAnnot();
 
 	private static TextAnnotation createX1Sentence2SynonymAnnot() {
 		return factory.createAnnotation(43, 52, "ConceptX1", X_000001_SYN);
 	}
 
-	private static TextAnnotation x1Sentence4Annot = createX1Sentence4Annot();
+//	private static TextAnnotation x1Sentence4Annot = createX1Sentence4Annot();
 
 	private static TextAnnotation createX1Sentence4Annot() {
 		return factory.createAnnotation(135, 144, "ConceptX1", X_000001);
@@ -118,7 +118,7 @@ public class SentenceExtractionFnTest {
 
 //	private static Span x1Sentence4Span = new Span(135 - 135, 144 - 135);
 	private static Span y1Sentence2Span = new Span(84 - 43, 93 - 43);
-	private static TextAnnotation y1Sentence2Annot = createY1Sentence2Annot();
+//	private static TextAnnotation y1Sentence2Annot = createY1Sentence2Annot();
 
 	private static TextAnnotation createY1Sentence2Annot() {
 		return factory.createAnnotation(84, 93, "conceptY1", Y_000001);
@@ -128,25 +128,25 @@ public class SentenceExtractionFnTest {
 	// ontologies, e.g. an extension class
 	private static TextAnnotation x3ReallyY1Sentence2Annot = factory.createAnnotation(84, 93, "conceptY1", Y_000001);
 
-	private TextAnnotation sentence1Annot = createSentence1Annot();
+//	private TextAnnotation sentence1Annot = createSentence1Annot();
 
 	private TextAnnotation createSentence1Annot() {
 		return factory.createAnnotation(0, 42, sentence1, SENTENCE);
 	}
 
-	private TextAnnotation sentence2Annot = createSentence2Annot();
+//	private TextAnnotation sentence2Annot = createSentence2Annot();
 
 	private TextAnnotation createSentence2Annot() {
 		return factory.createAnnotation(43, 94, sentence2, SENTENCE);
 	}
 
-	private TextAnnotation sentence3Annot = createSentence3Annot();
+//	private TextAnnotation sentence3Annot = createSentence3Annot();
 
 	private TextAnnotation createSentence3Annot() {
 		return factory.createAnnotation(95, 134, sentence3, SENTENCE);
 	}
 
-	private TextAnnotation sentence4Annot = createSentence4Annot();
+//	private TextAnnotation sentence4Annot = createSentence4Annot();
 
 	private TextAnnotation createSentence4Annot() {
 		return factory.createAnnotation(135, 165, sentence4, SENTENCE);
@@ -188,17 +188,17 @@ public class SentenceExtractionFnTest {
 
 		Map<TextAnnotation, Map<String, Set<TextAnnotation>>> expectedSentToConceptMap = new HashMap<TextAnnotation, Map<String, Set<TextAnnotation>>>();
 		Map<String, Set<TextAnnotation>> map1 = new HashMap<String, Set<TextAnnotation>>();
-		map1.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(x1Sentence1Annot, x2Sentence1Annot));
-		expectedSentToConceptMap.put(sentence1Annot, map1);
+		map1.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(createX1Sentence1Annot(), createX2Sentence1Annot()));
+		expectedSentToConceptMap.put(createSentence1Annot(), map1);
 
 		Map<String, Set<TextAnnotation>> map2 = new HashMap<String, Set<TextAnnotation>>();
-		map2.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(x1Sentence2Annot));
-		map2.put(SentenceExtractionFn.Y_CONCEPTS, CollectionsUtil.createSet(y1Sentence2Annot));
-		expectedSentToConceptMap.put(sentence2Annot, map2);
+		map2.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(createX1Sentence2Annot()));
+		map2.put(SentenceExtractionFn.Y_CONCEPTS, CollectionsUtil.createSet(createY1Sentence2Annot()));
+		expectedSentToConceptMap.put(createSentence2Annot(), map2);
 
 		Map<String, Set<TextAnnotation>> map4 = new HashMap<String, Set<TextAnnotation>>();
-		map4.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(x1Sentence4Annot));
-		expectedSentToConceptMap.put(sentence4Annot, map4);
+		map4.put(SentenceExtractionFn.X_CONCEPTS, CollectionsUtil.createSet(createX1Sentence4Annot()));
+		expectedSentToConceptMap.put(createSentence4Annot(), map4);
 
 		assertEquals(expectedSentToConceptMap, sentToConceptMap);
 
@@ -277,7 +277,7 @@ public class SentenceExtractionFnTest {
 
 		Set<String> keywords = CollectionsUtil.createSet("sentence");
 
-		conceptXAnnots.add(x1Sentence2SynonymAnnot);
+		conceptXAnnots.add(createX1Sentence2SynonymAnnot());
 
 		Set<ExtractedSentence> extractedSentences = extractSentences(keywords, sentenceAnnotations, conceptXAnnots,
 				conceptYAnnots, sectionAnnots);
@@ -480,7 +480,7 @@ public class SentenceExtractionFnTest {
 //		crfXAnnots.add(x1Sentence2Annot);
 //
 //		List<TextAnnotation> crfYAnnots = new ArrayList<TextAnnotation>();
-//		crfYAnnots.add(y1Sentence2Annot);
+//		crfYAnnots.add(createX2Sentence1Annot());
 //
 //		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 //			TextDocument td = new TextDocument(documentId, "Pubmed", documentText);
@@ -497,9 +497,9 @@ public class SentenceExtractionFnTest {
 //		}
 
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
-		conceptAnnots.add(y1Sentence2Annot);
-		conceptAnnots.add(x2Sentence1Annot);
-		conceptAnnots.add(x1Sentence2Annot);
+		conceptAnnots.add(createY1Sentence2Annot());
+		conceptAnnots.add(createX2Sentence1Annot());
+		conceptAnnots.add(createX1Sentence2Annot());
 
 		String conceptAnnotBionlp = null;
 
@@ -607,9 +607,9 @@ public class SentenceExtractionFnTest {
 	@Test
 	public void testGetAnnotsByPrefix() {
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
-		conceptAnnots.add(y1Sentence2Annot);
-		conceptAnnots.add(x2Sentence1Annot);
-		conceptAnnots.add(x1Sentence2Annot);
+		conceptAnnots.add(createY1Sentence2Annot());
+		conceptAnnots.add(createX2Sentence1Annot());
+		conceptAnnots.add(createX1Sentence2Annot());
 
 		List<String> prefixes = new ArrayList<String>();
 		prefixes.add("X");
@@ -617,7 +617,7 @@ public class SentenceExtractionFnTest {
 		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
 		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
 
-		List<TextAnnotation> expectedAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot);
+		List<TextAnnotation> expectedAnnots = Arrays.asList(createX2Sentence1Annot(), createX1Sentence2Annot());
 
 		assertEquals(expectedAnnots, annots);
 
@@ -626,10 +626,10 @@ public class SentenceExtractionFnTest {
 	@Test
 	public void testGetAnnotsByPrefixUseAncestor() {
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
-		conceptAnnots.add(y1Sentence2Annot);
-		conceptAnnots.add(x2Sentence1Annot);
-		conceptAnnots.add(x1Sentence2Annot);
-		conceptAnnots.add(x1Sentence4Annot);
+		conceptAnnots.add(createY1Sentence2Annot());
+		conceptAnnots.add(createX2Sentence1Annot());
+		conceptAnnots.add(createX1Sentence2Annot());
+		conceptAnnots.add(createX1Sentence4Annot());
 
 		List<String> prefixes = new ArrayList<String>();
 		prefixes.add(X_000001);
@@ -638,7 +638,7 @@ public class SentenceExtractionFnTest {
 		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000001));
 		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
 
-		List<TextAnnotation> expectedAnnots = Arrays.asList(x2Sentence1Annot, x1Sentence2Annot, x1Sentence4Annot);
+		List<TextAnnotation> expectedAnnots = Arrays.asList(createX2Sentence1Annot(), createX1Sentence2Annot(), createX1Sentence4Annot());
 
 		assertEquals(expectedAnnots.size(), annots.size());
 		assertEquals(expectedAnnots, annots);
@@ -648,10 +648,10 @@ public class SentenceExtractionFnTest {
 	@Test
 	public void testGetAnnotsByPrefixUseAncestorY() {
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
-		conceptAnnots.add(y1Sentence2Annot);
-		conceptAnnots.add(x2Sentence1Annot);
-		conceptAnnots.add(x1Sentence2Annot);
-		conceptAnnots.add(x1Sentence4Annot);
+		conceptAnnots.add(createY1Sentence2Annot());
+		conceptAnnots.add(createX2Sentence1Annot());
+		conceptAnnots.add(createX1Sentence2Annot());
+		conceptAnnots.add(createX1Sentence4Annot());
 
 		List<String> prefixes = new ArrayList<String>();
 		prefixes.add("Y");
@@ -660,7 +660,7 @@ public class SentenceExtractionFnTest {
 		ancestorMap.put(X_000002, CollectionsUtil.createSet(X_000001));
 		List<TextAnnotation> annots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots, prefixes, ancestorMap);
 
-		List<TextAnnotation> expectedAnnots = Arrays.asList(y1Sentence2Annot);
+		List<TextAnnotation> expectedAnnots = Arrays.asList(createY1Sentence2Annot());
 
 		assertEquals(expectedAnnots.size(), annots.size());
 		assertEquals(expectedAnnots, annots);
@@ -675,10 +675,10 @@ public class SentenceExtractionFnTest {
 		TextAnnotation annot6 = factory.createAnnotation(20, 21, "6", X_000006);
 
 		List<TextAnnotation> conceptAnnots = new ArrayList<TextAnnotation>();
-		conceptAnnots.add(y1Sentence2Annot);
-		conceptAnnots.add(x2Sentence1Annot);
-		conceptAnnots.add(x1Sentence2Annot);
-		conceptAnnots.add(x1Sentence4Annot);
+		conceptAnnots.add(createY1Sentence2Annot());
+		conceptAnnots.add(createX2Sentence1Annot());
+		conceptAnnots.add(createX1Sentence2Annot());
+		conceptAnnots.add(createX1Sentence4Annot());
 		conceptAnnots.add(annot4);
 		conceptAnnots.add(annot5);
 		conceptAnnots.add(annot6);
