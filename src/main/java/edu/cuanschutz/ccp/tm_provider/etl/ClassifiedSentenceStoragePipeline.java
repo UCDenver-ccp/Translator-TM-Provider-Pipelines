@@ -157,6 +157,29 @@ public class ClassifiedSentenceStoragePipeline {
 							if (metadataLineIter.hasNext()) {
 								// if there is another line, check it just to make sure it's a redundant copy.
 								// If it's not identical, then error.
+								//
+								// Note: this does happen -- there was a case of a sentence segment in both
+								// title and abstract -- document section probably needs to be used as part of
+								// the hash for creating the sentence id.
+
+								/*
+								 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
+								 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
+								 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
+								 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
+								 * vector. title 2155 production of the synthetic drug anti-CD25/IL-10 using
+								 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
+								 * using minicircle vector. --- != ---
+								 * 
+								 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
+								 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
+								 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
+								 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
+								 * vector. abstract 2155 production of the synthetic drug anti-CD25/IL-10 using
+								 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
+								 * using minicircle vector.
+								 * 
+								 */
 								String nextMetadataLine = metadataLineIter.next();
 								if (!nextMetadataLine.equals(metadataLine)) {
 									throw new IllegalArgumentException(
@@ -235,27 +258,85 @@ public class ClassifiedSentenceStoragePipeline {
 										// 2155 is the max year value in MySQL
 										documentYearPublished = 2155;
 									}
-									SqlValues sqlValues = new SqlValues(assertionId, subjectCurie, objectCurie,
-											biolinkAssoc.getAssociationId(), evidenceId, documentId, sentence,
-											subjectEntityId, objectEntityId, es.getDocumentZone(),
-											CollectionsUtil.createDelimitedString(es.getDocumentPublicationTypes(),
-													"|"),
-											documentYearPublished, subjectSpanStr, objectSpanStr, subjectCoveredText,
-											objectCoveredText);
 
-									for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
-										sqlValues.addScore(entry.getKey(), entry.getValue());
+									/*
+									 * for efficiency purposes, if there were multiple ontologies IDs identified for
+									 * the same span of text, those identifiers were spliced together into a
+									 * pipe-delimited list so that sentence only needed to be classified once. Here
+									 * we unsplice any spliced identifiers and create separate sqlvalues for each.
+									 */
+									for (String sub : subjectCurie.split("\\|")) {
+										for (String obj : objectCurie.split("\\|")) {
+
+											// make sure things will fit in the database columns
+
+											// sentences of this great length are most likely sentence segmentation
+											// errors.
+											// Here we truncate anything longer than 1900 characters so that it fits in
+											// the
+											// database column.
+											if (sentence.length() > 1900) {
+												sentence = sentence.substring(0, 1900);
+											}
+
+											if (sub.length() > 95) {
+												sub = sub.substring(0, 95);
+											}
+
+											if (obj.length() > 95) {
+												obj = obj.substring(0, 95);
+											}
+
+											String associationId = biolinkAssoc.getAssociationId();
+											if (associationId.length() > 95) {
+												associationId = associationId.substring(0, 95);
+											}
+
+											String documentZone = es.getDocumentZone();
+											if (documentZone.length() > 45) {
+												documentZone = documentZone.substring(0, 45);
+											}
+
+											String pubTypes = CollectionsUtil
+													.createDelimitedString(es.getDocumentPublicationTypes(), "|");
+											if (pubTypes.length() > 500) {
+												pubTypes = pubTypes.substring(0, 450);
+											}
+
+											if (subjectCoveredText.length() > 100) {
+												subjectCoveredText = subjectCoveredText.substring(0, 100);
+											}
+
+											if (objectCoveredText.length() > 100) {
+												objectCoveredText = objectCoveredText.substring(0, 100);
+											}
+
+											SqlValues sqlValues = new SqlValues(assertionId, sub, obj, associationId,
+													evidenceId, documentId, sentence, subjectEntityId, objectEntityId,
+													documentZone, pubTypes, documentYearPublished, subjectSpanStr,
+													objectSpanStr, subjectCoveredText, objectCoveredText);
+
+											for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
+												String predicateCurie = entry.getKey();
+												if (predicateCurie.length() > 100) {
+													predicateCurie = predicateCurie.substring(0, 100);
+												}
+
+												sqlValues.addScore(predicateCurie, entry.getValue());
+											}
+
+											c.output(sqlValues);
+										}
 									}
-
-									c.output(sqlValues);
+								} else {
+									throw new IllegalStateException(
+											"Mismatch between the BERT output file and sentence metadata files detected. "
+													+ "Sentence identifiers do not match!!! "
+													+ es.getSentenceIdentifier() + " != " + sentenceId1);
 								}
-							} else {
-								throw new IllegalStateException(
-										"Mismatch between the BERT output file and sentence metadata files detected. "
-												+ "Sentence identifiers do not match!!!");
 							}
-
 						}
+
 					}
 
 				}));

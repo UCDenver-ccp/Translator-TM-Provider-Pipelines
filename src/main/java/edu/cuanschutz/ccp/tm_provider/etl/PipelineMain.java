@@ -146,11 +146,11 @@ public class PipelineMain {
 			case MEDLINE_XML_TO_TEXT:
 				MedlineXmlToTextPipeline.main(pipelineArgs);
 				break;
-			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS:
-				NgdStoreCountsPipeline.main(pipelineArgs);
+			case CONCEPT_COOCCURRENCE_COUNTS:
+				ConceptCooccurrenceCountsPipeline.main(pipelineArgs);
 				break;
-			case NORMALIZED_GOOGLE_DISTANCE_CONCEPT_KGX:
-				NgdKgxPipeline.main(pipelineArgs);
+			case CONCEPT_COOCCURRENCE_METRICS:
+				ConceptCooccurrenceMetricsPipeline.main(pipelineArgs);
 				break;
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
@@ -400,7 +400,7 @@ public class PipelineMain {
 		query.addKindBuilder().setName(STATUS_KIND);
 		query.setFilter(filter);
 
-		PCollection<Entity> status = p.apply("datastore->status entities to process",
+		PCollection<Entity> status = p.apply("load status entities",
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 
 		PCollection<KV<String, ProcessingStatus>> docId2Status = status.apply("status entity->status",
@@ -436,7 +436,7 @@ public class PipelineMain {
 		}
 
 		PCollection<Entity> documents = p.apply(
-				String.format("datastore->[%s] document entities",
+				String.format("load %s",
 						(documentType == null) ? "all types" : documentType.name().toLowerCase()),
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 

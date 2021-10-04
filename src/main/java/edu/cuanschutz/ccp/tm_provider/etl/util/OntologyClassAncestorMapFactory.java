@@ -69,7 +69,7 @@ public class OntologyClassAncestorMapFactory {
 
 	public static void main(String[] args) {
 
-		File ontologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies");
+		File ontologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918");
 		File craftOntologyDir = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/craft");
 		File outputFile = new File(ontologyDir, "ontology-class-ancestor-map.tsv");
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {

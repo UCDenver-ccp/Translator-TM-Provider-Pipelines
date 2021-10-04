@@ -93,14 +93,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
 	private static final int SENTENCE_ID_COLUMN = 0;
-	private static final int SENTENCE_WITH_PLACEHOLDER_COLUMN = 1;
+	public static final int SENTENCE_WITH_PLACEHOLDER_COLUMN = 1;
 	private static final int DOCUMENT_ID_COLUMN = 2;
 	private static final int SUBJECT_ID_COLUMN = 3;
 	private static final int SUBJECT_TEXT_COLUMN = 4;
 	private static final int OBJECT_ID_COLUMN = 5;
 	private static final int OBJECT_TEXT_COLUMN = 6;
 	private static final int SENTENCE_COLUMN = 7;
-	private static final int NO_RELATION_COLUMN = 8;
+	public static final int NO_RELATION_COLUMN = 8;
 
 	/**
 	 * Global instance of the scopes required by this quickstart. If modifying these
@@ -166,7 +166,8 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 * @return An authorized Credential object.
 	 * @throws IOException If the credentials.json file cannot be found.
 	 */
-	private Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT, File credentialsFile) throws IOException {
+	public static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT, File credentialsFile,
+			DataStoreFactory dataStoreFactory) throws IOException {
 		// Load client secrets.
 		InputStream in = new FileInputStream(credentialsFile);
 		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
@@ -198,8 +199,8 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	 * @throws InterruptedException
 	 */
 	public void createNewSpreadsheet(File credentialsFile, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, List<File> inputSentenceFiles, File previousSentenceIdsFile, boolean includeInverse)
-			throws IOException, GeneralSecurityException, InterruptedException {
+			int batchSize, List<File> inputSentenceFiles, File previousSentenceIdsFile, boolean includeInverse,
+			Set<String> idsToExclude) throws IOException, GeneralSecurityException, InterruptedException {
 
 		String sheetTitle = biolinkAssociation.name() + "-" + batchId;
 		String applicationName = "annotation of " + biolinkAssociation.name();
@@ -209,7 +210,8 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		// Build a new authorized API client service.
 		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 		Sheets sheetsService = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-				getCredentials(HTTP_TRANSPORT, credentialsFile)).setApplicationName(applicationName).build();
+				getCredentials(HTTP_TRANSPORT, credentialsFile, dataStoreFactory)).setApplicationName(applicationName)
+						.build();
 
 		String sheetId = createNewSheet(sheetsService, sheetTitle);
 
@@ -218,14 +220,23 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		int maxSentenceCount = countSentences(inputSentenceFiles);
 
+
+		System.out.println("Max sentence count: " + maxSentenceCount);
+
 		Set<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize);
+		
+//		System.out.println("Indexes: "+ indexesForNewBatch.toString());
+//		for (int i = 0; i < 10; i++) {
+//			System.out.println("random index: " + indexesForNewBatch.get(i));
+//		}
+
 
 		List<Request> updateRequests = new ArrayList<Request>();
 		updateRequests.addAll(writeHeaderToSpreadsheet(biolinkAssociation, sheetsService, sheetId));
 
 		Set<String> hashesOutputInThisBatch = new HashSet<String>();
 		// this count is used to track what line a sentence ends up in the Google Sheet
-		int sheetRow = 1;
+		int extractedSentenceCount = 1;
 		int sentenceCount = 0;
 		String previousSentenceText = null;
 		for (File inputSentenceFile : inputSentenceFiles) {
@@ -238,27 +249,60 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 				while (lineIter.hasNext() && hashesOutputInThisBatch.size() < batchSize) {
 					Line line = lineIter.next();
 					ExtractedSentence sentence = ExtractedSentence.fromTsv(line.getText(), true);
-					if (previousSentenceText == null || !previousSentenceText.equals(sentence.getSentenceText())) {
+
+					boolean exclude = false;
+					for (String id : sentence.getEntityId1().split("\\|")) {
+						if (idsToExclude.contains(id)) {
+							exclude = true;
+							break;
+						}
+					}
+					if (!exclude) {
+						for (String id : sentence.getEntityId2().split("\\|")) {
+							if (idsToExclude.contains(id)) {
+								exclude = true;
+								break;
+							}
+						}
+					}
+
+					if (previousSentenceText == null
+							|| !previousSentenceText.equals(sentence.getSentenceText())) {
 						previousSentenceText = sentence.getSentenceText();
 						sentenceCount++;
 					}
 
-					if (indexesForNewBatch.contains(sentenceCount)) {
-						String hash = computeHash(sentence);
-						if (!alreadyAnnotated.contains(hash)) {
-							if (validateSubjectObject(sentence)) {
-								hashesOutputInThisBatch.add(hash);
+					
+//					System.out.println("Line: " + line.getLineNumber() + " -- sentence: "+ sentenceCount + " -- exclude: " + exclude);
+					
+					if (!exclude) {
 
-								updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService, sheetId,
-										sheetRow, biolinkAssociation, false));
-								sheetRow++;
-								if (includeInverse) {
-									updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
-											sheetId, sheetRow, biolinkAssociation, true));
-									sheetRow++;
+						// TODO: remove this as it was only used for disease-phenotype annotation
+						// this ensures that the object is phenotype
+//						if (sentence.getEntityId2().contains("HP")) {
+
+//							System.out.println("passed MONDO/HP test " + sentenceCount);
+
+							if (indexesForNewBatch.contains(sentenceCount)) {
+								String hash = computeHash(sentence);
+								if (!alreadyAnnotated.contains(hash)) {
+									if (validateSubjectObject(sentence)) {
+										hashesOutputInThisBatch.add(hash);
+//										System.out.println("output hash: " + hash);
+										updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
+												sheetId, extractedSentenceCount, biolinkAssociation, false));
+										extractedSentenceCount++;
+										if (includeInverse) {
+											updateRequests
+													.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
+															sheetId, extractedSentenceCount, biolinkAssociation, true));
+											extractedSentenceCount++;
+										}
+									}
+
 								}
 							}
-						}
+//						}
 					}
 
 					// cannot send more than 100,000 requests in an update, so we check to see if we
@@ -281,7 +325,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
 		System.out.println("Sentence count: " + sentenceCount);
-		System.out.println("Extracted sentence count: " + sheetRow);
+		System.out.println("Extracted sentence count: " + extractedSentenceCount);
 		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
 		/*
@@ -303,7 +347,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		batchUpdate.execute();
 
 		// write checkboxes on spreadsheet
-		addCheckBoxesToSheet(sheetsService, sheetId, sheetRow, biolinkAssociation.getSpoTriples().length);
+		addCheckBoxesToSheet(sheetsService, sheetId, extractedSentenceCount, biolinkAssociation.getSpoTriples().length);
 
 	}
 

@@ -16,7 +16,7 @@ echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-OUTPUT_BUCKET="${BUCKET}/output/sentences/${ASSOCIATION}/${COLLECTION}/filtered/${ASSOCIATION}"
+OUTPUT_BUCKET="${BUCKET}/output/sentences/${ASSOCIATION}/${COLLECTION}/${ASSOCIATION}"
 ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar SENTENCE_EXTRACTION \
@@ -42,4 +42,5 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar SENTENCE_E
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=125 \
+--autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner

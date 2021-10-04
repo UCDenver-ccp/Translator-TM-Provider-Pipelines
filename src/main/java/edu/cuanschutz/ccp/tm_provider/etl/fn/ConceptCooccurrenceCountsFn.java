@@ -16,14 +16,13 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.NgdStoreCountsPipeline.CountType;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.CrfOrConcept;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
@@ -31,40 +30,53 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
-import edu.ucdenver.ccp.nlp.core.annotation.Span;
+import edu.ucdenver.ccp.common.digest.DigestUtil;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<String, String>> {
+public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	public enum CooccurLevel {
-		DOCUMENT, SENTENCE, TITLE, ABSTRACT// , PARAGRAPH -- will require code to make sure all text is covered by a
-		// paragraph in full text docs
-	}
+		DOCUMENT(DOCUMENT_ID_TO_CONCEPT_ID), SENTENCE(SENTENCE_ID_TO_CONCEPT_ID), TITLE(TITLE_ID_TO_CONCEPT_ID),
+		ABSTRACT(ABSTRACT_ID_TO_CONCEPT_ID);
 
-	public enum AddSuperClassAnnots {
-		YES, NO
+		// , PARAGRAPH -- will require code to make sure all text is covered by a
+		// paragraph in full text docs
+
+		private final TupleTag<String> outputTag;
+
+		private CooccurLevel(TupleTag<String> outputTag) {
+			this.outputTag = outputTag;
+		}
+
+		public TupleTag<String> getOutputTag() {
+			return this.outputTag;
+		}
+
 	}
 
 	private static final long serialVersionUID = 1L;
 
-	public static Delimiter OUTPUT_FILE_DELIMITER = Delimiter.TAB;
+	public static Delimiter OUTPUT_FILE_COLUMN_DELIMITER = Delimiter.TAB;
+	public static Delimiter OUTPUT_FILE_SET_DELIMITER = Delimiter.PIPE;
 
 	@SuppressWarnings("serial")
-	public static TupleTag<String> SINGLETON_TO_DOCID = new TupleTag<String>() {
+	public static TupleTag<String> DOCUMENT_ID_TO_CONCEPT_ID = new TupleTag<String>() {
 	};
 	@SuppressWarnings("serial")
-	public static TupleTag<String> PAIR_TO_DOCID = new TupleTag<String>() {
+	public static TupleTag<String> ABSTRACT_ID_TO_CONCEPT_ID = new TupleTag<String>() {
 	};
 	@SuppressWarnings("serial")
-	public static TupleTag<String> DOCID_TO_CONCEPT_COUNT = new TupleTag<String>() {
+	public static TupleTag<String> TITLE_ID_TO_CONCEPT_ID = new TupleTag<String>() {
 	};
+	@SuppressWarnings("serial")
+	public static TupleTag<String> SENTENCE_ID_TO_CONCEPT_ID = new TupleTag<String>() {
+	};
+
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
@@ -72,9 +84,7 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 	public static PCollectionTuple computeCounts(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
-			Set<DocumentCriteria> requiredDocumentCriteria, CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots,
-			DocumentType docTypeToCount, CountType countType,
-			PCollectionView<Map<String, Set<String>>> ancestorMapView) {
+			Set<DocumentCriteria> requiredDocumentCriteria, Set<CooccurLevel> levels, DocumentType docTypeToCount) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, String>() {
@@ -84,34 +94,28 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 					public void processElement(ProcessContext context) {
 						KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText = context.element();
 
-						Map<String, Set<String>> ancestorMap = context.sideInput(ancestorMapView);
-
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 						try {
 
-							Set<String> singletonConceptIds = new HashSet<String>();
-							Set<ConceptPair> pairedConceptIds = new HashSet<ConceptPair>();
+							// If the loaded document types don't match the required types, then throw an
+							// exception which will get logged as a failure in datastore
+							validatePresenceOfRequiredDocuments(docId, statusEntityToText.getValue(),
+									requiredDocumentCriteria);
 
-							validateDocuments(docId, statusEntityToText.getValue(), requiredDocumentCriteria);
+							for (CooccurLevel level : levels) {
 
-							countConcepts(docId, statusEntityToText.getValue(), ancestorMap, singletonConceptIds,
-									pairedConceptIds, level, addSuperClassAnnots, docTypeToCount);
+								Map<String, Set<String>> docIdToConceptIdMap = countConcepts(docId,
+										statusEntityToText.getValue(), level, docTypeToCount);
 
-							for (String conceptId : singletonConceptIds) {
-								context.output(SINGLETON_TO_DOCID,
-										String.format("%s%s%s", conceptId, OUTPUT_FILE_DELIMITER.delimiter(), docId));
-							}
-
-							// the following aren't necessary for the SIMPLE count type
-							if (countType == CountType.NGD) {
-								for (ConceptPair pair : pairedConceptIds) {
-									context.output(PAIR_TO_DOCID, String.format("%s%s%s", pair.toReproducibleKey(),
-											OUTPUT_FILE_DELIMITER.delimiter(), docId));
+								for (Entry<String, Set<String>> entry : docIdToConceptIdMap.entrySet()) {
+									String textId = entry.getKey();
+									Set<String> conceptIds = entry.getValue();
+									String outStr = textId + OUTPUT_FILE_COLUMN_DELIMITER.delimiter() + CollectionsUtil
+											.createDelimitedString(conceptIds, OUTPUT_FILE_SET_DELIMITER.delimiter());
+									context.output(level.getOutputTag(), outStr);
 								}
 
-								context.output(DOCID_TO_CONCEPT_COUNT, String.format("%s%s%d", docId,
-										OUTPUT_FILE_DELIMITER.delimiter(), singletonConceptIds.size()));
 							}
 						} catch (Throwable t) {
 							EtlFailureData failure = PipelineMain.initFailure("Failure while counting concepts.",
@@ -129,47 +133,67 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 					 * @param docs
 					 * @param requiredDocumentCriteria
 					 */
-					private void validateDocuments(String documentId, Map<DocumentCriteria, String> docs,
-							Set<DocumentCriteria> requiredDocumentCriteria) {
-						if (!docs.keySet().equals(requiredDocumentCriteria)) {
+					private void validatePresenceOfRequiredDocuments(String documentId,
+							Map<DocumentCriteria, String> docs, Set<DocumentCriteria> requiredDocumentCriteria) {
 
-							throw new IllegalArgumentException("Invalid document input (" + documentId + "). HAS: "
-									+ docs.keySet().toString() + " BUT NEEDED: " + requiredDocumentCriteria.toString());
-
+						for (DocumentCriteria requiredCriteria : requiredDocumentCriteria) {
+							if (!docs.keySet().contains(requiredCriteria)) {
+								throw new IllegalArgumentException(
+										"Invalid document input (" + documentId + "). HAS: " + docs.keySet().toString()
+												+ " BUT NEEDED: " + requiredDocumentCriteria.toString());
+							}
 						}
 
 					}
 
-				}).withOutputTags(SINGLETON_TO_DOCID,
-						TupleTagList.of(PAIR_TO_DOCID).and(DOCID_TO_CONCEPT_COUNT).and(ETL_FAILURE_TAG))
-						.withSideInputs(ancestorMapView));
+				}).withOutputTags(DOCUMENT_ID_TO_CONCEPT_ID, TupleTagList.of(ETL_FAILURE_TAG)
+						.and(ABSTRACT_ID_TO_CONCEPT_ID).and(SENTENCE_ID_TO_CONCEPT_ID).and(TITLE_ID_TO_CONCEPT_ID)));
 	}
 
 	@VisibleForTesting
-	protected static void countConcepts(String documentId, Map<DocumentCriteria, String> docs,
-			Map<String, Set<String>> superClassMap, Set<String> singletonConceptIds, Set<ConceptPair> pairedConceptIds,
-			CooccurLevel level, AddSuperClassAnnots addSuperClassAnnots, DocumentType docTypeToCount)
-			throws IOException {
+	protected static Map<String, Set<String>> countConcepts(String documentId, Map<DocumentCriteria, String> docs,
+			CooccurLevel level, DocumentType docTypeToCount) throws IOException {
+
+		Map<String, Set<String>> textIdToConceptIds = new HashMap<String, Set<String>>();
 
 		String documentText = PipelineMain.getDocumentText(docs);
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, docs);
 
+		// levelAnnots is a list of annotations at the specified level, so if level ==
+		// document then it's a single annotation representing the entire document.If
+		// level == sentence, then it's the list of all sentences found in the document.
 		List<TextAnnotation> levelAnnots = getLevelAnnotations(documentId, level, documentText, docTypeToContentMap);
 
-//		DocumentType dt = (filterFlag == FilterFlag.NONE) ? DocumentType.CONCEPT_ALL_UNFILTERED
-//				: DocumentType.CONCEPT_ALL;
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(docTypeToCount);
-
-		if (addSuperClassAnnots == AddSuperClassAnnots.YES) {
-			conceptAnnots = addSuperClassAnnotations(documentId, conceptAnnots, superClassMap);
-		}
 
 		conceptAnnots = removeAnnotsWithMissingTypes(conceptAnnots);
 
-		singletonConceptIds.addAll(getUniqueConceptIds(conceptAnnots));
-		pairedConceptIds.addAll(getConceptPairs(conceptAnnots, levelAnnots));
+		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
+				conceptAnnots);
 
+		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
+			TextAnnotation levelAnnot = entry.getKey();
+			Set<TextAnnotation> conceptAnnotsInLevel = entry.getValue();
+
+			String textId = computeUniqueTextIdentifier(documentId, level, levelAnnot);
+			Set<String> uniqueConceptsInLevelAnnot = getUniqueConceptIds(conceptAnnotsInLevel);
+			if (!uniqueConceptsInLevelAnnot.isEmpty()) {
+				textIdToConceptIds.put(textId, uniqueConceptsInLevelAnnot);
+			}
+		}
+
+		return textIdToConceptIds;
+	}
+
+	protected static String computeUniqueTextIdentifier(String documentId, CooccurLevel level,
+			TextAnnotation levelAnnot) {
+		// if the level is DOCUMENT then there isn't a need to create longer identifiers
+		if (level == CooccurLevel.DOCUMENT) {
+			return documentId;
+		}
+		return documentId + "_" + level.name().toLowerCase() + "_" + DigestUtils
+				.sha256Hex(levelAnnot.getAggregateSpan().toString() + levelAnnot.getCoveredText().substring(0, 8));
 	}
 
 	/**
@@ -188,31 +212,6 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 			}
 		}
 		return toKeep;
-	}
-
-	@VisibleForTesting
-	protected static Set<ConceptPair> getConceptPairs(Collection<TextAnnotation> conceptAnnots,
-			Collection<TextAnnotation> levelAnnots) {
-		Set<ConceptPair> pairs = new HashSet<ConceptPair>();
-
-		Map<TextAnnotation, Set<TextAnnotation>> levelAnnotToConceptAnnotMap = matchConceptsToLevelAnnots(levelAnnots,
-				conceptAnnots);
-
-		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : levelAnnotToConceptAnnotMap.entrySet()) {
-			for (TextAnnotation annot1 : entry.getValue()) {
-				for (TextAnnotation annot2 : entry.getValue()) {
-					String type1 = annot1.getClassMention().getMentionName();
-					String type2 = annot2.getClassMention().getMentionName();
-					// we require the types to be different and the annotation spans to also be
-					// different
-					if (!type1.equals(type2) && !annot1.getSpans().equals(annot2.getSpans())) {
-						pairs.add(new ConceptPair(type1, type2));
-					}
-				}
-			}
-		}
-
-		return pairs;
 	}
 
 	/**
@@ -260,107 +259,13 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 		return map;
 	}
 
-	private static Collection<? extends String> getUniqueConceptIds(Collection<TextAnnotation> conceptAnnots) {
+	private static Set<String> getUniqueConceptIds(Collection<TextAnnotation> conceptAnnots) {
 		Set<String> conceptIds = new HashSet<String>();
 		for (TextAnnotation annot : conceptAnnots) {
 			conceptIds.add(annot.getClassMention().getMentionName());
 		}
 		return conceptIds;
 	}
-
-	/**
-	 * Given a list of concept annotations and a mapping from concept identifiers to
-	 * corresponding ancestor identifiers, return a list of the concept annotations
-	 * augmented with annotations including all ancestor classes.
-	 * 
-	 * Some ontologies, e.g. MONDO, link a large number of other "ontology concept",
-	 * e.g. Mesh,ICD9, etc. This causes a combinatoric explosion when computing
-	 * cooccurrence. To limit this issue, only superclasses with the same prefix as
-	 * the seed class are added, e.g. for the class CHEBI_1234, only superclasses
-	 * with the CHEBI prefix are added. This will also inherently avoid some of the
-	 * upperlevel concepts that aren't likely to be that useful since they will
-	 * cooccur with all/many concepts.
-	 * 
-	 * @param documentId
-	 * @param conceptAnnots
-	 * @param superClassMap
-	 * @return
-	 */
-	@VisibleForTesting
-	protected static Set<TextAnnotation> addSuperClassAnnotations(String documentId,
-			Collection<TextAnnotation> conceptAnnots, Map<String, Set<String>> superClassMap) {
-
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(documentId);
-		Set<TextAnnotation> updatedAnnots = new HashSet<TextAnnotation>();
-
-		for (TextAnnotation annot : conceptAnnots) {
-			updatedAnnots.add(annot);
-			String conceptId = annot.getClassMention().getMentionName();
-			String conceptPrefix = null;
-			if (conceptId.contains(":")) {
-				conceptPrefix = conceptId.substring(0, conceptId.indexOf(":") + 1);
-				System.out.println("PREFIX= " + conceptPrefix);
-			}
-			Set<String> superClassIds = superClassMap.get(conceptId);
-			if (superClassIds != null) {
-				for (String superClassId : superClassIds) {
-					// if the concept id has a prefix, then only include superclasses that also have
-					// the same prefix to limit the number of superclasses imported
-					if (conceptPrefix == null || superClassId.startsWith(conceptPrefix)) {
-						List<Span> spans = annot.getSpans();
-						TextAnnotation newAnnot = factory.createAnnotation(spans.get(0).getSpanStart(),
-								spans.get(0).getSpanEnd(), annot.getCoveredText(), superClassId);
-						for (int i = 1; i < spans.size(); i++) {
-							newAnnot.addSpan(spans.get(i));
-						}
-						updatedAnnots.add(newAnnot);
-					}
-				}
-			}
-		}
-		return updatedAnnots;
-	}
-
-//	/**
-//	 * Given the input CRF and CONCEPT annotations, return a mapping from the
-//	 * concept type, e.g. CHEBI, CL, etc. to a collection of CONCEPT annotations
-//	 * that were filtered using the CRF annotations.
-//	 * 
-//	 * @param documentId
-//	 * @param conceptTypeToContentMap
-//	 * @param documentText
-//	 * @return
-//	 * @throws IOException
-//	 */
-//	@VisibleForTesting
-//	protected static Map<String, Collection<TextAnnotation>> getConceptAnnotations(String documentId,
-//			Map<String, Map<CrfOrConcept, String>> conceptTypeToContentMap, String documentText) throws IOException {
-//
-//		BioNLPDocumentReader reader = new BioNLPDocumentReader();
-//		Map<String, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<String, Collection<TextAnnotation>>();
-//
-//		for (Entry<String, Map<CrfOrConcept, String>> entry : conceptTypeToContentMap.entrySet()) {
-//
-//			String type = entry.getKey();
-//			String crfBionlp = entry.getValue().get(CrfOrConcept.CRF);
-//			String conceptBionlp = entry.getValue().get(CrfOrConcept.CONCEPT);
-//
-//			TextDocument crfDocument = reader.readDocument(documentId, "unknown",
-//					new ByteArrayInputStream(crfBionlp.getBytes()), new ByteArrayInputStream(documentText.getBytes()),
-//					CharacterEncoding.UTF_8);
-//
-//			TextDocument conceptDocument = reader.readDocument(documentId, "unknown",
-//					new ByteArrayInputStream(conceptBionlp.getBytes()),
-//					new ByteArrayInputStream(documentText.getBytes()), CharacterEncoding.UTF_8);
-//
-//			List<TextAnnotation> conceptAnnots = PipelineMain.filterViaCrf(conceptDocument.getAnnotations(),
-//					crfDocument.getAnnotations());
-//
-//			typeToAnnotMap.put(type, conceptAnnots);
-//
-//		}
-//		return typeToAnnotMap;
-//	}
 
 	/**
 	 * Depending on the requested cooccurrence Level, return the appropriate level
@@ -413,6 +318,22 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 			}
 			break;
 
+		case ABSTRACT:
+			if (docTypeToContentMap.containsKey(DocumentType.SECTIONS)) {
+				for (TextAnnotation annot : docTypeToContentMap.get(DocumentType.SECTIONS)) {
+					String sectionType = annot.getClassMention().getMentionName();
+					if (sectionType.equalsIgnoreCase("abstract")) {
+						levelAnnots.add(annot);
+						break;
+					}
+				}
+			} else {
+				throw new IllegalArgumentException(
+						"Cooccurrence level = ABSTRACT, however there are no section annotations in the input for document "
+								+ documentId);
+			}
+			break;
+
 		default:
 			throw new IllegalArgumentException(
 					String.format("Unhandled level type (%s). Code changes required.", level.name()));
@@ -440,14 +361,21 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 		}
 	}
 
-	@Getter
-	@RequiredArgsConstructor
-	@VisibleForTesting
-	@SuppressWarnings("rawtypes")
+	@Data
 	public static class ConceptPair extends DoFn {
 		private static final long serialVersionUID = 1L;
 		private final String conceptId1;
 		private final String conceptId2;
+
+		public ConceptPair(String conceptId1, String conceptId2) {
+			if (conceptId1.compareTo(conceptId2) < 1) {
+				this.conceptId1 = conceptId1;
+				this.conceptId2 = conceptId2;
+			} else {
+				this.conceptId1 = conceptId2;
+				this.conceptId2 = conceptId1;
+			}
+		}
 
 		public String toReproducibleKey() {
 			return (conceptId1.compareTo(conceptId2) < 1) ? conceptId1 + "|" + conceptId2
@@ -459,32 +387,36 @@ public class NormalizedGoogleDistanceFn extends DoFn<KV<String, String>, KV<Stri
 			return new ConceptPair(cols[0], cols[1]);
 		}
 
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			ConceptPair other = (ConceptPair) obj;
-
-			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
-			Set<String> otherSet = CollectionsUtil.createSet(other.getConceptId1(), other.getConceptId2());
-
-			return set.equals(otherSet);
+		public String getPairId() {
+			return DigestUtil.getBase64Sha1Digest(toReproducibleKey());
 		}
 
-		@Override
-		public int hashCode() {
-			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
-			return set.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return String.format("[%s, %s]", conceptId1, conceptId2);
-		}
+//		@Override
+//		public boolean equals(Object obj) {
+//			if (this == obj)
+//				return true;
+//			if (obj == null)
+//				return false;
+//			if (getClass() != obj.getClass())
+//				return false;
+//			ConceptPair other = (ConceptPair) obj;
+//
+//			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
+//			Set<String> otherSet = CollectionsUtil.createSet(other.getConceptId1(), other.getConceptId2());
+//
+//			return set.equals(otherSet);
+//		}
+//
+//		@Override
+//		public int hashCode() {
+//			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
+//			return set.hashCode();
+//		}
+//
+//		@Override
+//		public String toString() {
+//			return String.format("[%s, %s]", conceptId1, conceptId2);
+//		}
 
 	}
 

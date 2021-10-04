@@ -140,10 +140,11 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
 
 	/**
-	 * NGD = Normalized Google Distance
+	 * Concept cooccurrence count status
 	 */
-	public static final String STATUS_PROPERTY_NGD_COUNTS_DONE = "ngd_counts";
-	public static final String STATUS_PROPERTY_NGD_KGX_DONE = "ngd_kgx";
+	public static final String STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE = "concept_cooccur_counts";
+	
+//	public static final String STATUS_PROPERTY_CONCEPT_COOCCURRENCE_METRICS_DONE = "concept_cooccur_metrics";
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////

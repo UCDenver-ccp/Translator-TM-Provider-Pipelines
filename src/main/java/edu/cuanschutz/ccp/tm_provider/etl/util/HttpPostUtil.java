@@ -43,33 +43,35 @@ public class HttpPostUtil {
 	 * @throws InterruptedException
 	 */
 	public String submit(String payload) throws IOException {
-		/*
-		 * occasionally the server does not respond, or does not respond in time and an
-		 * exception is thrown. In these cases we will catch the exception, wait 5
-		 * seconds, and retry up to 3 times total before officially failing.
-		 */
-		int tryCount = 0;
-		HttpResponse response = null;
-		while (tryCount++ < 4) {
-			try {
-				response = makeHttpRequest(payload);
-				// request was successful so break out of the while loop
-				break;
-			} catch (HttpResponseException e) {
-				if (tryCount == 4) {
-					throw new HttpResponseException(response);
-				}
-				/* sleep for 5s before trying again */
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e1) {
-					throw new IOException(e1);
-				}
-			}
-		}
-		if (tryCount > 1) {
-			logger.info("TMPLOG -- recovered HTTPReponse after sleeping.");
-		}
+		
+		HttpResponse response = makeHttpRequest(payload);
+//		/*
+//		 * occasionally the server does not respond, or does not respond in time and an
+//		 * exception is thrown. In these cases we will catch the exception, wait 5
+//		 * seconds, and retry up to 3 times total before officially failing.
+//		 */
+//		int tryCount = 0;
+//		HttpResponse response = null;
+//		while (tryCount++ < 4) {
+//			try {
+//				response = makeHttpRequest(payload);
+//				// request was successful so break out of the while loop
+//				break;
+//			} catch (HttpResponseException e) {
+//				if (tryCount == 4) {
+//					throw new HttpResponseException(response);
+//				}
+//				/* sleep for 5s before trying again */
+//				try {
+//					Thread.sleep(5000);
+//				} catch (InterruptedException e1) {
+//					throw new IOException(e1);
+//				}
+//			}
+//		}
+//		if (tryCount > 1) {
+//			logger.info("TMPLOG -- recovered HTTPReponse after sleeping.");
+//		}
 		return response.parseAsString();
 	}
 

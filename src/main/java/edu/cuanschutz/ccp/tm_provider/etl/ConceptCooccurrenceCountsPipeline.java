@@ -1,30 +1,25 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.AddSuperClassAnnots;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.NormalizedGoogleDistanceFn.CooccurLevel;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -36,9 +31,10 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 /**
  * Computes normalized google distance between concepts
  */
-public class NgdStoreCountsPipeline {
+public class ConceptCooccurrenceCountsPipeline {
 
-	private static final PipelineKey PIPELINE_KEY = PipelineKey.NORMALIZED_GOOGLE_DISTANCE_CONCEPT_STORE_COUNTS;
+	private static final PipelineKey PIPELINE_KEY = PipelineKey.CONCEPT_COOCCURRENCE_COUNTS;
+	protected static final String DOCUMENT_ID_TO_CONCEPT_ID_FILE_PREFIX = "-to-concept";
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
@@ -52,26 +48,6 @@ public class NgdStoreCountsPipeline {
 		String getRequiredProcessingStatusFlags();
 
 		void setRequiredProcessingStatusFlags(String flags);
-
-		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
-		String getAncestorMapFilePath();
-
-		void setAncestorMapFilePath(String path);
-
-		@Description("delimiter used to separate columns in the ancestor map file")
-		Delimiter getAncestorMapFileDelimiter();
-
-		void setAncestorMapFileDelimiter(Delimiter delimiter);
-
-		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
-		Delimiter getAncestorMapFileSetDelimiter();
-
-		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
-
-		@Description("If YES, then when counting concepts, all superclasses for a given concept are also added and counted.")
-		AddSuperClassAnnots getAddSuperClassAnnots();
-
-		void setAddSuperClassAnnots(AddSuperClassAnnots value);
 
 		@Description("The document type, e.g. CONCEPT_ALL, CONCEPT_MP, etc., indicating the document type containing the annotations that will be counted. This document type must be in the InputDocumentCriteria input parameter.")
 		DocumentType getDocTypeToCount();
@@ -93,29 +69,11 @@ public class NgdStoreCountsPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("'level' of cooccurrence, e.g. Document, Sentence, etc.")
-		CooccurLevel getCooccurLevel();
+		@Description("'levels' of cooccurrence for which to compute counts, e.g. Document, Sentence, etc. This paramter should be pipe-delimited values from the CooccurLevel enum.")
+		String getCooccurLevels();
 
-		void setCooccurLevel(CooccurLevel value);
+		void setCooccurLevels(String value);
 
-		@Description("If YES, then this is using the NGD machinery to produce only a subset of the output - concept ids linked to document ids")
-		CountType getCountType();
-
-		void setCountType(CountType value);
-
-	}
-
-	public enum CountType {
-		/**
-		 * Select NGD to produce the counts required for the Normalized Google Distance
-		 * computations
-		 */
-		NGD,
-		/**
-		 * A selection of "SIMPLE" will result in only the concept id -to- document id
-		 * data being serialized.
-		 */
-		SIMPLE
 	}
 
 	public static void main(String[] args) {
@@ -123,8 +81,13 @@ public class NgdStoreCountsPipeline {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
-		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.NORMALIZED_GOOGLE_DISTANCE_STORE_COUNTS_DONE;
+		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.CONCEPT_COOCCURRENCE_COUNTS_DONE;
 		Pipeline p = Pipeline.create(options);
+
+		Set<CooccurLevel> cooccurLevels = new HashSet<CooccurLevel>();
+		for (String level : options.getCooccurLevels().split("\\|")) {
+			cooccurLevels.add(CooccurLevel.valueOf(level));
+		}
 
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = PipelineMain
 				.compileRequiredProcessingStatusFlags(options.getRequiredProcessingStatusFlags());
@@ -136,52 +99,69 @@ public class NgdStoreCountsPipeline {
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
-						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
-				.apply(View.<String, Set<String>>asMap());
-
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);
 
-		PCollectionTuple output = NormalizedGoogleDistanceFn.computeCounts(statusEntity2Content, outputDocCriteria,
-				timestamp, inputDocCriteria, options.getCooccurLevel(), options.getAddSuperClassAnnots(),
-				options.getDocTypeToCount(), options.getCountType(), ancestorMapView);
-
-		PCollection<String> conceptIdToDocId = output.get(NormalizedGoogleDistanceFn.SINGLETON_TO_DOCID);
-
-		PCollection<EtlFailureData> failures = output.get(NormalizedGoogleDistanceFn.ETL_FAILURE_TAG);
+		PCollectionTuple output = ConceptCooccurrenceCountsFn.computeCounts(statusEntity2Content, outputDocCriteria,
+				timestamp, inputDocCriteria, cooccurLevels, options.getDocTypeToCount());
 
 		/*
 		 * store failures from sentence extraction
 		 */
+		PCollection<EtlFailureData> failures = output.get(ConceptCooccurrenceCountsFn.ETL_FAILURE_TAG);
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("ngd count failures->datastore",
 				ParDo.of(new EtlFailureToEntityFn()));
 		PCollection<Entity> nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		// TODO NOTE: only write doc-id if it is the doc-id - could be sentence id
+		/* ==== Store counts below ==== */
 
-		// output count files
-		conceptIdToDocId.apply("write concept-id to doc-id file",
-				TextIO.write().to(options.getOutputBucket()
-						+ String.format("/concept-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-						.withSuffix(".tsv"));
+		if (cooccurLevels.contains(CooccurLevel.DOCUMENT)) {
+			serializeDocIdToConceptIds(options.getOutputBucket(), options.getCollection(), output,
+					CooccurLevel.DOCUMENT);
+		}
 
-		if (options.getCountType() == CountType.NGD) {
-			PCollection<String> conceptPairIdToDocId = output.get(NormalizedGoogleDistanceFn.PAIR_TO_DOCID);
-			PCollection<String> docIdToConceptCount = output.get(NormalizedGoogleDistanceFn.DOCID_TO_CONCEPT_COUNT);
-			conceptPairIdToDocId.apply("write concept pair to doc-id file", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/concept-pair-to-doc.%s.%s", options.getCollection(), options.getCooccurLevel()))
-					.withSuffix(".tsv"));
+		if (cooccurLevels.contains(CooccurLevel.TITLE)) {
+			serializeDocIdToConceptIds(options.getOutputBucket(), options.getCollection(), output, CooccurLevel.TITLE);
+		}
 
-			docIdToConceptCount.apply("write doc-id to concept count file", TextIO.write().to(options.getOutputBucket()
-					+ String.format("/doc-to-concept-count.%s.%s", options.getCollection(), options.getCooccurLevel()))
-					.withSuffix(".tsv"));
+		if (cooccurLevels.contains(CooccurLevel.SENTENCE)) {
+			serializeDocIdToConceptIds(options.getOutputBucket(), options.getCollection(), output,
+					CooccurLevel.SENTENCE);
+		}
+
+		if (cooccurLevels.contains(CooccurLevel.ABSTRACT)) {
+			serializeDocIdToConceptIds(options.getOutputBucket(), options.getCollection(), output,
+					CooccurLevel.ABSTRACT);
 		}
 
 		p.run().waitUntilFinish();
+	}
+
+	/**
+	 * Given a CooccurLevel, extract the relevant PCollection from the output and
+	 * serialize the strings to file. These strings should be of the format:
+	 * DOCUMENT_ID [tab] CONCEPT1|CONCEPT2|...
+	 * 
+	 * @param options
+	 * @param output
+	 * @param level
+	 */
+	private static void serializeDocIdToConceptIds(String outputBucket, String collection, PCollectionTuple output,
+			CooccurLevel level) {
+		PCollection<String> conceptIdToDocId = output.get(level.getOutputTag());
+		conceptIdToDocId.apply("docid-to-conceptid - " + level.name().toLowerCase(),
+				TextIO.write().to(outputBucket + "/" + getDocumentIdToConceptIdsFileNamePrefix(level, collection))
+						.withSuffix(".tsv"));
+	}
+
+	protected static String getDocumentIdToConceptIdsFileNamePrefix(CooccurLevel level, String collection) {
+		return getDocumentIdToConceptIdsFileNamePrefix(level) + collection;
+	}
+
+	public static String getDocumentIdToConceptIdsFileNamePrefix(CooccurLevel level) {
+		return String.format("%s%s.", level.name().toLowerCase(), DOCUMENT_ID_TO_CONCEPT_ID_FILE_PREFIX);
 	}
 
 }

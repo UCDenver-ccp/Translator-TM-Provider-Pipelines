@@ -48,6 +48,9 @@ public class PCollectionUtil {
 			public void processElement(ProcessContext c) {
 				String element = c.element();
 				String[] cols = element.split(delimiter.regex());
+				if (cols.length != 2) {
+					throw new IllegalArgumentException("Unable to split line into two columns. Delimiter=" + delimiter.name() + " Line=" + element);
+				}
 				c.output(KV.of(cols[0], cols[1]));
 			}
 		}));

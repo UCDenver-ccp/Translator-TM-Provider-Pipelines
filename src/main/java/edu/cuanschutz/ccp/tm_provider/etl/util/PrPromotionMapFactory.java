@@ -99,9 +99,10 @@ public class PrPromotionMapFactory {
 	}
 
 	public static void main(String[] args) {
-		File prOwlFile = new File("/Users/bill/projects/ncats-translator/craft-resources/ontologies/pr.owl.gz");
+		File prOwlFile = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+		                           
 		File outputFile = new File(
-				"/Users/bill/projects/ncats-translator/craft-resources/ontologies/pr-promotion-map.tsv");
+				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
 			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(prOwlFile)));
