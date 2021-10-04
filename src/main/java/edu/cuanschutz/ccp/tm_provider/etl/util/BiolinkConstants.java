@@ -3,9 +3,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 import lombok.Data;
 
 public class BiolinkConstants {
-	private static final String KGX_EDGE_FILE_NAME = "edges.kgx.tsv.gz";
-	private static final String KGX_NODE_FILE_NAME = "nodes.kgx.tsv.gz";
-
 	public static final String GENE_PLACEHOLDER = "@GENE$";
 	public static final String CHEMICAL_PLACEHOLDER = "@CHEMICAL$";
 	public static final String DISEASE_PLACEHOLDER = "@DISEASE$";
@@ -21,7 +18,6 @@ public class BiolinkConstants {
 	private static final String BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION = "biolink:GeneRegulatoryRelationship";
 	private static final String BL_GENE_TO_DISEASE_ASSOCIATION = "biolink:GeneToDiseaseAssociation";
 	private static final String BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION = "biolink:GeneToExpressionSiteAssociation";
-	private static final String BL_GENE_TO_GO_TERM_ASSOCIATION = "biolink:GeneToGoTermAssociation";
 
 	public enum BiolinkAssociation {
 		BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE(BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
@@ -53,11 +49,13 @@ public class BiolinkConstants {
 		BL_GENE_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
 				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
-		
-		
+
 		BL_GENE_LOSS_GAIN_OF_FUNCTION_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
-				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
-						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
+				new SPO[] {
+						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO,
+								DISEASE_PLACEHOLDER),
+						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO,
+								DISEASE_PLACEHOLDER),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_GENE_TO_EXPRESSION_SITE(BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION, GENE_PLACEHOLDER, LOCATION_PLACEHOLDER,
@@ -116,9 +114,11 @@ public class BiolinkConstants {
 		BL_ENTITY_NEGATIVELY_REGULATES_ENTITY("biolink:entity_negatively_regulates_entity", "neg-reg"),
 		BL_TREATS("biolink:treats", "treats"), BL_EXPRESSED_IN("biolink:expressed_in", "expressed_in"),
 		BL_CONTRIBUTES_TO("biolink:contributes_to", "contributes_to"),
-		BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO("biolink:loss_of_function_contributes_to", "contributes_to_via_loss_of_function"),
-		BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO("biolink:gain_of_function_contributes_to", "contributes_to_via_gain_of_function"),
-		
+		BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO("biolink:loss_of_function_contributes_to",
+				"contributes_to_via_loss_of_function"),
+		BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO("biolink:gain_of_function_contributes_to",
+				"contributes_to_via_gain_of_function"),
+
 		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype");
 
 		private final String curie;
@@ -137,23 +137,6 @@ public class BiolinkConstants {
 			return this.labelAbbreviation;
 		}
 	}
-
-//	private static final String KGX_NODE_FILE_HEADER = KgxUtil.KGX_NODE_WITH_EVIDENCE_HEADER;
-//	private static final String KGX_EDGE_FILE_HEADER = KgxUtil.KGX_EDGE_WITH_EVIDENCE_HEADER;
-
-//	private static final String NO_RELATION_PRESENT = "no relation present";
-
-//	private static final String BL_ENTITY_POSITIVELY_REGULATES_ENTITY_PREDICATE = "biolink:entity_positively_regulates_entity";
-//	private static final String BL_ENTITY_NEGATIVELY_REGULATES_ENTITY_PREDICATE = "biolink:entity_negatively_regulates_entity";
-//	private static final String BL_TREATS_PREDICATE = "biolink:treats";
-//	private static final String BL_EXPRESSED_IN_PREDICATE = "biolink:expressed_in";
-//	private static final String BL_CONTRIBUTES_TO_PREDICATE = "biolink:contributes_to";
-
-	private static final String EVIDENCE_NODE_CATEGORY = "biolink:InformationContentEntity";
-//	private static final String POSITIVELY_REGULATES_RELATION = "RO:0002213";
-//	private static final String NEGATIVELY_REGULATES_RELATION = "RO:0002212";
-
-	private static final String PROVIDED_BY = "Text Mining Provider";
 
 	@Data
 	public static class SPO {
