@@ -35,8 +35,6 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -363,14 +361,21 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 		}
 	}
 
-	@Getter
-	@RequiredArgsConstructor
-	@VisibleForTesting
-	@SuppressWarnings("rawtypes")
+	@Data
 	public static class ConceptPair extends DoFn {
 		private static final long serialVersionUID = 1L;
 		private final String conceptId1;
 		private final String conceptId2;
+
+		public ConceptPair(String conceptId1, String conceptId2) {
+			if (conceptId1.compareTo(conceptId2) < 1) {
+				this.conceptId1 = conceptId1;
+				this.conceptId2 = conceptId2;
+			} else {
+				this.conceptId1 = conceptId2;
+				this.conceptId2 = conceptId1;
+			}
+		}
 
 		public String toReproducibleKey() {
 			return (conceptId1.compareTo(conceptId2) < 1) ? conceptId1 + "|" + conceptId2
@@ -386,32 +391,32 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 			return DigestUtil.getBase64Sha1Digest(toReproducibleKey());
 		}
 
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			ConceptPair other = (ConceptPair) obj;
-
-			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
-			Set<String> otherSet = CollectionsUtil.createSet(other.getConceptId1(), other.getConceptId2());
-
-			return set.equals(otherSet);
-		}
-
-		@Override
-		public int hashCode() {
-			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
-			return set.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return String.format("[%s, %s]", conceptId1, conceptId2);
-		}
+//		@Override
+//		public boolean equals(Object obj) {
+//			if (this == obj)
+//				return true;
+//			if (obj == null)
+//				return false;
+//			if (getClass() != obj.getClass())
+//				return false;
+//			ConceptPair other = (ConceptPair) obj;
+//
+//			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
+//			Set<String> otherSet = CollectionsUtil.createSet(other.getConceptId1(), other.getConceptId2());
+//
+//			return set.equals(otherSet);
+//		}
+//
+//		@Override
+//		public int hashCode() {
+//			Set<String> set = CollectionsUtil.createSet(conceptId1, conceptId2);
+//			return set.hashCode();
+//		}
+//
+//		@Override
+//		public String toString() {
+//			return String.format("[%s, %s]", conceptId1, conceptId2);
+//		}
 
 	}
 
