@@ -12,7 +12,7 @@ MYSQL_INSTANCE_NAME=$9
 CLOUD_SQL_REGION=${10}
 
 JOB_NAME='CONCEPT-METRICS'
-COUNT_FILE_BUCKET="${BUCKET}/output/sample-count-output"
+COUNT_FILE_BUCKET="${BUCKET}/output/concept-cooccurrence-counts"
 ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
 
 echo "PROJECT: $PROJECT"
@@ -22,6 +22,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --jobName="$JOB_NAME" \
 --cooccurLevelsToProcess="$COOCCUR_LEVELS_TO_PROCESS" \
 --countFileBucket="$COUNT_FILE_BUCKET" \
+--addAncestors=false \
 --ancestorMapFilePath="$ANCESTOR_MAP_FILE_PATH" \
 --ancestorMapFileDelimiter='TAB' \
 --ancestorMapFileSetDelimiter='PIPE' \
@@ -30,6 +31,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_CO
 --dbPassword="$DB_PASSWORD" \
 --mySqlInstanceName="$MYSQL_INSTANCE_NAME" \
 --cloudSqlRegion="$CLOUD_SQL_REGION" \
+--conceptPrefixesToInclude="" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
