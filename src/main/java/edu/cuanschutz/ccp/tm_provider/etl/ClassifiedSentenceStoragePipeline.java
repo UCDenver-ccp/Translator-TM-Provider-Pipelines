@@ -244,15 +244,6 @@ public class ClassifiedSentenceStoragePipeline {
 									String documentId = es.getDocumentId();
 									String sentence = es.getSentenceText();
 
-									String assertionId = DigestUtils
-											.sha256Hex(subjectCurie + objectCurie + biolinkAssoc.getAssociationId());
-									String evidenceId = DigestUtils.sha256Hex(documentId + sentence + subjectCurie
-											+ subjectSpanStr + objectCurie + objectSpanStr);
-									String subjectEntityId = DigestUtils
-											.sha256Hex(documentId + sentence + subjectCurie + subjectSpanStr);
-									String objectEntityId = DigestUtils
-											.sha256Hex(documentId + sentence + objectCurie + objectSpanStr);
-
 									int documentYearPublished = es.getDocumentYearPublished();
 									if (documentYearPublished > 2155) {
 										// 2155 is the max year value in MySQL
@@ -267,6 +258,15 @@ public class ClassifiedSentenceStoragePipeline {
 									 */
 									for (String sub : subjectCurie.split("\\|")) {
 										for (String obj : objectCurie.split("\\|")) {
+
+											String assertionId = DigestUtils
+													.sha256Hex(sub + obj + biolinkAssoc.getAssociationId());
+											String evidenceId = DigestUtils.sha256Hex(
+													documentId + sentence + sub + subjectSpanStr + obj + objectSpanStr);
+											String subjectEntityId = DigestUtils
+													.sha256Hex(documentId + sentence + sub + subjectSpanStr);
+											String objectEntityId = DigestUtils
+													.sha256Hex(documentId + sentence + obj + objectSpanStr);
 
 											// make sure things will fit in the database columns
 
