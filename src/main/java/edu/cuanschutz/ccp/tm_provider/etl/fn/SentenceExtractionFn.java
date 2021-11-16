@@ -292,7 +292,8 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
 										documentText.substring(sentenceAnnot.getAnnotationSpanStart(),
 												sentenceAnnot.getAnnotationSpanEnd()),
-										documentText, documentZone, documentPublicationTypes, documentYearPublished);
+//										documentText,
+										documentZone, documentPublicationTypes, documentYearPublished);
 								extractedSentences.add(es);
 							}
 						}
