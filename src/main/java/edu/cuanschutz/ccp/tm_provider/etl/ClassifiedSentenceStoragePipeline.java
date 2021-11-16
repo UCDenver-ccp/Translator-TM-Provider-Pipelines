@@ -86,6 +86,11 @@ public class ClassifiedSentenceStoragePipeline {
 
 		void setBertScoreInclusionMinimumThreshold(double minThreshold);
 
+		@Description("If set, only documents that end with the specified ID suffix will be processed. This allows large loads to be spread out over multiple runs.")
+		String getIdSuffixToProcess();
+
+		void setIdSuffixToProcess(String value);
+
 	}
 
 	public static void main(String[] args) {
@@ -118,6 +123,7 @@ public class ClassifiedSentenceStoragePipeline {
 		final String projectId = options.getProject();
 		final String cloudSqlRegion = options.getCloudSqlRegion();
 		final BiolinkAssociation biolinkAssoc = options.getBiolinkAssociation();
+		final String idSuffixToProcess = options.getIdSuffixToProcess();
 
 		PCollection<SqlValues> sqlValues = result.apply("compile sql values",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, SqlValues>() {
@@ -214,125 +220,149 @@ public class ClassifiedSentenceStoragePipeline {
 							}
 
 							if (hasScoreThatMeetsMinimumInclusionThreshold) {
-								ExtractedSentence es = ExtractedSentence.fromTsv(metadataLine, true);
-								// ensure the sentence identifer in the metadata line equals that from the bert
-								// output line. This check is probably unnecessary since the lines were keyed
-								// together based on the sentence ID initially, but we'll check just in case.
-								if (es.getSentenceIdentifier().equals(sentenceId1)) {
-									String subjectCoveredText;
-									String subjectCurie;
-									String subjectSpanStr;
-									String objectCoveredText;
-									String objectCurie;
-									String objectSpanStr;
-									if (es.getEntityPlaceholder1().equals(biolinkAssoc.getSubjectPlaceholder())) {
-										subjectCurie = es.getEntityId1();
-										subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-										subjectCoveredText = es.getEntityCoveredText1();
-										objectCurie = es.getEntityId2();
-										objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-										objectCoveredText = es.getEntityCoveredText2();
-									} else {
-										subjectCurie = es.getEntityId2();
-										subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
-										subjectCoveredText = es.getEntityCoveredText2();
-										objectCurie = es.getEntityId1();
-										objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
-										objectCoveredText = es.getEntityCoveredText1();
-									}
+								ExtractedSentence es = null;
 
-									String documentId = es.getDocumentId();
-									String sentence = es.getSentenceText();
+								try {
+									es = ExtractedSentence.fromTsv(metadataLine, true);
+								} catch (RuntimeException e) {
+									// some sentences in the PMCOA set contain tabs -- these need to be removed
+									// upstream. For now we catch the error so that processing can continue
+									es = null;
+								}
+								if (es != null) {
 
-									int documentYearPublished = es.getDocumentYearPublished();
-									if (documentYearPublished > 2155) {
-										// 2155 is the max year value in MySQL
-										documentYearPublished = 2155;
-									}
+									// if the IdSuffixToProcess is set then only process the sentence if it ends
+									// with that suffix
+									if (idSuffixToProcess.isEmpty() || (!idSuffixToProcess.isEmpty()
+											&& es.getDocumentId().endsWith(idSuffixToProcess))) {
 
-									/*
-									 * for efficiency purposes, if there were multiple ontologies IDs identified for
-									 * the same span of text, those identifiers were spliced together into a
-									 * pipe-delimited list so that sentence only needed to be classified once. Here
-									 * we unsplice any spliced identifiers and create separate sqlvalues for each.
-									 */
-									for (String sub : subjectCurie.split("\\|")) {
-										for (String obj : objectCurie.split("\\|")) {
-
-											String assertionId = DigestUtils
-													.sha256Hex(sub + obj + biolinkAssoc.getAssociationId());
-											String evidenceId = DigestUtils.sha256Hex(
-													documentId + sentence + sub + subjectSpanStr + obj + objectSpanStr);
-											String subjectEntityId = DigestUtils
-													.sha256Hex(documentId + sentence + sub + subjectSpanStr);
-											String objectEntityId = DigestUtils
-													.sha256Hex(documentId + sentence + obj + objectSpanStr);
-
-											// make sure things will fit in the database columns
-
-											// sentences of this great length are most likely sentence segmentation
-											// errors.
-											// Here we truncate anything longer than 1900 characters so that it fits in
-											// the
-											// database column.
-											if (sentence.length() > 1900) {
-												sentence = sentence.substring(0, 1900);
+										// ensure the sentence identifer in the metadata line equals that from the bert
+										// output line. This check is probably unnecessary since the lines were keyed
+										// together based on the sentence ID initially, but we'll check just in case.
+										if (es.getSentenceIdentifier().equals(sentenceId1)) {
+											String subjectCoveredText;
+											String subjectCurie;
+											String subjectSpanStr;
+											String objectCoveredText;
+											String objectCurie;
+											String objectSpanStr;
+											if (es.getEntityPlaceholder1()
+													.equals(biolinkAssoc.getSubjectPlaceholder())) {
+												subjectCurie = es.getEntityId1();
+												subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+												subjectCoveredText = es.getEntityCoveredText1();
+												objectCurie = es.getEntityId2();
+												objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+												objectCoveredText = es.getEntityCoveredText2();
+											} else {
+												subjectCurie = es.getEntityId2();
+												subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan2());
+												subjectCoveredText = es.getEntityCoveredText2();
+												objectCurie = es.getEntityId1();
+												objectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
+												objectCoveredText = es.getEntityCoveredText1();
 											}
 
-											if (sub.length() > 95) {
-												sub = sub.substring(0, 95);
+											String documentId = es.getDocumentId();
+											String sentence = es.getSentenceText();
+
+											int documentYearPublished = es.getDocumentYearPublished();
+											if (documentYearPublished > 2155) {
+												// 2155 is the max year value in MySQL
+												documentYearPublished = 2155;
 											}
 
-											if (obj.length() > 95) {
-												obj = obj.substring(0, 95);
-											}
+											/*
+											 * for efficiency purposes, if there were multiple ontologies IDs identified
+											 * for the same span of text, those identifiers were spliced together into a
+											 * pipe-delimited list so that sentence only needed to be classified once.
+											 * Here we unsplice any spliced identifiers and create separate sqlvalues
+											 * for each.
+											 */
+											for (String sub : subjectCurie.split("\\|")) {
+												for (String obj : objectCurie.split("\\|")) {
 
-											String associationId = biolinkAssoc.getAssociationId();
-											if (associationId.length() > 95) {
-												associationId = associationId.substring(0, 95);
-											}
+													String assertionId = DigestUtils
+															.sha256Hex(sub + obj + biolinkAssoc.getAssociationId());
+													String evidenceId = DigestUtils.sha256Hex(documentId + sentence
+															+ sub + subjectSpanStr + obj + objectSpanStr);
+													String subjectEntityId = DigestUtils
+															.sha256Hex(documentId + sentence + sub + subjectSpanStr);
+													String objectEntityId = DigestUtils
+															.sha256Hex(documentId + sentence + obj + objectSpanStr);
 
-											String documentZone = es.getDocumentZone();
-											if (documentZone.length() > 45) {
-												documentZone = documentZone.substring(0, 45);
-											}
+													// make sure things will fit in the database columns
 
-											String pubTypes = CollectionsUtil
-													.createDelimitedString(es.getDocumentPublicationTypes(), "|");
-											if (pubTypes.length() > 500) {
-												pubTypes = pubTypes.substring(0, 450);
-											}
+													// sentences of this great length are most likely sentence
+													// segmentation
+													// errors.
+													// Here we truncate anything longer than 1900 characters so that it
+													// fits
+													// in
+													// the
+													// database column.
+													if (sentence.length() > 1900) {
+														sentence = sentence.substring(0, 1900);
+													}
 
-											if (subjectCoveredText.length() > 100) {
-												subjectCoveredText = subjectCoveredText.substring(0, 100);
-											}
+													if (sub.length() > 95) {
+														sub = sub.substring(0, 95);
+													}
 
-											if (objectCoveredText.length() > 100) {
-												objectCoveredText = objectCoveredText.substring(0, 100);
-											}
+													if (obj.length() > 95) {
+														obj = obj.substring(0, 95);
+													}
 
-											SqlValues sqlValues = new SqlValues(assertionId, sub, obj, associationId,
-													evidenceId, documentId, sentence, subjectEntityId, objectEntityId,
-													documentZone, pubTypes, documentYearPublished, subjectSpanStr,
-													objectSpanStr, subjectCoveredText, objectCoveredText);
+													String associationId = biolinkAssoc.getAssociationId();
+													if (associationId.length() > 95) {
+														associationId = associationId.substring(0, 95);
+													}
 
-											for (Entry<String, Double> entry : predicateCurieToScore.entrySet()) {
-												String predicateCurie = entry.getKey();
-												if (predicateCurie.length() > 100) {
-													predicateCurie = predicateCurie.substring(0, 100);
+													String documentZone = es.getDocumentZone();
+													if (documentZone.length() > 45) {
+														documentZone = documentZone.substring(0, 45);
+													}
+
+													String pubTypes = CollectionsUtil.createDelimitedString(
+															es.getDocumentPublicationTypes(), "|");
+													if (pubTypes.length() > 500) {
+														pubTypes = pubTypes.substring(0, 450);
+													}
+
+													if (subjectCoveredText.length() > 100) {
+														subjectCoveredText = subjectCoveredText.substring(0, 100);
+													}
+
+													if (objectCoveredText.length() > 100) {
+														objectCoveredText = objectCoveredText.substring(0, 100);
+													}
+
+													SqlValues sqlValues = new SqlValues(assertionId, sub, obj,
+															associationId, evidenceId, documentId, sentence,
+															subjectEntityId, objectEntityId, documentZone, pubTypes,
+															documentYearPublished, subjectSpanStr, objectSpanStr,
+															subjectCoveredText, objectCoveredText);
+
+													for (Entry<String, Double> entry : predicateCurieToScore
+															.entrySet()) {
+														String predicateCurie = entry.getKey();
+														if (predicateCurie.length() > 100) {
+															predicateCurie = predicateCurie.substring(0, 100);
+														}
+
+														sqlValues.addScore(predicateCurie, entry.getValue());
+													}
+
+													c.output(sqlValues);
 												}
-
-												sqlValues.addScore(predicateCurie, entry.getValue());
 											}
-
-											c.output(sqlValues);
+										} else {
+											throw new IllegalStateException(
+													"Mismatch between the BERT output file and sentence metadata files detected. "
+															+ "Sentence identifiers do not match!!! "
+															+ es.getSentenceIdentifier() + " != " + sentenceId1);
 										}
 									}
-								} else {
-									throw new IllegalStateException(
-											"Mismatch between the BERT output file and sentence metadata files detected. "
-													+ "Sentence identifiers do not match!!! "
-													+ es.getSentenceIdentifier() + " != " + sentenceId1);
 								}
 							}
 						}
