@@ -7,7 +7,7 @@ STAGE_LOCATION=$4
 TMP_LOCATION=$5
 BUCKET=$6
 
-ASSOCIATION="bl_gene_to_disease_association"
+ASSOCIATION="bl_gene_to_disease"
 
 JOB_NAME=$(echo "SENTENCE-EXTRACTION-${ASSOCIATION}-${COLLECTION}" | tr '_' '-')
 
@@ -41,6 +41,6 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar SENTENCE_E
 --workerZone=us-central1-c \
 --region=us-central1 \
 --numWorkers=10 \
---maxNumWorkers=125 \
+--maxNumWorkers=75 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner

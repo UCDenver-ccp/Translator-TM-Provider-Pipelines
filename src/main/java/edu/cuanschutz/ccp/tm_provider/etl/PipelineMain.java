@@ -152,6 +152,9 @@ public class PipelineMain {
 			case CONCEPT_COOCCURRENCE_METRICS:
 				ConceptCooccurrenceMetricsPipeline.main(pipelineArgs);
 				break;
+			case CONCEPT_IDF:
+				ConceptIdfPipeline.main(pipelineArgs);
+				break;	
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
 				break;

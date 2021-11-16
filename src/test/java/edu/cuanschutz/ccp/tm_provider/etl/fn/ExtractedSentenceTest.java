@@ -3,6 +3,8 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +12,9 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.file.reader.Line;
+import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 
 public class ExtractedSentenceTest {
@@ -49,7 +54,8 @@ public class ExtractedSentenceTest {
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, "sentence", sentence2,
-				documentText, "abstract", CollectionsUtil.createSet("Journal Article"), 1997);
+//				documentText,
+				"abstract", CollectionsUtil.createSet("Journal Article"), 1997);
 
 		String sentenceWithPlaceholders = es.getSentenceWithPlaceholders();
 
@@ -106,7 +112,9 @@ public class ExtractedSentenceTest {
 
 		ExtractedSentence expectedEs = new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1,
 				entityPlaceholder1, entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword,
-				sentenceText, sentenceContext, documentZone, documentPublicationTypes, documentYearPublished);
+				sentenceText, 
+//				sentenceContext, 
+				documentZone, documentPublicationTypes, documentYearPublished);
 
 		assertEquals(expectedEs.getDocumentId(), es.getDocumentId());
 		assertEquals(expectedEs.getEntityCoveredText1(), es.getEntityCoveredText1());
@@ -119,7 +127,7 @@ public class ExtractedSentenceTest {
 		assertEquals(expectedEs.getEntityPlaceholder2(), es.getEntityPlaceholder2());
 		assertEquals(expectedEs.getSentenceIdentifier(), es.getSentenceIdentifier());
 		assertEquals(expectedEs.getSentenceText(), es.getSentenceText());
-		assertEquals(expectedEs.getSentenceContext(), es.getSentenceContext());
+//		assertEquals(expectedEs.getSentenceContext(), es.getSentenceContext());
 		assertEquals(expectedEs.getDocumentPublicationTypes(), es.getDocumentPublicationTypes());
 		assertEquals(expectedEs.getDocumentYearPublished(), es.getDocumentYearPublished());
 		assertEquals(expectedEs.getDocumentZone(), es.getDocumentZone());
@@ -133,12 +141,33 @@ public class ExtractedSentenceTest {
 		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
 				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, keyword, sentence2,
-				documentText, null, null, 1997);
+//				documentText,
+				null, null, 1997);
 		
 		// tests that null publication types don't result in NPE
 		
 		assertNotNull(es.toTsv());
 				
 	}
+	
+//	@Test
+//	public void testReal1() throws IOException {
+//		String line = "87199fbda36d11ff59658425696120970134fbb5727bddd0aa0718d8ccc4c2c4	@GENE_REGULATOR$, @GENE_REGULATOR$	light signaling/ photomorphogenesis	Cop1 (human)	repression of bZIP transcriptional regulators	PMC317288	COP1	PR:000013922|PR:000005036|PR:000017427|PR:000005036|PR:000017427	0|4	SPA1	PR:000014881|PR:000014880|PR:000014880	6|10		105		COP1, SPA1	light signaling/ photomorphogenesis	Cop1 (human)	repression of bZIP transcriptional regulators	RESULTS		2155\n";
+//		ExtractedSentence.fromTsv(line, true);
+//	}
+	
+//	@Test
+//	public void testReal() throws IOException {
+//		
+//		File f = new File("/Users/bill/projects/ncats-translator/prototype/tm-pipelines.git/bl_gene_regulatory_relationship-00000-of-00008.PMC_SUBSET_1.tsv");
+//		for (StreamLineIterator lineIter = new StreamLineIterator(f, CharacterEncoding.UTF_8, null); lineIter.hasNext();) {
+//			Line next = lineIter.next();
+//			System.out.println(next.getLineNumber());
+//			ExtractedSentence.fromTsv(next.getText(), true);
+//			
+//		}
+//		
+//	}
+	
 
 }

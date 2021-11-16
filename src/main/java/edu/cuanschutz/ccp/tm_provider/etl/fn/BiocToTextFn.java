@@ -125,6 +125,8 @@ public class BiocToTextFn extends DoFn<KV<String, String>, KV<String, String>> {
 								ProcessingStatus status = new ProcessingStatus(docId);
 								status.enableFlag(ProcessingStatusFlag.TEXT_DONE);
 								status.enableFlag(ProcessingStatusFlag.SECTIONS_DONE);
+								status.setYearPublished("2155");
+								status.addPublicationType("unknown");
 
 								if (collection != null) {
 									status.addCollection(collection);

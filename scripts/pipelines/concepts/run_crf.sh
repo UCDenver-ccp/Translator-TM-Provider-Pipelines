@@ -36,6 +36,6 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CRF \
 --workerZone=us-central1-c \
 --region=us-central1 \
 --numWorkers=10 \
---maxNumWorkers=100 \
+--maxNumWorkers=75 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner

@@ -219,9 +219,13 @@ public class ConceptCooccurrenceMetricsPipeline {
 			PCollection<CooccurrenceScores> scores = getConceptIdPairToCooccurrenceMetrics(level, singletonCountMap,
 					totalConceptCount, totalDocumentCount, pairToDocIds);
 
-			/* compute the inverse document frequency for all concepts */
-			PCollection<KV<String, Double>> conceptIdToIdf = getConceptIdf(totalDocumentCount, conceptIdToCounts,
-					level);
+			// IDF should be computed with ancestors. Because using ancestors makes
+			// computing the cooccurrence pairs challenging due to scaling issues, IDF
+			// computation has been migrated to its own pipeline, see {@link
+			// ConceptIdfPipeline}
+//			/* compute the inverse document frequency for all concepts */
+//			PCollection<KV<String, Double>> conceptIdToIdf = getConceptIdf(totalDocumentCount, conceptIdToCounts,
+//					level);
 
 //			///////////////////////
 //
@@ -264,34 +268,34 @@ public class ConceptCooccurrenceMetricsPipeline {
 //			final double recordsPerSecond = 3.0/200.0; 
 			final double recordsPerSecond = 14.5;
 
-			/* Insert into concept_idf table */
-			final PCollection<Void> afterConceptIdf = conceptIdToIdf
-					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
-					.apply("insert concept_idf - " + level.name().toLowerCase(),
-							JdbcIO.<KV<String, Double>>write().withDataSourceConfiguration(dbConfig)
-									.withStatement("INSERT INTO concept_idf (concept_curie,level,idf) \n"
-									// @formatter:off
-							+ "values(?,?,?) ON DUPLICATE KEY UPDATE\n" 
-							+ "    concept_curie = VALUES(concept_curie),\n"
-							+ "    level = VALUES(level),\n"
-							+ "    idf = VALUES(idf)")
-							// @formatter:on
-									.withPreparedStatementSetter(
-											new JdbcIO.PreparedStatementSetter<KV<String, Double>>() {
-												private static final long serialVersionUID = 1L;
-
-												public void setParameters(KV<String, Double> conceptIdToIdf,
-														PreparedStatement query) throws SQLException {
-													query.setString(1, conceptIdToIdf.getKey());
-													query.setString(2, level.name().toLowerCase());
-													query.setDouble(3, conceptIdToIdf.getValue());
-												}
-											})
-									.withResults());
+//			/* Insert into concept_idf table */
+//			final PCollection<Void> afterConceptIdf = conceptIdToIdf
+//					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
+//					.apply("insert concept_idf - " + level.name().toLowerCase(),
+//							JdbcIO.<KV<String, Double>>write().withDataSourceConfiguration(dbConfig)
+//									.withStatement("INSERT INTO concept_idf (concept_curie,level,idf) \n"
+//									// @formatter:off
+//							+ "values(?,?,?) ON DUPLICATE KEY UPDATE\n" 
+//							+ "    concept_curie = VALUES(concept_curie),\n"
+//							+ "    level = VALUES(level),\n"
+//							+ "    idf = VALUES(idf)")
+//							// @formatter:on
+//									.withPreparedStatementSetter(
+//											new JdbcIO.PreparedStatementSetter<KV<String, Double>>() {
+//												private static final long serialVersionUID = 1L;
+//
+//												public void setParameters(KV<String, Double> conceptIdToIdf,
+//														PreparedStatement query) throws SQLException {
+//													query.setString(1, conceptIdToIdf.getKey());
+//													query.setString(2, level.name().toLowerCase());
+//													query.setDouble(3, conceptIdToIdf.getValue());
+//												}
+//											})
+//									.withResults());
 
 			/* Insert into cooccurrence table */
 			PCollection<Void> afterCooccurrenceLoad = scores
-					.apply("waiton concept_idf - " + level.name().toLowerCase(), Wait.on(afterConceptIdf))
+//					.apply("waiton concept_idf - " + level.name().toLowerCase(), Wait.on(afterConceptIdf))
 					.apply(ParDo.of(new RateLimiterDoFn<>(recordsPerSecond)))
 					.apply("insert cooccurrence - " + level.name().toLowerCase(), JdbcIO.<CooccurrenceScores>write()
 							.withDataSourceConfiguration(dbConfig)
@@ -601,7 +605,7 @@ public class ConceptCooccurrenceMetricsPipeline {
 
 	}
 
-	private static PCollectionView<Long> countTotalDocumentsView(Pipeline p, CooccurLevel level,
+	public static PCollectionView<Long> countTotalDocumentsView(Pipeline p, CooccurLevel level,
 			PCollection<KV<String, Set<ConceptId>>> textIdToConceptIdWithAncestorsCollection) {
 		return countTotalDocuments(p, level, textIdToConceptIdWithAncestorsCollection).apply(View.asSingleton());
 	}
@@ -735,32 +739,6 @@ public class ConceptCooccurrenceMetricsPipeline {
 					}
 				}).withSideInputs(ancestorMapView));
 
-	}
-
-	/**
-	 * @param totalDocumentCountView
-	 * @param conceptIdToCounts
-	 * @return KV pairs linking the concept ID to the inverse document frequency
-	 */
-	private static PCollection<KV<String, Double>> getConceptIdf(PCollectionView<Long> totalDocumentCountView,
-			PCollection<KV<String, Long>> conceptIdToCounts, CooccurLevel level) {
-		return conceptIdToCounts.apply("idf - " + level.name().toLowerCase(),
-				ParDo.of(new DoFn<KV<String, Long>, KV<String, Double>>() {
-					private static final long serialVersionUID = 1L;
-
-					@ProcessElement
-					public void processElement(ProcessContext c) {
-						KV<String, Long> conceptIdToCount = c.element();
-						String conceptId = conceptIdToCount.getKey();
-						long count = conceptIdToCount.getValue();
-						long totalDocumentCount = c.sideInput(totalDocumentCountView);
-						double idf = Math.log((double) totalDocumentCount / (double) count);
-
-						BigDecimal d = new BigDecimal(idf).setScale(8, BigDecimal.ROUND_HALF_UP);
-
-						c.output(KV.of(conceptId, d.doubleValue()));
-					}
-				}).withSideInputs(totalDocumentCountView));
 	}
 
 //	/**

@@ -41,17 +41,18 @@ public class ExtractedSentence extends DoFn {
 	private final Set<String> documentPublicationTypes;
 	private final int documentYearPublished;
 
-	/**
-	 * Larger block of text, perhaps entire abstract
-	 */
-	private final String sentenceContext;
+//	/**
+//	 * Larger block of text, perhaps entire abstract
+//	 */
+//	private final String sentenceContext;
 
 	private final String entityPlaceholder1;
 	private final String entityPlaceholder2;
 
 	public ExtractedSentence(String documentId, String entityId1, String entityCoveredText1, List<Span> entitySpan1,
 			String entityPlaceholder1, String entityId2, String entityCoveredText2, List<Span> entitySpan2,
-			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext, String documentZone,
+//			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext, String documentZone,
+			String entityPlaceholder2, String keyword, String sentenceText, String documentZone,
 			Set<String> documentPublicationTypes, int documentYearPublished) {
 		super();
 
@@ -82,7 +83,7 @@ public class ExtractedSentence extends DoFn {
 		this.documentId = documentId;
 		this.keyword = (keyword != null) ? keyword : "";
 		this.sentenceText = sentenceText;
-		this.sentenceContext = sentenceContext.replaceAll("\\n", "||||");
+//		this.sentenceContext = sentenceContext.replaceAll("\\n", "||||");
 		this.documentZone = (documentZone != null) ? documentZone : "unknown";
 		this.documentPublicationTypes = (documentPublicationTypes != null)
 				? new HashSet<String>(documentPublicationTypes)
@@ -147,7 +148,8 @@ public class ExtractedSentence extends DoFn {
 			return CollectionsUtil.createDelimitedString(Arrays.asList(getSentenceIdentifier(),
 					getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
 					entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
-					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceContext), "\t");
+//					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceContext), "\t");
+			sentenceText, documentZone, pubTypesStr, documentYearPublished), "\t");
 
 		} catch (NullPointerException e) {
 			StringBuilder msgBuilder = new StringBuilder();
@@ -166,7 +168,7 @@ public class ExtractedSentence extends DoFn {
 			msgBuilder.append("document zone: " + documentZone + "\n");
 			msgBuilder.append("pub types: " + pubTypesStr + "\n");
 			msgBuilder.append("year pyblished: " + documentYearPublished + "\n");
-			msgBuilder.append("sentence context: " + sentenceContext + "\n");
+//			msgBuilder.append("sentence context: " + sentenceContext + "\n");
 			throw new NullPointerException(msgBuilder.toString());
 		}
 
@@ -210,7 +212,7 @@ public class ExtractedSentence extends DoFn {
 		String documentZone = cols[index++];
 		Set<String> documentPublicationTypes = new HashSet<String>(Arrays.asList(cols[index++].split("\\|")));
 		int documentYearPublished = Integer.parseInt(cols[index++]);
-		String sentenceContext = cols[index++];
+//		String sentenceContext = cols[index++];
 
 		
 		int entity1Start = entitySpan1.get(0).getSpanStart();
@@ -248,7 +250,7 @@ public class ExtractedSentence extends DoFn {
 		}
 
 		return new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1, entityPlaceholder1,
-				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, sentenceContext,
+				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, //sentenceContext,
 				documentZone, documentPublicationTypes, documentYearPublished);
 	}
 
