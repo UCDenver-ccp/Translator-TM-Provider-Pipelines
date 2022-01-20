@@ -7,6 +7,8 @@ OUTPUT_BUCKET=$4
 STAGE_LOCATION=$5
 TMP_LOCATION=$6
 
+ZONE='us-central1-c'
+REGION='us-central1'
 JOB_NAME=$(echo "CONCEPT-ANNOT-EXPORT-${COLLECTION}" | tr '_' '-')
 
 
@@ -26,7 +28,9 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CONCEPT_AN
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
---zone=us-central1-c \
+--workerZone="$ZONE" \
+--region="$REGION" \
 --numWorkers=10 \
 --maxNumWorkers=200 \
+--autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner
