@@ -25,3 +25,4 @@ src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/GoogleSheetsToB
 scripts/airflow/backfill-sentence-classification-pubmed-full.py
 scripts/airflow/backfill-sentence-classification-pubmed.py
 src/main/java/edu/cuanschutz/ccp/tm_provider/trapi/PrToUniProtMapFileCreatorMain.java
+src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/BratAssertionAnnotationFileCreatorMain.java
