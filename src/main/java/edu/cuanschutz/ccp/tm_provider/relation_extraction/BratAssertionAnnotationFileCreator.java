@@ -127,41 +127,39 @@ public class BratAssertionAnnotationFileCreator {
 				for (Iterator<Set<ExtractedSentence>> sentIter = new SentenceIterator(is); sentIter.hasNext();) {
 					Set<ExtractedSentence> sentences = sentIter.next();
 					sentences = excludeBasedOnEntityIds(sentences, idsToExclude);
-					if (!sentences.isEmpty()) {
-						if (indexesForNewBatch.contains(sentenceCount)) {
-							String hash = computeHash(sentences.iterator().next());
-							if (hashesOutputInThisBatch.contains(hash)) {
-								throw new IllegalStateException("duplicate hash observed!");
-							}
-							if (!alreadyAnnotated.contains(hash)) {
-								hashesOutputInThisBatch.add(hash);
-								annIndex = writeSentenceToBratFiles(sentences, annIndex, annFileWriter, txtFileWriter,
-										idFileWriter, biolinkAssociation);
+					if (!sentences.isEmpty() && indexesForNewBatch.contains(sentenceCount)) {
+						String hash = computeHash(sentences.iterator().next());
+						if (hashesOutputInThisBatch.contains(hash)) {
+							throw new IllegalStateException("duplicate hash observed!");
+						}
+						if (!alreadyAnnotated.contains(hash)) {
+							hashesOutputInThisBatch.add(hash);
+							annIndex = writeSentenceToBratFiles(sentences, annIndex, annFileWriter, txtFileWriter,
+									idFileWriter, biolinkAssociation);
 //								extractedSentenceCount++;
 
-								// create a new "page" of sentences at regular intervals by creating new
-								// annFile, txtFile, and idFile.
-								if (hashesOutputInThisBatch.size() % SENTENCES_PER_PAGE == 0
-										&& hashesOutputInThisBatch.size() < batchSize) {
-									// without this check for extractedSentenceCount < batchSize an empty file gets
-									// created at the end of processing
-									annFileWriter.close();
-									txtFileWriter.write("DONE\n");
-									txtFileWriter.close();
-									if (idFileWriter != null) {
-										idFileWriter.close();
-									}
-									subBatchId = getSubBatchId(++subBatchIndex);
-									
-									annFileWriter = getAnnFileWriter(biolinkAssociation, batchId, subBatchId);
-									txtFileWriter = getTxtFileWriter(biolinkAssociation, batchId, subBatchId);
+							// create a new "page" of sentences at regular intervals by creating new
+							// annFile, txtFile, and idFile.
+							if (hashesOutputInThisBatch.size() % SENTENCES_PER_PAGE == 0
+									&& hashesOutputInThisBatch.size() < batchSize) {
+								// without this check for extractedSentenceCount < batchSize an empty file gets
+								// created at the end of processing
+								annFileWriter.close();
+								txtFileWriter.write("DONE\n");
+								txtFileWriter.close();
+								if (idFileWriter != null) {
+									idFileWriter.close();
+								}
+								subBatchId = getSubBatchId(++subBatchIndex);
+
+								annFileWriter = getAnnFileWriter(biolinkAssociation, batchId, subBatchId);
+								txtFileWriter = getTxtFileWriter(biolinkAssociation, batchId, subBatchId);
 //									idFileWriter = getIdFileWriter(biolinkAssociation, batchId, subBatchId);
-									annIndex = 1;
-									spanOffset = 0;
-								}
-								if (hashesOutputInThisBatch.size() >= batchSize) {
-									break;
-								}
+								annIndex = 1;
+								spanOffset = 0;
+							}
+							if (hashesOutputInThisBatch.size() >= batchSize) {
+								break;
 							}
 						}
 					}
@@ -175,7 +173,7 @@ public class BratAssertionAnnotationFileCreator {
 			}
 
 		} finally {
-			System.out.println("closing files ("+subBatchId+"). count = " + hashesOutputInThisBatch.size());
+			System.out.println("closing files (" + subBatchId + "). count = " + hashesOutputInThisBatch.size());
 			annFileWriter.close();
 			txtFileWriter.write("DONE\n");
 			txtFileWriter.close();
@@ -352,10 +350,7 @@ public class BratAssertionAnnotationFileCreator {
 	 * @return
 	 */
 	private boolean validateSubjectObject(ExtractedSentence sentence, Set<String> idsToExclude) {
-		if (idsToExclude.contains(sentence.getEntityId1()) || idsToExclude.contains(sentence.getEntityId2())) {
-			return false;
-		}
-		return true;
+		return !(idsToExclude.contains(sentence.getEntityId1()) || idsToExclude.contains(sentence.getEntityId2()));
 	}
 
 	/**
@@ -379,6 +374,7 @@ public class BratAssertionAnnotationFileCreator {
 			BufferedWriter txtFileWriter, BufferedWriter idFileWriter, BiolinkAssociation biolinkAssociation)
 			throws IOException {
 
+		int currentAnnIndex = annIndex;
 		/* write the sentence to the txt file as a new line */
 		ExtractedSentence sentence = sentences.iterator().next();
 		txtFileWriter.write(sentence.getSentenceText() + "\n");
@@ -394,7 +390,7 @@ public class BratAssertionAnnotationFileCreator {
 
 		/* write the entity annotations to the ann file */
 		for (TextAnnotation annot : annots) {
-			String tIndex = "T" + annIndex++;
+			String tIndex = "T" + currentAnnIndex++;
 			String label = annot.getClassMention().getMentionName().toLowerCase();
 			String spanStr = getSpanStr(annot);
 			String coveredText = annot.getCoveredText();
@@ -404,7 +400,7 @@ public class BratAssertionAnnotationFileCreator {
 		}
 
 		spanOffset += sentence.getSentenceText().length() + 1;
-		return annIndex;
+		return currentAnnIndex;
 	}
 
 	private List<TextAnnotation> getEntityAnnotations(Set<ExtractedSentence> sentences,
