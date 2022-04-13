@@ -308,11 +308,11 @@ public class BratAssertionAnnotationFileCreator {
 
 	}
 
-	private BufferedWriter getIdFileWriter(BiolinkAssociation biolinkAssociation, String batchId, String subBatchIndex)
-			throws FileNotFoundException {
-		return FileWriterUtil
-				.initBufferedWriter(getIdFile(outputDirectory, biolinkAssociation, batchId, subBatchIndex));
-	}
+//	private BufferedWriter getIdFileWriter(BiolinkAssociation biolinkAssociation, String batchId, String subBatchIndex)
+//			throws FileNotFoundException {
+//		return FileWriterUtil
+//				.initBufferedWriter(getIdFile(outputDirectory, biolinkAssociation, batchId, subBatchIndex));
+//	}
 
 	private BufferedWriter getTxtFileWriter(BiolinkAssociation biolinkAssociation, String batchId, String subBatchIndex)
 			throws FileNotFoundException {
@@ -494,21 +494,21 @@ public class BratAssertionAnnotationFileCreator {
 		return sentence.getEntitySpan2();
 	}
 
-	private static String getSubjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
-		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
-			return sentence.getEntityId1();
-		}
-		return sentence.getEntityId2();
-	}
-
-	private static String getObjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
-		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
-			return sentence.getEntityId1();
-		}
-		return sentence.getEntityId2();
-	}
+//	private static String getSubjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
+//		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+//		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
+//			return sentence.getEntityId1();
+//		}
+//		return sentence.getEntityId2();
+//	}
+//
+//	private static String getObjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
+//		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+//		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
+//			return sentence.getEntityId1();
+//		}
+//		return sentence.getEntityId2();
+//	}
 
 	protected static String computeHash(ExtractedSentence sentence) {
 		return DigestUtil.getBase64Sha1Digest(sentence.getSentenceText());
