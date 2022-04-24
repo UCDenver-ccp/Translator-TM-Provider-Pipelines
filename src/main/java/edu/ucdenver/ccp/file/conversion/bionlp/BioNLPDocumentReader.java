@@ -45,6 +45,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.io.StreamUtil;
@@ -59,6 +61,9 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationUtil;
 import edu.ucdenver.ccp.nlp.core.mention.impl.DefaultClassMention;
 
 public class BioNLPDocumentReader extends DocumentReader {
+
+	private static final Logger logger = Logger.getLogger(BioNLPDocumentReader.class);
+
 	/**
 	 * The BioNLP format does not support spaces in annotation and relation types,
 	 * so any spaces in an annotation or relation type must be replaced. This
@@ -154,34 +159,54 @@ public class BioNLPDocumentReader extends DocumentReader {
 		lineIter.close();
 	}
 
+	private boolean isValidAnnotationLine(String line) {
+		String[] toks = line.split("\\t");
+		if (toks.length != 3) {
+			logger.warn("Invalid annotation line detected (column count != 3): " + line);
+			return false;
+		}
+		if (!toks[0].matches("T\\d+")) {
+			logger.warn("Invalid annotation line detected (first column does not match T\\d+): " + line);
+			return false;
+		}
+		String[] mid = toks[1].split(" ");
+		if (mid.length != 3) {
+			logger.warn("Invalid annotation line detected (middle column does not have 3 columns): " + line);
+			return false;
+		}
+		return true;
+	}
+
 	private void extractAnnotations(String documentText, Map<String, TextAnnotation> annotIdToAnnotMap,
 			TextAnnotationFactory factory, String line) {
-		String[] toks = line.split("\\t");
-		String annotId = toks[0];
+		if (isValidAnnotationLine(line)) {
 
-		String annotType = toks[1].substring(0, toks[1].indexOf(" "));
-		/* replace all spaceHolders in annotation type with spaces */
-		if (spacePlaceholder != null) {
-			annotType = annotType.replaceAll(RegExPatterns.escapeCharacterForRegEx(spacePlaceholder), " ");
-		}
-		String spanStr = toks[1].substring(toks[1].indexOf(" ") + 1);
+			String[] toks = line.split("\\t");
+			String annotId = toks[0];
 
-		TextAnnotation ta = null;
-		// TODO FIX SPAN VALIDATION WHEN THERE IS A DISCONTINUOUS SPAN -- will involve
-		// parsing the expected covered text
-		String coveredText = ""; // expected covered text will not appear in the document
-		if (toks.length > 2) {
-			coveredText = toks[2]; // TODO: Note that if this is a discontinuous span, then the
-		}
-		String[] spanToks = spanStr.split(";");
+			String annotType = toks[1].substring(0, toks[1].indexOf(" "));
+			/* replace all spaceHolders in annotation type with spaces */
+			if (spacePlaceholder != null) {
+				annotType = annotType.replaceAll(RegExPatterns.escapeCharacterForRegEx(spacePlaceholder), " ");
+			}
+			String spanStr = toks[1].substring(toks[1].indexOf(" ") + 1);
 
-		for (String spanTok : spanToks) {
-			String[] spanTokToks = spanTok.split(" ");
-			int spanStart = Integer.parseInt(spanTokToks[0]);
-			int spanEnd = Integer.parseInt(spanTokToks[1]);
-			if (ta == null) {
-				ta = factory.createAnnotation(spanStart, spanEnd, "", new DefaultClassMention(annotType));
-				TextAnnotationUtil.addSlotValue(ta, THEME_ID_SLOT_NAME, annotId);
+			TextAnnotation ta = null;
+			// TODO FIX SPAN VALIDATION WHEN THERE IS A DISCONTINUOUS SPAN -- will involve
+			// parsing the expected covered text
+			String coveredText = ""; // expected covered text will not appear in the document
+			if (toks.length > 2) {
+				coveredText = toks[2]; // TODO: Note that if this is a discontinuous span, then the
+			}
+			String[] spanToks = spanStr.split(";");
+
+			for (String spanTok : spanToks) {
+				String[] spanTokToks = spanTok.split(" ");
+				int spanStart = Integer.parseInt(spanTokToks[0]);
+				int spanEnd = Integer.parseInt(spanTokToks[1]);
+				if (ta == null) {
+					ta = factory.createAnnotation(spanStart, spanEnd, "", new DefaultClassMention(annotType));
+					TextAnnotationUtil.addSlotValue(ta, THEME_ID_SLOT_NAME, annotId);
 
 //						// TODO: NOTE - validation of spans/covered text needs to be implemented for
 //						// discontinuous span annots
@@ -217,17 +242,18 @@ public class BioNLPDocumentReader extends DocumentReader {
 //								}
 //							}
 //						}
-				// TODO -- revisit for use with discontinuous annotations
-				if (coveredText.isEmpty() && documentText.length() > ta.getAnnotationSpanEnd()) {
-					coveredText = documentText.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd());
+					// TODO -- revisit for use with discontinuous annotations
+					if (coveredText.isEmpty() && documentText.length() > ta.getAnnotationSpanEnd()) {
+						coveredText = documentText.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd());
+					}
+				} else {
+					ta.addSpan(new Span(spanStart, spanEnd));
+					coveredText += (" " + documentText.substring(spanStart, spanEnd));
 				}
-			} else {
-				ta.addSpan(new Span(spanStart, spanEnd));
-				coveredText += (" " + documentText.substring(spanStart, spanEnd));
 			}
+			ta.setCoveredText(coveredText);
+			annotIdToAnnotMap.put(annotId, ta);
 		}
-		ta.setCoveredText(coveredText);
-		annotIdToAnnotMap.put(annotId, ta);
 	}
 
 }

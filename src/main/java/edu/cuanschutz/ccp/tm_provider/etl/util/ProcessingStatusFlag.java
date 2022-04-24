@@ -18,6 +18,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_DRUGBANK_DONE;
@@ -67,6 +68,8 @@ public enum ProcessingStatusFlag {
 	CONCEPT_POST_PROCESSING_UNFILTERED_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE),
 
 	CONCEPT_COOCCURRENCE_COUNTS_DONE(STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE),
+
+	ELASTICSEARCH_INDEX_DONE(STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE),
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
