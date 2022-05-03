@@ -404,9 +404,9 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 		headerValues.add("Sentence ID");
 		headerValues.add("Sentence With Placeholders");
 		headerValues.add("Document ID");
-		headerValues.add(association.getSubjectPlaceholder());
+		headerValues.add(association.getSubjectClass().getPlaceholder());
 		headerValues.add("Subject text");
-		headerValues.add(association.getObjectPlaceholder());
+		headerValues.add(association.getObjectClass().getPlaceholder());
 		headerValues.add("Object text");
 		headerValues.add("Sentence");
 		headerValues.add("NO RELATION PRESENT");
@@ -785,7 +785,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 //	}
 
 	private String getSubjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		String subjectPlaceholder = biolinkAssociation.getSubjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
 			return sentence.getEntityCoveredText1();
 		}
@@ -793,7 +793,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	private String getObjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		String objectPlaceholder = biolinkAssociation.getObjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
 			return sentence.getEntityCoveredText1();
 		}
@@ -801,7 +801,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	private static List<Span> getSubjectSpan(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		String subjectPlaceholder = biolinkAssociation.getSubjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
 			return sentence.getEntitySpan1();
 		}
@@ -809,7 +809,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	private static List<Span> getObjectSpan(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		String objectPlaceholder = biolinkAssociation.getObjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
 			return sentence.getEntitySpan1();
 		}
@@ -817,7 +817,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	private static String getSubjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		String subjectPlaceholder = biolinkAssociation.getSubjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
 			return sentence.getEntityId1();
 		}
@@ -825,7 +825,7 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 	}
 
 	private static String getObjectId(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		String objectPlaceholder = biolinkAssociation.getObjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
 			return sentence.getEntityId1();
 		}

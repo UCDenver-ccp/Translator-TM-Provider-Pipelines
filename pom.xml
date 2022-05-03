@@ -281,8 +281,18 @@
 
 
 
+		<!-- <dependency> <groupId>com.fasterxml.jackson.core</groupId> <artifactId>jackson-databind</artifactId> 
+			<version>2.12.3</version> </dependency> -->
 
-
+		<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-datacatalog-bom -->
+		<!-- Build stalls in Docker without adding this more recent version of 
+			google-cloud-datacatalog-bom -->
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-datacatalog-bom</artifactId>
+			<version>1.7.3</version>
+			<type>pom</type>
+		</dependency>
 
 
 		<!-- Adds a dependency on the Beam SDK. -->
@@ -324,6 +334,12 @@
 			<groupId>org.apache.beam</groupId>
 			<artifactId>beam-sdks-java-io-elasticsearch</artifactId>
 			<version>2.37.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>co.elastic.clients</groupId>
+			<artifactId>elasticsearch-java</artifactId>
+			<version>7.17.3</version>
 		</dependency>
 
 

@@ -1,13 +1,22 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import lombok.Data;
 
 public class BiolinkConstants {
+
+	public static final String ANATOMICAL_SITE_PLACEHOLDER = "@SITE$";
+	public static final String CELL_TYPE_PLACEHOLDER = "@CELL$";
+	public static final String CELLULAR_COMPONENT_PLACEHOLDER = "@COMPONENT$";
 	public static final String GENE_PLACEHOLDER = "@GENE$";
 	public static final String CHEMICAL_PLACEHOLDER = "@CHEMICAL$";
 	public static final String DISEASE_PLACEHOLDER = "@DISEASE$";
-	public static final String LOCATION_PLACEHOLDER = "@LOCATION$";
+	public static final String ANY_LOCATION_PLACEHOLDER = "@LOCATION$";
 	public static final String PHENOTYPIC_FEATURE_PLACEHOLDER = "@PHENOTYPICFEATURE$";
+	public static final String PROCESS_PLACEHOLDER = "@PROCESS$";
 
 	private static final String REGULATING_GENE_PLACEHOLDER = "@GENE_REGULATOR$";
 	private static final String REGULATED_GENE_PLACEHOLDER = "@REGULATED_GENE$";
@@ -15,55 +24,72 @@ public class BiolinkConstants {
 	private static final String BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION = "biolink:ChemicalToDiseaseOrPhenotypicFeatureAssociation";
 	private static final String BL_CHEMICAL_TO_GENE_ASSOCIATION = "biolink:ChemicalToGeneAssociation";
 	private static final String BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION = "biolink:DiseaseToPhenotypicFeatureAssociation";
+	private static final String BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION_ASSOCIATION = "biolink:DiseaseOrPhenotypicFeatureToLocationAssociation";
 	private static final String BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION = "biolink:GeneRegulatoryRelationship";
 	private static final String BL_GENE_TO_DISEASE_ASSOCIATION = "biolink:GeneToDiseaseAssociation";
 	private static final String BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION = "biolink:GeneToExpressionSiteAssociation";
 
+	// TODO: THis is not yet an official Biolink Association
+	private static final String BL_BIOLOGICAL_PROCESS_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION = "biolink:BiologicalProcessToDiseaseOrPhenotypicFeatureAssociation";
+
 	public enum BiolinkAssociation {
+		// @formatter:off
 		BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE(BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
-				CHEMICAL_PLACEHOLDER, DISEASE_PLACEHOLDER,
-				new SPO[] { new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_TREATS, DISEASE_PLACEHOLDER),
-//						new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
+				BiolinkClass.CHEMICAL, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
+				new SPO[] { new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_TREATS, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+//						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_CONTRIBUTES_TO, BiolinkClass.DISEASE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_CHEMICAL_TO_GENE(BL_CHEMICAL_TO_GENE_ASSOCIATION, CHEMICAL_PLACEHOLDER, GENE_PLACEHOLDER, new SPO[] {
-				new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_ENTITY_POSITIVELY_REGULATES_ENTITY, GENE_PLACEHOLDER),
-				new SPO(CHEMICAL_PLACEHOLDER, BiolinkPredicate.BL_ENTITY_NEGATIVELY_REGULATES_ENTITY, GENE_PLACEHOLDER),
-				new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
-
-		BL_DISEASE_TO_PHENOTYPIC_FEATURE(BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION, DISEASE_PLACEHOLDER,
-				PHENOTYPIC_FEATURE_PLACEHOLDER,
+		BL_CHEMICAL_TO_GENE(BL_CHEMICAL_TO_GENE_ASSOCIATION, BiolinkClass.CHEMICAL, BiolinkClass.GENE,
 				new SPO[] {
-						new SPO(DISEASE_PLACEHOLDER, BiolinkPredicate.BL_HAS_PHENOTYPE, PHENOTYPIC_FEATURE_PLACEHOLDER),
+						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_ENTITY_POSITIVELY_REGULATES_ENTITY, BiolinkClass.GENE),
+						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_ENTITY_NEGATIVELY_REGULATES_ENTITY, BiolinkClass.GENE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_GENE_REGULATORY_RELATIONSHIP(BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION, REGULATING_GENE_PLACEHOLDER,
-				REGULATED_GENE_PLACEHOLDER,
+		BL_DISEASE_TO_PHENOTYPIC_FEATURE(BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION, BiolinkClass.DISEASE,
+				BiolinkClass.PHENOTYPIC_FEATURE,
 				new SPO[] {
-						new SPO(REGULATING_GENE_PLACEHOLDER, BiolinkPredicate.BL_ENTITY_POSITIVELY_REGULATES_ENTITY,
-								REGULATED_GENE_PLACEHOLDER),
-						new SPO(REGULATING_GENE_PLACEHOLDER, BiolinkPredicate.BL_ENTITY_NEGATIVELY_REGULATES_ENTITY,
-								REGULATED_GENE_PLACEHOLDER),
+						new SPO(BiolinkClass.DISEASE, BiolinkPredicate.BL_HAS_PHENOTYPE, BiolinkClass.PHENOTYPIC_FEATURE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_GENE_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
-				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_CONTRIBUTES_TO, DISEASE_PLACEHOLDER),
-						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
-
-		BL_GENE_LOSS_GAIN_OF_FUNCTION_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, GENE_PLACEHOLDER, DISEASE_PLACEHOLDER,
+		BL_GENE_REGULATORY_RELATIONSHIP(BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION, BiolinkClass.REGULATING_GENE,
+				BiolinkClass.REGULATED_GENE,
 				new SPO[] {
-						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO,
-								DISEASE_PLACEHOLDER),
-						new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO,
-								DISEASE_PLACEHOLDER),
+						new SPO(BiolinkClass.REGULATING_GENE, BiolinkPredicate.BL_ENTITY_POSITIVELY_REGULATES_ENTITY, BiolinkClass.REGULATED_GENE),
+						new SPO(BiolinkClass.REGULATING_GENE, BiolinkPredicate.BL_ENTITY_NEGATIVELY_REGULATES_ENTITY, BiolinkClass.REGULATED_GENE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_GENE_TO_EXPRESSION_SITE(BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION, GENE_PLACEHOLDER, LOCATION_PLACEHOLDER,
-				new SPO[] { new SPO(GENE_PLACEHOLDER, BiolinkPredicate.BL_EXPRESSED_IN, LOCATION_PLACEHOLDER),
+		BL_GENE_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, BiolinkClass.GENE,
+				BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
+				new SPO[] {
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_CONTRIBUTES_TO, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-//		TODO: need to define what kinds of assertions are extracted here
-//		BL_GENE_TO_GO_TERM(BL_GENE_TO_GO_TERM_ASSOCIATION, new BiolinkPredicate[] {})
+		BL_GENE_LOSS_GAIN_OF_FUNCTION_TO_DISEASE(BL_GENE_TO_DISEASE_ASSOCIATION, BiolinkClass.GENE,
+				BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
+				new SPO[] {
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+
+		BL_GENE_TO_EXPRESSION_SITE(BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION, BiolinkClass.GENE, BiolinkClass.ANY_LOCATION,
+				new SPO[] { new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.ANATOMICAL_SITE),
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.CELL_TYPE),
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.CELLULAR_COMPONENT),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+
+		BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION(BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION_ASSOCIATION,
+				BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE, BiolinkClass.ANATOMICAL_SITE,
+				new SPO[] {
+						new SPO(BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE, BiolinkPredicate.BL_OCCURS_IN, BiolinkClass.ANATOMICAL_SITE),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+
+		BL_BIOLOGICAL_PROCESS_TO_DISEASE(BL_BIOLOGICAL_PROCESS_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
+				BiolinkClass.BIOLOGICAL_PROCESS, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
+				new SPO[] {
+						new SPO(BiolinkClass.BIOLOGICAL_PROCESS, BiolinkPredicate.ACTIVELY_INVOLVED_IN, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+		// @formatter:on
 
 		;
 
@@ -74,16 +100,16 @@ public class BiolinkConstants {
 		 * https://github.com/UCDenver-ccp/bluebert/blob/6a91a1bae7bd911cb32dca7a52379680499d213a/bluebert/run_bluebert.py#L249)
 		 */
 		private final SPO[] spoTriples;
-		private final String subjectPlaceholder;
-		private final String objectPlaceholder;
+		private final BiolinkClass subjectClass;
+		private final BiolinkClass objectClass;
 
 		private final String associationId;
 
-		private BiolinkAssociation(String associationId, String subjectPlaceholder, String objectPlaceholder,
+		private BiolinkAssociation(String associationId, BiolinkClass subjectClass, BiolinkClass objectClass,
 				SPO[] spoTriples) {
 			this.associationId = associationId;
-			this.subjectPlaceholder = subjectPlaceholder;
-			this.objectPlaceholder = objectPlaceholder;
+			this.subjectClass = subjectClass;
+			this.objectClass = objectClass;
 			this.spoTriples = spoTriples;
 		}
 
@@ -91,12 +117,12 @@ public class BiolinkConstants {
 			return this.associationId;
 		}
 
-		public String getSubjectPlaceholder() {
-			return this.subjectPlaceholder;
+		public BiolinkClass getSubjectClass() {
+			return this.subjectClass;
 		}
 
-		public String getObjectPlaceholder() {
-			return this.objectPlaceholder;
+		public BiolinkClass getObjectClass() {
+			return this.objectClass;
 		}
 
 		public SPO[] getSpoTriples() {
@@ -105,6 +131,7 @@ public class BiolinkConstants {
 	}
 
 	public enum BiolinkPredicate {
+		// @formatter:off
 		/**
 		 * This is a placeholder for the column that is typically labeled "false" in the
 		 * BERT output to signify that no relation was predicted.
@@ -112,14 +139,17 @@ public class BiolinkConstants {
 		NO_RELATION_PRESENT(null, "false"),
 		BL_ENTITY_POSITIVELY_REGULATES_ENTITY("biolink:entity_positively_regulates_entity", "pos-reg"),
 		BL_ENTITY_NEGATIVELY_REGULATES_ENTITY("biolink:entity_negatively_regulates_entity", "neg-reg"),
-		BL_TREATS("biolink:treats", "treats"), BL_EXPRESSED_IN("biolink:expressed_in", "expressed_in"),
+		BL_TREATS("biolink:treats", "treats"), 
+		BL_EXPRESSED_IN("biolink:expressed_in", "expressed_in"),
 		BL_CONTRIBUTES_TO("biolink:contributes_to", "contributes_to"),
 		BL_LOSS_OF_FUNCTION_CONTRIBUTES_TO("biolink:loss_of_function_contributes_to",
 				"contributes_to_via_loss_of_function"),
 		BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO("biolink:gain_of_function_contributes_to",
 				"contributes_to_via_gain_of_function"),
-
-		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype");
+		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype"), 
+		BL_OCCURS_IN("biolink:occurs_in", "occurs_in"),
+		ACTIVELY_INVOLVED_IN("biolink:actively_involved_in", "actively_involved_in");
+		// @formatter:on
 
 		private final String curie;
 		private final String labelAbbreviation;
@@ -140,8 +170,42 @@ public class BiolinkConstants {
 
 	@Data
 	public static class SPO {
-		private final String subjPlaceholder;
+		private final BiolinkClass subjClass;
 		private final BiolinkPredicate predicate;
-		private final String objPlaceholder;
+		private final BiolinkClass objClass;
+	}
+
+	public enum BiolinkClass {
+		// @formatter:off
+		DISEASE(DISEASE_PLACEHOLDER, "MONDO"), 
+		DISEASE_OR_PHENOTYPIC_FEATURE(DISEASE_PLACEHOLDER, "MONDO", "HP"),
+		PHENOTYPIC_FEATURE(PHENOTYPIC_FEATURE_PLACEHOLDER, "HP"), 
+		CHEMICAL(CHEMICAL_PLACEHOLDER, "DRUGBANK", "CHEBI"),
+		BIOLOGICAL_PROCESS(PROCESS_PLACEHOLDER, "GO_BP"),  // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		ANATOMICAL_SITE(ANATOMICAL_SITE_PLACEHOLDER, "UBERON"),
+		CELLULAR_COMPONENT(CELLULAR_COMPONENT_PLACEHOLDER, "GO_CC"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		CELL_TYPE(CELL_TYPE_PLACEHOLDER, "CL"),
+		ANY_LOCATION(ANY_LOCATION_PLACEHOLDER, "UBERON", "CL", "GO_CC"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		GENE(GENE_PLACEHOLDER, "PR"),
+		REGULATED_GENE(REGULATED_GENE_PLACEHOLDER, "PR"), 
+		REGULATING_GENE(REGULATING_GENE_PLACEHOLDER, "PR");
+		// @formatter:on
+
+		private final String placeholder;
+		private final String[] ontologyPrefixes;
+
+		private BiolinkClass(String placeholder, String... ontologyPrefixes) {
+			this.placeholder = placeholder;
+			this.ontologyPrefixes = ontologyPrefixes;
+		}
+
+		public Set<String> getOntologyPrefixes() {
+			return new HashSet<String>(Arrays.asList(ontologyPrefixes));
+		}
+
+		public String getPlaceholder() {
+			return this.placeholder;
+		}
+
 	}
 }

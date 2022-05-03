@@ -423,8 +423,8 @@ public class BratAssertionAnnotationFileCreator {
 
 	private TextAnnotation getSubjectAnnot(BiolinkAssociation biolinkAssociation, TextAnnotationFactory factory,
 			ExtractedSentence sentence) {
-		String subjectType = biolinkAssociation.getSubjectPlaceholder().substring(1,
-				biolinkAssociation.getSubjectPlaceholder().length() - 1);
+		String subjectType = biolinkAssociation.getSubjectClass().getPlaceholder().substring(1,
+				biolinkAssociation.getSubjectClass().getPlaceholder().length() - 1);
 		getSubjectText(sentence, biolinkAssociation);
 		List<Span> subjectSpans = getSubjectSpan(sentence, biolinkAssociation);
 
@@ -435,8 +435,8 @@ public class BratAssertionAnnotationFileCreator {
 
 	private TextAnnotation getObjectAnnot(BiolinkAssociation biolinkAssociation, TextAnnotationFactory factory,
 			ExtractedSentence sentence) {
-		String objectType = biolinkAssociation.getObjectPlaceholder().substring(1,
-				biolinkAssociation.getObjectPlaceholder().length() - 1);
+		String objectType = biolinkAssociation.getObjectClass().getPlaceholder().substring(1,
+				biolinkAssociation.getObjectClass().getPlaceholder().length() - 1);
 		getObjectText(sentence, biolinkAssociation);
 		List<Span> objectSpans = getObjectSpan(sentence, biolinkAssociation);
 
@@ -459,7 +459,7 @@ public class BratAssertionAnnotationFileCreator {
 	}
 
 	private String getSubjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		String subjectPlaceholder = biolinkAssociation.getSubjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
 			return sentence.getEntityCoveredText1();
 		}
@@ -467,7 +467,7 @@ public class BratAssertionAnnotationFileCreator {
 	}
 
 	private String getObjectText(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		String objectPlaceholder = biolinkAssociation.getObjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
 			return sentence.getEntityCoveredText1();
 		}
@@ -475,7 +475,7 @@ public class BratAssertionAnnotationFileCreator {
 	}
 
 	private static List<Span> getSubjectSpan(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String subjectPlaceholder = biolinkAssociation.getSubjectPlaceholder();
+		String subjectPlaceholder = biolinkAssociation.getSubjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(subjectPlaceholder)) {
 			return sentence.getEntitySpan1();
 		}
@@ -483,7 +483,7 @@ public class BratAssertionAnnotationFileCreator {
 	}
 
 	private static List<Span> getObjectSpan(ExtractedSentence sentence, BiolinkAssociation biolinkAssociation) {
-		String objectPlaceholder = biolinkAssociation.getObjectPlaceholder();
+		String objectPlaceholder = biolinkAssociation.getObjectClass().getPlaceholder();
 		if (sentence.getEntityPlaceholder1().equals(objectPlaceholder)) {
 			return sentence.getEntitySpan1();
 		}
