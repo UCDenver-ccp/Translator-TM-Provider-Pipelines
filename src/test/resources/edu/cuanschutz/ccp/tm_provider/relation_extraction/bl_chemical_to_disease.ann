@@ -1,0 +1,14 @@
+T1	chemical 50 66	prostaglandin E2
+T2	chemical 139 151	carbohydrate
+T3	chemical 152 159	antigen
+T4	disease 213 230	mucinous neoplasm
+T5	disease 232 236	IPMN
+T6	chemical 264 274	biomarkers
+T7	missed_disease 299 312	Lung fibrosis
+T8	disease 339 345	cancer
+T9	chemical 366 375	bleomycin
+T10	missed_chemical 377 380	BLM
+R1	treats Arg1:T9 Arg2:T8
+R2	causes Arg1:T9 Arg2:T7
+R3	causes Arg1:T10 Arg2:T7
+R4	treats Arg1:T10 Arg2:T8
