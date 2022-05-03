@@ -247,7 +247,7 @@ public class ClassifiedSentenceStoragePipeline {
 											String objectCurie;
 											String objectSpanStr;
 											if (es.getEntityPlaceholder1()
-													.equals(biolinkAssoc.getSubjectPlaceholder())) {
+													.equals(biolinkAssoc.getSubjectClass().getPlaceholder())) {
 												subjectCurie = es.getEntityId1();
 												subjectSpanStr = ExtractedSentence.getSpanStr(es.getEntitySpan1());
 												subjectCoveredText = es.getEntityCoveredText1();

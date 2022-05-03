@@ -185,6 +185,9 @@ public class PipelineMain {
 			case UPDATE_MEDLINE_STATUS_ENTITIES:
 				UpdateMedlineEntitiesPipeline.main(pipelineArgs);
 				break;
+			case ELASTICSEARCH_LOAD:
+				ElasticsearchLoadPipeline.main(pipelineArgs);
+				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
 				break;

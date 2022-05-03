@@ -203,7 +203,7 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 	 * @param conceptAnnots
 	 * @return
 	 */
-	private static Collection<TextAnnotation> removeAnnotsWithMissingTypes(Collection<TextAnnotation> conceptAnnots) {
+	protected static Collection<TextAnnotation> removeAnnotsWithMissingTypes(Collection<TextAnnotation> conceptAnnots) {
 		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
 		for (TextAnnotation annot : conceptAnnots) {
 			String type = annot.getClassMention().getMentionName();
@@ -244,7 +244,7 @@ public class ConceptCooccurrenceCountsFn extends DoFn<KV<String, String>, KV<Str
 
 		for (TextAnnotation concept : conceptAnnotList) {
 			for (TextAnnotation level : levelAnnotList) {
-				if (concept.overlaps(level)) {
+				if (concept.overlaps(level) && level.getAggregateSpan().containsSpan(concept.getAggregateSpan())) {
 					if (map.containsKey(level)) {
 						map.get(level).add(concept);
 					} else {
