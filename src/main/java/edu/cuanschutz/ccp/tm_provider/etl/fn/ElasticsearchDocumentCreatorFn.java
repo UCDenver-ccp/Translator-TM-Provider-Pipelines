@@ -271,7 +271,6 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 
 				String sentenceSubstringBefore = sentenceText.substring(offset, span.getSpanStart())
 						.replaceAll("\\(", "%28").replaceAll("\\)", "%29");
-				;
 
 				sb.append(sentenceSubstringBefore);
 				sb.append(formattedEntity);
