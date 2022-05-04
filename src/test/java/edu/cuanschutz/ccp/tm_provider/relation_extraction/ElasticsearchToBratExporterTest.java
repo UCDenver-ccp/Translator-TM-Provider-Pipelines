@@ -31,13 +31,12 @@ public class ElasticsearchToBratExporterTest {
 
 		// @formatter:off
 		String expectedSentenceQuery = "{\n" + 
-				"	\"query\": {\n" + 
 				"		\"bool\": {\n" + 
 				"			\"must\": [\n" + 
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"CHEBI DRUGBANK\",\n" + 
+				"							\"query\": \"_CHEBI _DRUGBANK\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
@@ -45,7 +44,7 @@ public class ElasticsearchToBratExporterTest {
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"CL UBERON\",\n" + 
+				"							\"query\": \"_CL _UBERON\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
@@ -53,14 +52,13 @@ public class ElasticsearchToBratExporterTest {
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"GO\",\n" + 
+				"							\"query\": \"_GO\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
 				"				}\n" + 
 				"			]\n" + 
 				"		}\n" + 
-				"	}\n" + 
 				"}";
 		// @formatter:on
 
@@ -185,6 +183,35 @@ public class ElasticsearchToBratExporterTest {
 		expectedAnnots.add(factory.createAnnotation(112, 122, "hemoglobin", "DRUGBANK:DB04945"));
 //		expectedAnnots.add(factory.createAnnotation(112, 122, "hemoglobin", "GO:0005833"));
 
+		assertEquals(expectedAnnots, new HashSet<TextAnnotation>(td.getAnnotations()));
+
+	}
+
+	@Test
+	public void testDeserializeAnnotatedTextWithEncodedText() {
+
+		Set<String> ontologyPrefixes = CollectionsUtil.createSet("DRUGBANK");
+		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q disorders including %2528(hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India%2529 are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
+				ontologyPrefixes);
+		// 1 2 3 4 5 6 7 8 9 0 1 2 3
+		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+		String expectedText = "Hemoglobin Q disorders including (hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India) are important hemoglobin variants.";
+		assertEquals(expectedText, td.getText());
+
+		Set<TextAnnotation> expectedAnnots = new HashSet<TextAnnotation>();
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+		expectedAnnots.add(factory.createAnnotation(0, 10, "Hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(34, 44, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(53, 63, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(80, 90, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(114, 124, "hemoglobin", "DRUGBANK:DB04945"));
+
+		assertEquals(expectedAnnots.size(), new HashSet<TextAnnotation>(td.getAnnotations()).size());
 		assertEquals(expectedAnnots, new HashSet<TextAnnotation>(td.getAnnotations()));
 
 	}

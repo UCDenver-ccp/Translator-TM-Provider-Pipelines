@@ -1,9 +1,7 @@
 {
-	"query": {
-		"bool": {
-			"must": [
-				MATCH_PLACEHOLDER
-			]
-		}
+	"bool": {
+		"must": [
+			MATCH_PLACEHOLDER
+		]
 	}
 }

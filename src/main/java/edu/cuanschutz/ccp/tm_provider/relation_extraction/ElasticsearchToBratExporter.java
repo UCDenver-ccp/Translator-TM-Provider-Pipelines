@@ -33,6 +33,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkClass;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
@@ -67,8 +68,16 @@ public class ElasticsearchToBratExporter {
 	private static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER = "QUERY_PLACEHOLDER";
 	private static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
 
-	static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet("CHEBI:36080", "CL:0000000", "PR:000000001",
-			"MONDO:0000001", "DRUGBANK:DB00118");
+	// @formatter:off
+	static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet(
+			"CHEBI:36080", 		// protein
+			"PR:000000001", 	// protein
+			"CL:0000000", 		// cell
+			"MONDO:0000001", 	// disease
+			"HP:0002664", 		// tumor
+			"MONDO:0005070", 	// tumor
+			"DRUGBANK:DB00118");
+	// @formatter:on
 
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
 			Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile) throws IOException {
@@ -88,8 +97,8 @@ public class ElasticsearchToBratExporter {
 	 * @throws IOException
 	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile, Set<String> idsToExclude,
-			int sentencesPerPage) throws IOException {
+			int batchSize, Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile,
+			Set<String> idsToExclude, int sentencesPerPage) throws IOException {
 
 		Set<String> alreadyAnnotated = new HashSet<String>(
 				FileReaderUtil.loadLinesFromFile(previousSentenceIdsFile, UTF8));
@@ -125,35 +134,39 @@ public class ElasticsearchToBratExporter {
 						Arrays.asList(biolinkAssociation.getSubjectClass(), biolinkAssociation.getObjectClass()));
 
 				td = excludeBasedOnEntityIds(td, idsToExclude, biolinkClasses);
-				String hash = computeHash(td);
-				if (td != null && !alreadyAnnotated.contains(hash)) {
-					if (hashesOutputInThisBatch.contains(hash)) {
-						throw new IllegalStateException("duplicate hash observed!");
-					}
-					hashesOutputInThisBatch.add(hash);
-					spanOffset = writeSentenceToBratFiles(td, annIndex++, spanOffset, annFileWriter, txtFileWriter,
-							biolinkAssociation);
+				if (td != null) {
+					String hash = computeHash(td);
+					if (!alreadyAnnotated.contains(hash)) {
+						if (hashesOutputInThisBatch.contains(hash)) {
+							throw new IllegalStateException("duplicate hash observed!");
+						}
+						hashesOutputInThisBatch.add(hash);
+						spanOffset = writeSentenceToBratFiles(td, annIndex++, spanOffset, annFileWriter, txtFileWriter,
+								biolinkAssociation);
 
-					// create a new "page" of sentences at regular intervals by creating new
-					// annFile, txtFile, and idFile.
-					if (hashesOutputInThisBatch.size() % sentencesPerPage == 0
-							&& hashesOutputInThisBatch.size() < batchSize) {
-						// without this check for extractedSentenceCount < batchSize an empty file gets
-						// created at the end of processing
-						annFileWriter.close();
-						txtFileWriter.write("DONE\n");
-						txtFileWriter.close();
+						// create a new "page" of sentences at regular intervals by creating new
+						// annFile, txtFile, and idFile.
+						if (hashesOutputInThisBatch.size() % sentencesPerPage == 0
+								&& hashesOutputInThisBatch.size() < batchSize) {
+							// without this check for extractedSentenceCount < batchSize an empty file gets
+							// created at the end of processing
+							annFileWriter.close();
+							txtFileWriter.write("DONE\n");
+							txtFileWriter.close();
 
 //						subBatchId = getSubBatchId(++subBatchIndex);
 
-						annFileWriter = getAnnFileWriter(outputDirectory, biolinkAssociation, batchId, subBatchIndex);
-						txtFileWriter = getTxtFileWriter(outputDirectory, biolinkAssociation, batchId, subBatchIndex);
-						annIndex = 1;
-						spanOffset = 0;
-						subBatchIndex++;
-					}
-					if (hashesOutputInThisBatch.size() >= batchSize) {
-						break;
+							annFileWriter = getAnnFileWriter(outputDirectory, biolinkAssociation, batchId,
+									subBatchIndex);
+							txtFileWriter = getTxtFileWriter(outputDirectory, biolinkAssociation, batchId,
+									subBatchIndex);
+							annIndex = 1;
+							spanOffset = 0;
+							subBatchIndex++;
+						}
+						if (hashesOutputInThisBatch.size() >= batchSize) {
+							break;
+						}
 					}
 				}
 			}
@@ -194,16 +207,43 @@ public class ElasticsearchToBratExporter {
 		/* write the entity annotations to the ann file */
 		for (TextAnnotation annot : annots) {
 			String tIndex = "T" + annIndex;
-			String label = annot.getClassMention().getMentionName().toLowerCase();
+			String ontId = annot.getClassMention().getMentionName().toLowerCase();
+
+			BiolinkClass biolinkClass = getBiolinkClassForOntologyId(biolinkAssociation, ontId);
+
 			String spanStr = getSpanStr(annot, spanOffset);
 			String coveredText = annot.getCoveredText();
 
-			String annLine = String.format("%s\t%s %s\t%s", tIndex, label, spanStr, coveredText);
+			String annLine = String.format("%s\t%s %s\t%s", tIndex, biolinkClass.name().toLowerCase(), spanStr, coveredText);
 			annFileWriter.write(annLine + "\n");
 		}
 
 		spanOffset += td.getText().length() + 1;
 		return spanOffset;
+	}
+
+	/**
+	 * Given an ontology ID, return the BiolinkClass based on the ontology id prefix
+	 * 
+	 * @param biolinkAssociation
+	 * @param ontId
+	 * @return
+	 */
+	private static BiolinkClass getBiolinkClassForOntologyId(BiolinkAssociation biolinkAssociation, String ontId) {
+		String ontPrefix = ontId.substring(0, ontId.indexOf(":")).toUpperCase();
+
+		if (biolinkAssociation.getSubjectClass().getOntologyPrefixes().contains(ontPrefix)) {
+			return biolinkAssociation.getSubjectClass();
+		}
+
+		if (biolinkAssociation.getObjectClass().getOntologyPrefixes().contains(ontPrefix)) {
+			return biolinkAssociation.getObjectClass();
+		}
+
+		throw new IllegalArgumentException(
+				String.format("Unable to map ontology prefix (%s) to a BiolinkClass from association: %s", ontPrefix,
+						biolinkAssociation.name()));
+
 	}
 
 	private static String getSpanStr(TextAnnotation annot, int spanOffset) {
@@ -350,11 +390,8 @@ public class ElasticsearchToBratExporter {
 		try (RestClient restClient = RestClient.builder(new HttpHost(elasticUrl, elasticPort, "https"))
 				.setDefaultHeaders(defaultHeaders).build()) {
 
-			System.out.println(restClient.getClass().getName());
-			System.out.println("REST CLIENT RUNNING: " + restClient.isRunning());
 			// Create the transport with a Jackson mapper
 			RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-			System.out.println("TRANSPORT OPTIONS: " + transport.options().headers().toString());
 			// And create the API client
 			ElasticsearchClient client = new ElasticsearchClient(transport);
 			BooleanResponse ping = client.ping();
@@ -375,6 +412,9 @@ public class ElasticsearchToBratExporter {
 //			String queryJson = "{\n" + "    \"match\": {\n" + "        \"annotatedText\" : {\n"
 //					+ "            \"query\": \"_DRUGBANK _GO\",\n" + "            \"operator\": \"and\"\n"
 //					+ "        }\n" + "    }\n" + "  }";
+
+			System.out.println("QUERY:\n" + queryJson);
+
 			Query query = new Query.Builder().withJson(new ByteArrayInputStream(queryJson.getBytes())).build();
 
 			SearchResponse<Sentence> results = client.search(_0 -> _0.size(maxReturned).index(indexName).query(query),
@@ -428,6 +468,13 @@ public class ElasticsearchToBratExporter {
 		return query;
 	}
 
+	/**
+	 * This method adds an underscore to the beginning of each ontology prefix (to
+	 * match how they are represented in the Elastic index)
+	 * 
+	 * @param ontologyPrefixSets
+	 * @return
+	 */
 	private static List<String> getSortedOntologyPrefixQueryStrings(Set<Set<String>> ontologyPrefixSets) {
 		List<String> ontologyPrefixQueryStrings = new ArrayList<String>();
 		for (Set<String> ontologyPrefixSet : ontologyPrefixSets) {
@@ -435,7 +482,7 @@ public class ElasticsearchToBratExporter {
 			Collections.sort(sortedPrefixes);
 			StringBuilder sb = new StringBuilder();
 			for (String prefix : sortedPrefixes) {
-				sb.append(prefix + " ");
+				sb.append("_" + prefix + " ");
 			}
 			ontologyPrefixQueryStrings.add(sb.toString().trim());
 		}
@@ -469,8 +516,11 @@ public class ElasticsearchToBratExporter {
 	@VisibleForTesting
 	protected static TextDocument deserializeAnnotatedText(String documentId, String annotatedText,
 			Set<String> ontologyPrefixes) {
-		Pattern p = Pattern.compile("\\((.*?)\\)\\[(.*?)\\]");
-		Matcher m = p.matcher(annotatedText);
+
+		String decodedAnnotatedText = decode(annotatedText);
+
+		Pattern p = Pattern.compile("\\(([^\\(]*?)\\)\\[(.*?)\\]");
+		Matcher m = p.matcher(decodedAnnotatedText);
 
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
 		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
@@ -478,18 +528,13 @@ public class ElasticsearchToBratExporter {
 		int annotatedTextOffset = 0;
 		int sentenceTextOffset = 0;
 		while (m.find()) {
-			String interveningText = annotatedText.substring(annotatedTextOffset, m.start());
+			String interveningText = decodedAnnotatedText.substring(annotatedTextOffset, m.start());
 			sb.append(interveningText);
 			String coveredText = m.group(1);
 			sb.append(coveredText);
 
-			System.out.println("SENTENCE: " + sb.toString());
-
 			int spanStart = m.start() - sentenceTextOffset;
 			int spanEnd = spanStart + coveredText.length();
-
-			Span span = new Span(spanStart, spanEnd);
-			System.out.println("SPAN: " + span.toString());
 
 			String[] conceptIds = m.group(2).split("&");
 
@@ -504,20 +549,27 @@ public class ElasticsearchToBratExporter {
 				}
 			}
 
-			System.out.println(m.group() + " -- " + m.start() + "|" + m.end() + " -- " + Arrays.toString(conceptIds));
-
 			annotatedTextOffset = m.end();
 			sentenceTextOffset += (m.group().length() - coveredText.length());
 
 		}
 
-		sb.append(annotatedText.substring(annotatedTextOffset));
-		System.out.println("SENTENCE: " + sb.toString());
+		sb.append(decodedAnnotatedText.substring(annotatedTextOffset));
 
 		TextDocument td = new TextDocument(documentId, "PubMed", sb.toString());
 		td.addAnnotations(annots);
 
 		return td;
+	}
+
+	/**
+	 * @param annotatedText
+	 * @return the annotated text decoded so that characters that were encoded for
+	 *         HTTP serialization purposes are converted back to their un-encoded
+	 *         form, e.g parentheses.
+	 */
+	private static String decode(String annotatedText) {
+		return ElasticsearchDocumentCreatorFn.decode(annotatedText);
 	}
 
 	@Data

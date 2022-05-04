@@ -170,8 +170,25 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 		// % sign must be URL encoded
 		json = json.replaceAll("%", "%25");
 		json = json.replaceAll("=", "%3D");
-		
+
 		return json;
+	}
+
+	/**
+	 * This is a utility method to decode the characters that were encoded in the
+	 * methods above and below.
+	 * 
+	 * @param encodedString
+	 * @return
+	 */
+	public static String decode(String encodedString) {
+
+		String decodedString = encodedString.replaceAll("%25", "%");
+		decodedString = decodedString.replaceAll("%3D", "=");
+		decodedString = decodedString.replaceAll("%29", ")");
+		decodedString = decodedString.replaceAll("%28", "(");
+
+		return decodedString;
 	}
 
 	@VisibleForTesting
@@ -248,11 +265,13 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 				conceptIds.addAll(sortedOntologyPrefixes);
 				String idStr = CollectionsUtil.createDelimitedString(conceptIds, "&");
 
-				String entityText = sentenceText.substring(span.getSpanStart(), span.getSpanEnd()).replaceAll("\\(", "%28").replaceAll("\\)", "%29");
-				String formattedEntity = String.format("(%s)[%s]",
-						entityText, idStr);
+				String entityText = sentenceText.substring(span.getSpanStart(), span.getSpanEnd())
+						.replaceAll("\\(", "%28").replaceAll("\\)", "%29");
+				String formattedEntity = String.format("(%s)[%s]", entityText, idStr);
 
-				String sentenceSubstringBefore = sentenceText.substring(offset, span.getSpanStart()).replaceAll("\\(", "%28").replaceAll("\\)", "%29");;
+				String sentenceSubstringBefore = sentenceText.substring(offset, span.getSpanStart())
+						.replaceAll("\\(", "%28").replaceAll("\\)", "%29");
+				;
 
 				sb.append(sentenceSubstringBefore);
 				sb.append(formattedEntity);
@@ -260,7 +279,8 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 			}
 
 			// add the tail end of the sentence
-			String sentenceTail = sentenceText.substring(offset).replaceAll("\\(", "%28").replaceAll("\\)", "%29");;
+			String sentenceTail = sentenceText.substring(offset).replaceAll("\\(", "%28").replaceAll("\\)", "%29");
+			;
 			sb.append(sentenceTail);
 
 			return sb.toString();
