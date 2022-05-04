@@ -3,16 +3,28 @@ package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkClass;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.file.FileComparisonUtil;
+import edu.ucdenver.ccp.common.file.FileComparisonUtil.ColumnOrder;
+import edu.ucdenver.ccp.common.file.FileComparisonUtil.LineOrder;
+import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
@@ -20,6 +32,9 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
 public class ElasticsearchToBratExporterTest {
 	private static final CharacterEncoding UTF8 = CharacterEncoding.UTF_8;
+
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
 
 	@Test
 	public void testBuildSentenceQuery() throws IOException {
@@ -31,13 +46,12 @@ public class ElasticsearchToBratExporterTest {
 
 		// @formatter:off
 		String expectedSentenceQuery = "{\n" + 
-				"	\"query\": {\n" + 
 				"		\"bool\": {\n" + 
 				"			\"must\": [\n" + 
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"CHEBI DRUGBANK\",\n" + 
+				"							\"query\": \"_CHEBI _DRUGBANK\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
@@ -45,7 +59,7 @@ public class ElasticsearchToBratExporterTest {
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"CL UBERON\",\n" + 
+				"							\"query\": \"_CL _UBERON\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
@@ -53,14 +67,13 @@ public class ElasticsearchToBratExporterTest {
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"GO\",\n" + 
+				"							\"query\": \"_GO\",\n" + 
 				"							\"operator\": \"or\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
 				"				}\n" + 
 				"			]\n" + 
 				"		}\n" + 
-				"	}\n" + 
 				"}";
 		// @formatter:on
 
@@ -186,6 +199,145 @@ public class ElasticsearchToBratExporterTest {
 //		expectedAnnots.add(factory.createAnnotation(112, 122, "hemoglobin", "GO:0005833"));
 
 		assertEquals(expectedAnnots, new HashSet<TextAnnotation>(td.getAnnotations()));
+
+	}
+
+	@Test
+	public void testDeserializeAnnotatedTextWithEncodedText() {
+
+		Set<String> ontologyPrefixes = CollectionsUtil.createSet("DRUGBANK");
+		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q disorders including %2528(hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India%2529 are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
+				ontologyPrefixes);
+		// 1 2 3 4 5 6 7 8 9 0 1 2 3
+		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+		String expectedText = "Hemoglobin Q disorders including (hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India) are important hemoglobin variants.";
+		assertEquals(expectedText, td.getText());
+
+		Set<TextAnnotation> expectedAnnots = new HashSet<TextAnnotation>();
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+		expectedAnnots.add(factory.createAnnotation(0, 10, "Hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(34, 44, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(53, 63, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(80, 90, "hemoglobin", "DRUGBANK:DB04945"));
+
+		expectedAnnots.add(factory.createAnnotation(114, 124, "hemoglobin", "DRUGBANK:DB04945"));
+
+		assertEquals(expectedAnnots.size(), new HashSet<TextAnnotation>(td.getAnnotations()).size());
+		assertEquals(expectedAnnots, new HashSet<TextAnnotation>(td.getAnnotations()));
+
+	}
+
+	@Test
+	public void testGetRandomIndexes() {
+		int maxSentenceCount = 4;
+		int batchSize = 4;
+		for (int i = 0; i < 100; i++) {
+			Set<Integer> randomIndexes = ElasticsearchToBratExporter.getRandomIndexes(maxSentenceCount, batchSize);
+			assertTrue(randomIndexes.contains(0));
+			assertTrue(randomIndexes.contains(1));
+			assertTrue(randomIndexes.contains(2));
+			assertTrue(randomIndexes.contains(3));
+		}
+	}
+
+//	T index not incrementing properly
+//	duplicate annotations end up in .ann files
+
+	@Test
+	public void testCreateBratFiles() throws IOException {
+		File outputDirectory = folder.newFolder();
+		File previousSentenceIdsFile = folder.newFile();
+
+		List<String> annotatedTexts = Arrays.asList(
+				"The mean overall qualitative (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]-to-background contrast grades for the T2-weighted (sequence)[SO_0000110\u0026_SO] were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.84, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 2.20, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 1.23, and for the contrast-enhanced T1-weighted (sequence)[SO_0000110\u0026_SO], they were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.02, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 1.58, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 0.73.",
+				"There were 15 (fourth ventricle)[UBERON_0002422\u0026_UBERON] (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO], 6 (lateral ventricle)[UBERON_0002285\u0026_UBERON] (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO], and 5 spinal (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO].",
+				"(Tuberous sclerosis complex)[MONDO_0019341\u0026_MONDO] %2528(TSC)[MONDO_0001734\u0026_MONDO]%2529 is a (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] suppressor (gene)[SO_0000704\u0026_SO] syndrome with manifestations that can include (seizures)[HP_0001250\u0026_HP], (mental retardation)[HP_0001249\u0026_HP], (autism)[HP_0000717\u0026MONDO_0005260\u0026_HP\u0026_MONDO], and (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] in the (brain)[UBERON_0000955\u0026_UBERON], (retina)[UBERON_0000966\u0026_UBERON], (kidney)[UBERON_0002113\u0026_UBERON], (heart)[UBERON_0000948\u0026_UBERON], and (skin)[UBERON_0000014\u0026UBERON_0002097\u0026_UBERON].",
+				"CR were 95.6%25 %252844/46 (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]%2529 for (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] near the (gallbladder)[UBERON_0002110\u0026_UBERON], 92.9%25%252879/85 (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]%2529 for (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] near the (diaphragm)[UBERON_0001103\u0026_UBERON], 90.9%25%252840/44 (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]%2529 for (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] near the gastrointestinal tract, 91.2%25 %252831/34 (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]%2529 for (tumors)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO] near large (vessel)[UBERON_0000055\u0026_UBERON].");
+
+		BiolinkAssociation biolinkAssociation = BiolinkAssociation.BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION;
+		String batchId = "1";
+
+		List<TextDocument> inputSentences = new ArrayList<TextDocument>();
+		Set<String> ontologyPrefixes = new HashSet<String>();
+		ontologyPrefixes.addAll(biolinkAssociation.getSubjectClass().getOntologyPrefixes());
+		ontologyPrefixes.addAll(biolinkAssociation.getObjectClass().getOntologyPrefixes());
+		for (String annotatedText : annotatedTexts) {
+			TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
+					ontologyPrefixes);
+			inputSentences.add(td);
+		}
+
+		assertEquals(4, inputSentences.size());
+		int batchSize = 4;
+		int sentencesPerPage = 4;
+		Set<String> identifiersToExclude = new HashSet<String>();
+		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
+				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage);
+
+		File annFile = new File(outputDirectory,
+				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
+		File txtFile = new File(outputDirectory,
+				String.format("%s_%s_0.txt", biolinkAssociation.name().toLowerCase(), batchId));
+
+		assertTrue(annFile.exists());
+		assertTrue(txtFile.exists());
+
+		for (String line : FileReaderUtil.loadLinesFromFile(txtFile, UTF8)) {
+			System.out.println(line);
+		}
+
+		// @formatter:off
+		List<String> expectedAnnFileLines = Arrays.asList(
+				"T1	disease_or_phenotypic_feature 29 34	tumor", 
+				"T2	disease_or_phenotypic_feature 99 104	tumor", 
+				"T3	anatomical_site 105 111	muscle", 
+				"T4	disease_or_phenotypic_feature 120 125	tumor", 
+				"T5	anatomical_site 126 129	fat", 
+				"T6	disease_or_phenotypic_feature 142 147	tumor", 
+				"T7	anatomical_site 148 154	mucosa", 
+				"T8	disease_or_phenotypic_feature 225 230	tumor", 
+				"T9	anatomical_site 231 237	muscle", 
+				"T10	disease_or_phenotypic_feature 246 251	tumor", 
+				"T11	anatomical_site 252 255	fat", 
+				"T12	disease_or_phenotypic_feature 268 273	tumor", 
+				"T13	anatomical_site 274 280	mucosa", 
+				"T14	anatomical_site 303 319	fourth ventricle", 
+				"T15	disease_or_phenotypic_feature 320 326	tumors", 
+				"T16	anatomical_site 330 347	lateral ventricle", 
+				"T17	disease_or_phenotypic_feature 348 354	tumors", 
+				"T18	disease_or_phenotypic_feature 369 375	tumors", 
+				"T19	disease_or_phenotypic_feature 377 403	Tuberous sclerosis complex", 
+				"T20	disease_or_phenotypic_feature 405 408	TSC", 
+				"T21	disease_or_phenotypic_feature 415 420	tumor", 
+				"T22	disease_or_phenotypic_feature 483 491	seizures", 
+				"T23	disease_or_phenotypic_feature 493 511	mental retardation", 
+				"T24	disease_or_phenotypic_feature 513 519	autism", 
+				"T25	disease_or_phenotypic_feature 525 531	tumors", 
+				"T26	anatomical_site 539 544	brain", 
+				"T27	anatomical_site 546 552	retina", 
+				"T28	anatomical_site 554 560	kidney", 
+				"T29	anatomical_site 562 567	heart", 
+				"T30	anatomical_site 573 577	skin", 
+				"T31	disease_or_phenotypic_feature 600 606	tumors", 
+				"T32	disease_or_phenotypic_feature 612 618	tumors", 
+				"T33	anatomical_site 628 639	gallbladder", 
+				"T34	disease_or_phenotypic_feature 653 659	tumors", 
+				"T35	disease_or_phenotypic_feature 665 671	tumors", 
+				"T36	anatomical_site 681 690	diaphragm", 
+				"T37	disease_or_phenotypic_feature 704 710	tumors", 
+				"T38	disease_or_phenotypic_feature 716 722	tumors", 
+				"T39	disease_or_phenotypic_feature 769 775	tumors", 
+				"T40	disease_or_phenotypic_feature 781 787	tumors", 
+				"T41	anatomical_site 799 805	vessel"
+				);
+		// @formatter:on
+
+		assertTrue(FileComparisonUtil.hasExpectedLines(annFile, UTF8, expectedAnnFileLines, null, LineOrder.AS_IN_FILE,
+				ColumnOrder.AS_IN_FILE));
 
 	}
 
