@@ -109,6 +109,8 @@ public class ElasticsearchToBratExporter {
 
 		Set<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize);
 
+		System.out.println("random index count: " + indexesForNewBatch.size());
+
 		Set<String> hashesOutputInThisBatch = new HashSet<String>();
 		// this count is used to track when a batch has been completed
 //		int extractedSentenceCount = 0;
@@ -141,8 +143,15 @@ public class ElasticsearchToBratExporter {
 							throw new IllegalStateException("duplicate hash observed!");
 						}
 						hashesOutputInThisBatch.add(hash);
-						spanOffset = writeSentenceToBratFiles(td, annIndex++, spanOffset, annFileWriter, txtFileWriter,
-								biolinkAssociation);
+
+						Indexes indexes = writeSentenceToBratFiles(td, new Indexes(spanOffset, annIndex), annFileWriter,
+								txtFileWriter, biolinkAssociation);
+
+						spanOffset = indexes.getSpanOffset();
+						annIndex = indexes.getAnnIndex();
+
+//						T index not incrementing properly
+//						duplicate annotations end up in .ann files
 
 						// create a new "page" of sentences at regular intervals by creating new
 						// annFile, txtFile, and idFile.
@@ -195,18 +204,22 @@ public class ElasticsearchToBratExporter {
 
 	}
 
-	private static int writeSentenceToBratFiles(TextDocument td, int annIndex, int spanOffset,
-			BufferedWriter annFileWriter, BufferedWriter txtFileWriter, BiolinkAssociation biolinkAssociation)
-			throws IOException {
+	private static Indexes writeSentenceToBratFiles(TextDocument td, Indexes indexes, BufferedWriter annFileWriter,
+			BufferedWriter txtFileWriter, BiolinkAssociation biolinkAssociation) throws IOException {
 
 		txtFileWriter.write(td.getText() + "\n");
 
 		List<TextAnnotation> annots = td.getAnnotations();
 		Collections.sort(annots, TextAnnotation.BY_SPAN());
 
+		int annIndex = indexes.getAnnIndex();
+		int spanOffset = indexes.getSpanOffset();
+
+		// use this set to prevent duplicate annotation lines from being written
+		Set<String> alreadyWritten = new HashSet<String>();
+
 		/* write the entity annotations to the ann file */
 		for (TextAnnotation annot : annots) {
-			String tIndex = "T" + annIndex;
 			String ontId = annot.getClassMention().getMentionName().toLowerCase();
 
 			BiolinkClass biolinkClass = getBiolinkClassForOntologyId(biolinkAssociation, ontId);
@@ -214,12 +227,27 @@ public class ElasticsearchToBratExporter {
 			String spanStr = getSpanStr(annot, spanOffset);
 			String coveredText = annot.getCoveredText();
 
-			String annLine = String.format("%s\t%s %s\t%s", tIndex, biolinkClass.name().toLowerCase(), spanStr, coveredText);
-			annFileWriter.write(annLine + "\n");
+			String annLineWithoutIndex = String.format("%s %s\t%s", biolinkClass.name().toLowerCase(), spanStr,
+					coveredText);
+
+			if (!alreadyWritten.contains(annLineWithoutIndex)) {
+				String tIndex = "T" + annIndex++;
+				String annLine = String.format("%s\t%s %s\t%s", tIndex, biolinkClass.name().toLowerCase(), spanStr,
+						coveredText);
+				alreadyWritten.add(annLineWithoutIndex);
+				annFileWriter.write(annLine + "\n");
+			}
 		}
 
 		spanOffset += td.getText().length() + 1;
-		return spanOffset;
+
+		return new Indexes(spanOffset, annIndex);
+	}
+
+	@Data
+	private static class Indexes {
+		private final int spanOffset;
+		private final int annIndex;
 	}
 
 	/**
@@ -331,8 +359,7 @@ public class ElasticsearchToBratExporter {
 		// sentences
 		Random rand = new Random();
 		while (randomIndexes.size() < maxSentenceCount && randomIndexes.size() < batchSize + 10000) {
-			randomIndexes.add(rand.nextInt(maxSentenceCount) + 1);
-
+			randomIndexes.add(rand.nextInt(maxSentenceCount));
 		}
 
 		return randomIndexes;
