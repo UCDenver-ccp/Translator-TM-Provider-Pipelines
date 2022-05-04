@@ -279,7 +279,7 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 
 			// add the tail end of the sentence
 			String sentenceTail = sentenceText.substring(offset).replaceAll("\\(", "%28").replaceAll("\\)", "%29");
-			;
+			
 			sb.append(sentenceTail);
 
 			return sb.toString();

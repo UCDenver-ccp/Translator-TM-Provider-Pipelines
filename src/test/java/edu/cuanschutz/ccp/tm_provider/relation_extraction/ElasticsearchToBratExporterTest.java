@@ -1,7 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -10,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,9 +22,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkClass;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil;
-import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil.ColumnOrder;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil.LineOrder;
+import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
