@@ -50,16 +50,23 @@
 						<goals>
 							<goal>xjc</goal>
 						</goals>
-						<configuration>
-							<externalEntityProcessing>true</externalEntityProcessing>
-							<sources>
-								<source>src/main/resources/pubmed/pubmed_190101.dtd</source>
-							</sources>
-							<sourceType>dtd</sourceType>
-							<packageName>org.medline</packageName>
-						</configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<externalEntityProcessing>true</externalEntityProcessing>
+					<sources>
+						<source>src/main/resources/pubmed/pubmed_190101.dtd</source>
+					</sources>
+					<sourceType>dtd</sourceType>
+					<packageName>org.medline</packageName>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.sun.activation</groupId>
+						<artifactId>javax.activation</artifactId>
+						<version>1.2.0</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -70,7 +77,6 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -516,7 +522,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.12</version>
+			<version>1.18.20</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -571,7 +577,11 @@
 			<version>1.23.0</version>
 		</dependency>
 
-
+		<dependency>
+			<groupId>com.sun.activation</groupId>
+			<artifactId>javax.activation</artifactId>
+			<version>1.2.0</version>
+		</dependency>
 
 
 	</dependencies>
@@ -583,7 +593,7 @@
 		</repository>
 		<repository>
 			<id>dkpro</id>
-			<url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases/</url>
+			<url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases/</url>
 		</repository>
 	</repositories>
 
