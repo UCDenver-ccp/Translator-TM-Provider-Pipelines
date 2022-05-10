@@ -1,0 +1,7 @@
+{
+	"bool": {
+		"must": [
+			MATCH_PLACEHOLDER
+		]
+	}
+}

@@ -143,8 +143,10 @@ public interface DatastoreConstants {
 	 * Concept cooccurrence count status
 	 */
 	public static final String STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE = "concept_cooccur_counts";
-	
 //	public static final String STATUS_PROPERTY_CONCEPT_COOCCURRENCE_METRICS_DONE = "concept_cooccur_metrics";
+
+	public static final String STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE = "elasticsearch";
+	
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////

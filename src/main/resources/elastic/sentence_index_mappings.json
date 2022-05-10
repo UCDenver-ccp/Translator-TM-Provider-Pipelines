@@ -1,0 +1,15 @@
+{
+	"mappings": {
+		"properties": {
+			"annotatedText": {
+				"type": "annotated_text"
+			},
+			"documentId": {
+				"type": "keyword"
+			},
+			"id": {
+				"type": "keyword"
+			}
+		}
+	}
+}

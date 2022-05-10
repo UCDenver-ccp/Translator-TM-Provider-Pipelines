@@ -1,0 +1,8 @@
+{
+	"match": {
+		"annotatedText": {
+			"query": "QUERY_PLACEHOLDER",
+			"operator": "BOOLEAN_OPERATOR_PLACEHOLDER"
+		}
+	}
+}
