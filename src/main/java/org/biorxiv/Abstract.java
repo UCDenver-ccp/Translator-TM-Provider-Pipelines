@@ -20,6 +20,9 @@ public class Abstract implements Serializable {
     protected List<Fig> figures;
 
     public String getTitle() {
+        if (title == null) {
+            return "";
+        }
         return title;
     }
 

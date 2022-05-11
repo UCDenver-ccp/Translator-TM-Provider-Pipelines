@@ -46,8 +46,16 @@ public class Article implements Serializable {
         try {
             Node frontNode = (Node) xPath.compile("front").evaluate(document, XPathConstants.NODE);
             Node bodyNode = (Node) xPath.compile("body").evaluate(document, XPathConstants.NODE);
-            theArticle.setFront(Front.parse(frontNode, xPath));
-            theArticle.setBody(Body.parse(bodyNode, xPath));
+            if (frontNode == null) {
+                theArticle.setFront(new Front());
+            } else {
+                theArticle.setFront(Front.parse(frontNode, xPath));
+            }
+            if (bodyNode == null) {
+                theArticle.setBody(new Body());
+            } else {
+                theArticle.setBody(Body.parse(bodyNode, xPath));
+            }
         } catch (XPathExpressionException ex) {
             System.err.println("Could not compile front or body XPath expression " + ex.getLocalizedMessage());
         }

@@ -16,8 +16,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -42,8 +41,8 @@ public class JatsFileToArticleFn extends DoFn<FileIO.ReadableFile, Article> {
             return;
         }
         try {
-            InputStream stream = Files.newInputStream(Paths.get(file.getMetadata().resourceId().toString()));
-            InputSource source = new InputSource(stream);
+            String fileContents = file.readFullyAsUTF8String();
+            InputSource source = new InputSource(new StringReader(fileContents));
             builder.setEntityResolver((publicId, systemId) -> {
                 String terminalPart = systemId.substring(systemId.lastIndexOf('/'));
                 if (systemId.contains("/iso8879/") || systemId.contains("/iso9573-13/") || systemId.contains("/mathml/") ||
