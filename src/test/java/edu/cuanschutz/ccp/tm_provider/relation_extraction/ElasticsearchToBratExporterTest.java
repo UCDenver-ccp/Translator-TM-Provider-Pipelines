@@ -67,8 +67,7 @@ public class ElasticsearchToBratExporterTest {
 				"				{\n" + 
 				"					\"match\": {\n" + 
 				"						\"annotatedText\": {\n" + 
-				"							\"query\": \"_GO\",\n" + 
-				"							\"operator\": \"or\"\n" + 
+				"							\"query\": \"_GO\"\n" + 
 				"						}\n" + 
 				"					}\n" + 
 				"				}\n" + 
