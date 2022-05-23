@@ -43,6 +43,8 @@ import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.FileWriterUtil.FileSuffixEnforcement;
 import edu.ucdenver.ccp.common.file.FileWriterUtil.WriteMode;
+import edu.ucdenver.ccp.common.file.reader.Line;
+import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
@@ -522,14 +524,34 @@ public class ElasticsearchToBratExporter {
 	 * @param ontologyPrefixSet
 	 * @return a populated elasticsearch match block that or's together the input
 	 *         ontology prefixes
+	 * @throws IOException
 	 */
 	@VisibleForTesting
 	protected static String createAnnotatedTextMatchStanza(String annotatedTextMatchTemplate,
-			String ontologyPrefixQueryString) {
+			String ontologyPrefixQueryString) throws IOException {
 		String matchStanza = annotatedTextMatchTemplate;
 		matchStanza = matchStanza.replace(ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER,
 				ontologyPrefixQueryString);
 		matchStanza = matchStanza.replace(ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER, "or");
+
+		if (!ontologyPrefixQueryString.contains(" ")) {
+			// then we need to remove the operator line which is the 5th line
+			StringBuilder sb = new StringBuilder();
+			for (StreamLineIterator lineIter = new StreamLineIterator(new ByteArrayInputStream(matchStanza.getBytes()),
+					UTF8, null); lineIter.hasNext();) {
+				Line line = lineIter.next();
+				String lineText = line.getText();
+				if (lineText.contains("query")) {
+					// remove trailing comma
+					lineText = lineText.substring(0, lineText.length() - 1);
+				}
+				if (!lineText.contains("operator")) {
+					sb.append(lineText + "\n");
+				}
+			}
+			matchStanza = sb.toString();
+		}
+
 		return matchStanza;
 	}
 
@@ -567,11 +589,16 @@ public class ElasticsearchToBratExporter {
 
 			for (String conceptId : conceptIds) {
 				if (!conceptId.startsWith("_")) {
-					String ontologyPrefix = conceptId.substring(0, conceptId.indexOf("_"));
-					if (ontologyPrefixes.contains(ontologyPrefix)) {
-						TextAnnotation annotation = factory.createAnnotation(spanStart, spanEnd, coveredText,
-								conceptId.replace("_", ":"));
-						annots.add(annotation);
+					try {
+						String ontologyPrefix = conceptId.substring(0, conceptId.indexOf("_"));
+
+						if (ontologyPrefixes.contains(ontologyPrefix)) {
+							TextAnnotation annotation = factory.createAnnotation(spanStart, spanEnd, coveredText,
+									conceptId.replace("_", ":"));
+							annots.add(annotation);
+						}
+					} catch (Exception e) {
+						System.err.println("NO UNDERSCORE: " + conceptId);
 					}
 				}
 			}
