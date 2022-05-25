@@ -43,10 +43,6 @@ import org.slf4j.LoggerFactory;
  */
 public class CallingSubProcessUtils {
 
-	// Prevent Instantiation
-	private CallingSubProcessUtils() {
-	}
-
 	private static final Logger LOG = LoggerFactory.getLogger(CallingSubProcessUtils.class);
 
 	static boolean initCompleted = false;
@@ -58,6 +54,10 @@ public class CallingSubProcessUtils {
 
 	// Limit the number of threads able to do work
 	private static Map<String, Semaphore> semaphores = new ConcurrentHashMap<>();
+
+	// Prevent Instantiation
+	private CallingSubProcessUtils() {
+	}
 
 	public static void setUp(SubProcessConfiguration configuration, List<String> filesToDownload) throws Exception {
 
