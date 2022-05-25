@@ -341,6 +341,12 @@
 			<artifactId>beam-sdks-java-io-elasticsearch</artifactId>
 			<version>2.37.0</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.beam</groupId>
+			<artifactId>beam-examples-java</artifactId>
+			<version>${beam.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>co.elastic.clients</groupId>

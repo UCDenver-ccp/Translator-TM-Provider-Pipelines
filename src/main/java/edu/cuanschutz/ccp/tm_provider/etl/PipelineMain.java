@@ -128,6 +128,9 @@ public class PipelineMain {
 		if (pipeline != null) {
 			String[] pipelineArgs = Arrays.copyOfRange(args, 1, args.length);
 			switch (pipeline) {
+			case ABBREVIATION:
+				AbbreviationAb3pPipeline.main(pipelineArgs);
+				break;
 			case BIOC_TO_TEXT:
 				BiocToTextPipeline.main(pipelineArgs);
 				break;
