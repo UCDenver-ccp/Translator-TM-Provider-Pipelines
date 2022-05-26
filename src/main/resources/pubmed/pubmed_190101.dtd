@@ -37,7 +37,16 @@ Additions/Changes since 180601 DTD:
 	no symbol = required element
 
        -->
-       		 
+       
+<!-- ============================================================= -->
+<!--                     MATHML 3.0 SETUP                        -->
+<!-- ============================================================= -->
+<!--                    MATHML SETUP FILE                 -->
+<!ENTITY % mathml-in-pubmed     SYSTEM        "mathml-in-pubmed.mod"               >	
+<!-- %mathml-in-pubmed; -->
+
+
+		 
 <!-- ================================================================= -->
 <!-- ================================================================= -->
 <!ENTITY % text             "#PCDATA | b | i | sup | sub | u" >
@@ -51,16 +60,21 @@ Additions/Changes since 180601 DTD:
 
 <!--  ================= Set-level elements ============================-->
 <!ELEMENT	PubmedArticleSet ((PubmedArticle | PubmedBookArticle)+, DeleteCitation?) >
+<!ATTLIST       PubmedArticleSet>
 
 <!ELEMENT	BookDocumentSet (BookDocument*, DeleteDocument?) >
+<!ATTLIST       BookDocumentSet>
 
 <!ELEMENT	PubmedBookArticleSet (PubmedBookArticle*)>
+<!ATTLIST       PubmedBookArticleSet>
 
 
 <!--  ============= Document-level elements ============================-->
 <!ELEMENT	PubmedArticle (MedlineCitation, PubmedData?)>
+<!ATTLIST       PubmedArticle>
 
 <!ELEMENT	PubmedBookArticle (BookDocument, PubmedBookData?)>
+<!ATTLIST       PubmedBookArticle>
 
 <!ELEMENT	BookDocument ( PMID, ArticleIdList, Book, LocationLabel*, ArticleTitle?, VernacularTitle?,
 	Pagination?, Language*, AuthorList*, InvestigatorList?, PublicationType*, Abstract?, Sections?, KeywordList*, 

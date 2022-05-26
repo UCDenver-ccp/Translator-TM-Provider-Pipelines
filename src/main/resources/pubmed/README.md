@@ -12,28 +12,13 @@ The `pubmed_190101.dtd` file in this directory has been modified slightly from t
 org.xml.sax.SAXParseException: Either an attribute declaration or ">" is expected, not ">"
 ```
 
-The changes consisted of removing lines from the original. Note that these lines were not present in the 2018 version of the DTD.
-
-## Lines removed from local version of pubmed_190101.dtd
-
-| Line number | Line text |
-| ----------- | --------- |
-| 41 | <!-- ============================================================= --> |
-| 42 | <!--                     MATHML 3.0 SETUP                        --> |
-| 43 | <!-- ============================================================= --> |
-| 44 | <!--                    MATHML SETUP FILE                 --> |
-| 45 | <!ENTITY % mathml-in-pubmed     SYSTEM        "mathml-in-pubmed.mod"               > |	
-| 46 | %mathml-in-pubmed;
-| 63 | <!ATTLIST       PubmedArticleSet |
-| 64 | > |
-| 67 | <!ATTLIST       BookDocumentSet |
-| 68 | > |
-| 71 | <!ATTLIST       PubmedBookArticleSet |
-| 72 | > |
-| 77 | <!ATTLIST       PubmedArticle |
-| 78 | > |
-| 81 | <!ATTLIST       PubmedBookArticle |
-| 82 | > |
+The changes consisted of commenting out line 46 and moving angle brackets on lines 64, 68, 72, 78, and 82 to the previous line so they aren't on a line all by themselves.
 
 
+# prior to parsing the XML - wrap the article title and abstract text fields in CDATA b/c they contain HTML fragments, <b>. <i>, <u>, <sup>, <sub>
 
+sed -i 's/<ArticleTitle\([^>]*\)>/<ArticleTitle\1><![CDATA[/g' pubmed22n1115.xml
+sed -i 's/<\/ArticleTitle>/]]><\/ArticleTitle>/g' pubmed22n1115.xml
+
+sed -i 's/<AbstractText\([^>]*\)>/<AbstractText\1><![CDATA[/g' pubmed22n1115.xml
+sed -i 's/<\/AbstractText>/]]><\/AbstractText>/g' pubmed22n1115.xml

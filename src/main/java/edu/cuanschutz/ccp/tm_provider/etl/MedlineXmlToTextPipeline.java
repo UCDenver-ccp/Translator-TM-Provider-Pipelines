@@ -39,6 +39,14 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.SerializableFunction;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
+/**
+ * The Medline XML is broken as it comes with HTML fragments inside the title
+ * and abstract text fields. The solution is to wrap the title and abstract
+ * fields with CDATA. This solution was informed by this post:
+ * https://github.com/Rothamsted/knetbuilder/issues/12
+ * 
+ * NOTE: This pipeline must be run on the CDATA-updated XML files.
+ */
 public class MedlineXmlToTextPipeline {
 
 //	private final static Logger LOGGER = Logger.getLogger(BigQueryExportPipeline.class.getName());

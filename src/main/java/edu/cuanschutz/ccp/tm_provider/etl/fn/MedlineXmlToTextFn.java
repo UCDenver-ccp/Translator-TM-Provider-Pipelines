@@ -129,7 +129,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		 */
 		if (medlineCitation != null && medlineCitation.getPMID() != null) {
 			String pmid = "PMID:" + medlineCitation.getPMID().getvalue();
-			String title = medlineCitation.getArticle().getArticleTitle().getvalue();
+			String title = processTitleAndAbstractText(medlineCitation.getArticle().getArticleTitle().getvalue());
 			String abstractText = getAbstractText(pubmedArticle);
 			String documentText = (abstractText == null || abstractText.isEmpty()) ? title
 					: String.format("%s\n\n%s", title, abstractText);
@@ -206,14 +206,48 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			return null;
 		}
 		StringBuilder sb = new StringBuilder();
-		for (AbstractText text : theAbstract.getAbstractText()) {
+		for (AbstractText aText : theAbstract.getAbstractText()) {
+			String text = processTitleAndAbstractText(aText.getvalue());
+
 			if (sb.length() == 0) {
-				sb.append(text.getvalue());
+				sb.append(text);
 			} else {
-				sb.append("\n" + text.getvalue());
+				sb.append("\n" + text);
 			}
 		}
+
 		return sb.toString();
+	}
+
+	/**
+	 * Replace multiple whitespace with single space. Remove <b>, <i>, <u>, <sup>,
+	 * <sub>
+	 * 
+	 * @param aText
+	 * @return
+	 */
+	private static String processTitleAndAbstractText(String text) {
+		String updatedText = text.trim();
+
+		updatedText = updatedText.replaceAll("\\s\\s+", " ");
+		updatedText = updatedText.replaceAll("\\s?<sub>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?</sub>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?<sup>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?</sup>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?<b>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?</b>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?<i>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?</i>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?<u>\\s?", "");
+		updatedText = updatedText.replaceAll("\\s?</u>\\s?", "");
+
+		updatedText = updatedText.replaceAll("&lt;", "<");
+		updatedText = updatedText.replaceAll("&gt;", ">");
+		updatedText = updatedText.replaceAll("&amp;", "&");
+		updatedText = updatedText.replaceAll("&quot;", "\"");
+		updatedText = updatedText.replaceAll("&apos;", "'");
+
+		return updatedText;
 	}
 
 	private static void outputDocument(ProcessContext context, TextDocumentWithMetadata td, String collection)

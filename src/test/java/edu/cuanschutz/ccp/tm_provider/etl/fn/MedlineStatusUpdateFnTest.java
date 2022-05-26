@@ -41,7 +41,8 @@ public class MedlineStatusUpdateFnTest {
 		String pmid3 = "PMID:31839729";
 
 		PCollection<PubmedArticle> pubmedArticles = pipeline.apply("create pubmed articles", Create
-				.of(MedlineXmlToTextFnTest.getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
+				.of(MedlineXmlToTextFnTest.getSamplePubmedArticles(MedlineXmlToTextFnTest.SAMPLE_PUBMED20N0001_XML_GZ))
+				.withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		PCollection<KV<String, PubmedArticle>> pubmedArticlesInput = UpdateMedlineEntitiesPipeline
 				.keyByPubmedId(pubmedArticles);
