@@ -49,13 +49,16 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class MedlineXmlToTextFnTest {
 
+	static final String SAMPLE_PUBMED20N0001_XML_GZ = "sample-pubmed20n0001.xml.gz";
+	private static final String SAMPLE_PUBMED_XML_GZ = "sample-pubmed.xml.gz";
+
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
 
 	@Test
 	public void testTextDocumentConstruction()
 			throws ParserConfigurationException, SAXException, IOException, JAXBException, XMLStreamException {
-		List<PubmedArticle> articles = getSamplePubmedArticles();
+		List<PubmedArticle> articles = getSamplePubmedArticles(SAMPLE_PUBMED20N0001_XML_GZ);
 		assertEquals("document count not as expected.", 3, articles.size());
 		for (PubmedArticle article : articles) {
 			TextDocument td = MedlineXmlToTextFn.buildDocument(article);
@@ -88,10 +91,11 @@ public class MedlineXmlToTextFnTest {
 		};
 	}
 
-	public static List<PubmedArticle> getSamplePubmedArticles() throws JAXBException, IOException, XMLStreamException {
+	public static List<PubmedArticle> getSamplePubmedArticles(String filename)
+			throws JAXBException, IOException, XMLStreamException {
 		List<PubmedArticle> articles = new ArrayList<PubmedArticle>();
-		InputStream is = new GZIPInputStream(ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class,
-				"sample-pubmed20n0001.xml.gz"));
+		InputStream is = new GZIPInputStream(
+				ClassPathUtil.getResourceStreamFromClasspath(MedlineXmlToTextFnTest.class, filename));
 
 		XMLInputFactory xif = XMLInputFactory.newInstance();
 		xif.setXMLResolver(getXmlResolver());
@@ -173,8 +177,8 @@ public class MedlineXmlToTextFnTest {
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		PCollection<PubmedArticle> input = pipeline
-				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
+		PCollection<PubmedArticle> input = pipeline.apply(Create
+				.of(getSamplePubmedArticles(SAMPLE_PUBMED20N0001_XML_GZ)).withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
@@ -218,8 +222,8 @@ public class MedlineXmlToTextFnTest {
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		PCollection<PubmedArticle> input = pipeline
-				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
+		PCollection<PubmedArticle> input = pipeline.apply(Create
+				.of(getSamplePubmedArticles(SAMPLE_PUBMED20N0001_XML_GZ)).withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
@@ -265,8 +269,8 @@ public class MedlineXmlToTextFnTest {
 		String pipelineVersion = "0.1.0";
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
-		PCollection<PubmedArticle> input = pipeline
-				.apply(Create.of(getSamplePubmedArticles()).withCoder(JAXBCoder.of(PubmedArticle.class)));
+		PCollection<PubmedArticle> input = pipeline.apply(Create
+				.of(getSamplePubmedArticles(SAMPLE_PUBMED20N0001_XML_GZ)).withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				pipelineKey, pipelineVersion);
@@ -319,5 +323,39 @@ public class MedlineXmlToTextFnTest {
 		assertEquals("1998", extractedYear);
 
 	}
+	
+	
+	
+	@Test
+	public void testMedlineXmlToTextConversionFn_testHalfAbstractParseError() throws IOException, JAXBException, XMLStreamException {
+		PipelineKey pipelineKey = PipelineKey.MEDLINE_XML_TO_TEXT;
+		String pipelineVersion = "0.1.0";
+		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
+
+		PCollection<PubmedArticle> input = pipeline.apply(Create
+				.of(getSamplePubmedArticles(SAMPLE_PUBMED_XML_GZ)).withCoder(JAXBCoder.of(PubmedArticle.class)));
+
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				pipelineKey, pipelineVersion);
+		String collection = null;
+
+		// simulate empty PCollectionView
+		PCollectionView<Set<String>> docIdsAlreadyStoredView = pipeline
+				.apply("Create schema view", Create.<Set<String>>of(CollectionsUtil.createSet("")))
+				.apply(View.<Set<String>>asSingleton());
+
+		PCollectionTuple output = MedlineXmlToTextFn.process(input, outputTextDocCriteria, timestamp, collection,
+				docIdsAlreadyStoredView, OverwriteOutput.YES);
+
+		String expectedPmid_1 = "PMID:31000267";
+		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
+				"PMID31000267.txt", CharacterEncoding.UTF_8);
+
+		PAssert.that(output.get(MedlineXmlToTextFn.plainTextTag)).containsInAnyOrder(
+				KV.of(expectedPmid_1, Arrays.asList(expectedText_1)));
+
+		pipeline.run();
+	}
+	
 
 }

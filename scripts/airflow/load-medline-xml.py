@@ -87,6 +87,13 @@ populate_load_directory = BashOperator(
     bash_command="cd /home/airflow/gcs/data && mkdir -p /home/airflow/gcs/data/to_load && if [ -s downloaded-files.txt ]; then xargs -a downloaded-files.txt cp -t /home/airflow/gcs/data/to_load; fi",
     dag=dag)
 
+# in order to parse the XML properly, the article text and abstract text fields must be wrapped with CDATA
+# This script unzips all of the files in the to_load directory; wraps with CDATA; and then zips all the files
+wrap_with_cdata = BashOperator(
+    task_id='wrap_with_cdata',
+    bash_command="cd /home/airflow/gcs/data/to_load && gunzip *.gz && if [ -s downloaded-files.txt ]; then { xargs -a downloaded-files.txt sed -i 's/<ArticleTitle\([^>]*\)>/<ArticleTitle\1><![CDATA[/g'; xargs -a downloaded-files.txt sed -i 's/<\/ArticleTitle>/]]><\/ArticleTitle>/g'; xargs -a downloaded-files.txt sed -i 's/<AbstractText\([^>]*\)>/<AbstractText\1><![CDATA[/g'; xargs -a downloaded-files.txt sed -i 's/<\/AbstractText>/]]><\/AbstractText>/g'; } fi && gzip *",
+    dag=dag)
+
 # checks to see if the to_load directory is empty
 def check_for_files_to_process(**kwargs):
     # if os.stat("/home/airflow/gcs/data/downloaded-files.txt").st_size > 0:
@@ -138,7 +145,8 @@ pipeline_end = BashOperator(
 
 verify_md5.set_upstream(download)
 populate_load_directory.set_upstream(verify_md5)
-check_for_files_to_process.set_upstream(populate_load_directory)
+wrap_with_cdata.set_upstream(populate_load_directory)
+check_for_files_to_process.set_upstream(wrap_with_cdata)
 dataflow_medline_xml_to_text.set_upstream(check_for_files_to_process)
 dataflow_medline_xml_to_text.set_downstream(pipeline_end)
 check_for_files_to_process.set_downstream(pipeline_end)
