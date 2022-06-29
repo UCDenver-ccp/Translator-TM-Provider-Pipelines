@@ -28,6 +28,7 @@ public class BiolinkConstants {
 	private static final String BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION = "biolink:GeneRegulatoryRelationship";
 	private static final String BL_GENE_TO_DISEASE_ASSOCIATION = "biolink:GeneToDiseaseAssociation";
 	private static final String BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION = "biolink:GeneToExpressionSiteAssociation";
+	private static final String BL_GENE_TO_BIOLOGICAL_PROCESS_ASSOCIATION = "biolink:GeneToBiologicalProcessAssociation";
 
 	// TODO: THis is not yet an official Biolink Association
 	private static final String BL_BIOLOGICAL_PROCESS_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION = "biolink:BiologicalProcessToDiseaseOrPhenotypicFeatureAssociation";
@@ -87,7 +88,13 @@ public class BiolinkConstants {
 		BL_BIOLOGICAL_PROCESS_TO_DISEASE(BL_BIOLOGICAL_PROCESS_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
 				BiolinkClass.BIOLOGICAL_PROCESS, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
 				new SPO[] {
-						new SPO(BiolinkClass.BIOLOGICAL_PROCESS, BiolinkPredicate.ACTIVELY_INVOLVED_IN, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(BiolinkClass.BIOLOGICAL_PROCESS, BiolinkPredicate.BL_ACTIVELY_INVOLVED_IN, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+		
+		BL_GENE_TO_BIOLOGICAL_PROCESS(BL_GENE_TO_BIOLOGICAL_PROCESS_ASSOCIATION,
+				BiolinkClass.GENE, BiolinkClass.BIOLOGICAL_PROCESS, 
+				new SPO[] {
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_PARTICIPATES_IN, BiolinkClass.BIOLOGICAL_PROCESS),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 		// @formatter:on
 
@@ -148,7 +155,8 @@ public class BiolinkConstants {
 				"contributes_to_via_gain_of_function"),
 		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype"), 
 		BL_OCCURS_IN("biolink:occurs_in", "occurs_in"),
-		ACTIVELY_INVOLVED_IN("biolink:actively_involved_in", "actively_involved_in");
+		BL_ACTIVELY_INVOLVED_IN("biolink:actively_involved_in", "actively_involved_in"),
+		BL_PARTICIPATES_IN("biolink:participates_in", "participates_in");
 		// @formatter:on
 
 		private final String curie;
@@ -181,11 +189,11 @@ public class BiolinkConstants {
 		DISEASE_OR_PHENOTYPIC_FEATURE(DISEASE_PLACEHOLDER, "MONDO", "HP"),
 		PHENOTYPIC_FEATURE(PHENOTYPIC_FEATURE_PLACEHOLDER, "HP"), 
 		CHEMICAL(CHEMICAL_PLACEHOLDER, "DRUGBANK", "CHEBI"),
-		BIOLOGICAL_PROCESS(PROCESS_PLACEHOLDER, "GO_BP"),  // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		BIOLOGICAL_PROCESS(PROCESS_PLACEHOLDER, "GO"),  // TODO: won't work until Elastic is updated to split GO into component hierarchies
 		ANATOMICAL_SITE(ANATOMICAL_SITE_PLACEHOLDER, "UBERON"),
-		CELLULAR_COMPONENT(CELLULAR_COMPONENT_PLACEHOLDER, "GO_CC"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		CELLULAR_COMPONENT(CELLULAR_COMPONENT_PLACEHOLDER, "GO"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
 		CELL_TYPE(CELL_TYPE_PLACEHOLDER, "CL"),
-		ANY_LOCATION(ANY_LOCATION_PLACEHOLDER, "UBERON", "CL", "GO_CC"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
+		ANY_LOCATION(ANY_LOCATION_PLACEHOLDER, "UBERON", "CL", "GO"), // TODO: won't work until Elastic is updated to split GO into component hierarchies
 		GENE(GENE_PLACEHOLDER, "PR"),
 		REGULATED_GENE(REGULATED_GENE_PLACEHOLDER, "PR"), 
 		REGULATING_GENE(REGULATING_GENE_PLACEHOLDER, "PR");
