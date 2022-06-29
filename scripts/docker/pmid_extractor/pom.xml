@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Contents of this pom file borrow heavily from word-count-beam/pom.xml -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>edu.cuanschutz.edu</groupId>
+	<artifactId>run_pmid_extractor</artifactId>
+	<version>0.1.0</version>
+	<description>Pipelines used by the Translator Text Mining Provider</description>
+
+	<organization>
+		<name>University of Colorado Anschutz Medical Campus</name>
+	</organization>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>java</executable>
+					<arguments>
+						<argument>-classpath</argument>
+						<argument>/home/code/tm-pipelines-bundled-0.1.0.jar</argument>
+						<argument>edu.cuanschutz.ccp.tm_provider.corpora.PmidExtractor</argument>
+						<argument>/home/input</argument>
+						<argument>/home/output</argument>
+						<argument>CONTAINS_HTML</argument>
+						<argument>0</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+
+
+</project>

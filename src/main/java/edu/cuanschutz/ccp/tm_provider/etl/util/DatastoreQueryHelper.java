@@ -1,5 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +26,7 @@ import com.google.cloud.datastore.Value;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
+import edu.ucdenver.ccp.common.file.FileWriterUtil;
 
 public class DatastoreQueryHelper {
 
@@ -336,6 +339,33 @@ public class DatastoreQueryHelper {
 		System.out.println("done.");
 	}
 
+	public void getAllDocumentIds(File outputFile) throws IOException {
+		Query<Entity> query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.STATUS_KIND).build();
+
+		QueryResults<Entity> results = datastore.run(query);
+		int count = 0;
+
+		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
+			while (results.hasNext()) {
+				if (count++ % 1000 == 0) {
+					System.out.println("progress: " + count);
+				}
+				Entity entity = results.next();
+				Map<String, Value<?>> properties = entity.getProperties();
+
+				String docId = properties.get(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID).get().toString();
+				Boolean hasText = Boolean
+						.valueOf(properties.get(DatastoreConstants.STATUS_PROPERTY_TEXT_DONE).get().toString());
+
+				if (hasText) {
+					writer.write(docId + "\n");
+				}
+
+			}
+		}
+
+	}
+
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
 //		new DatastoreQueryHelper().getStatuses();
@@ -353,9 +383,12 @@ public class DatastoreQueryHelper {
 
 //		new DatastoreQueryHelper().printDocumentCountsBasedOnKeys();
 
-		new DatastoreQueryHelper().addStatusFlag(CollectionsUtil.createSet(ProcessingStatusFlag.SENTENCE_DONE), false);
+//		new DatastoreQueryHelper().addStatusFlag(CollectionsUtil.createSet(ProcessingStatusFlag.SENTENCE_DONE), false);
 
 //		new DatastoreQueryHelper().collectionStatus("CORD19");
+		
+		File outputFile = new File("/Users/bill/projects/ncats-translator/current-kgs/20220613/document_ids.txt");
+		new DatastoreQueryHelper().getAllDocumentIds(outputFile);
 
 	}
 
