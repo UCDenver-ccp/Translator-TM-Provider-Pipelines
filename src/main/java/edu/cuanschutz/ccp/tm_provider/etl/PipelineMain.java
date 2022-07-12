@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
-import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
@@ -60,7 +59,7 @@ import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
-import edu.cuanschutz.ccp.tm_provider.etl.MedlineXmlToTextPipeline.UniqueStrings;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.update.UpdateMedlineEntitiesPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreKeyUtil;
@@ -157,7 +156,7 @@ public class PipelineMain {
 				break;
 			case CONCEPT_IDF:
 				ConceptIdfPipeline.main(pipelineArgs);
-				break;	
+				break;
 			case DEPENDENCY_PARSE:
 				DependencyParsePipeline.main(pipelineArgs);
 				break;
@@ -445,8 +444,7 @@ public class PipelineMain {
 		}
 
 		PCollection<Entity> documents = p.apply(
-				String.format("load %s",
-						(documentType == null) ? "all types" : documentType.name().toLowerCase()),
+				String.format("load %s", (documentType == null) ? "all types" : documentType.name().toLowerCase()),
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 
 		PCollection<KV<String, ProcessedDocument>> docId2Document = documents.apply("document entity -> PD",
@@ -1066,7 +1064,7 @@ public class PipelineMain {
 	public static PCollectionView<Set<String>> catalogExistingDocuments(String project, String collection,
 			OverwriteOutput overwrite, Pipeline p) {
 		/*
-		 * if OverwriteOutput == YES, then there is no need to catalog te existing
+		 * if OverwriteOutput == YES, then there is no need to catalog the existing
 		 * documents as they will be overwritten if they exist
 		 */
 		if (overwrite == OverwriteOutput.YES) {
@@ -1087,8 +1085,7 @@ public class PipelineMain {
 		// create a set of document IDs already present in Datastore to be used as a
 		// side input
 		PCollection<String> docIds = docIdToStatusEntity.apply(Keys.<String>create());
-		PCollection<Set<String>> docIdsSet = docIds.apply(Combine.globally(new UniqueStrings()));
-		final PCollectionView<Set<String>> existingDocumentIds = docIdsSet.apply(View.<Set<String>>asSingleton());
+		final PCollectionView<Set<String>> existingDocumentIds = PCollectionUtil.createPCollectionViewSet(docIds);
 		return existingDocumentIds;
 	}
 

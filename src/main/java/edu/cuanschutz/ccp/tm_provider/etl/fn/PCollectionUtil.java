@@ -7,11 +7,14 @@ import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -37,6 +40,76 @@ public class PCollectionUtil {
 		}
 	}
 
+	/**
+	 * Create a PCollectionView set where each line in the input file is a unique
+	 * set element
+	 * 
+	 * @param description
+	 * @param p
+	 * @param filePattern
+	 * @param delimiter
+	 * @param compression
+	 * @return
+	 */
+	public static PCollectionView<Set<String>> loadSetAsMapFromFile(String description, Pipeline p, String filePattern,
+			Compression compression) {
+		PCollection<String> lines = p.apply(description, TextIO.read().from(filePattern).withCompression(compression));
+		final PCollectionView<Set<String>> linesAsSetView = createPCollectionViewSet(lines);
+		return linesAsSetView;
+
+//		// parse each line to get a key/value pair
+//		PCollection<KV<String, String>> column0Tocolumn1 = lines.apply(ParDo.of(new DoFn<String, KV<String, String>>() {
+//			private static final long serialVersionUID = 1L;
+//
+//			@ProcessElement
+//			public void processElement(ProcessContext c) {
+//				String element = c.element();
+//				// there will be a single element per line in the input file. This element will
+//				// be a key in the map so that we can query the map as if it were a set. The
+//				// value for each map entry will be an empty string.
+//				c.output(KV.of(element, ""));
+//			}
+//		}));
+//		return column0Tocolumn1;
+	}
+
+	public static PCollectionView<Set<String>> createPCollectionViewSet(PCollection<String> elements) {
+		PCollection<Set<String>> elementsAsSet = elements.apply(Combine.globally(new UniqueStrings()));
+		final PCollectionView<Set<String>> elementsAsSetView = elementsAsSet.apply(View.<Set<String>>asSingleton());
+		return elementsAsSetView;
+	}
+
+	/** Modeled after code in og.apache.beam.sdk.transforms.CombineTest */
+	public static class UniqueStrings extends Combine.CombineFn<String, Set<String>, Set<String>> {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Set<String> createAccumulator() {
+			return new HashSet<>();
+		}
+
+		@Override
+		public Set<String> addInput(Set<String> accumulator, String input) {
+			accumulator.add(input);
+			return accumulator;
+		}
+
+		@Override
+		public Set<String> mergeAccumulators(Iterable<Set<String>> accumulators) {
+			Set<String> all = new HashSet<>();
+			for (Set<String> part : accumulators) {
+				all.addAll(part);
+			}
+			return all;
+		}
+
+		@Override
+		public Set<String> extractOutput(Set<String> accumulator) {
+			return accumulator;
+		}
+	}
+
 	public static PCollection<KV<String, String>> fromTwoColumnFiles(String description, Pipeline p, String filePattern,
 			Delimiter delimiter, Compression compression) {
 		PCollection<String> lines = p.apply(description, TextIO.read().from(filePattern).withCompression(compression));
@@ -49,7 +122,8 @@ public class PCollectionUtil {
 				String element = c.element();
 				String[] cols = element.split(delimiter.regex());
 				if (cols.length != 2) {
-					throw new IllegalArgumentException("Unable to split line into two columns. Delimiter=" + delimiter.name() + " Line=" + element);
+					throw new IllegalArgumentException("Unable to split line into two columns. Delimiter="
+							+ delimiter.name() + " Line=" + element);
 				}
 				c.output(KV.of(cols[0], cols[1]));
 			}
@@ -63,9 +137,9 @@ public class PCollectionUtil {
 	 * @param delimiter
 	 * @return
 	 */
-	public static PCollection<KV<String, Set<String>>> fromKeyToSetTwoColumnFiles(String description, Pipeline p, String filePattern,
-			Delimiter fileDelimiter, Delimiter setDelimiter, Compression compression) {
-		PCollection<String> lines = p.apply(description ,TextIO.read().from(filePattern).withCompression(compression));
+	public static PCollection<KV<String, Set<String>>> fromKeyToSetTwoColumnFiles(String description, Pipeline p,
+			String filePattern, Delimiter fileDelimiter, Delimiter setDelimiter, Compression compression) {
+		PCollection<String> lines = p.apply(description, TextIO.read().from(filePattern).withCompression(compression));
 		// parse each line to get a key/value pair
 		PCollection<KV<String, Set<String>>> column0Tocolumn1 = lines
 				.apply(ParDo.of(new DoFn<String, KV<String, Set<String>>>() {
