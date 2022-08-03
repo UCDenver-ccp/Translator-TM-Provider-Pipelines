@@ -93,14 +93,19 @@ public class PrPromotionMapFactory {
 	private boolean isGeneLevel(OWLClass cls) {
 		List<String> comments = ontUtil.getComments(cls);
 		if (comments != null && !comments.isEmpty()) {
-			return comments.contains("Category=gene.");
+			for (String comment : comments) {
+				if (comment.contains("Category=gene.")) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}
 
 	public static void main(String[] args) {
-		File prOwlFile = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
-		                           
+		File prOwlFile = new File(
+				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+
 		File outputFile = new File(
 				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
 

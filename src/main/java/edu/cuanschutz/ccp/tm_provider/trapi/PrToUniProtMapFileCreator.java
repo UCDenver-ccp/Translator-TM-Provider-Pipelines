@@ -70,9 +70,8 @@ public class PrToUniProtMapFileCreator {
 		if (owlClass != null) {
 			String prId = iriToCurie(owlClass.getIRI().toString());
 			if (isGeneLevel(ontUtil, owlClass)) {
-				// then walk down the hierarch and look for a protein annotated as human with a
+				// then walk down the hierarchy and look for a protein annotated as human with a
 				// uniprot xref; traverse at most 2 subclass levels
-
 				owlClass = findHumanSubclassWithUniprotXref(ontUtil, owlClass, true);
 			}
 
@@ -128,7 +127,11 @@ public class PrToUniProtMapFileCreator {
 	protected static boolean isGeneLevel(OntologyUtil ontUtil, OWLClass cls) {
 		List<String> comments = ontUtil.getComments(cls);
 		if (comments != null && !comments.isEmpty()) {
-			return comments.contains("Category=gene.");
+			for (String comment : comments) {
+				if (comment.contains("Category=gene.")) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}
