@@ -3,6 +3,8 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,11 +12,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.file.FileReaderUtil;
+import edu.ucdenver.ccp.common.io.ClassPathUtil;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class AbbreviationFnTest {
+
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
 
 	@Test
 	public void testSerializeAbbreviations() throws IOException {
@@ -79,6 +93,31 @@ public class AbbreviationFnTest {
 		shortLongFormSpans = AbbreviationFn.findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
 		assertArrayEquals(new Span[] { new Span(77, 79), new Span(66, 76) }, shortLongFormSpans);
 
+	}
+
+	// This data is from PMC9006252
+	@Test
+	public void testNullPointerExceptionInRealExample() throws IOException {
+		File dir = folder.newFolder();
+		File ab3pOutputFile = ClassPathUtil.copyClasspathResourceToDirectory(getClass(), "abbrev.sample.ab3p.results", dir);
+
+		File sentenceAnnotsInBioNLP = ClassPathUtil.copyClasspathResourceToDirectory(getClass(), "abbrev.sample.sentences.bionlp", dir);
+		File documentTextFile = ClassPathUtil.copyClasspathResourceToDirectory(getClass(), "abbrev.sample.txt", dir);
+
+		BioNLPDocumentReader reader = new BioNLPDocumentReader();
+		TextDocument td = reader.readDocument("123456", "source", sentenceAnnotsInBioNLP, documentTextFile,
+				CharacterEncoding.UTF_8);
+		Map<String, Span> sentenceToSpanMap = new HashMap<String, Span>();
+		for (TextAnnotation annot : td.getAnnotations()) {
+			sentenceToSpanMap.put(annot.getCoveredText(), annot.getAggregateSpan());
+		}
+
+		List<String> results = FileReaderUtil.loadLinesFromFile(ab3pOutputFile, CharacterEncoding.UTF_8);
+		String documentText = IOUtils.toString(new FileInputStream(documentTextFile),
+				CharacterEncoding.UTF_8.getCharacterSetName());
+
+		String serializedAbbreviations = AbbreviationFn.serializeAbbreviations(results, sentenceToSpanMap,
+				documentText);
 	}
 
 }
