@@ -89,7 +89,7 @@ public class MedlineXmlToTextPipeline {
 		// of document IDs to skip when loading Medline records, otherwise, query the
 		// Datastore for existing document IDs and skip any existing document ID, unless
 		// overwrite = YES.
-		final PCollectionView<Set<String>> docIdsToSkipSetView = (options.getPmidSkipFilePath() != null)
+		final PCollectionView<Set<String>> docIdsToSkipSetView = (!options.getPmidSkipFilePath().equals("null"))
 				? PCollectionUtil.loadSetAsMapFromFile("pmids-to-skip", p, options.getPmidSkipFilePath(),
 						Compression.GZIP)
 				: PipelineMain.catalogExistingDocuments(options.getProject(), options.getCollection(),
