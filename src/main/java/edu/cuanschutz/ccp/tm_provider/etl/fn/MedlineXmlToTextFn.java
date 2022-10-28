@@ -129,7 +129,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		 */
 		if (medlineCitation != null && medlineCitation.getPMID() != null) {
 			String pmid = "PMID:" + medlineCitation.getPMID().getvalue();
-			String title = processTitleAndAbstractText(medlineCitation.getArticle().getArticleTitle().getvalue());
+			String title = extractTitleText(medlineCitation);
 			String abstractText = getAbstractText(pubmedArticle);
 			String documentText = (abstractText == null || abstractText.isEmpty()) ? title
 					: String.format("%s\n\n%s", title, abstractText);
@@ -158,6 +158,10 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			return td;
 		}
 		return null;
+	}
+
+	public static String extractTitleText(MedlineCitation medlineCitation) {
+		return processTitleAndAbstractText(medlineCitation.getArticle().getArticleTitle().getvalue());
 	}
 
 	public static String getYearPublished(MedlineCitation medlineCitation) {
@@ -200,7 +204,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @param pubmedArticle
 	 * @return the abstract text compiled from the {@link PubmedArticle}
 	 */
-	static String getAbstractText(PubmedArticle pubmedArticle) {
+	public static String getAbstractText(PubmedArticle pubmedArticle) {
 		Abstract theAbstract = pubmedArticle.getMedlineCitation().getArticle().getAbstract();
 		if (theAbstract == null) {
 			return null;

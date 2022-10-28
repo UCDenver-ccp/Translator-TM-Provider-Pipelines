@@ -49,8 +49,8 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 public class MedlineXmlToTextFnTest {
 
-	static final String SAMPLE_PUBMED20N0001_XML_GZ = "sample-pubmed20n0001.xml.gz";
-	private static final String SAMPLE_PUBMED_XML_GZ = "sample-pubmed.xml.gz";
+	public static final String SAMPLE_PUBMED20N0001_XML_GZ = "sample-pubmed20n0001.xml.gz";
+	public static final String SAMPLE_PUBMED_XML_GZ = "sample-pubmed.xml.gz";
 
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
