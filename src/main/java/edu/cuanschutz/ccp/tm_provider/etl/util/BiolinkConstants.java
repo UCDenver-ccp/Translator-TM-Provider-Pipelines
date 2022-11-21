@@ -27,7 +27,9 @@ public class BiolinkConstants {
 	private static final String BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION_ASSOCIATION = "biolink:DiseaseOrPhenotypicFeatureToLocationAssociation";
 	private static final String BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION = "biolink:GeneRegulatoryRelationship";
 	private static final String BL_GENE_TO_DISEASE_ASSOCIATION = "biolink:GeneToDiseaseAssociation";
-	private static final String BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION = "biolink:GeneToExpressionSiteAssociation";
+	private static final String BL_GENE_TO_CELLULAR_COMPONENT_ASSOCIATION = "biolink:GeneToCellularComponentAssociation"; // TODO: This Association needs to be added to Biolink
+	private static final String BL_GENE_TO_CELL_ASSOCIATION = "biolink:GeneToCellAssociation"; // TODO: This Association needs to be added to Biolink
+	private static final String BL_GENE_TO_ANATOMICAL_ENTITY_ASSOCIATION = "biolink:GeneToAnatomalEntityAssociation"; // TODO: This Association needs to be added to Biolink
 	private static final String BL_GENE_TO_BIOLOGICAL_PROCESS_ASSOCIATION = "biolink:GeneToBiologicalProcessAssociation";
 
 	// TODO: THis is not yet an official Biolink Association
@@ -38,7 +40,7 @@ public class BiolinkConstants {
 		BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE(BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE_ASSOCIATION,
 				BiolinkClass.CHEMICAL, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
 				new SPO[] { new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_TREATS, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
-//						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_CONTRIBUTES_TO, BiolinkClass.DISEASE),
+						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_CONTRIBUTES_TO, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_CHEMICAL_TO_GENE(BL_CHEMICAL_TO_GENE_ASSOCIATION, BiolinkClass.CHEMICAL, BiolinkClass.GENE,
@@ -47,10 +49,10 @@ public class BiolinkConstants {
 						new SPO(BiolinkClass.CHEMICAL, BiolinkPredicate.BL_ENTITY_NEGATIVELY_REGULATES_ENTITY, BiolinkClass.GENE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_DISEASE_TO_PHENOTYPIC_FEATURE(BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
-				BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE,
+		BL_DISEASE_TO_PHENOTYPIC_FEATURE(BL_DISEASE_TO_PHENOTYPIC_FEATURE_ASSOCIATION, BiolinkClass.DISEASE,
+				BiolinkClass.PHENOTYPIC_FEATURE,
 				new SPO[] {
-						new SPO(BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE, BiolinkPredicate.BL_HAS_PHENOTYPE, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
+						new SPO(BiolinkClass.DISEASE, BiolinkPredicate.BL_HAS_PHENOTYPE, BiolinkClass.PHENOTYPIC_FEATURE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_GENE_REGULATORY_RELATIONSHIP(BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION, BiolinkClass.REGULATING_GENE,
@@ -73,10 +75,17 @@ public class BiolinkConstants {
 						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_GAIN_OF_FUNCTION_CONTRIBUTES_TO, BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
-		BL_GENE_TO_EXPRESSION_SITE(BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION, BiolinkClass.GENE, BiolinkClass.ANY_LOCATION,
-				new SPO[] { new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.ANATOMICAL_SITE),
-						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.CELL_TYPE),
-						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_EXPRESSED_IN, BiolinkClass.CELLULAR_COMPONENT),
+		BL_GENE_TO_CELLULAR_COMPONENT(BL_GENE_TO_CELLULAR_COMPONENT_ASSOCIATION, BiolinkClass.GENE, BiolinkClass.CELLULAR_COMPONENT,
+				new SPO[] { new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_LOCATED_IN, BiolinkClass.CELLULAR_COMPONENT),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+		
+		BL_GENE_TO_CELL(BL_GENE_TO_CELL_ASSOCIATION, BiolinkClass.GENE, BiolinkClass.CELL_TYPE,
+				new SPO[] { 
+						new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_LOCATED_IN, BiolinkClass.CELL_TYPE),
+						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
+		
+		BL_GENE_TO_ANATOMICAL_ENTITY(BL_GENE_TO_ANATOMICAL_ENTITY_ASSOCIATION, BiolinkClass.GENE, BiolinkClass.ANATOMICAL_SITE,
+				new SPO[] { new SPO(BiolinkClass.GENE, BiolinkPredicate.BL_LOCATED_IN, BiolinkClass.ANATOMICAL_SITE),
 						new SPO(null, BiolinkPredicate.NO_RELATION_PRESENT, null) }),
 
 		BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION(BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION_ASSOCIATION,
@@ -156,7 +165,8 @@ public class BiolinkConstants {
 		BL_HAS_PHENOTYPE("biolink:has_phenotype", "has_phenotype"), 
 		BL_OCCURS_IN("biolink:occurs_in", "occurs_in"),
 		BL_ACTIVELY_INVOLVED_IN("biolink:actively_involved_in", "actively_involved_in"),
-		BL_PARTICIPATES_IN("biolink:participates_in", "participates_in");
+		BL_PARTICIPATES_IN("biolink:participates_in", "participates_in"),
+		BL_LOCATED_IN("biolink:located_in", "located_in");
 		// @formatter:on
 
 		private final String curie;
