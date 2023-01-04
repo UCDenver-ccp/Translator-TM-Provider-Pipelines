@@ -149,7 +149,7 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 			String sentenceId = computeSentenceIdentifier(documentId, sentenceAnnot);
 
 			String elasticsearchSentenceDocumentJson = createJsonDocument(sentenceId, sentenceAnnot,
-					conceptAnnotsInSentence, documentId);
+					conceptAnnotsInSentence, documentId, documentText);
 
 			jsonDocuments.add(elasticsearchSentenceDocumentJson);
 		}
@@ -159,11 +159,14 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 
 	@VisibleForTesting
 	protected static String createJsonDocument(String sentenceId, TextAnnotation sentenceAnnot,
-			Set<TextAnnotation> conceptAnnotsInSentence, String documentId) { // , String documentSection, int
+			Set<TextAnnotation> conceptAnnotsInSentence, String documentId, String documentText) { // , String documentSection, int
 																				// publicationYear) {
-		Sentence sentence = Sentence.buildSentence(sentenceAnnot, conceptAnnotsInSentence, sentenceId, documentId);
+		Sentence sentence = Sentence.buildSentence(sentenceAnnot, conceptAnnotsInSentence, sentenceId, documentId, documentText);
 //				documentSection, publicationYear);
 
+		System.out.println("sentence id: " + sentence.getId());
+		System.out.println("sentence doc id: " + sentence.getDocumentId());
+		
 		Gson gson = new Gson();
 		String json = gson.toJson(sentence);
 
@@ -196,7 +199,6 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 		return documentId + "_" + DigestUtils.sha256Hex(annot.getAggregateSpan().toString() + annot.getCoveredText());
 	}
 
-	@Data
 	public static class Sentence {
 
 		public static final String ID = "id";
@@ -205,9 +207,9 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 		public static final String SECTION = "section";
 		public static final String PUBLICATION_YEAR = "publicationYear";
 
-		private final String id;
-		private final String documentId;
-		private final String annotatedText;
+		private String id;
+		private String documentId;
+		private String annotatedText;
 //		private final String section;
 //		private final int publicationYear;
 
@@ -222,17 +224,34 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 //		private final Set<String> predObj;
 //		
 //		private final boolean manuallyVetted;
+		
+		
+		public Sentence(String id, String documentId, String annotatedText) {
+			this.setId(id);
+			this.setDocumentId(documentId);
+			this.setAnnotatedText(annotatedText);
+		}
+		
+		public Sentence() {
+			
+		}
+		
+		
+		
 
 		public static Sentence buildSentence(TextAnnotation sentenceAnnot, Set<TextAnnotation> conceptAnnots,
-				String sentenceId, String documentId) {// , String section, int publicationYear) {
+				String sentenceId, String documentId, String documentText) {// , String section, int publicationYear) {
 
-			String annotatedText = getAnnotatedText(sentenceAnnot, conceptAnnots);
+			String annotatedText = getAnnotatedText(sentenceAnnot, conceptAnnots, documentText);
 
+			System.out.println("input sentence id: " + sentenceId);
+			System.out.println("input doc id: " + documentId);
+			
 			return new Sentence(sentenceId, documentId, annotatedText);// , section, publicationYear);
 		}
 
 		@VisibleForTesting
-		protected static String getAnnotatedText(TextAnnotation sentenceAnnot, Set<TextAnnotation> conceptAnnots) {
+		protected static String getAnnotatedText(TextAnnotation sentenceAnnot, Set<TextAnnotation> conceptAnnots, String documentText) {
 
 			Set<TextAnnotation> unnestedConceptAnnotations = removeNestedAnnotations(conceptAnnots);
 
@@ -251,7 +270,9 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 			Map<Span, Set<TextAnnotation>> sortedSpanToConceptAnnotMap = CollectionsUtil
 					.sortMapByKeys(spanToConceptAnnotMap, SortOrder.ASCENDING);
 
-			String sentenceText = sentenceAnnot.getCoveredText();
+//			String sentenceText = sentenceAnnot.getCoveredText();
+			
+			String sentenceText = documentText.substring(sentenceAnnot.getAnnotationSpanStart(), sentenceAnnot.getAnnotationSpanEnd());
 
 			StringBuilder sb = new StringBuilder();
 
@@ -370,6 +391,48 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 			List<String> sortedPrefixes = new ArrayList<String>(prefixes);
 			Collections.sort(sortedPrefixes);
 			return sortedPrefixes;
+		}
+
+
+
+
+		public String getId() {
+			return id;
+		}
+
+
+
+
+		public String getDocumentId() {
+			return documentId;
+		}
+
+
+
+
+		public String getAnnotatedText() {
+			return annotatedText;
+		}
+
+
+
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+
+
+
+		public void setDocumentId(String documentId) {
+			this.documentId = documentId;
+		}
+
+
+
+
+		public void setAnnotatedText(String annotatedText) {
+			this.annotatedText = annotatedText;
 		}
 
 	}
