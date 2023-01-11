@@ -78,7 +78,7 @@ public class ElasticsearchToBratExporter {
 	private static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
 
 	// @formatter:off
-	static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet(
+	public static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet(
 			"CHEBI:36080", 		// protein
 			"PR:000000001", 	// protein
 			"CL:0000000", 		// cell
@@ -88,12 +88,28 @@ public class ElasticsearchToBratExporter {
 			"DRUGBANK:DB00118");
 	// @formatter:on
 
+	/**
+	 * @param outputDirectory
+	 * @param biolinkAssociation
+	 * @param batchId
+	 * @param inputSentences
+	 * @param previousSentenceIdsFile
+	 * @param redundantSentencesToInclude
+	 * @param populateOverlapBatchIdsFile if true then we will randomly sample
+	 *                                    sentence identifiers from the search
+	 *                                    results and save them to a file. These
+	 *                                    sentences will be included in future
+	 *                                    batches so that IAA can be computed.
+	 * @throws IOException
+	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
 			Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile,
-			List<TextDocument> redundantSentencesToInclude) throws IOException {
+			List<TextDocument> redundantSentencesToInclude, boolean populateOverlapBatchIdsFile, File associationDir,
+			float batchOverlapPercentage) throws IOException {
 
 		createBratFiles(outputDirectory, biolinkAssociation, batchId, BATCH_SIZE, inputSentences,
-				previousSentenceIdsFile, IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude);
+				previousSentenceIdsFile, IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude,
+				populateOverlapBatchIdsFile, associationDir, batchOverlapPercentage);
 	}
 
 	/**
@@ -115,12 +131,19 @@ public class ElasticsearchToBratExporter {
 	 *                                    agreement can be calculated. They will be
 	 *                                    randomly worked into the randomly selected
 	 *                                    sentences for this batch.
+	 * @param populateOverlapBatchIdsFile if true then we will randomly sample
+	 *                                    sentence identifiers from the search
+	 *                                    results and save them to a file. These
+	 *                                    sentences will be included in future
+	 *                                    batches so that IAA can be computed.
+	 * @param associationDir
+	 * @param batchOverlapPercentage
 	 * @throws IOException
 	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
 			int batchSize, Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile,
-			Set<String> idsToExclude, int sentencesPerPage, List<TextDocument> redundantSentencesToInclude)
-			throws IOException {
+			Set<String> idsToExclude, int sentencesPerPage, List<TextDocument> redundantSentencesToInclude,
+			boolean populateOverlapBatchIdsFile, File associationDir, float batchOverlapPercentage) throws IOException {
 
 		Set<String> alreadyAnnotated = new HashSet<String>(
 				FileReaderUtil.loadLinesFromFile(previousSentenceIdsFile, UTF8));
@@ -167,6 +190,11 @@ public class ElasticsearchToBratExporter {
 					Set<BiolinkClass> biolinkClasses = new HashSet<BiolinkClass>(
 							Arrays.asList(biolinkAssociation.getSubjectClass(), biolinkAssociation.getObjectClass()));
 					td = excludeBasedOnEntityIds(td, idsToExclude, biolinkClasses);
+				}
+
+				if (td.getAnnotations() == null) {
+					System.err.println("Null annotations observed!!!!");
+					td = null;
 				}
 
 				if (td != null) {
@@ -235,6 +263,35 @@ public class ElasticsearchToBratExporter {
 			}
 		}
 
+		/*
+		 * if the flag to populate the batch overlap setence Ids file is true, then
+		 * write a random selection of the sentence hashes to file
+		 */
+		if (populateOverlapBatchIdsFile) {
+			File batchOverlapSentenceIdsFile = ElasticsearchToBratExporterMain.getBatchOverlapSentenceIdsFile(batchId,
+					associationDir);
+			System.out.println(String.format("Populating redundant (overlap) sentence id file for batch %s: %s",
+					batchId, batchOverlapSentenceIdsFile.getAbsolutePath()));
+			int overlapCount = Math.round((float) hashesOutputInThisBatch.size() * batchOverlapPercentage);
+			System.out.println("Batch overlap count: " + overlapCount);
+			List<String> hashList = new ArrayList<String>(hashesOutputInThisBatch);
+
+			// randomly sample the hash list for count=overlapCount number of hashes and
+			// output to the batchOverlapSentenceIdsFile
+			Set<Integer> randomIndexes = new HashSet<Integer>();
+			Random rand = new Random();
+			while (randomIndexes.size() < overlapCount && randomIndexes.size() < hashList.size()) {
+				randomIndexes.add(rand.nextInt(hashList.size()));
+			}
+
+			try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(batchOverlapSentenceIdsFile)) {
+				for (int index : randomIndexes) {
+					writer.write(hashList.get(index) + "\n");
+				}
+			}
+
+		}
+
 	}
 
 	private static Indexes writeSentenceToBratFiles(TextDocument td, Indexes indexes, BufferedWriter annFileWriter,
@@ -243,6 +300,10 @@ public class ElasticsearchToBratExporter {
 		txtFileWriter.write(td.getText() + "\n");
 
 		List<TextAnnotation> annots = td.getAnnotations();
+		if (annots == null) {
+			throw new IllegalStateException("Null annots for: " + td.toString());
+		}
+
 		Collections.sort(annots, TextAnnotation.BY_SPAN());
 
 		int annIndex = indexes.getAnnIndex();
@@ -413,7 +474,7 @@ public class ElasticsearchToBratExporter {
 		// add 500 extra just in case there are collisions with previous extracted
 		// sentences
 		Random rand = new Random();
-		while (randomIndexes.size() < maxSentenceCount && randomIndexes.size() < batchSize + 500) {
+		while (randomIndexes.size() < maxSentenceCount && randomIndexes.size() < batchSize + 2000) {
 			randomIndexes.add(rand.nextInt(maxSentenceCount));
 		}
 
@@ -926,9 +987,8 @@ public class ElasticsearchToBratExporter {
 		return outputDocs;
 	}
 
-	@Data
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	private static class Sentence {
+	public static class Sentence {
 
 		@SuppressWarnings("unused")
 		public static final String ID = "id";
@@ -940,6 +1000,34 @@ public class ElasticsearchToBratExporter {
 		private String id;
 		private String documentId;
 		private String annotatedText;
+
+		public Sentence() {
+
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getDocumentId() {
+			return documentId;
+		}
+
+		public void setDocumentId(String documentId) {
+			this.documentId = documentId;
+		}
+
+		public String getAnnotatedText() {
+			return annotatedText;
+		}
+
+		public void setAnnotatedText(String annotatedText) {
+			this.annotatedText = annotatedText;
+		}
 
 	}
 

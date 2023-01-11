@@ -330,7 +330,7 @@ public class ElasticsearchToBratExporterTest {
 		Set<String> identifiersToExclude = new HashSet<String>();
 		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
 				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage,
-				Collections.emptyList());
+				Collections.emptyList(), false, null, 0f);
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
@@ -439,7 +439,8 @@ public class ElasticsearchToBratExporterTest {
 		int sentencesPerPage = 5;
 		Set<String> identifiersToExclude = new HashSet<String>();
 		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
-				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage, redundantSentences);
+				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage, redundantSentences,
+				false, null, 0f);
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
