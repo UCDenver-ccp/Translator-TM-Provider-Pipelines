@@ -178,8 +178,7 @@ public class ElasticsearchToBratExporterTest {
 
 		Set<String> ontologyPrefixes = CollectionsUtil.createSet("DRUGBANK");
 		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q disorders including (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
-		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-				ontologyPrefixes, null);
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes, null);
 		// 1 2 3 4 5 6 7 8 9 0 1 2 3
 		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
 		String expectedText = "Hemoglobin Q disorders including hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India are important hemoglobin variants.";
@@ -211,8 +210,7 @@ public class ElasticsearchToBratExporterTest {
 
 		Set<String> ontologyPrefixes = CollectionsUtil.createSet("DRUGBANK");
 		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q disorders including %2528(hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India%2529 are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
-		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-				ontologyPrefixes, null);
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes, null);
 		// 1 2 3 4 5 6 7 8 9 0 1 2 3
 		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
 		String expectedText = "Hemoglobin Q disorders including (hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India) are important hemoglobin variants.";
@@ -303,7 +301,6 @@ public class ElasticsearchToBratExporterTest {
 	@Test
 	public void testCreateBratFiles() throws IOException {
 		File outputDirectory = folder.newFolder();
-		File previousSentenceIdsFile = folder.newFile();
 
 		List<String> annotatedTexts = Arrays.asList(
 				"The mean overall qualitative (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]-to-background contrast grades for the T2-weighted (sequence)[SO_0000110\u0026_SO] were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.84, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 2.20, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 1.23, and for the contrast-enhanced T1-weighted (sequence)[SO_0000110\u0026_SO], they were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.02, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 1.58, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 0.73.",
@@ -319,8 +316,8 @@ public class ElasticsearchToBratExporterTest {
 		ontologyPrefixes.addAll(biolinkAssociation.getSubjectClass().getOntologyPrefixes());
 		ontologyPrefixes.addAll(biolinkAssociation.getObjectClass().getOntologyPrefixes());
 		for (String annotatedText : annotatedTexts) {
-			TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-					ontologyPrefixes, null);
+			TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes,
+					null);
 			inputSentences.add(td);
 		}
 
@@ -328,9 +325,10 @@ public class ElasticsearchToBratExporterTest {
 		int batchSize = 4;
 		int sentencesPerPage = 4;
 		Set<String> identifiersToExclude = new HashSet<String>();
+		Set<String> alreadyAssignedSentenceIds = new HashSet<String>();
 		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
-				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage,
-				Collections.emptyList(), false, null, 0f);
+				inputSentences, alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage,
+				Collections.emptyList());
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
@@ -398,7 +396,6 @@ public class ElasticsearchToBratExporterTest {
 	@Test
 	public void testCreateBratFilesWithAdditionalRedundantSentences() throws IOException {
 		File outputDirectory = folder.newFolder();
-		File previousSentenceIdsFile = folder.newFile();
 
 		List<String> annotatedTexts = Arrays.asList(
 				"The mean overall qualitative (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]-to-background contrast grades for the T2-weighted (sequence)[SO_0000110\u0026_SO] were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.84, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 2.20, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 1.23, and for the contrast-enhanced T1-weighted (sequence)[SO_0000110\u0026_SO], they were (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(muscle)[UBERON_0002385\u0026UBERON_0005090\u0026_UBERON] \u003d 2.02, (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(fat)[UBERON_0001013\u0026_UBERON] \u003d 1.58, and (tumor)[HP_0002664\u0026MONDO_0005070\u0026_HP\u0026_MONDO]/(mucosa)[UBERON_0000344\u0026_UBERON] \u003d 0.73.",
@@ -414,8 +411,8 @@ public class ElasticsearchToBratExporterTest {
 		ontologyPrefixes.addAll(biolinkAssociation.getSubjectClass().getOntologyPrefixes());
 		ontologyPrefixes.addAll(biolinkAssociation.getObjectClass().getOntologyPrefixes());
 		for (String annotatedText : annotatedTexts) {
-			TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-					ontologyPrefixes, null);
+			TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes,
+					null);
 			inputSentences.add(td);
 		}
 
@@ -438,9 +435,9 @@ public class ElasticsearchToBratExporterTest {
 		int batchSize = 5;
 		int sentencesPerPage = 5;
 		Set<String> identifiersToExclude = new HashSet<String>();
+		Set<String> alreadyAssignedSentenceIds = new HashSet<String>();
 		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
-				inputSentences, previousSentenceIdsFile, identifiersToExclude, sentencesPerPage, redundantSentences,
-				false, null, 0f);
+				inputSentences, alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage, redundantSentences);
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
@@ -475,8 +472,8 @@ public class ElasticsearchToBratExporterTest {
 		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q disorders including (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
 		Map<String, Set<String>> prefixToAllowedConceptIdsMap = new HashMap<String, Set<String>>();
 		prefixToAllowedConceptIdsMap.put("DRUGBANK", CollectionsUtil.createSet("DRUGBANK:DB04945"));
-		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-				ontologyPrefixes, prefixToAllowedConceptIdsMap);
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes,
+				prefixToAllowedConceptIdsMap);
 		// 1 2 3 4 5 6 7 8 9 0 1 2 3
 		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
 		String expectedText = "Hemoglobin Q disorders including hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India are important hemoglobin variants.";
@@ -510,8 +507,8 @@ public class ElasticsearchToBratExporterTest {
 		String annotatedText = "(Hemoglobin)[DRUGBANK_DB04945111&GO_0005833&_DRUGBANK&_GO] Q disorders including (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Iran, (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-Thailand, and (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] Q-India are important (hemoglobin)[DRUGBANK_DB04945&GO_0005833&_DRUGBANK&_GO] variants.";
 		Map<String, Set<String>> prefixToAllowedConceptIdsMap = new HashMap<String, Set<String>>();
 		prefixToAllowedConceptIdsMap.put("DRUGBANK", CollectionsUtil.createSet("DRUGBANK:DB04945"));
-		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText("PMID:1234", annotatedText,
-				ontologyPrefixes, prefixToAllowedConceptIdsMap);
+		TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(annotatedText, ontologyPrefixes,
+				prefixToAllowedConceptIdsMap);
 		// 1 2 3 4 5 6 7 8 9 0 1 2 3
 		// 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
 		String expectedText = "Hemoglobin Q disorders including hemoglobin Q-Iran, hemoglobin Q-Thailand, and hemoglobin Q-India are important hemoglobin variants.";
@@ -600,100 +597,100 @@ public class ElasticsearchToBratExporterTest {
 
 	}
 
-	@Test
-	public void testLoadRedundantSentencesForAnnotation() throws IOException {
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
-		StringBuilder docText = new StringBuilder();
-		String sent1 = "Here is the text for the redundant sentence 1.";
-		String sent2 = "Here is the text for the redundant sentence 2.";
-		String sent3 = "Here is the text for the redundant sentence 3.";
-		String sent4 = "Here is the text for the redundant sentence 4.";
-		String sent5 = "Here is the text for the redundant sentence 5.";
-		String sent6 = "Here is the text for the redundant sentence 6.";
-		String sent7 = "Here is the text for the redundant sentence 7.";
-		String sent8 = "Here is the text for the redundant sentence 8.";
-		String sent9 = "Here is the text for the redundant sentence 9.";
-		String sent10 = "Here is the text for the redundant sentence 10.";
-		docText.append(sent1 + "\n");
-		docText.append(sent2 + "\n");
-		docText.append(sent3 + "\n");
-		docText.append(sent4 + "\n");
-		docText.append(sent5 + "\n");
-		docText.append(sent6 + "\n");
-		docText.append(sent7 + "\n");
-		docText.append(sent8 + "\n");
-		docText.append(sent9 + "\n");
-		docText.append(sent10 + "\n");
-
-		TextDocument td = new TextDocument("docid", "docsource", docText.toString());
-
-		int offset = 0;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent1.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent2.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent3.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent4.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent5.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent6.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent7.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent8.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-		offset += sent9.length() + 1;
-		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
-		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
-
-		File dir = folder.newFolder();
-		File annFile = new File(dir, "batch.ann");
-		File txtFile = new File(dir, "batch.txt");
-
-		File cachedIdsFile = folder.newFile();
-
-		FileWriterUtil.printLines(Arrays.asList(td.getText()), txtFile, UTF8);
-
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
-		writer.serialize(td, annFile, UTF8);
-
-		float batchOverlapPercentage = 0.2f;
-		List<TextDocument> redundantSentences = ElasticsearchToBratExporter
-				.loadRedundantSentencesForAnnotation(batchOverlapPercentage, annFile, cachedIdsFile);
-		assertEquals(2, redundantSentences.size());
-
-		batchOverlapPercentage = 0.3f;
-		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
-				annFile, cachedIdsFile);
-		assertEquals(3, redundantSentences.size());
-
-		batchOverlapPercentage = 0.5f;
-		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
-				annFile, cachedIdsFile);
-		assertEquals(5, redundantSentences.size());
-
-		batchOverlapPercentage = 0.8f;
-		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
-				annFile, cachedIdsFile);
-		assertEquals(8, redundantSentences.size());
-
-		batchOverlapPercentage = 1.0f;
-		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
-				annFile, cachedIdsFile);
-		assertEquals(10, redundantSentences.size());
-
-	}
+//	@Test
+//	public void testLoadRedundantSentencesForAnnotation() throws IOException {
+//		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+//		StringBuilder docText = new StringBuilder();
+//		String sent1 = "Here is the text for the redundant sentence 1.";
+//		String sent2 = "Here is the text for the redundant sentence 2.";
+//		String sent3 = "Here is the text for the redundant sentence 3.";
+//		String sent4 = "Here is the text for the redundant sentence 4.";
+//		String sent5 = "Here is the text for the redundant sentence 5.";
+//		String sent6 = "Here is the text for the redundant sentence 6.";
+//		String sent7 = "Here is the text for the redundant sentence 7.";
+//		String sent8 = "Here is the text for the redundant sentence 8.";
+//		String sent9 = "Here is the text for the redundant sentence 9.";
+//		String sent10 = "Here is the text for the redundant sentence 10.";
+//		docText.append(sent1 + "\n");
+//		docText.append(sent2 + "\n");
+//		docText.append(sent3 + "\n");
+//		docText.append(sent4 + "\n");
+//		docText.append(sent5 + "\n");
+//		docText.append(sent6 + "\n");
+//		docText.append(sent7 + "\n");
+//		docText.append(sent8 + "\n");
+//		docText.append(sent9 + "\n");
+//		docText.append(sent10 + "\n");
+//
+//		TextDocument td = new TextDocument("docid", "docsource", docText.toString());
+//
+//		int offset = 0;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent1.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent2.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent3.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent4.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent5.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent6.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent7.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent8.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//		offset += sent9.length() + 1;
+//		td.addAnnotation(factory.createAnnotation(0 + offset, 4 + offset, "Here", "anatomical_site"));
+//		td.addAnnotation(factory.createAnnotation(12 + offset, 16 + offset, "text", "disease_or_phenotypic_feature"));
+//
+//		File dir = folder.newFolder();
+//		File annFile = new File(dir, "batch.ann");
+//		File txtFile = new File(dir, "batch.txt");
+//
+//		File cachedIdsFile = folder.newFile();
+//
+//		FileWriterUtil.printLines(Arrays.asList(td.getText()), txtFile, UTF8);
+//
+//		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+//		writer.serialize(td, annFile, UTF8);
+//
+//		float batchOverlapPercentage = 0.2f;
+//		List<TextDocument> redundantSentences = ElasticsearchToBratExporter
+//				.loadRedundantSentencesForAnnotation(batchOverlapPercentage, annFile, cachedIdsFile);
+//		assertEquals(2, redundantSentences.size());
+//
+//		batchOverlapPercentage = 0.3f;
+//		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
+//				annFile, cachedIdsFile);
+//		assertEquals(3, redundantSentences.size());
+//
+//		batchOverlapPercentage = 0.5f;
+//		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
+//				annFile, cachedIdsFile);
+//		assertEquals(5, redundantSentences.size());
+//
+//		batchOverlapPercentage = 0.8f;
+//		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
+//				annFile, cachedIdsFile);
+//		assertEquals(8, redundantSentences.size());
+//
+//		batchOverlapPercentage = 1.0f;
+//		redundantSentences = ElasticsearchToBratExporter.loadRedundantSentencesForAnnotation(batchOverlapPercentage,
+//				annFile, cachedIdsFile);
+//		assertEquals(10, redundantSentences.size());
+//
+//	}
 
 }

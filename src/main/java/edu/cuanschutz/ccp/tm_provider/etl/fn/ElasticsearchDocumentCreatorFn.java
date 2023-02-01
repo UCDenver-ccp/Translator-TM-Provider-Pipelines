@@ -146,7 +146,7 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 			TextAnnotation sentenceAnnot = entry.getKey();
 			Set<TextAnnotation> conceptAnnotsInSentence = entry.getValue();
 
-			String sentenceId = computeSentenceIdentifier(documentId, sentenceAnnot);
+			String sentenceId = computeSentenceIdentifier(documentText, sentenceAnnot);
 
 			String elasticsearchSentenceDocumentJson = createJsonDocument(sentenceId, sentenceAnnot,
 					conceptAnnotsInSentence, documentId, documentText);
@@ -194,9 +194,13 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 		return decodedString;
 	}
 
-	@VisibleForTesting
-	protected static String computeSentenceIdentifier(String documentId, TextAnnotation annot) {
-		return documentId + "_" + DigestUtils.sha256Hex(annot.getAggregateSpan().toString() + annot.getCoveredText());
+	protected static String computeSentenceIdentifier(String documentText, TextAnnotation annot) {
+		String sentenceText = documentText.substring(annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd());
+		return computeSentenceIdentifier(sentenceText);
+	}
+	
+	public static String computeSentenceIdentifier(String sentenceText) {
+		return DigestUtils.sha256Hex(sentenceText);
 	}
 
 	public static class Sentence {
@@ -244,9 +248,6 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 
 			String annotatedText = getAnnotatedText(sentenceAnnot, conceptAnnots, documentText);
 
-			System.out.println("input sentence id: " + sentenceId);
-			System.out.println("input doc id: " + documentId);
-			
 			return new Sentence(sentenceId, documentId, annotatedText);// , section, publicationYear);
 		}
 

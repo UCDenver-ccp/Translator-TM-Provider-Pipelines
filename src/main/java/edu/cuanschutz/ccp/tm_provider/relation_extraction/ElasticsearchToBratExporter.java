@@ -1,5 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 
+import static edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn.computeSentenceIdentifier;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -11,7 +13,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,7 +30,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.annotations.VisibleForTesting;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.ScrollRequest;
+import co.elastic.clients.elasticsearch.core.ScrollResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -41,19 +45,12 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociati
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkClass;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
-import edu.ucdenver.ccp.common.digest.DigestUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.common.file.FileReaderUtil;
-import edu.ucdenver.ccp.common.file.FileUtil;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
-import edu.ucdenver.ccp.common.file.FileWriterUtil.FileSuffixEnforcement;
-import edu.ucdenver.ccp.common.file.FileWriterUtil.WriteMode;
 import edu.ucdenver.ccp.common.file.reader.Line;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
-import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
-import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
@@ -68,7 +65,12 @@ public class ElasticsearchToBratExporter {
 	 * sentence, we will include multiple sentences on each page
 	 */
 	private static final int SENTENCES_PER_PAGE = 20;
-	private static final int BATCH_SIZE = 500;
+
+	/**
+	 * SEARCH_BATCH_SIZE is the number of records requested for each Elasticsearch
+	 * query
+	 */
+	private static final int SEARCH_BATCH_SIZE = 10000;
 
 	protected static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic_boolean_query_template.json";
 	private static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER = "MATCH_PLACEHOLDER";
@@ -95,21 +97,14 @@ public class ElasticsearchToBratExporter {
 	 * @param inputSentences
 	 * @param previousSentenceIdsFile
 	 * @param redundantSentencesToInclude
-	 * @param populateOverlapBatchIdsFile if true then we will randomly sample
-	 *                                    sentence identifiers from the search
-	 *                                    results and save them to a file. These
-	 *                                    sentences will be included in future
-	 *                                    batches so that IAA can be computed.
 	 * @throws IOException
 	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
-			Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile,
-			List<TextDocument> redundantSentencesToInclude, boolean populateOverlapBatchIdsFile, File associationDir,
-			float batchOverlapPercentage) throws IOException {
+			int batchSize, Collection<? extends TextDocument> inputSentences, Set<String> previousSentenceIds,
+			List<TextDocument> redundantSentencesToInclude) throws IOException {
 
-		createBratFiles(outputDirectory, biolinkAssociation, batchId, BATCH_SIZE, inputSentences,
-				previousSentenceIdsFile, IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude,
-				populateOverlapBatchIdsFile, associationDir, batchOverlapPercentage);
+		createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize, inputSentences, previousSentenceIds,
+				IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude);
 	}
 
 	/**
@@ -123,7 +118,7 @@ public class ElasticsearchToBratExporter {
 	 * @param batchSize
 	 * @param inputSentenceFiles
 	 * @param previousSentenceIdsFile
-	 * @param idsToExclude
+	 * @param entityOntologyIdsToExclude
 	 * @param sentencesPerPage
 	 * @param redundantSentencesToInclude - these are sentences from a different
 	 *                                    annotator batch that will be included in
@@ -140,23 +135,26 @@ public class ElasticsearchToBratExporter {
 	 * @param batchOverlapPercentage
 	 * @throws IOException
 	 */
-	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, Collection<? extends TextDocument> inputSentences, File previousSentenceIdsFile,
-			Set<String> idsToExclude, int sentencesPerPage, List<TextDocument> redundantSentencesToInclude,
-			boolean populateOverlapBatchIdsFile, File associationDir, float batchOverlapPercentage) throws IOException {
+	public static Set<String> createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation,
+			String batchId, int batchSize, Collection<? extends TextDocument> inputSentences,
+			Set<String> alreadyAnnotatedSentenceIds, Set<String> entityOntologyIdsToExclude, int sentencesPerPage,
+			List<TextDocument> redundantSentencesToInclude) throws IOException {
 
-		Set<String> alreadyAnnotated = new HashSet<String>(
-				FileReaderUtil.loadLinesFromFile(previousSentenceIdsFile, UTF8));
+		for (TextDocument td : redundantSentencesToInclude) {
+			if (td.getAnnotations() == null) {
+				System.err.println("NULL ANNOTS IN REDUNDANT DOC");
+			}
+		}
 
 		int maxSentenceCount = inputSentences.size();
 
-		System.out.println("Max sentence count: " + maxSentenceCount);
+//		System.out.println("Max sentence count: " + maxSentenceCount);
 
 		List<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize,
 				redundantSentencesToInclude.size());
 
-		System.out.println("random index count: " + indexesForNewBatch.size());
-		System.out.println("random indexes: " + indexesForNewBatch.toString());
+//		System.out.println("random index count: " + indexesForNewBatch.size());
+//		System.out.println("random indexes: " + indexesForNewBatch.toString());
 
 		Set<String> hashesOutputInThisBatch = new HashSet<String>();
 		// this count is used to track when a batch has been completed
@@ -173,6 +171,7 @@ public class ElasticsearchToBratExporter {
 		BufferedWriter txtFileWriter = getTxtFileWriter(outputDirectory, biolinkAssociation, batchId, subBatchIndex);
 
 		List<TextDocument> candidateSentences = new ArrayList<TextDocument>(inputSentences);
+//		System.out.println("INDEXES FOR NEW BATCH: " + indexesForNewBatch.size());
 		try {
 			int redundantIndex = 0;
 			int annIndex = 1;
@@ -189,22 +188,25 @@ public class ElasticsearchToBratExporter {
 					td = candidateSentences.get(index);
 					Set<BiolinkClass> biolinkClasses = new HashSet<BiolinkClass>(
 							Arrays.asList(biolinkAssociation.getSubjectClass(), biolinkAssociation.getObjectClass()));
-					td = excludeBasedOnEntityIds(td, idsToExclude, biolinkClasses);
+					td = excludeBasedOnEntityIds(td, entityOntologyIdsToExclude, biolinkClasses);
 				}
 
 				if (td.getAnnotations() == null) {
+					// this error persists even after screening the docs as they come back from
+					// elasticsearch - so we must be inadvertantly deleting annotations at some
+					// point? strange.
 					System.err.println("Null annotations observed!!!!");
 					td = null;
 				}
 
 				if (td != null) {
-					String hash = computeHash(td.getText());
+					String hash = computeSentenceIdentifier(td.getText());
 					// for the redundant sentences, we don't want to check the hash (checkHash ==
 					// false) b/c it will be in the alreadyAnnotated set, but we need to add the
 					// hash to the hashesOutputInThisBatch so that the correct number of sentences
 					// get output per file.
 					if (!hashesOutputInThisBatch.contains(hash)
-							&& (checkHash == false || !alreadyAnnotated.contains(hash))) {
+							&& (checkHash == false || !alreadyAnnotatedSentenceIds.contains(hash))) {
 						if (hashesOutputInThisBatch.contains(hash)) {
 							throw new IllegalStateException("duplicate hash observed!");
 						}
@@ -235,62 +237,28 @@ public class ElasticsearchToBratExporter {
 							spanOffset = 0;
 						}
 						if (hashesOutputInThisBatch.size() >= batchSize) {
+//							System.out.println("BREAKING: HASH SIZE = BATCH SIZE");
 							break;
 						}
 					}
 				}
 			}
+
+//			System.out.println("LOOP ENDED: HASHES OUTPUT: " + hashesOutputInThisBatch.size());
+//			System.out.println("LOOP ENDED: BATCH SIZE: " + batchSize);
 		} finally {
-			System.out.println("closing files (" + subBatchIndex + "). count = " + hashesOutputInThisBatch.size());
+
+//			System.out.println("closing files (" + subBatchIndex + "). count = " + hashesOutputInThisBatch.size());
 			annFileWriter.close();
 			txtFileWriter.write("DONE\n");
 			txtFileWriter.close();
 		}
 
-		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
-		System.out.println("Sentence count: " + sentenceCount);
-		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
+//		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
+		System.out.println("Batch creation complete. Sentences included in this batch: " + sentenceCount);
+//		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
-		/*
-		 * save the hashes for sentences that were output during this batch to the file
-		 * that tracks sentence hashes that have already been exported to a sheet for
-		 * annotation
-		 */
-		try (BufferedWriter alreadyAnnotatedWriter = FileWriterUtil.initBufferedWriter(previousSentenceIdsFile, UTF8,
-				WriteMode.APPEND, FileSuffixEnforcement.OFF)) {
-			for (String hash : hashesOutputInThisBatch) {
-				alreadyAnnotatedWriter.write(hash + "\n");
-			}
-		}
-
-		/*
-		 * if the flag to populate the batch overlap setence Ids file is true, then
-		 * write a random selection of the sentence hashes to file
-		 */
-		if (populateOverlapBatchIdsFile) {
-			File batchOverlapSentenceIdsFile = ElasticsearchToBratExporterMain.getBatchOverlapSentenceIdsFile(batchId,
-					associationDir);
-			System.out.println(String.format("Populating redundant (overlap) sentence id file for batch %s: %s",
-					batchId, batchOverlapSentenceIdsFile.getAbsolutePath()));
-			int overlapCount = Math.round((float) hashesOutputInThisBatch.size() * batchOverlapPercentage);
-			System.out.println("Batch overlap count: " + overlapCount);
-			List<String> hashList = new ArrayList<String>(hashesOutputInThisBatch);
-
-			// randomly sample the hash list for count=overlapCount number of hashes and
-			// output to the batchOverlapSentenceIdsFile
-			Set<Integer> randomIndexes = new HashSet<Integer>();
-			Random rand = new Random();
-			while (randomIndexes.size() < overlapCount && randomIndexes.size() < hashList.size()) {
-				randomIndexes.add(rand.nextInt(hashList.size()));
-			}
-
-			try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(batchOverlapSentenceIdsFile)) {
-				for (int index : randomIndexes) {
-					writer.write(hashList.get(index) + "\n");
-				}
-			}
-
-		}
+		return hashesOutputInThisBatch;
 
 	}
 
@@ -394,36 +362,16 @@ public class ElasticsearchToBratExporter {
 		return sb.toString();
 	}
 
-//	/**
-//	 * @param index
-//	 * @return a 3-letter code in alpha order based on the input index number, e.g.
-//	 *         0 = aaa, 1 = aab
-//	 */
-//	static String getSubBatchId(int index) {
-//		char[] c = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-//				'u', 'v', 'w', 'x', 'y', 'z' };
-//
-//		// 0 = aaa 0,0,0
-//		// 1 = aab 0,0,1
-//		// 2 = aac 0,0,2
-//
-//		int index3 = index % 26;
-//		int index2 = (index / 26) % 26;
-//		int index1 = (index / (26 * 26)) % 26;
-//
-//		return "" + c[index1] + c[index2] + c[index3];
-//	}
-
 	/**
 	 * @param td
-	 * @param idsToExclude
-	 * @param types        the Biolink classes that need to be in the sentence in
-	 *                     order to be processed. If just one type is listed, then
-	 *                     it is assumed that two annotations of that type are
-	 *                     required.
+	 * @param entityOntologyIdsToExclude
+	 * @param types                      the Biolink classes that need to be in the
+	 *                                   sentence in order to be processed. If just
+	 *                                   one type is listed, then it is assumed that
+	 *                                   two annotations of that type are required.
 	 * @return
 	 */
-	protected static TextDocument excludeBasedOnEntityIds(TextDocument td, Set<String> idsToExclude,
+	protected static TextDocument excludeBasedOnEntityIds(TextDocument td, Set<String> entityOntologyIdsToExclude,
 			Set<BiolinkClass> types) {
 
 		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
@@ -441,7 +389,7 @@ public class ElasticsearchToBratExporter {
 			for (TextAnnotation annot : td.getAnnotations()) {
 				String conceptId = annot.getClassMention().getMentionName();
 				String prefix = conceptId.substring(0, conceptId.indexOf(":"));
-				if (!idsToExclude.contains(conceptId) && ontologyPrefixToTypeMap.containsKey(prefix)) {
+				if (!entityOntologyIdsToExclude.contains(conceptId) && ontologyPrefixToTypeMap.containsKey(prefix)) {
 					toKeep.add(annot);
 					BiolinkClass biolinkClass = ontologyPrefixToTypeMap.get(prefix);
 					typeToPresenceMap.put(biolinkClass, true);
@@ -462,6 +410,10 @@ public class ElasticsearchToBratExporter {
 	protected static List<Integer> getRandomIndexes(int maxSentenceCount, int batchSize,
 			int redundantSentencesToIncludeCount) {
 
+//		System.out.println("CREATING RANDOM INDEXES. BATCH SIZE: " + batchSize);
+//		System.out.println("CREATING RANDOM INDEXES. MAX SENTENCE COUNT: " + maxSentenceCount);
+//		System.out.println("CREATING RANDOM INDEXES. REDUNDANT TO INCLUDE: " + redundantSentencesToIncludeCount);
+
 		if (batchSize < redundantSentencesToIncludeCount) {
 			throw new IllegalArgumentException(String.format(
 					"Batch size (%d) is less than the count of redundant sentences to include (%d). "
@@ -471,10 +423,11 @@ public class ElasticsearchToBratExporter {
 
 		Set<Integer> randomIndexes = new HashSet<Integer>();
 
-		// add 500 extra just in case there are collisions with previous extracted
-		// sentences
 		Random rand = new Random();
-		while (randomIndexes.size() < maxSentenceCount && randomIndexes.size() < batchSize + 2000) {
+		// by subtracting redundantSentencesToIncludeCount we are leaving room to add
+		// the redundant sentences
+		while (randomIndexes.size() < (maxSentenceCount - redundantSentencesToIncludeCount)
+				&& randomIndexes.size() < (batchSize - redundantSentencesToIncludeCount)) {
 			randomIndexes.add(rand.nextInt(maxSentenceCount));
 		}
 
@@ -496,7 +449,6 @@ public class ElasticsearchToBratExporter {
 		// we'll sort the list so that we can add -1's to the randomIndexesList in order
 		// to ensure all of the -1's appear within the batch size.
 		Collections.sort(redundantIndexesList);
-
 		for (Integer index : redundantIndexesList) {
 			randomIndexesList.add(index, -1);
 		}
@@ -550,23 +502,26 @@ public class ElasticsearchToBratExporter {
 		return String.format("%s_%s_%s", biolinkAssociation.name().toLowerCase(), batchId, subBatchIndex);
 	}
 
-	/**
-	 * In this case the TextDocument is assumed to hold a single sentence + concept
-	 * annotations
-	 * 
-	 * @param td
-	 * @return
-	 */
-	public static String computeHash(String sentenceText) {
-		return DigestUtil.getBase64Sha1Digest(sentenceText);
-	}
-
 	// authentication:
 	// https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/_other_authentication_methods.html
+	/**
+	 * @param elasticUrl
+	 * @param elasticPort
+	 * @param apiKeyAuth
+	 * @param indexName
+	 * @param maxReturnCount                         - the target number of records
+	 *                                               to return
+	 * @param ontologyPrefixes
+	 * @param ontologyPrefixToAllowableConceptIdsMap
+	 * @param biolinkAssociation
+	 * @param entityOntologyIdsToExclude
+	 * @return
+	 * @throws IOException
+	 */
 	public static Set<TextDocument> search(String elasticUrl, int elasticPort, String apiKeyAuth, String indexName,
-			int maxReturned, Set<Set<String>> ontologyPrefixes,
+			int maxReturnCount, Set<Set<String>> ontologyPrefixes,
 			Map<String, Set<String>> ontologyPrefixToAllowableConceptIdsMap, BiolinkAssociation biolinkAssociation,
-			Set<String> idsToExclude) throws IOException {
+			Set<String> entityOntologyIdsToExclude, Set<String> alreadyAssignedDocumentIds) throws IOException {
 
 		Set<BiolinkClass> biolinkClasses = new HashSet<BiolinkClass>(
 				Arrays.asList(biolinkAssociation.getSubjectClass(), biolinkAssociation.getObjectClass()));
@@ -579,90 +534,104 @@ public class ElasticsearchToBratExporter {
 
 			// Create the transport with a Jackson mapper
 			RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+
 			// And create the API client
 			ElasticsearchClient client = new ElasticsearchClient(transport);
+
 			BooleanResponse ping = client.ping();
 //			System.out.println("HEALTH: " + client.cluster().health().clusterName());
 			System.out.println("PING: " + ping.value());
-//			System.out.println(info);
-//			Query query = new Query.Builder()
-//					.bool(_0 -> _0.must(_1 -> _1.term(t -> t                          
-//					        .field("_index")     
-//					        .value(v -> v.stringValue(indexName))
-//					    )).must(_1 -> _1.term(t -> t                          
-//					        .field("annotatedText")     
-//				            .value(v -> v.stringValue("First")))
-//					    )).build();  
 
-//			Query query = new Query.Builder().match(t -> t.field("annotatedText").query("metformin")).build();
 			String queryJson = buildSentenceQuery(ontologyPrefixes);
-//			String queryJson = "{\n" + "    \"match\": {\n" + "        \"annotatedText\" : {\n"
-//					+ "            \"query\": \"_DRUGBANK _GO\",\n" + "            \"operator\": \"and\"\n"
-//					+ "        }\n" + "    }\n" + "  }";
-
 			System.out.println("QUERY:\n" + queryJson);
+
 			Query query = new Query.Builder().withJson(new ByteArrayInputStream(queryJson.getBytes())).build();
-			SearchRequest request = SearchRequest.of(_0 -> _0.size(maxReturned).index(indexName).query(query));
+
+			Time.Builder tb = new Time.Builder();
+			Time t = tb.time("1m").build();
+
+			SearchRequest.Builder searchBuilder = new SearchRequest.Builder().scroll(t).size(SEARCH_BATCH_SIZE)
+					.index(indexName).query(query);
+			SearchRequest request = searchBuilder.build();
 
 			SearchResponse<Sentence> response = client.search(request, Sentence.class);
+
 			String scrollId = response.scrollId();
 			Set<String> ontologyPrefixesToIncludeInSearchHits = CollectionsUtil.consolidateSets(ontologyPrefixes);
 			List<Hit<Sentence>> hits = response.hits().hits();
-			for (Hit<Sentence> hit : hits) {
-				TextDocument td = deserializeAnnotatedText(hit.source().getDocumentId(),
-						hit.source().getAnnotatedText(), ontologyPrefixesToIncludeInSearchHits,
-						ontologyPrefixToAllowableConceptIdsMap);
+			System.out.println("Initial hits returned: " + hits.size());
+			processHits(ontologyPrefixToAllowableConceptIdsMap, entityOntologyIdsToExclude, biolinkClasses,
+					docsToReturn, ontologyPrefixesToIncludeInSearchHits, alreadyAssignedDocumentIds, hits);
 
-				td = excludeBasedOnEntityIds(td, idsToExclude, biolinkClasses);
-				if (td != null) {
-					docsToReturn.add(td);
+			/*
+			 * If we get to this point, then we've extracted some documents from the
+			 * Elasticsearch instance (max= 10,000). We will check to see if we have
+			 * fulfilled the amount requested (maxReturnCount). If we have not, then we loop
+			 * using the "scrolling" functionality of Elasticsearch to get more documents
+			 * (if there are more).
+			 */
+			while (docsToReturn.size() < maxReturnCount) {
+				System.out.println("DOCS TO RETURN SIZE: " + docsToReturn.size());
+				ScrollRequest.Builder scrollRequestBuilder = new ScrollRequest.Builder().scroll(t).scrollId(scrollId);
+				ScrollRequest scrollRequest = scrollRequestBuilder.build();
+				ScrollResponse<Sentence> scrollResponse = client.scroll(scrollRequest, Sentence.class);
+				hits = scrollResponse.hits().hits();
+				System.out.println("Supplemental hits returned: " + hits.size());
+				if (hits.size() == 0) {
+					/* then we have exhausted all hits, so break out of the loop */
+					break;
 				}
+				scrollId = scrollResponse.scrollId();
+				processHits(ontologyPrefixToAllowableConceptIdsMap, entityOntologyIdsToExclude, biolinkClasses,
+						docsToReturn, ontologyPrefixesToIncludeInSearchHits, alreadyAssignedDocumentIds, hits);
 			}
 
-			// Below is the beginning of an attempt to allow Elasticsearch to return >10,000
-			// sentences. This approach is not currently working however, so it has been
-			// commented out.
-
-//			// scrollId needed to be final, so create a final list and always take the most
-//			// recently added item as the scroll id
-//			final List<String> scrollIds = Arrays.asList(scrollId);
-//			while (hits != null && hits.size() > 0 && docsToReturn.size() < maxReturned) {
-//				for (Hit<Sentence> hit : hits) {
-//					TextDocument td = deserializeAnnotatedText(hit.source().getDocumentId(),
-//							hit.source().getAnnotatedText(), ontologyPrefixesToIncludeInSearchHits,
-//							ontologyPrefixToAllowableConceptIdsMap);
-//
-//					td = excludeBasedOnEntityIds(td, idsToExclude, biolinkClasses);
-//					if (td != null) {
-//						docsToReturn.add(td);
-//					}
-//				}
-//
-////				 TODO: Missing required property 'ScrollRequest.scrollId'
-//
-//				ScrollRequest scrollRequest = ScrollRequest.of(_0 -> _0.scrollId(scrollIds.get(scrollIds.size() - 1)));
-//				ScrollResponse<Sentence> scrollResponse = client.scroll(scrollRequest, Sentence.class);
-//				scrollId = scrollResponse.scrollId();
-//				scrollIds.add(scrollId);
-//				hits = scrollResponse.hits().hits();
-//
-//			}
-//
-////			Query query = new Query.Builder().withJson(new ByteArrayInputStream(queryJson.getBytes())).build();
-////
-////			SearchResponse<Sentence> results = client.search(_0 -> _0.size(maxReturned).index(indexName).query(query),
-////					Sentence.class);
-////
-////			Set<String> ontologyPrefixesToIncludeInSearchHits = CollectionsUtil.consolidateSets(ontologyPrefixes);
-////			for (Hit<Sentence> hit : results.hits().hits()) {
-////				TextDocument td = deserializeAnnotatedText(hit.source().getDocumentId(),
-////						hit.source().getAnnotatedText(), ontologyPrefixesToIncludeInSearchHits,
-////						ontologyPrefixToAllowableConceptIdsMap);
-////				docsToReturn.add(td);
-////			}
 		}
 		return docsToReturn;
 
+	}
+
+	/**
+	 * @param ontologyPrefixToAllowableConceptIdsMap
+	 * @param entityOntologyIdsToExclude
+	 * @param biolinkClasses
+	 * @param docsToReturn
+	 * @param ontologyPrefixesToIncludeInSearchHits
+	 * @param alreadyAssignedDocumentIds             a set of document IDs that have
+	 *                                               already been assigned for
+	 *                                               annotation. We will exclude
+	 *                                               returning these since they
+	 *                                               would be redundant.
+	 * @param hits
+	 */
+	private static void processHits(Map<String, Set<String>> ontologyPrefixToAllowableConceptIdsMap,
+			Set<String> entityOntologyIdsToExclude, Set<BiolinkClass> biolinkClasses, Set<TextDocument> docsToReturn,
+			Set<String> ontologyPrefixesToIncludeInSearchHits, Set<String> alreadyAssignedDocumentIds,
+			List<Hit<Sentence>> hits) {
+		for (Hit<Sentence> hit : hits) {
+			TextDocument td = deserializeAnnotatedText(hit.source().getAnnotatedText(),
+					ontologyPrefixesToIncludeInSearchHits, ontologyPrefixToAllowableConceptIdsMap);
+
+			td = excludeBasedOnEntityIds(td, entityOntologyIdsToExclude, biolinkClasses);
+			if (td != null) {
+				/*
+				 * only add this sentence to the documents to return if it has not been
+				 * previously assigned for annotation
+				 */
+				if (!alreadyAssignedDocumentIds.contains(td.getSourceid())) {
+					/*
+					 * there seems to be the occasional document that gets returned without
+					 * annotations -- require the documents to have annotations
+					 */
+
+					if (td.getAnnotations() != null) {
+						docsToReturn.add(td);
+					} else {
+						System.err.println("Search returned a document with a null annotations field.");
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -776,8 +745,8 @@ public class ElasticsearchToBratExporter {
 	 * @return
 	 */
 	@VisibleForTesting
-	protected static TextDocument deserializeAnnotatedText(String documentId, String annotatedText,
-			Set<String> ontologyPrefixes, Map<String, Set<String>> ontologyPrefixToAllowableConceptIds) {
+	protected static TextDocument deserializeAnnotatedText(String annotatedText, Set<String> ontologyPrefixes,
+			Map<String, Set<String>> ontologyPrefixToAllowableConceptIds) {
 
 		String decodedAnnotatedText = decode(annotatedText);
 
@@ -835,8 +804,10 @@ public class ElasticsearchToBratExporter {
 		}
 
 		sb.append(decodedAnnotatedText.substring(annotatedTextOffset));
+		String sentenceText = sb.toString();
+		String sentenceId = computeSentenceIdentifier(sentenceText);
 
-		TextDocument td = new TextDocument(documentId, "PubMed", sb.toString());
+		TextDocument td = new TextDocument(sentenceId, "PubMed", sentenceText);
 		td.addAnnotations(annots);
 
 		return td;
@@ -853,85 +824,6 @@ public class ElasticsearchToBratExporter {
 	}
 
 	/**
-	 * returns randomly selected percentage of sentences from the input file
-	 * 
-	 * @param batchOverlapPercentage
-	 * @param overlapWithBatchFile
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<TextDocument> loadRedundantSentencesForAnnotation(float batchOverlapPercentage,
-			File redundantBatchDirectory, File cacheSelectedSentenceIdsFile) throws IOException {
-		List<TextDocument> sentences = new ArrayList<TextDocument>();
-		if (redundantBatchDirectory != null) {
-			List<TextDocument> sentenceDocs = new ArrayList<TextDocument>();
-			for (Iterator<File> fileIterator = FileUtil.getFileIterator(redundantBatchDirectory, false,
-					".ann"); fileIterator.hasNext();) {
-				File redundantBatchAnnFile = fileIterator.next();
-				File txtFile = new File(redundantBatchAnnFile.getParentFile(),
-						StringUtil.removeSuffix(redundantBatchAnnFile.getName(), ".ann") + ".txt");
-				BioNLPDocumentReader reader = new BioNLPDocumentReader();
-				TextDocument td = reader.readDocument("doc-id", "doc-source", redundantBatchAnnFile, txtFile, UTF8);
-				sentenceDocs.addAll(splitIntoSentences(td));
-			}
-			// now randomly select the requested percentage of sentences
-			int redundantCount = Math.round(sentenceDocs.size() * batchOverlapPercentage);
-			Set<Integer> randomIndexes = new HashSet<Integer>();
-			Random rand = new Random();
-			while (randomIndexes.size() < redundantCount && randomIndexes.size() < sentenceDocs.size()) {
-				randomIndexes.add(rand.nextInt(sentenceDocs.size()));
-			}
-
-			try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(cacheSelectedSentenceIdsFile)) {
-				for (int index : randomIndexes) {
-					TextDocument sentenceDoc = sentenceDocs.get(index);
-					writer.write(computeHash(sentenceDoc.getText()) + "\n");
-					sentences.add(sentenceDoc);
-				}
-			}
-			System.out.println(String.format(
-					"Returning random percentage (%f percent = %d) redundant sentences to be used in IAA computation",
-					batchOverlapPercentage, sentences.size()));
-		}
-		return sentences;
-	}
-
-	/**
-	 * 
-	 * @param batchOverlapIdsFile
-	 * @param redundantBatchAnnFile
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<TextDocument> loadRedundantSentencesForAnnotation(File batchOverlapIdsFile,
-			File redundantBatchDirectory) throws IOException {
-		Set<String> sentenceIds = new HashSet<String>(FileReaderUtil.loadLinesFromFile(batchOverlapIdsFile, UTF8));
-		List<TextDocument> sentences = new ArrayList<TextDocument>();
-		if (redundantBatchDirectory != null) {
-			for (Iterator<File> fileIterator = FileUtil.getFileIterator(redundantBatchDirectory, false,
-					".ann"); fileIterator.hasNext();) {
-				File redundantBatchAnnFile = fileIterator.next();
-				File txtFile = new File(redundantBatchAnnFile.getParentFile(),
-						StringUtil.removeSuffix(redundantBatchAnnFile.getName(), ".ann") + ".txt");
-				BioNLPDocumentReader reader = new BioNLPDocumentReader();
-				TextDocument td = reader.readDocument("doc-id", "doc-source", redundantBatchAnnFile, txtFile, UTF8);
-				List<TextDocument> sentenceDocs = splitIntoSentences(td);
-
-				for (TextDocument sentenceDoc : sentenceDocs) {
-					String hash = computeHash(sentenceDoc.getText());
-					if (sentenceIds.contains(hash)) {
-						sentences.add(sentenceDoc);
-					}
-				}
-			}
-			System.out.println(String.format(
-					"Returning %d redundant sentences loaded from file -- %s -- to be used in IAA computation",
-					sentences.size(), batchOverlapIdsFile.getAbsolutePath()));
-		}
-		return sentences;
-	}
-
-	/**
 	 * Each new line in the input document is its own sentence. This method splits
 	 * all sentences into distinct @link{TextDocument} objects.
 	 * 
@@ -939,7 +831,7 @@ public class ElasticsearchToBratExporter {
 	 * @return
 	 */
 	@VisibleForTesting
-	protected static List<TextDocument> splitIntoSentences(TextDocument td) {
+	public static List<TextDocument> splitIntoSentences(TextDocument td) {
 		Map<Span, TextDocument> spanToSentences = new HashMap<Span, TextDocument>();
 		String[] sentences = td.getText().split("\\n");
 		int offset = 0;
