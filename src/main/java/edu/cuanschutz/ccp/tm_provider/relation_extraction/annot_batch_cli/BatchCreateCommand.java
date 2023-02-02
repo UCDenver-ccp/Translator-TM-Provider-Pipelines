@@ -29,35 +29,51 @@ public class BatchCreateCommand implements Runnable {
 
 	private static final String BATCH_DIR_PREFIX = "batch_";
 
-	@Option(names = { "-d", "--dir" }, required = true)
+	@Option(names = { "-d",
+			"--dir" }, required = true, description = "The base directory of the relation extraction git repository. "
+					+ "The code will look for the following subdirectory: annotation-data/brat, which must be present.")
 	private File repoBaseDir;
 
-	@Option(names = { "-b", "--biolink" }, required = true)
+	@Option(names = { "-b",
+			"--biolink" }, required = true, description = "Each annotation project focuses on a specific Biolink association. "
+					+ "Allowable values are: bl_chemical_to_disease_or_phenotypic_feature, bl_chemical_to_gene, "
+					+ "bl_disease_to_phenotypic_feature, bl_gene_regulatory_relationship, bl_gene_to_disease, "
+					+ "bl_gene_loss_gain_of_function_to_disease, bl_gene_to_cellular_component, bl_gene_to_cell, "
+					+ "bl_gene_to_anatomical_entity, bl_disease_or_phenotypic_feature_to_location, "
+					+ "bl_biological_process_to_disease, bl_gene_to_biological_process.")
 	private String biolinkAssociation;
 
-	@Option(names = { "-a", "--annotator" }, required = true)
+	@Option(names = { "-a",
+			"--annotator" }, required = true, description = "Name/identifier for the annotator assigned to this batch. "
+					+ "This name will become a directory name so it should be a single token (no spaces).")
 	private String annotatorKey;
 
 	@Option(names = { "-n",
 			"--sentence-count" }, required = false, defaultValue = "500", description = "The number of sentences to include in this batch.")
 	private int sentenceCount;
 
-	@Option(names = { "-v", "--overlap-sentence-percentage" }, required = false, defaultValue = "0.1")
+	@Option(names = { "-v",
+			"--overlap-sentence-percentage" }, required = false, defaultValue = "0.1", description = "The percentage of the sentences that "
+					+ "should be shared across batches to facilitate measurements of inter-annotator agreement.")
 	private float overlapSentencePercentage;
 
-	@Option(names = { "-u", "--elastic-url" }, required = true)
+	@Option(names = { "-u",
+			"--elastic-url" }, required = true, description = "URL to the Elasticsearch instance. Do not include 'http://'.")
 	private String elasticUrl;
 
-	@Option(names = { "-p", "--elastic-port" }, required = true)
+	@Option(names = { "-p", "--elastic-port" }, required = true, description = "Elasticsearch port.")
 	private int elasticPort;
 
-	@Option(names = { "-k", "--elastic-api-key" }, required = true)
+	@Option(names = { "-k", "--elastic-api-key" }, required = true, description = "Elasticsearch API key.")
 	private String elasticApiKey;
 
-	@Option(names = { "-i", "--elastic-index-name" }, required = false, defaultValue = "sentences")
+	@Option(names = { "-i",
+			"--elastic-index-name" }, required = false, defaultValue = "sentences", description = "Elasticsearch index name to be queried.")
 	private String elasticIndexName;
 
-	@Option(names = { "-t", "--batch-id" }, required = false)
+	@Option(names = { "-t",
+			"--batch-id" }, required = false, description = "[OPTIONAL] The name of the batch to be created. If not specified, "
+					+ "then a batch name of 'batch_n', where n is an integer, will be used.")
 	private String batchId;
 
 	@Override

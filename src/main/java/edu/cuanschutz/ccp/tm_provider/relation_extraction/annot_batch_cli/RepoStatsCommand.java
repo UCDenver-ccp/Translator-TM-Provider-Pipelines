@@ -34,10 +34,18 @@ import picocli.CommandLine.Option;
 @Command(name = "stats")
 public class RepoStatsCommand implements Runnable {
 
-	@Option(names = { "-d", "--dir" }, required = true)
+	@Option(names = { "-d",
+			"--dir" }, required = true, description = "The base directory of the relation extraction git repository. "
+					+ "The code will look for the following subdirectory: annotation-data/brat, which must be present.")
 	private File repoBaseDir;
 
-	@Option(names = { "-b", "--biolink" }, required = true)
+	@Option(names = { "-b",
+			"--biolink" }, required = true, description = "Each annotation project focuses on a specific Biolink association. "
+					+ "Allowable values are: bl_chemical_to_disease_or_phenotypic_feature, bl_chemical_to_gene, "
+					+ "bl_disease_to_phenotypic_feature, bl_gene_regulatory_relationship, bl_gene_to_disease, "
+					+ "bl_gene_loss_gain_of_function_to_disease, bl_gene_to_cellular_component, bl_gene_to_cell, "
+					+ "bl_gene_to_anatomical_entity, bl_disease_or_phenotypic_feature_to_location, "
+					+ "bl_biological_process_to_disease, bl_gene_to_biological_process.")
 	private String biolinkAssociation;
 
 	@Override
