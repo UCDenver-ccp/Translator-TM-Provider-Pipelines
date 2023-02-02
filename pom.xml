@@ -75,13 +75,13 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-					<annotationProcessorPaths>
+					<!-- <annotationProcessorPaths>
 						<path>
 							<groupId>info.picocli</groupId>
 							<artifactId>picocli-codegen</artifactId>
 							<version>4.7.0</version>
 						</path>
-					</annotationProcessorPaths>
+					</annotationProcessorPaths> -->
 				</configuration>
 			</plugin>
 			<plugin>

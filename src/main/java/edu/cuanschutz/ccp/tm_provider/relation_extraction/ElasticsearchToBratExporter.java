@@ -126,11 +126,6 @@ public class ElasticsearchToBratExporter {
 	 *                                    agreement can be calculated. They will be
 	 *                                    randomly worked into the randomly selected
 	 *                                    sentences for this batch.
-	 * @param populateOverlapBatchIdsFile if true then we will randomly sample
-	 *                                    sentence identifiers from the search
-	 *                                    results and save them to a file. These
-	 *                                    sentences will be included in future
-	 *                                    batches so that IAA can be computed.
 	 * @param associationDir
 	 * @param batchOverlapPercentage
 	 * @throws IOException
@@ -255,7 +250,8 @@ public class ElasticsearchToBratExporter {
 		}
 
 //		System.out.println("Indexes for new batch count: " + indexesForNewBatch.size());
-		System.out.println("Batch creation complete. Sentences included in this batch: " + sentenceCount);
+		System.out.println(
+				"Batch creation complete. Sentences included in this batch: " + hashesOutputInThisBatch.size());
 //		System.out.println("Hash output count: " + hashesOutputInThisBatch.size());
 
 		return hashesOutputInThisBatch;
@@ -456,7 +452,7 @@ public class ElasticsearchToBratExporter {
 		// sanity check -- make sure there are the proper number of -1's in the first n
 		// indexes where n is the batch size
 		int minusOneCount = 0;
-		for (int i = 0; i < batchSize; i++) {
+		for (int i = 0; i < randomIndexesList.size(); i++) {
 			if (randomIndexesList.get(i) == -1) {
 				minusOneCount++;
 			}
