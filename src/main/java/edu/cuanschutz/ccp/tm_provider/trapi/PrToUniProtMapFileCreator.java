@@ -10,8 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
-import org.apache.beam.vendor.grpc.v1p26p0.com.jcraft.jzlib.GZIPInputStream;
 import org.apache.tools.ant.util.StringUtils;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
