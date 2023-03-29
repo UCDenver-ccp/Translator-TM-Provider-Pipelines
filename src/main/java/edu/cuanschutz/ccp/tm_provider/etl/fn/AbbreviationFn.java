@@ -132,7 +132,7 @@ public class AbbreviationFn
 
 			String abbreviationsInBionlp = serializeAbbreviations(results, sentenceToSpanMap, documentText);
 
-			if (abbreviationsInBionlp != null && !abbreviationsInBionlp.isEmpty()) {
+			if (abbreviationsInBionlp != null) {
 				List<String> chunkedAbbreviationsOutput = PipelineMain.chunkContent(abbreviationsInBionlp);
 				out.get(ABBREVIATIONS_TAG).output(KV.of(processingStatus, chunkedAbbreviationsOutput));
 			}
