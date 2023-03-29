@@ -354,6 +354,7 @@ public class DatastoreQueryHelper {
 				Map<String, Value<?>> properties = entity.getProperties();
 
 				String docId = properties.get(DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID).get().toString();
+
 				Boolean hasText = Boolean
 						.valueOf(properties.get(DatastoreConstants.STATUS_PROPERTY_TEXT_DONE).get().toString());
 
@@ -365,6 +366,7 @@ public class DatastoreQueryHelper {
 		}
 
 	}
+
 
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
@@ -386,10 +388,10 @@ public class DatastoreQueryHelper {
 //		new DatastoreQueryHelper().addStatusFlag(CollectionsUtil.createSet(ProcessingStatusFlag.SENTENCE_DONE), false);
 
 //		new DatastoreQueryHelper().collectionStatus("CORD19");
-		
-		File outputFile = new File("/Users/bill/projects/ncats-translator/current-kgs/20220613/document_ids.txt");
-		new DatastoreQueryHelper().getAllDocumentIds(outputFile);
 
+		File outputFile = new File("/Users/bill/projects/ncats-translator/current-kgs/20221205_document_ids.txt");
+		new DatastoreQueryHelper().getAllDocumentIds(outputFile);
+		
 	}
 
 }
