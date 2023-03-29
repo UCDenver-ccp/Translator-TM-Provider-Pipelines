@@ -30,10 +30,9 @@ import edu.cuanschutz.ccp.tm_provider.relation_extraction.BratToBertConverter.Re
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil;
-import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil.ColumnOrder;
 import edu.ucdenver.ccp.common.file.FileComparisonUtil.LineOrder;
-import edu.ucdenver.ccp.common.file.FileReaderUtil;
+import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.nlp.core.annotation.Annotator;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
@@ -105,7 +104,7 @@ public class BratToBertConverterTest {
 				BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE, diseaseAnnot, "treats");
 
 		String trainingLine = BratToBertConverter.getTrainingExampleLine(sentenceAnnot, assertion,
-				new HashSet<String>());
+				new HashSet<String>(), false);
 
 		String sentenceWithPlaceholders = String.format(
 				"%s is frequently observed in cancer patients undergoing %s (BLM) treatment.",
@@ -403,7 +402,7 @@ public class BratToBertConverterTest {
 				chemicalAnnot1, chemicalAnnot2);
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer);
+			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer, new HashSet<String>());
 		}
 
 		// @formatter:off
@@ -495,7 +494,7 @@ public class BratToBertConverterTest {
 				chemicalAnnot1, chemicalAnnot2);
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer);
+			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer, new HashSet<String>());
 		}
 
 		// @formatter:off
@@ -536,7 +535,7 @@ public class BratToBertConverterTest {
 		File outputFile = folder.newFile();
 
 		BiolinkAssociation biolinkAssociation = BiolinkAssociation.BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE;
-		BratToBertConverter.convertBratToBert(biolinkAssociation, bratFolder, Recurse.NO, outputFile);
+		BratToBertConverter.convertBratToBert(biolinkAssociation, Arrays.asList(bratFolder), Recurse.NO, outputFile);
 
 		// @formatter:off
 				String sentenceWithPlaceholders1 = String.format("We sought to determine if interleukin (IL)-1β and %s (PGE2) (inflammatory mediators in pancreatic fluid) together with serum carbohydrate antigen (CA) 19-9 could better predict intraductal papillary %s (IPMN) dysplasia than individual biomarkers alone. -- PMID:31404023", BiolinkClass.CHEMICAL.getPlaceholder(), BiolinkClass.DISEASE_OR_PHENOTYPIC_FEATURE.getPlaceholder());

@@ -77,24 +77,29 @@ public class BratToBertConverter {
 		}
 	}
 
-	public static void convertBratToBert(BiolinkAssociation biolinkAssociation, File bratDirectory, Recurse recurse,
-			File bertOutputFile) throws FileNotFoundException, IOException {
+	public static void convertBratToBert(BiolinkAssociation biolinkAssociation, List<File> bratDirectories,
+			Recurse recurse, File bertOutputFile) throws FileNotFoundException, IOException {
 
+		Set<String> alreadyPrinted = new HashSet<String>();
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(bertOutputFile)) {
-			for (Iterator<File> fileIterator = FileUtil.getFileIterator(bratDirectory, recurse.getValue(),
-					BRAT_ANN_FILE_SUFFIX); fileIterator.hasNext();) {
-				File annFile = fileIterator.next();
-				File txtFile = getCorrespondingTxtFile(annFile);
+			for (File bratDirectory : bratDirectories) {
+				for (Iterator<File> fileIterator = FileUtil.getFileIterator(bratDirectory, recurse.getValue(),
+						BRAT_ANN_FILE_SUFFIX); fileIterator.hasNext();) {
+					File annFile = fileIterator.next();
+					File txtFile = getCorrespondingTxtFile(annFile);
 
-				BioNLPDocumentReader reader = new BioNLPDocumentReader();
-				TextDocument td = reader.readDocument("unknown", "unknown", annFile, txtFile, UTF8);
+					System.out.println("Processing: " + annFile.getAbsolutePath());
 
-				List<TextAnnotation> sentences = getSentenceAnnotationsOnePerLine(txtFile);
+					BioNLPDocumentReader reader = new BioNLPDocumentReader();
+					TextDocument td = reader.readDocument("unknown", "unknown", annFile, txtFile, UTF8);
 
-				generateBertStyleTrainingData(biolinkAssociation, sentences, td.getAnnotations(), writer);
+					List<TextAnnotation> sentences = getSentenceAnnotationsOnePerLine(txtFile);
 
+					generateBertStyleTrainingData(biolinkAssociation, sentences, td.getAnnotations(), writer,
+							alreadyPrinted);
+
+				}
 			}
-
 		}
 	}
 
@@ -129,9 +134,8 @@ public class BratToBertConverter {
 	}
 
 	public static void generateBertStyleTrainingData(BiolinkAssociation biolinkAssociation,
-			List<TextAnnotation> sentences, List<TextAnnotation> entityAnnots, BufferedWriter writer)
-			throws IOException {
-		Set<String> alreadyPrinted = new HashSet<String>();
+			List<TextAnnotation> sentences, List<TextAnnotation> entityAnnots, BufferedWriter writer,
+			Set<String> alreadyPrinted) throws IOException {
 		Map<TextAnnotation, Set<TextAnnotation>> sentToEntityMap = new HashMap<TextAnnotation, Set<TextAnnotation>>();
 
 		addIdsToAnnotations(entityAnnots, "entity");
@@ -327,7 +331,7 @@ public class BratToBertConverter {
 
 	private static void writeTrainingExample(BufferedWriter writer, TextAnnotation sentence, Assertion assertion,
 			Set<String> alreadyPrinted) throws IOException {
-		String out = getTrainingExampleLine(sentence, assertion, alreadyPrinted);
+		String out = getTrainingExampleLine(sentence, assertion, alreadyPrinted, false);
 		if (writer != null && out != null) {
 			writer.write(out + "\n");
 		}
@@ -358,8 +362,8 @@ public class BratToBertConverter {
 	}
 
 	@VisibleForTesting
-	protected static String getTrainingExampleLine(TextAnnotation sentence, Assertion assertion,
-			Set<String> alreadyPrinted) {
+	public static String getTrainingExampleLine(TextAnnotation sentence, Assertion assertion,
+			Set<String> alreadyPrinted, boolean includeEntityCoveredText) {
 
 		/*
 		 * setting annotation IDs so that the proper placeholder can be used to replace
@@ -367,7 +371,9 @@ public class BratToBertConverter {
 		 */
 
 		TextAnnotation subjectAnnot = assertion.getSubjectAnnotation();
+		subjectAnnot.setAnnotationID("subject");
 		TextAnnotation objectAnnot = assertion.getObjectAnnotation();
+		objectAnnot.setAnnotationID("object");
 
 		Map<String, String> annotationIdToPlaceholderMap = new HashMap<String, String>();
 		annotationIdToPlaceholderMap.put(subjectAnnot.getAnnotationID(), assertion.getSubjectClass().getPlaceholder());
@@ -396,6 +402,16 @@ public class BratToBertConverter {
 			if (!alreadyPrinted.contains(id)) {
 				alreadyPrinted.add(id);
 				String output = id + "\t" + sentenceText + "\t" + assertion.getRelation();
+				if (includeEntityCoveredText) {
+
+//					output = output + "\t" + sortedEntityAnnots.get(0).getCoveredText() + "\t" + sortedEntityAnnots.get(1).getCoveredText();
+
+					// TODO:below version includes concept IDs for debugging
+					output = output + "\t" + sortedEntityAnnots.get(0).getCoveredText() + "-- "
+							+ sortedEntityAnnots.get(0).getClassMention().getMentionName() + "\t"
+							+ sortedEntityAnnots.get(1).getCoveredText() + "-- "
+							+ sortedEntityAnnots.get(1).getClassMention().getMentionName();
+				}
 				return output;
 			}
 		}
@@ -447,6 +463,9 @@ public class BratToBertConverter {
 		Map<BiolinkClass, Set<TextAnnotation>> map = new HashMap<BiolinkClass, Set<TextAnnotation>>();
 		for (TextAnnotation ta : entityAnnots) {
 			String type = ta.getClassMention().getMentionName();
+			if (type.equalsIgnoreCase("DONE")) {
+				continue;
+			}
 			if (type.contains(":")) {
 				String ontologyPrefix = type.substring(0, type.indexOf(":"));
 				if (biolinkAssociation.getSubjectClass().getOntologyPrefixes().contains(ontologyPrefix)) {
