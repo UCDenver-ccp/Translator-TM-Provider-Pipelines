@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -19,7 +20,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.apache.beam.vendor.grpc.v1p26p0.com.jcraft.jzlib.GZIPInputStream;
 import org.medline.ArticleDate;
 import org.medline.MedlineCitation;
 import org.medline.MedlineDate;
