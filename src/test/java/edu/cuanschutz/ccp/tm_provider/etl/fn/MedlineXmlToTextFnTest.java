@@ -3,6 +3,8 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -63,6 +65,34 @@ public class MedlineXmlToTextFnTest {
 		for (PubmedArticle article : articles) {
 			TextDocument td = MedlineXmlToTextFn.buildDocument(article);
 			validateDocument(td);
+		}
+	}
+	
+	@Test
+	public void testTextDocumentConstructionReal()
+			throws ParserConfigurationException, SAXException, IOException, JAXBException, XMLStreamException {
+		InputStream is = new GZIPInputStream(
+				new FileInputStream(new File("/Users/bill/projects/ncats-translator/debugging/daily-updates/pubmed22n1388.xml.gz")));
+
+		XMLInputFactory xif = XMLInputFactory.newInstance();
+		xif.setXMLResolver(getXmlResolver());
+		XMLStreamReader xsr = xif.createXMLStreamReader(is);
+
+		JAXBContext jaxbContext = JAXBContext.newInstance(PubmedArticleSet.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		PubmedArticleSet articleSet = (PubmedArticleSet) jaxbUnmarshaller.unmarshal(xsr);
+
+		int count = 0;
+		for (Object article : articleSet.getPubmedArticleOrPubmedBookArticle()) {
+			if (article instanceof PubmedArticle) {
+				if (count++ % 100 == 0) {
+					System.out.println("progress: " + count);
+				}
+				PubmedArticle art = (PubmedArticle) article;
+			} else {
+				fail(String.format("Expected only PubmedArticle objects, but observed: %s",
+						article.getClass().getName()));
+			}
 		}
 	}
 
