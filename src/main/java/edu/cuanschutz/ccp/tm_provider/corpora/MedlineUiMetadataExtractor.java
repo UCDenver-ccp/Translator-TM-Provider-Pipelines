@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -21,7 +22,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.apache.beam.vendor.grpc.v1p26p0.com.jcraft.jzlib.GZIPInputStream;
 import org.medline.ArticleDate;
 import org.medline.Day;
 import org.medline.DeleteCitation;
@@ -31,6 +31,7 @@ import org.medline.Month;
 import org.medline.PMID;
 import org.medline.PubmedArticle;
 import org.medline.PubmedArticleSet;
+import org.medline.Season;
 import org.medline.Year;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn;
@@ -179,6 +180,24 @@ public class MedlineUiMetadataExtractor {
 				if (m != null) {
 					return m.getvalue();
 				}
+			} else if (obj instanceof Season) {
+				Season s = (Season) obj;
+				String season = s.getvalue();
+				if (season.equalsIgnoreCase("winter")) {
+					return "12";
+				}
+				if (season.equalsIgnoreCase("spring")) {
+					return "03";
+				}
+				if (season.equalsIgnoreCase("summer")) {
+					return "06";
+				}
+				if (season.equalsIgnoreCase("fall")) {
+					return "09";
+				}
+				if (season.equalsIgnoreCase("autumn")) {
+					return "09";
+				}
 			}
 		}
 
@@ -191,9 +210,48 @@ public class MedlineUiMetadataExtractor {
 		return null;
 	}
 
-	private static String getMonth(String dateStr) {
-		// TODO Auto-generated method stub
+	/**
+	 * Look for first 3-letter abbreviation and return that as the month
+	 * @param dateStr
+	 * @return
+	 */
+	protected static String getMonth(String dateStr) {
+		Pattern p = Pattern.compile("(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)");
+		Matcher m = p.matcher(dateStr);
+		if (m.find()) {
+			String month = m.group();
+			switch (month) {
+			case "Jan":
+				return "01";
+			case "Feb":
+				return "02";
+			case "Mar":
+				return "03";
+			case "Apr":
+				return "04";
+			case "May":
+				return "05";
+			case "Jun":
+				return "06";
+			case "Jul":
+				return "07";
+			case "Aug":
+				return "08";
+			case "Sep":
+				return "09";
+			case "Oct":
+				return "10";
+			case "Nov":
+				return "11";
+			case "Dec":
+				return "12";
+
+			default:
+				return null;
+			}
+		}
 		return null;
+		
 	}
 
 	private static String getDay(List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate, List<ArticleDate> articleDate) {
