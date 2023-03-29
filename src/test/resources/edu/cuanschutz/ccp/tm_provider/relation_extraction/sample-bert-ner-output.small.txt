@@ -1,0 +1,52 @@
+Loss O O
+of O O
+Skeletal B-UBERON B-UBERON
+Muscle I-UBERON I-UBERON
+HIF B-PR B-PR
+- I-PR I-PR
+1α I-PR I-PR
+Results O O
+in O O
+Altered O O
+Exercise O O
+Endurance O O
+
+Abstract O O
+
+The O O
+Notch B-PR B-GO_BP
+Ligand B-CHEBI B-CHEBI
+JAG1 B-PR B-PR
+Is O O
+Required O O
+for O O
+Sensory B-GO_BP B-GO_BP
+Progenitor O O
+Development O O
+in O O
+the O O
+Mammalian B-NCBITAXON B-NCBITAXON
+Inner B-UBERON B-UBERON
+Ear I-UBERON I-UBERON
+
+Abstract O O
+
+In O O
+mammals B-NCBITAXON B-NCBITAXON
+, O O
+six O O
+separate O O
+sensory B-GO_BP B-GO_BP
+regions O O
+in O O
+the O O
+inner B-UBERON B-UBERON
+ear I-UBERON I-UBERON
+are O O
+essential O O
+for O O
+hearing B-GO_BP B-GO_BP
+and O O
+balance O O
+function O O
+. O O

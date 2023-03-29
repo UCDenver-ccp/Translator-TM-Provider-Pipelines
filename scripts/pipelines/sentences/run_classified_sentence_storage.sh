@@ -12,12 +12,11 @@ DB_USER_NAME=$9
 DB_PASSWORD=${10}
 CLOUD_SQL_REGION=${11}
 MYSQL_INSTANCE_NAME=${12}
-ID_SUFFIX_TO_PROCESS=${13}
 
 
 ZONE='us-central1-c'
 REGION='us-central1'
-JOB_NAME=$(echo "CLASSIFIED-SENTENCE-STORAGE-${COLLECTION}-${BIOLINK_ASSOCIATION}-${ID_SUFFIX_TO_PROCESS}" | tr '_' '-')
+JOB_NAME=$(echo "CLASSIFIED-SENTENCE-STORAGE-${COLLECTION}-${BIOLINK_ASSOCIATION}" | tr '_' '-')
 
 ASSOCIATION_KEY_LC=$(echo "$BIOLINK_ASSOCIATION" | tr '[:upper:]' '[:lower:]')
 
@@ -44,7 +43,6 @@ echo "DATABASE_NAME: $DATABASE_NAME"
 echo "DB_USER_NAME: $DB_USER_NAME"
 echo "CLOUD_SQL_REGION: $CLOUD_SQL_REGION"
 echo "MYSQL_INSTANCE_NAME: $MYSQL_INSTANCE_NAME"
-echo "ID_SUFFIX_TO_PROCESS: $ID_SUFFIX_TO_PROCESS"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CLASSIFIED_SENTENCE_STORAGE \
 --jobName="$JOB_NAME" \
@@ -57,7 +55,6 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CLASSIFIED
 --mySqlInstanceName="$MYSQL_INSTANCE_NAME" \
 --cloudSqlRegion="$CLOUD_SQL_REGION" \
 --bertScoreInclusionMinimumThreshold=0.9 \
---idSuffixToProcess="$ID_SUFFIX_TO_PROCESS" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \

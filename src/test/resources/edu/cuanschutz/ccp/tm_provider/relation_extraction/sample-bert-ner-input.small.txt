@@ -1,0 +1,53 @@
+
+Loss	15328538	0	O
+of	-	5	O
+Skeletal	-	8	B-UBERON
+Muscle	-	17	I-UBERON
+HIF	-	24	B-PR
+-	-	27	I-PR
+1α	-	28	I-PR
+Results	-	31	O
+in	-	39	O
+Altered	-	42	O
+Exercise	-	50	O
+Endurance	-	59	O
+
+Abstract	15328538	70	O
+
+The	16410827	0	O
+Notch	-	4	B-PR
+Ligand	-	10	B-CHEBI
+JAG1	-	17	B-PR
+Is	-	22	O
+Required	-	25	O
+for	-	34	O
+Sensory	-	38	B-GO_BP
+Progenitor	-	46	O
+Development	-	57	O
+in	-	69	O
+the	-	72	O
+Mammalian	-	76	B-NCBITAXON
+Inner	-	86	B-UBERON
+Ear	-	92	I-UBERON
+
+Abstract	16410827	97	O
+
+In	16410827	107	O
+mammals	-	110	B-NCBITAXON
+,	-	117	O
+six	-	119	O
+separate	-	123	O
+sensory	-	132	B-GO_BP
+regions	-	140	O
+in	-	148	O
+the	-	151	O
+inner	-	155	B-UBERON
+ear	-	161	I-UBERON
+are	-	165	O
+essential	-	169	O
+for	-	179	O
+hearing	-	183	B-GO_BP
+and	-	191	O
+balance	-	195	O
+function	-	203	O
+.	-	211	O

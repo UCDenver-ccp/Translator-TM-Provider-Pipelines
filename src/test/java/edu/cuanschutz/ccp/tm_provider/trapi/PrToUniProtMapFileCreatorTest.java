@@ -3,6 +3,9 @@ package edu.cuanschutz.ccp.tm_provider.trapi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -56,8 +59,7 @@ public class PrToUniProtMapFileCreatorTest {
 		assertNull(mapping);
 
 	}
-	
-	
+
 	@Test
 	public void testRetrieveUniprotMappingFromClassWithGeneCategory2Levels() throws OWLOntologyCreationException {
 		OntologyUtil ontUtil = new OntologyUtil(
@@ -66,11 +68,46 @@ public class PrToUniProtMapFileCreatorTest {
 		OWLClass owlClassWithUniProtXref = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/PR_000012345");
 
 		assertNotNull(owlClassWithUniProtXref);
-		
+
 		Mapping mapping = PrToUniProtMapFileCreator.retrieveUniProtMapping(ontUtil, owlClassWithUniProtXref);
 
 		assertEquals("PR:000012345", mapping.getPrId());
 		assertEquals("UniProtKB:P01234", mapping.getUniprotId());
+		assertEquals("NCBITaxon:9606", mapping.getTaxonId());
+
+	}
+
+	@Test
+	public void testCftrIsGeneLevel() throws OWLOntologyCreationException, IOException {
+		OntologyUtil ontUtil = new OntologyUtil(
+				ClassPathUtil.getResourceStreamFromClasspath(getClass(), "sample.owl.xml"));
+		try {
+			OWLClass cftrAtGeneLevel = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/PR_000001044");
+			assertTrue(PrToUniProtMapFileCreator.isGeneLevel(ontUtil, cftrAtGeneLevel));
+		} finally {
+			ontUtil.close();
+		}
+	}
+
+	/**
+	 * 
+	 * Our data set has mapped to the species-agnostic (gene-level) concept for
+	 * CFTR: PR:000001044 We should return the UniProt identifier for human CFTR:
+	 * UniProtKB:P13569
+	 */
+	@Test
+	public void testRetrieveUniprotMappingForCFTR() throws OWLOntologyCreationException {
+		OntologyUtil ontUtil = new OntologyUtil(
+				ClassPathUtil.getResourceStreamFromClasspath(getClass(), "sample.owl.xml"));
+
+		OWLClass cftrAtGeneLevel = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/PR_000001044");
+
+		assertNotNull(cftrAtGeneLevel);
+
+		Mapping mapping = PrToUniProtMapFileCreator.retrieveUniProtMapping(ontUtil, cftrAtGeneLevel);
+
+		assertEquals("PR:000001044", mapping.getPrId());
+		assertEquals("UniProtKB:P13569", mapping.getUniprotId());
 		assertEquals("NCBITaxon:9606", mapping.getTaxonId());
 
 	}

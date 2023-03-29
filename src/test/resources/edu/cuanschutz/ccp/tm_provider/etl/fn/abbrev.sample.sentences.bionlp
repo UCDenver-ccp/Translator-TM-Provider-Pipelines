@@ -1,0 +1,362 @@
+T1	sentence 0 88	Crystal structure of plasmoredoxin, a redox-active protein unique for malaria parasites 
+T2	sentence 89 219	Plasmoredoxin is a 22 ​kDa thiol–disulfide oxidoreductase involved in cellular redox regulatory processes and antioxidant defense.
+T3	sentence 220 326	The 1.6 ​Å structure of the protein, solved via X-ray crystallography, adopts a modified thioredoxin fold.
+T4	sentence 327 504	The structure reveals that plasmoredoxin, unique for malarial parasites, forms a new subgroup of thioredoxin-like proteins together with tryparedoxin, unique for kinetoplastids.
+T5	sentence 505 611	Unlike most members of this superfamily, Plrx does not have a proline residue within the CxxC redox motif.
+T6	sentence 612 677	In addition, the Plrx structure has a distinct C-terminal domain.
+T7	sentence 678 873	Similar to human thioredoxin, plasmoredoxin forms monomers and dimers, which are also structurally similar to the human thioredoxin dimer, and, as in humans, plasmoredoxin is inactive as a dimer.
+T8	sentence 874 1014	Monomer–dimer equilibrium depends on the surrounding redox conditions, which could support the parasite in reacting to oxidative challenges.
+T9	sentence 1015 1131	Based on structural considerations, the residues of the dimer interface are likely to interact with target proteins.
+T10	sentence 1132 1291	In contrast to human and Plasmodium falciparum thioredoxin, however, there is a cluster of positively charged residues at the dimer interface of plasmoredoxin.
+T11	sentence 1292 1404	These intersubunit (lysine) residues might allow binding of the protein to cellular membranes or to plasminogen.
+T12	sentence 1405 1551	Malaria parasites lack catalase and glutathione peroxidase and therefore depend on their other glutathione and thioredoxin-dependent redox relays.
+T13	sentence 1552 1661	Plasmoredoxin could be part of a so far unknown electron transfer system that only occurs in these parasites.
+T14	sentence 1662 1881	Since the surface charge of plasmoredoxin differs significantly from other members of the thioredoxin superfamily, its three-dimensional structure can provide a model for designing selective redox-modulatory inhibitors.
+T15	sentence 1893 1911	Graphical abstract
+T16	sentence 1912 1922	Highlights
+T17	sentence 1923 2021	Two high resolution X-ray structures – confirmed that Plrx belongs to the thioredoxin superfamily.
+T18	sentence 2024 2114	Structure and surface charge differ from the other members of the thioredoxin superfamily.
+T19	sentence 2115 2211	The highest relationship in terms from sequence and structural fold is found with tryparedoxins.
+T20	sentence 2212 2282	Similar to human thioredoxin, plasmoredoxin forms monomers and dimers.
+T21	sentence 2283 2308	Potential as drug target.
+T22	sentence 2309 2321	Introduction
+T23	sentence 2322 2435	Malaria still causes 400,000 deaths per year; most of them are pregnant women and children less than 5 years old.
+T24	sentence 2436 2483	Obviously, new drugs are still urgently needed.
+T25	sentence 2484 2662	Malaria parasites depend crucially on their intercellular redox balance, so proteins involved in antioxidant defense are superb targets for the development of antimalarial drugs.
+T26	sentence 2663 3024	In Plasmodium, two redox systems are known for antioxidative defense and redox regulation: a glutathione system comprising NADP, glutathione reductase (GR), glutathione (GSH), glutathione S-transferase, and glutaredoxin (Grx) and a thioredoxin system comprising NADP, thioredoxin reductase (TrxR), thioredoxin (Trx), and thioredoxin-dependent peroxidases (Prx).
+T27	sentence 3025 3148	In kinetoplastids, such as Trypanosoma or Leishmania, an alternative system exists to maintain intracellular redox balance.
+T28	sentence 3149 3348	This system comprises trypanothione reductase (TR), trypanothione (Try) and tryparedoxin (Txn) with a terminal electron acceptor such as tryparedoxin-dependent peroxidase or ribonucleotide reductase.
+T29	sentence 3349 3362	Becker et al.
+T30	sentence 3363 3490	discovered an unknown redox-active protein that only exists in Plasmodium species and was therefore named plasmoredoxin (Plrx).
+T31	sentence 3491 3595	Plrx belongs to a novel family of redox-active proteins that are members of the thioredoxin superfamily.
+T32	sentence 3596 3720	This family includes the proteins Trx, Grx, and Txn, which are part of known redox systems in Plasmodium and kinetoplastids.
+T33	sentence 3721 3910	Like Trx, Grx, and Txn, Plrx reduces peroxiredoxins and is active in an insulin reduction assay; furthermore it is probably involved in ribonucleotide reduction and glutathione homeostasis.
+T34	sentence 3911 4057	A Plrx knockout was not lethal in the rodent malaria parasite P. berghei, but the function of Plrx in P. falciparum has not yet been investigated.
+T35	sentence 4061 4154	The oxidoreductases TrxR, GR, and TR reduce thioredoxin, GSSG, and Tryoxidized, respectively.
+T36	sentence 4155 4229	In the next step, GSH and Tryreduced non-enzymatically reduce Grx and Txn.
+T37	sentence 4230 4315	In contrast to the reduction of Trx, two steps are thus needed to reduce Grx and Txn.
+T38	sentence 4316 4430	However, an oxidoreductase or a comparable peroxidase that efficiently reduces PfPlrx has not yet been identified.
+T39	sentence 4431 4547	Low molecular weight substrates (TCEP, DTT), including trypanothione but not glutathione, are able to reduce PfPlrx.
+T40	sentence 4548 4796	Consequently, a kind of TR/Try system might reduce Plrx, as seen in kinetoplastids; however the respective players are not present in Plasmodium and other comparable enzyme/substrate couples fulfilling this function have not been identified so far.
+T41	sentence 4797 4976	Nonetheless, other members of the thioredoxin superfamily such as Txn, Grx, and Trx (in their prereduced form) are able to interact with and transfer electrons to oxidized PfPlrx.
+T42	sentence 4977 5095	PfPlrx is significantly larger (22 ​kDa; 179 amino acids) than classic thioredoxins (ca. 100 aa) or glutaredoxins (ca.
+T43	sentence 5096 5155	110 aa,); only tryparedoxins are similar in size (165 aa,).
+T44	sentence 5156 5408	The sequence identity of PfPlrx to other members of the thioredoxin superfamily is very low—less than 27% — but the characteristic active site motif (CXXC) of the family, which determines the biological activity of the protein, is also present in Plrx.
+T45	sentence 5409 5582	All members of the thioredoxin superfamily share a common 3D structure, the thioredoxin fold, characterized by a central four-stranded β-sheet surrounded by three α-helices.
+T46	sentence 5592 5688	In this study, we solved the 3-dimensional structure of recombinant P. falciparum plasmoredoxin.
+T47	sentence 5689 5918	In a range of about 100 amino acids, the structure is typical for a member of the thioredoxin family, but the surface charge is different from other members, which implies different binding partners and therefore different tasks.
+T48	sentence 5919 6047	Oligomerization studies showed that PfPlrx exists as both a monomer and dimer, depending on the redox milieu of the environment.
+T49	sentence 6048 6167	Though, crystallographic analysis revealed that PfPlrx would be inactive as a dimer, comparable to the human Trx dimer.
+T50	sentence 6169 6191	Results and discussion
+T51	sentence 6192 6215	Structure determination
+T52	sentence 6216 6244	Crystallographic statistics.
+T53	sentence 6245 6256	Table 1	 	 
+T54	sentence 6257 6577		Hexagonal	Monoclinic	 	Space group	P61	P1211	 	Unit cell parameters	 	 a, b, c (Å)	74, 74, 65.27	47.75, 122.73, 72.86	 	 α, β, γ (°)	90, 90, 120	90, 104.88, 90	 	Data collection	 	 Beamline	ESRF beamline ESD-ID14-4	SLS beam line X10SA	 	 Temperature (K)	100	100	 	 Wavelength (Å)	0.9793	1	 	 Resolution range	19.45–1.63
+T55	sentence 6578 6589	(1.69–1.63)
+T56	sentence 6590 6612	46.26–1.60 (1.66–1.60)
+T57	sentence 6616 6826	Wilson B-factor (Å2)	19.9	25.6	 	 Total reflections	249054 (9822)	483467 (45941)	 	 Unique reflections	25145 (2336)	106413 (10618)	 	 Multiplicity	9.9 (4.2)	4.5 (4.3)	 	 Completeness (%)	99.2 (92.2)	99.9 (99.5)
+T58	sentence 6830 6900	Mean I/σ (I)	33.9 (4)	13.5 (1.7)	 	 R-mergea (%)	5.7 (34.3)	5.2 (87.6)
+T59	sentence 6904 6972	R-pimb (%)	1.6 (18.0)	2.7 (46.8)	 	 CC1/2 (%)	100 (87.1)	99.8 (68.3)
+T60	sentence 6976 7047	Molecules per ASU	1	4	 	Refinement	 	 Rwork/Rfreec (%)	16.8 (21.4)/20.0
+T61	sentence 7048 7076	(24.7)	17.8(27.9)/21.0(30.0)
+T62	sentence 7079 7165	No. of atoms/average B (Å2)	 	 Protein	1391/27.7	5646/33.5	 	 Ligands	30/50.1	224/53.2
+T63	sentence 7169 7194	Solvent	149/40.5	311/41.9
+T64	sentence 7198 7226	Non-hydrogen atoms	1570/28.9
+T65	sentence 7227 7236	6181/34.6
+T66	sentence 7240 7478	Protein residues	158	648	 	Ramachandran plot (%)	 	 Favored (%)	97.44	97.0	 	 Outliers (%)	0	0	 	RMS deviations	 	 Bonds (Å)	0.02	0.020	 	 Angles (°)	1.52	1.41	 	PDB accession code	7AOJ	7AOO	 	                                             
+T67	sentence 7479 7545	Statistics for the high-resolution shell are shown in parentheses.
+T68	sentence 7546 7707	Rmerge ​= ​∑hkl∑i|Ii(hkl) [I(hkl)]|/∑hkl∑iIi(hkl), where Ii(hkl) is the ith measurement of reflection hkl and [I(hkl)] is the weighted mean of all mea-surements.
+T69	sentence 7722 7835	Rpim ​= ​∑hkl [1/(N 1)] 1/2 ∑i|Ii(hkl) [I(hkl)]|/∑hkl∑iIi(hkl), where N is the redundancy for the hkl reflection.
+T70	sentence 7850 8027	Rwork/Rfree ​= ​∑hkl| FoFc|/∑hkl|Fo|, where Fc is the calculated and Fo is the observed structure-factor amplitude of reflection hkl for the working/free (5%) set, respectively.
+T71	sentence 8038 8181	We have obtained monoclinic (space group P21) and hexagonal crystals (space group P61) of PfPlrx from P. falciparum, both diffracted to 1.6 ​Å.
+T72	sentence 8182 8304	The asymmetric unit of the monoclinic and hexagonal crystal types contained four and one monomers of PfPlrx, respectively.
+T73	sentence 8305 8393	Attempts to solve the structure by the molecular replacement method were not successful.
+T74	sentence 8394 8511	Finally, we combined single anomalous dispersion and molecular replacement methods to solve the monoclinic structure.
+T75	sentence 8512 8616	Manually rebuilding and subsequent refinement resulted in a PfPlrx model, comprising residues 12 to 179.
+T76	sentence 8617 8683	Accordingly, we used this model to obtain the hexagonal structure.
+T77	sentence 8684 8768	Data collection and refinement statistics of all datasets are summarized in Table 1.
+T78	sentence 8775 8792	Overall structure
+T79	sentence 8793 8831	Overall structure of the Plrx monomer.
+T80	sentence 8832 8952	The canonical thioredoxin fold is colored orange; the hydrogen bonds between the strands are indicated by blue lines.the
+T81	sentence 8953 9248	active site residues (W59, C60, K61, Y62, C63) and the positively charged residues R89, K61, K116, K117 and K121 are shown as sticks, The insertion, which is not present in classic thioredoxin structures, is stained green, the N-terminal and the C-terminal domaine are colored gold and dark red.
+T82	sentence 9249 9378	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T83	sentence 9379 9386	Fig. 1 
+T84	sentence 9387 9546	The PfPlrx monomer (12–179 aa) contains a twisted seven-stranded, mixed β-sheet (β1, β2, β5, β4, β3, β6, β7), surrounded by five α-helices (α2 to α5) (Fig. 1).
+T85	sentence 9547 9668	The N-terminal region (1–50) comprises a helix–hairpin motif (α1, β1, β2) connected by a 310 helix to the central domain.
+T86	sentence 9669 9791	Furthermore, strands β6 and β7 form another hairpin at the C-terminal end of the sheet, followed by three helices (α5-α7).
+T87	sentence 9792 10064	To facilitate comparison with the protein topology of other redoxins, we used the terminology ‘twisted’ seven-stranded β-sheet; although strands β5 (104–106) and β7 (135–137) are disturbed and connected to adjacent strands (β1, β4, β6) by only one or two H-bonds (Fig. 1).
+T88	sentence 10065 10235	The longest helix (α2) in the PfPlrx structure comprises five turns with the typical thioredoxin active site motive WCXXC (W59, C60, K61, Y62, C63) at its N-terminal end.
+T89	sentence 10236 10531	Besides the redox-active cysteines, the PfPlrx sequence contains two more Plasmodium-specific cysteine residues: The N-terminal cysteine residue C3 is not visible in the structure, and C115 is located at the exterior of helix α4 with a distance of 11 ​Å and 12.5 ​Å to C63 and C60, respectively.
+T90	sentence 10616 10664	Superpositions of (A) PfPlrx monomer structures.
+T91	sentence 10665 10835	The structure that resulted from the hexagonal crystal is colored light blue; the four structures of the monoclinic crystal are colored dark blue, orange, green, and red.
+T92	sentence 10836 10965	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T93	sentence 10966 10973	Fig. 2 
+T94	sentence 10974 11132	The five independent PfPlrx structures determined in the monoclinic (four monomers) and hexagonal (one monomer) crystal form are essentially similar (Fig. 2).
+T95	sentence 11133 11328	Superimposition of the monoclinic structures reveals an rmsd between 0.5 and 0.7 ​Å with about 160 residues, and comparison with the hexagonal structure shows an rmsd of 0.9 ​Å with 153 residues.
+T96	sentence 11329 11462	All structures are in the reduced form, with an equal distance (3.8 ​Å) between the Sγ-atoms of the active site cysteines (C60, C63).
+T97	sentence 11463 11591	Minor differences occur at the N and C-termini and are probably due to crystal contacts at the loop regions 145–148 and 160–171.
+T98	sentence 11592 11697	The number of N-terminal residues seen in the electron density varies among the five structures (Fig. 2).
+T99	sentence 11698 11773	Furthermore, the N-terminal helix α1 is missing in the hexagonal structure.
+T100	sentence 11794 11824	Comparison with other redoxins
+T101	sentence 11825 11877	Structure variations in the thioredoxin superfamily.
+T102	sentence 11878 12021	The C-terminal domain is colored dark red, and if present, the N-terminal domain and insertion are highlighted in gold and green, respectively.
+T103	sentence 12022 12120	The cysteine in the active site, which forms a mixed disulfide with the target enzyme, is labeled.
+T104	sentence 12121 12159	(a) Monomer structure of PfTrx (2mmo).
+T105	sentence 12160 12253	(b) Dimer structure of PfPrx1m (2c0d), one subunit is stained purple, the other light purple.
+T106	sentence 12254 12286	(c) Monomer structure of PfPlrx.
+T107	sentence 12287 12363	(d) Monomer structure of LmTxn (3s9f) (e) Monomer structure of wbTrx (4fyu).
+T108	sentence 12364 12493	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T109	sentence 12494 12501	Fig. 3 
+T110	sentence 12502 12651	Sequence alignment of PfPlrx with other thioredoxins (Trx), peroxiredoxins (Prx), or tryparedoxins (Txn) revealed sequence identities of 23% or less.
+T111	sentence 12652 12819	But the structural comparison with other redoxins confirms that PfPlrx belongs to the thioredoxin superfamily and shows that PfPlrx adopts a modified thioredoxin fold.
+T112	sentence 12820 12987	The classic thioredoxin fold comprises a four-stranded β-sheet surrounded by three α-helices (α2, α4, α5) forming one compact domain with a βαβαββα topology (Fig. 3a).
+T113	sentence 13031 13120	It is known that the sequences in the giant thioredoxin superfamily are highly divergent.
+T114	sentence 13121 13214	Therefore, we searched for similar structures in the Protein Data Bank using the Dali server.
+T115	sentence 13215 13272	The highest match was found with tryparedoxin structures.
+T116	sentence 13273 13353	(Z-score 15.4 to 16.6, rmsd 1.7 to 2.2 ​Å, seq_id 17–23% with 143–152 residues).
+T117	sentence 13354 13551	All other structures, including the classical Prx structures and Trx structures reach highest Z-scores of 11, except for an atypical Trx structure from Wuchereria bancrofti (4fyu, Nasser, Y. et al.
+T118	sentence 13552 13619	unpublished work) with a Z-score of 15.0 (rmsd 2.0 ​Å, seq_id 21%).
+T119	sentence 13620 13798	Despite the similarity of the secondary structure elements between the atypical Trx and Plrx, the best structural superimposition for the whole enzyme is found with Txn (Fig. 3).
+T120	sentence 13813 13934	In Trx and similar in Grx, strand β3Trx and helix α3 Trx, are linked via a short turn, comprising four residues (Fig. 3).
+T121	sentence 13935 14074	In Plrx the corresponding structural elements are connected by a 26-residue long insertion, containing an α-helix (α3) and a β-strand (β5).
+T122	sentence 14075 14219	This insertion is also present in tryparedoxin (, furthermore Plrx and Txn share the N-terminal domain, which is also not present in Trx or Grx.
+T123	sentence 14220 14358	These two structural elements also occur in 1- and 2-cys peroxiredoxins, but are arranged completely differently compared to Txn and Plrx.
+T124	sentence 14359 14586	Consequently, only about ninety residues can be structurally superimposed (rmsd 3 A) with the Prx1m structure, moreover, the amino acid sequence matches only to a maximum of 16%, both together result in poor Z-scores below 8.6.
+T125	sentence 14587 14746	However, neither the sequence identity of 23% nor the Z-score of 16 are particularly high, Plrx and Txn share the most similarities within the Trx superfamily.
+T126	sentence 14747 14892	Exclusive to Plrx is the large C-terminal domain containing two helices, which is not found in this form in other members of the Trx superfamily.
+T127	sentence 14893 14902	(Fig. 3).
+T128	sentence 14924 14935	Active site
+T129	sentence 14936 15027	The active site 59–63(WCKYC) is located at the N-terminal end of helix α2 (Fig. 1, Fig. 2).
+T130	sentence 15028 15224	The N-terminal cysteine residue (C60) is exposed on the surface of the protein, located on a loop, which connects β3 with the active site helix α2, while the second cysteine is part of this helix.
+T131	sentence 15225 15326	In other redoxins, the solvent-exposed cysteine residue forms a mixed disulfide with target proteins.
+T132	sentence 15327 15478	The second cysteine (C63Plrx) subsequently attacks this mixed disulfide, thereby releasing the reduced target protein and the oxidized enzyme (PfPlrx).
+T133	sentence 15479 15694	The environment of the active site, comprising PfPlrx residues F55–N71 (sections of β3 and α2) and C115–F126 (sections of α4 and β6), is structurally conserved in the thioredoxin superfamily (colored red in Fig. 1).
+T134	sentence 15695 15843	For this small region (26 aa) the sequence homology is significant for tryparedoxin (Txn) but still in the low thirties for WbTrx (Nasser, Y. et al.
+T135	sentence 15844 15886	unpublished work), hTrx, PfTrx, and PfGrx.
+T136	sentence 15887 15989	Notably the active site sequence differs: WCKYC in Plrx, WCPPC in Txn, WCPYC in Grx, and WCGPC in Trx.
+T137	sentence 15990 16133	Except for Plrx, the active site of the proteins listed above contains a proline, which is often found at the curvature of an amino acid chain.
+T138	sentence 16134 16326	However, despite the lack of proline, the backbone dihedral angles of the Plrx CXXC motif are consistent with those typically observed for active sites in the thioredoxin superfamily (Fig. 3).
+T139	sentence 16352 16401	Similarities and differences between Plrx and Txn
+T140	sentence 16402 16480	It is known that the 3-D structure is much better conserved than the sequence.
+T141	sentence 16481 16577	Members of a superfamily have large divergent sequence similarity but the same primary function.
+T142	sentence 16578 16718	Within the Trx superfamily, Plrx has the best match with Txn, both structurally and in terms of sequence identity in the active site region.
+T143	sentence 16719 16894	Therefore, we hypothesize that they are more closely related within the thioredoxin superfamily than other members and may define an extra subgroup consisting of Plrx and Txn.
+T144	sentence 16895 17085	In both oxidoreductases, the β-sheet is twisted, and the N-terminal β-hairpin is connected only via one (Plrx) or two hydrogen bonds (Txn) to the central 5-stranded β-sheet (Fig. 1, Fig. 3).
+T145	sentence 17086 17278	In addition to the few hydrogen bonds between the N-terminal β-strands and the central β-sheet, the N-terminal region is also connected to the central domain by a 310 helix followed by a loop.
+T146	sentence 17279 17456	The main structural features that distinguish Plrx and Txn from other members in the superfamily are the N-terminal hairpin and the insertion between β4Plrx and α4Plrx (Fig. 3).
+T147	sentence 17479 17521	Putative binding sites in PfPlrx or LmTxn.
+T148	sentence 17522 17608	(a) Surface representation of PfPlrx; residues E93 and R89 interact via a salt bridge.
+T149	sentence 17609 17652	(b) Surface representation of LmTxn (3s9f).
+T150	sentence 17653 17750	The molecular surfaces are color-coded according to electrostatic potential (red −10 to blue 10).
+T151	sentence 17751 17769	(Chimera package).
+T152	sentence 17770 17845	For orientation, some residues including the active site WCxxC are labeled.
+T153	sentence 17846 17975	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T154	sentence 17978 17985	Fig. 4 
+T155	sentence 17986 18059	It is supposed that this insertion serves to bind Try, which reduces Txn.
+T156	sentence 18060 18245	The proposed binding site is close to the active site of Txn, comprising a cluster of negatively charged residues (70–76, WDEEEDD), suitable for binding positively charged Try (Fig. 4).
+T157	sentence 18246 18380	As mentioned above, the structural similarity with the homologous region in Plrx is very high, but the surface charge is not (Fig. 4).
+T158	sentence 18381 18465	In Plrx, there are only two negatively charged residues in this region, D88 and E93.
+T159	sentence 18466 18572	In addition, the access to the potential binding pocket is blocked by a hydrogen bond between E93 and R89.
+T160	sentence 18573 18824	The structural similarity between the putative Try binding pocket with the homologous region in Plrx indicates that this structural element specific to Plasmodium and kinetoplastids could be used to bind small redox partner molecules in both proteins.
+T161	sentence 18825 18948	The access blockage of the binding pocket by the interaction between E93 and R89 could be easily resolved, allowing access.
+T162	sentence 18949 19065	Low molecular weight substrates (TCEP, DTT), including trypanothione but not glutathione, are able to reduce PfPlrx.
+T163	sentence 19066 19223	However, Try is not present in Plasmodium, TCEP or similar molecules are not present in the cell, thus until now we don't know suitable small redox molecule.
+T164	sentence 19228 19288	Another difference to Txn is the distinct C-terminal domain.
+T165	sentence 19289 19528	Along these lines, in contrast to Txn and Trx, the Plrx structure contains only small, negatively charged surface regions: one at the N-terminal helix (E19, E21) and one at the loop connecting the C-terminal helices α5 and α6 (D147, E148).
+T166	sentence 19529 19629	Plrx and Txn adopt a very similar fold, but the charge distribution on the surface differs strongly.
+T167	sentence 19630 19844	As shown in Fig. 4, the surface of Plrx is mainly neutral or positively charged, indicating either different redox partners than those of Trx or Txn, or the partners have adjusted their surface charges accordingly.
+T168	sentence 19853 19913	Comparison with the human Trx dimer and the TrxR-Trx complex
+T169	sentence 19914 19975	Elution profile of PfPlrx depending on its oxidization state.
+T170	sentence 19976 20108	In size-exclusion chromatography (SEC), PfPlrx exhibited considerably different elution profiles depending on its oxidization state.
+T171	sentence 20109 20332	PfPlrx, which was reduced by adding Tris(2-carboxyethyl)phosphine (TCEP) (black dashed line), displayed a single peak at 18.5 ​kDa, which is in close agreement with the calculated weight of the monomeric protein of 22 ​kDa.
+T172	sentence 20333 20424	PfPlrx that was at least partially oxidized due to a lack of TCEP eluted in two main peaks.
+T173	sentence 20425 20530	One peak corresponded to the weight of the monomer, and the second was equivalent to the dimeric protein.
+T174	sentence 20531 20608	The scales vary due to different amounts of protein used in both experiments.
+T175	sentence 20615 20622	Fig. 5 
+T176	sentence 20623 20729	We determined the oligomerization state of the PfPlrx wild type enzyme with size-exclusion chromatography.
+T177	sentence 20730 20891	In its oxidized form, the enzyme eluted in two main maxima (Fig. 5), with one peak corresponding to the weight of the monomer and the other to that of the dimer.
+T178	sentence 20892 21025	Adding a reducing agent to the protein solution leads to the removal of the dimer peak, most likely by dissolving a disulfide bridge.
+T179	sentence 21026 21132	Therefore, two cysteine residues, each from one subunit of the dimer, must be involved in dimer formation.
+T180	sentence 21134 21201	Monomer contacts in the asymmetric unit of the monoclinic crystals.
+T181	sentence 21202 21329	Dimer AC (yellow, orange) and its relevant interface residues are drawn with sticks and colored according to the subunit color.
+T182	sentence 21330 21459	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T183	sentence 21460 21467	Fig. 6 
+T184	sentence 21468 21533	Interfaces (A) Superimposition of the PfPlrx-with the hTrx—dimer.
+T185	sentence 21534 21595	The Plrx dimer is shown in the same orientation as in Fig. 6.
+T186	sentence 21596 21697	The two subunits of PfPlrx or hTrx (1eru) are colored gold and red, or purple and pink, respectively.
+T187	sentence 21698 21794	Active site cysteine residues and cysteine residues involved in the dimer interface are labeled.
+T188	sentence 21795 21856	Residues of the second subunit are marked with an apostrophe.
+T189	sentence 21857 21934	(B) Superimpostion of the PfPlrx-dimer with the PfTrx-PfTrxR -complex (4J57).
+T190	sentence 21935 22105	For clarity only one subunit (gold) of the Plrx dimer is shown, PfTrx is colored green and PfTrxR grey, active sites are marked by C60 (Plrx) and C30/C540 (PfTrx-PfTrxr).
+T191	sentence 22106 22235	(For interpretation of the references to color in this figure legend, the reader is referred to the Web version of this article.)
+T192	sentence 22239 22246	Fig. 7 
+T193	sentence 22247 22307	We obtained three different types of dimers in our crystals.
+T194	sentence 22308 22429	The asymmetric unit of the hexagonal crystal form contains one monomer, thus the dimer AA′ is formed by crystal contacts.
+T195	sentence 22430 22576	The four monomers (A, C, B, D) in the asymmetric unit of monoclinic crystals form two types of dimers: Dimer AC (Fig. 6) and Dimer AD (not shown).
+T196	sentence 22577 22708	It is worth mentioning that only one (AC) of the three dimers contains cysteine residues (C60, C60′, C115, C115′) at the interface.
+T197	sentence 22709 22835	The active site residues (W59, C60, K61), helix α4 residues (112–117), loop residues 120–123 and R89 form the dimer interface.
+T198	sentence 22836 22994	There are four lysine residues (K61, K116, K117, K121) and one arginine residue (R89) at the interface, but they do not form polar bonds between the subunits.
+T199	sentence 22995 23088	Instead, they use the aliphatic part of their side chains for nonpolar interactions (Fig. 6).
+T200	sentence 23089 23159	Overall, the interactions between the subunits are mainly hydrophobic.
+T201	sentence 23160 23360	As mentioned earlier, we have crystallized PfPlrx in its reduced form so that none of the cysteine residues at the interface, C60 and C115, and C60′ and C115′ of the adjacent subunit form a disulfide.
+T202	sentence 23361 23458	The distances between C115 Sγ - C115′ Sγ, and C115 Sγ - C60’ Sγ are 12 ​Å and 9 ​Å, respectively.
+T203	sentence 23459 23714	However, a change in the side chain conformation of C60 and C115′, which reduces the distance between the Sγ atoms to 4.6 ​Å, and a slight change in conformation of the amino acid chain would facilitate a disulfide between C60 and C115’ (Fig. 6, Fig. 7a).
+T204	sentence 23759 23837	Dimer formation via a disulfide bridge is also known from human thioredoxin 1.
+T205	sentence 23838 23975	This intermolecular disulfide is formed by C73 and C73′, and mutation of one of these cysteines is sufficient to prevent dimer formation.
+T206	sentence 23976 24146	This is similar to the Plrx dimer, where the addition of a reducing agent to the protein solution leads to the removal of the dimer peak in size exclusion chromatography.
+T207	sentence 24147 24272	Dimer formation without implication of any cysteine residue are seen in hTrx2, instead there are mainly hydrophobic contacts.
+T208	sentence 24275 24478	In the case of both hTrx and Plrx, dimer formation leads to an inactive redoxin because the redox-active cysteine is hidden in the dimer interface, so interaction with redox partners would be impossible.
+T209	sentence 24479 24559	The physiological role of the inactive human thioredoxin dimer is still unknown.
+T210	sentence 24560 24642	It is believed that dimer formation may function as part of a regulatory capacity.
+T211	sentence 24643 24874	In a recently published study, the authors suggested that dimerization is a common feature of thioredoxins from humans and other eukaryotes, but the interfacial residues are poorly conserved among members of the thioredoxin family.
+T212	sentence 24875 24985	point out that the residues involved in dimerization are also involved in the interaction with target enzymes.
+T213	sentence 24986 25178	In line with these findings, the structural superimposition of the Trx dimer with the Plrx dimer AC shows that corresponding regions of both enzymes are involved in dimer formation (Fig. 7 A).
+T214	sentence 25180 25394	The superposition of the PfPlrx dimer with the 3D structures of hTrxR or PfTrxR in complex with hTrx and PfTrx, respectively, show that exactly these interface residues are involved in complex formation (Fig. 7 B).
+T215	sentence 25395 25610	The structural comparisons of Plrx with the Trx dimers and with the TrxR-Trx complex structures strongly suggest that the interface residues of the Plrx dimer are used for complex formation with the target proteins.
+T216	sentence 25612 25692	Comparison of the charge distribution in the dimer interface of PfPlrx and hTrx.
+T217	sentence 25693 26045	To show the interaction surface of the two subunits, we rotated the dimer by 85°, putting the surface of subunit C in front of the surface of subunit A. We therefore show only subunit A. This dimer position is then turned by 180°, consequently subunit C is now on the bottom, and we display subunit C. Panel A shows the surfaces of the PfPlrx dimer AC.
+T218	sentence 26046 26091	Panel B shows the surfaces of the hTrx dimer.
+T219	sentence 26094 26101	Fig. 8 
+T220	sentence 26102 26263	The distribution of charge on the contact surface is very different for the three proteins: hTrx and PfTrx are negatively charged and Plrx is positively charged.
+T221	sentence 26264 26273	(Fig. 8).
+T222	sentence 26274 26448	The positively charged surface of this region in Plrx with five positively charged residues (K61, R81, K117, K117, K121) indicates different target enzymes than those of Trx.
+T223	sentence 26449 26597	For example, it could bind via the lysines to the cell membrane or to plasminogen, which is known to bind to bacterial proteins via lysine residues.
+T224	sentence 26598 26685	Plasminogen deficiency leads to reduced reactivity towards excessive clotting activity.
+T225	sentence 26687 26712	Functional considerations
+T226	sentence 26713 26947	It is known that dithiols such as Trx, Grx, and Txn and a few low-molecular substances such as Try, DDT, and TCEP can reduce Plrx, and the best reducing agents so far are Txn from Trypanosoma brucei and Grx from Plasmodium falciparum.
+T227	sentence 26948 27090	Until now, no enzymatically catalyzed reduction of Plrx has been identified except for rather unspecific disulfide dithiol exchange reactions.
+T228	sentence 27091 27228	However, Plrx is active in an insulin reduction assay and serves as a physiological electron donor for Prxs and ribonucleotide reductase.
+T229	sentence 27229 27332	Under intracellular reducing conditions, the majority of Plrx molecules are likely present as monomers.
+T230	sentence 27333 27512	Under oxidative challenge, Plrx dimers could form, which might have a redox-regulatory function: The active site of the inactive Plrx dimer is not accessible to reduction anymore.
+T231	sentence 27513 27670	This would favor other redox relays in the cell, such as Trx and Grx dependent reactions, which might be more essential for survival under stress conditions.
+T232	sentence 27671 27830	Until now, no Plrx-specific reductase has been discovered; therefore, dimer formation is perhaps even a precondition for Plrx to react with its reducing agent.
+T233	sentence 27831 27898	Initially, the dimer is dissolved, and then the monomer is reduced.
+T234	sentence 27899 28011	Oxidative stress could thus cause dimer formation as a regulatory mechanism for the biological activity of Plrx.
+T235	sentence 28012 28201	Overall, the entire Plrx surface is much more positively charged than the surface of Trx or Txn (Fig. 4, Fig. 8), and so Plrx might have additional binding partners than those known so far.
+T236	sentence 28204 28215	Conclusions
+T237	sentence 28216 28433	Structural analyses confirmed that PfPlrx belongs to the thioredoxin superfamily, despite the highly divergent sequence to other members and the modest results of a search for similar structures using the Dali server.
+T238	sentence 28434 28508	Unique to Plrx, is the distinct C-terminal domain, containing two helices.
+T239	sentence 28509 28595	The highest relationship in terms from sequence and structural fold is found with Txn.
+T240	sentence 28596 28713	We therefore propose a new subgroup within the thioredoxin superfamily with the following common characteristics: 1.)
+T241	sentence 28714 28749	They are larger than classical Trx.
+T242	sentence 28750 28961	2.) They form a ‘pseudo’ seven-stranded β-sheet, with an N-terminal domain, containing a helix-hairpin motif (α1, β1, β2) connected by a 310 helix to the central domain; the orientation of this small domain (ca.
+T243	sentence 28962 29011	50 aa in Plrx) is flexible to the central domain.
+T244	sentence 29012 29143	3.) There is a large insertion within the central domain between the β-strand (β4Plrx) and one of the surrounding helices (α4Plrx).
+T245	sentence 29144 29251	For Txn, this insertion includes a binding pocket for Try; no corresponding molecule is yet known for Plrx.
+T246	sentence 29252 29388	4.) So far, an atypical Trx from Wuchereria bancrofti (4fyu) (and all known tryparedoxins (Lm, Tb, Cf) are members of this new subgroup.
+T247	sentence 29389 29532	The members fulfill the typical thioredoxin family functions, and just like Txn, Plrx is able to provide electrons to ribonucleotide reductase.
+T248	sentence 29556 29678	The surface of Plrx is mainly neutral or positively charged, in contrast to Trx or Txn with more negatively charged areas.
+T249	sentence 29679 29826	Therefore, we expect either different redox partners for Plrx than for Trx or Txn, or the partners have adjusted their surface charges accordingly.
+T250	sentence 29827 29940	Moreover, we were able to show that Plrx is able to form dimers, depending on the redox level of the environment.
+T251	sentence 29941 30118	We suppose that the dimers are inactive because the interface residues, comprising the redox active cysteine, are presumably necessary for complex formation with redox partners.
+T252	sentence 30119 30273	We do not know whether the dimer has a regulative function, but we suppose that the residues located at the dimer interface interact with target proteins.
+T253	sentence 30274 30380	Moreover, these interface residues correspond to the interface residues of the h and PfTrxR-Trx complexes.
+T254	sentence 30381 30522	In particular, we demonstrated that the dimeric interface residues of Plrx are most likely involved in complex formation with redox partners.
+T255	sentence 30523 30681	Notably, five positively charged amino acids contribute to the dimer interface in Plrx and are suitable for interacting with the cell membrane or plasminogen.
+T256	sentence 30682 30777	This would demonstrate new putative redox functions in a member of the thioredoxin superfamily.
+T257	sentence 30778 30956	However, it would be very interesting to combine site-directed mutagenesis of the active-site cysteines with further biochemical analyses to study dimer formation in more detail.
+T258	sentence 30957 31191	Since the surface charge of plasmoredoxin differs largely from other members of the thioredoxin superfamily (LmTxn, hTrx, PfTrx), this initial 3-D structure might serve for designing specific redox modulatory compounds for Plasmodium.
+T259	sentence 31192 31199	Methods
+T260	sentence 31200 31219	Protein preparation
+T261	sentence 31220 31260	Plrx cloning has already been described.
+T262	sentence 31261 31372	For protein production, Qiagen's expression system consisting of a pQE30 vector and M15 E. coli cells was used.
+T263	sentence 31373 31520	After inoculation with a 50 ​ml starter culture, cells were grown in 1 ​L of LB medium containing 50 ​μg/ml kanamycin for 4 ​h at room temperature.
+T264	sentence 31521 31577	Ni-NTA-based affinity chromatography was used to purify.
+T265	sentence 31578 31651	The purification buffer consisted of 300 ​mM NaCl and 50 ​mM Tris pH 8.0.
+T266	sentence 31652 31733	To prevent protein dimers from forming, 1 ​mM TCEP had to be added to the eluate.
+T267	sentence 31734 31900	Size exclusion chromatography (SEC) further increased purity and assured conformational homogeneity of Plrx (column: HiLoad 16/60 Superdex 200, flow rate: 1 ​ml/min).
+T268	sentence 31901 32107	Protein fractions with approximately 99% purity, as judged via SDS-PAGE, were again supplemented with 1 ​mM TCEP, pooled, and concentrated using Vivaspin 20 centrifugal concentrators with a 10,000 ​Da MWCO.
+T269	sentence 32140 32188	Crystallization, data collection, and processing
+T270	sentence 32189 32298	We obtained monoclinic (space group P21) and hexagonal crystals (space group P61) of Plrx from P. falciparum.
+T271	sentence 32299 32374	The hexagonal crystals were grown at 25 ​C with the hanging drop technique.
+T272	sentence 32375 32506	The protein was concentrated to 15 ​mg/ml and stored in a buffer of 0.05 ​M sodium phosphate (pH 8.0), 300 ​mM NaCl, and 2 ​mM DDT.
+T273	sentence 32507 32626	We mixed 2 ​μl of protein buffer solution, 2 ​μl of 1.6 ​M ammonium sulfate (AS) and 1 ​μl of 1 ​M glycine in the drop.
+T274	sentence 32627 32778	The first crystals were found one year later and were soaked in a cryo buffer with 30% glycerol, 2.8 ​M AS, and 0.5 ​M glycine before the measurements.
+T275	sentence 32779 32860	The monoclinic crystals were produced using a Honeybee 961 crystallization robot.
+T276	sentence 32861 33073	Plrx was concentrated to 30 and 40 ​mg/ml (buffer: 50 ​mM Tris (pH 8.0, HCl), 300 ​mM NaCl, 1 ​mM TCEP), and 200 ​nl of the protein solution was mixed with 200 ​nl of precipitant solution in a sitting drop setup.
+T277	sentence 33074 33192	Useable crystals grew from screen JCSG II (Qiagen), well D6 (0.1 ​M sodium citrate pH 5.5, 40% PEG 600) within 5 days.
+T278	sentence 33193 33313	Further crystals were grown via grid screening around the initial conditions (32–46% PEG 600, sodium citrate pH 4.5–6.0,
+T279	sentence 33314 33343	with 0.05, 0.1, and 0.15 ​M).
+T280	sentence 33344 33434	Several of those conditions yielded diffraction quality crystals with similar resolutions.
+T281	sentence 33503 33712	Diffraction data of the monoclinic crystals were collected at the X10SA beam line of the Swiss Light Source in Villigen, Switzerland; the hexagonal crystals were collected in 2003 ​at beam line ID14-4 of ESRF.
+T282	sentence 33713 33778	Diffraction data were collected at 100 ​K and processed with XDS.
+T283	sentence 33779 33892	Both crystal types, monoclinic (space group P21) and hexagonal (space group P61), diffracted to 1.6 ​Å (Table 1).
+T284	sentence 33893 34013	The asymmetric unit of the monoclinic and hexagonal crystal types contained four and one monomers of Plrx, respectively.
+T285	sentence 34014 34108	During refinement, 5% of all reflections were omitted and used for calculating an Rfree value.
+T286	sentence 34120 34143	Structure determination
+T287	sentence 34144 34308	Attempts to solving the hexagonal structure via the automatic molecular replacement method, using all hits found with NCBI Blast as start models, were unsuccessful.
+T288	sentence 34309 34400	An initial partial solution was revealed with an automatically modified WbTrx model (4fyu).
+T289	sentence 34401 34511	This solution contained several fragments; overall, only 100 amino acids of 179 Plrx residues could be placed.
+T290	sentence 34512 34611	Refinement of this poor model resulted in an Rfree of 48% with an uninterpretable electron density.
+T291	sentence 34612 34662	We soaked the monoclinic crystals with thiomersal.
+T292	sentence 34663 34732	The resulting dataset and the native dataset were merged with XSCALE.
+T293	sentence 34733 35027	The mean anomalous difference in units of its estimated standard deviation (|F(+)-F(−)|/Sigma) was 2.5 or 1.5 and the anomalous correlation (=percentage of correlation between random half-sets of anomalous intensity differences) was 84 or 51 ​at a resolution of 6.2 ​Å and 3.1 ​Å, respectively.
+T294	sentence 35028 35302	Using AutoSol with the monoclinic native data, the anomalous scattering information of the thiomersal dataset (sad peak, sites) and the partial solution of the hexagonal dataset as input files, produced another partial solution (ca. 100 aa) with 11 fragments and 152 waters.
+T295	sentence 35303 35361	The figure of merit (FOM) value of this solution was 0.54.
+T296	sentence 35362 35538	Although some amino acid fragments were wrongly assigned to the electron density, the reasonable electron density could be used for manual rebuilding and subsequent refinement.
+T297	sentence 35539 35677	In the first refinement with the corrected structural model and the high-resolution data set, the Rfree value dropped from 44.7% to 24.4%.
+T298	sentence 35678 35737	After several cycles, we revealed a complete model of Plrx.
+T299	sentence 35738 35801	Data collection and refinement statistics are shown in Table 1.
+T300	sentence 35816 35896	The PHENIX program suite served for reflection phasing and structure refinement.
+T301	sentence 35897 35963	The interactive graphics program Coot was used for model building.
+T302	sentence 35964 36011	The sequences were aligned using Clustal Omega.
+T303	sentence 36012 36116	The structures were superimposed using the SSM algorithm tool, implemented in the Coot graphics package.
+T304	sentence 36117 36194	The SSM tool is a structural alignment based on secondary structure matching.
+T305	sentence 36195 36266	Molecular graphics images were produced using the UCSF Chimera package.
+T306	sentence 36267 36284	Accession numbers
+T307	sentence 36285 36374	Coordinates and measured reflection amplitudes have been deposited in the Brookhaven PDB.
+T308	sentence 36375 36439	PDB ID: 7AOJ (hexagonal form) and PDB ID:7AOO (monoclinic form).
+T309	sentence 36440 36460	Conflict of interest
+T310	sentence 36461 36505	The authors declare no conflict of interest.
+T311	sentence 36506 36526	Author contributions
+T312	sentence 36527 36671	KFW solved the X-ray structure, analyzed data, and wrote the manuscript, JB crystallized the enzyme and carried out the oligomerization studies.
+T313	sentence 36672 36797	SR and KB monitored the biochemical experiments, KB contributed to writing the manuscript and was the principal investigator.
+T314	sentence 36798 36882	All authors have critically discussed the results and carefully read the manuscript.
+T315	sentence 36883 36916	Declaration of competing interest
+T316	sentence 36917 36960	The authors declare no competing interests.
+T317	sentence 36961 36971	References
+T318	sentence 36972 37053	PHENIX: a comprehensive Python-based system for macromolecular structure solution
+T319	sentence 37054 37143	The high resolution crystal structure of recombinant Crithidia fasciculata tryparedoxin-I
+T320	sentence 37144 37208	Physiological functions of thioredoxin and thioredoxin reductase
+T321	sentence 37209 37303	An atlas of the thioredoxin fold class reveals the complexity of function-enabling adaptations
+T322	sentence 37304 37377	Plasmoredoxin, a novel redox-active protein unique for malarial parasites
+T323	sentence 37378 37481	Structural and biochemical characterization of a mitochondrial peroxiredoxin from Plasmodium falciparum
+T324	sentence 37482 37607	Depletion of Plasmodium berghei plasmoredoxin reveals a non-essential role for life cycle progression of the malaria parasite
+T325	sentence 37608 37657	Is dimerization a common feature in thioredoxins?
+T326	sentence 37658 37707	The case of thioredoxin from Litopenaeus vannamei
+T327	sentence 37708 37767	Similarities and differences in the thioredoxin superfamily
+T328	sentence 37768 37820	Protein folding coupled to disulphide bond formation
+T329	sentence 37821 37896	Structural and functional relations among thioredoxins of different species
+T330	sentence 37897 37946	Coot: model-building tools for molecular graphics
+T331	sentence 37947 37979	Features and development of Coot
+T332	sentence 37980 38125	The crystal structures of the tryparedoxin-tryparedoxin peroxidase couple unveil the structural determinants of Leishmania detoxification pathway
+T333	sentence 38126 38198	Crystal structure of the human thioredoxin reductase-thioredoxin complex
+T334	sentence 38199 38287	Crystal structure of the Plasmodium falciparum thioredoxin reductase-thioredoxin complex
+T335	sentence 38288 38329	DALI and the persistence of protein shape
+T336	sentence 38330 38390	Antioxidant function of thioredoxin and glutaredoxin systems
+T337	sentence 38391 38473	Three-dimensional structure of Escherichia coli thioredoxin-S2 to 2.8 A resolution
+T338	sentence 38474 38583	Structure is three to ten times more conserved than sequence--a study of structural response in protein cores
+T339	sentence 38584 38644	Thioredoxin and glutathione systems in Plasmodium falciparum
+T340	sentence 38645 38709	Integration, scaling, space-group assignment and post-refinement
+T341	sentence 38710 38865	Differential reactivity of the functional sulfhydryl groups of cysteine-32 and cysteine-35 present in the reduced form of thioredoxin from Escherichia coli
+T342	sentence 38866 38942	Crystal structure of thioredoxin from Escherichia coli at 1.68 Å resolution 
+T343	sentence 38943 39019	The parasite-specific trypanothione metabolism of trypanosoma and leishmania
+T344	sentence 39020 39123	Secondary-structure matching (SSM), a new tool for fast protein structure alignment in three dimensions
+T345	sentence 39124 39207	Trypanosoma brucei tryparedoxin, a thioredoxin-like protein in African trypanosomes
+T346	sentence 39208 39245	Thioredoxin —a fold for all reasons  
+T347	sentence 39246 39384	Crystal structure of the wild-type and D30A mutant thioredoxin h of Chlamydomonas reinhardtii and implications for the catalytic mechanism
+T348	sentence 39385 39470	Plasmodium falciparum 2-Cys peroxiredoxin reacts with plasmoredoxin and peroxynitrite
+T349	sentence 39471 39538	Thioredoxin networks in the malarial parasite Plasmodium falciparum
+T350	sentence 39539 39685	Identification of thioredoxin-binding protein-2/vitamin D(3) up-regulated protein 1 as a negative regulator of thioredoxin function and expression
+T351	sentence 39686 39760	UCSF Chimera--a visualization system for exploratory research and analysis
+T352	sentence 39761 39828	The thioredoxin system of Plasmodium falciparum and other parasites
+T353	sentence 39829 39962	Mutagenesis of structural half-cystine residues in human thioredoxin and effects on the regulation of activity by selenodiglutathione
+T354	sentence 39963 40052	Mammalian thioredoxin is a direct inhibitor of apoptosis signal-regulating kinase (ASK) 1
+T355	sentence 40053 40151	Fast, scalable generation of high-quality protein multiple sequence alignments using Clustal Omega
+T356	sentence 40152 40237	Crystal structures of oxidized and reduced forms of human mitochondrial thioredoxin 2
+T357	sentence 40238 40307	Thioredoxin-dependent redox regulation of p53-mediated p21 activation
+T358	sentence 40308 40395	Inhibitor-induced dimerization of an essential oxidoreductase from African trypanosomes
+T359	sentence 40396 40505	Crystal structures of reduced, oxidized, and mutated human thioredoxins: evidence for a regulatory homodimer 
+T360	sentence 40506 40626	Atomic resolution crystal structure of glutaredoxin 1 from Plasmodium falciparum and comparison with other glutaredoxins
+
+

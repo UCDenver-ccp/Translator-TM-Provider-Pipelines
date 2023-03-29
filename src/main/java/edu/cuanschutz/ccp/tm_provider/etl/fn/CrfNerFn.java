@@ -115,6 +115,41 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 		// add doc id
 		String withDocId = addLeadingColumn(sentenceAnnotsInBioNLP, docId);
+
+		// there are cases where there are blank lines in the text (usually near/in a
+		// table in the text). These cause IndexOutOfBoundsExceptions because there is
+		// no sentence text. In these cases we will add a tab so that an empty
+		// placeholder for the sentence text will exist.
+//		StringBuilder sb = new StringBuilder();
+//		for (String line : withDocId.split("\\n")) {
+//			String[] cols = line.split("\\t");
+//			// a properly formatted line will have 4 tab-separated columns
+//			if (cols.length == 3) {
+//				line = line + "\t";
+//			}
+//			sb.append(line + "\n");
+//		}
+//		
+//		withDocId = sb.toString();
+
+		// debugging index OOB exception
+		for (String line : withDocId.split("\\n")) {
+			try {
+				String[] cols = line.split("\\t",-1);
+				String documentId = cols[0];
+				String annotId = cols[1];
+				String coveredText = cols[3];
+
+				String[] typeSpan = cols[2].split(" ");
+				String type = typeSpan[0];
+				int spanStart = Integer.parseInt(typeSpan[1]);
+				int spanEnd = Integer.parseInt(typeSpan[2]);
+			} catch (IndexOutOfBoundsException e) {
+				throw new IllegalStateException("IOB Exception detected on sentence line: " + line.replaceAll("\\t", " [TAB] "), e);
+			}
+		}
+		// end debugging
+
 		String targetUri = String.format("%s/crf", crfServiceUri);
 
 		return new HttpPostUtil(targetUri).submit(withDocId);

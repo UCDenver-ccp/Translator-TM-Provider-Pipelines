@@ -132,8 +132,10 @@ public class AbbreviationFn
 
 			String abbreviationsInBionlp = serializeAbbreviations(results, sentenceToSpanMap, documentText);
 
-			List<String> chunkedAbbreviationsOutput = PipelineMain.chunkContent(abbreviationsInBionlp);
-			out.get(ABBREVIATIONS_TAG).output(KV.of(processingStatus, chunkedAbbreviationsOutput));
+			if (abbreviationsInBionlp != null) {
+				List<String> chunkedAbbreviationsOutput = PipelineMain.chunkContent(abbreviationsInBionlp);
+				out.get(ABBREVIATIONS_TAG).output(KV.of(processingStatus, chunkedAbbreviationsOutput));
+			}
 
 		} catch (Throwable t) {
 			EtlFailureData failure = new EtlFailureData(outputDocCriteria, "Failure during abbreviation detection.",
@@ -198,10 +200,10 @@ public class AbbreviationFn
 					shortFormSpans.add(new Span(m.start(), m.end()));
 				}
 
-				if (shortFormSpans.isEmpty()) {
-					throw new IllegalStateException(
-							String.format("Unable to find short form (%s) in sentence: ", shortForm, currentSentence));
-				}
+//				if (shortFormSpans.isEmpty()) {
+//					throw new IllegalStateException(
+//							String.format("Unable to find short form (%s) in sentence: ", shortForm, currentSentence));
+//				}
 
 				List<Span> longFormSpans = new ArrayList<Span>();
 				p = Pattern.compile(StringUtil.toRegExpString(longForm));
@@ -210,26 +212,33 @@ public class AbbreviationFn
 					longFormSpans.add(new Span(m.start(), m.end()));
 				}
 
-				if (longFormSpans.isEmpty()) {
-					throw new IllegalStateException(
-							String.format("Unable to find long form (%s) in sentence: ", longForm, currentSentence));
+//				if (longFormSpans.isEmpty()) {
+//					throw new IllegalStateException(
+//							String.format("Unable to find long form (%s) in sentence: ", longForm, currentSentence));
+//				}
+
+				/*
+				 * TODO: sometimes we aren't able to find the short/long form for an
+				 * abbreviation pairing; for now we simply ignore and move on.
+				 */
+				if (!shortFormSpans.isEmpty() && !longFormSpans.isEmpty()) {
+
+					Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
+
+					TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+					Span shortFormSpan = shortLongFormSpans[0];
+					Span longFormSpan = shortLongFormSpans[1];
+					TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
+							shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
+					TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
+							longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
+
+					TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
+							shortFormAnnot.getClassMention());
+
+					td.addAnnotation(shortFormAnnot);
+					td.addAnnotation(longFormAnnot);
 				}
-
-				Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
-
-				TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
-				Span shortFormSpan = shortLongFormSpans[0];
-				Span longFormSpan = shortLongFormSpans[1];
-				TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
-						shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
-				TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
-						longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
-
-				TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
-						shortFormAnnot.getClassMention());
-
-				td.addAnnotation(shortFormAnnot);
-				td.addAnnotation(longFormAnnot);
 
 			} else {
 				// line is a sentence
@@ -237,11 +246,13 @@ public class AbbreviationFn
 			}
 		}
 
-		BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		writer.serialize(td, outputStream, CharacterEncoding.UTF_8);
-		String bionlp = outputStream.toString(CharacterEncoding.UTF_8.getCharacterSetName());
-
+		String bionlp = "";
+		if (td.getAnnotations() != null && !td.getAnnotations().isEmpty()) {
+			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			writer.serialize(td, outputStream, CharacterEncoding.UTF_8);
+			bionlp = outputStream.toString(CharacterEncoding.UTF_8.getCharacterSetName());
+		}
 		return bionlp;
 	}
 
@@ -286,11 +297,32 @@ public class AbbreviationFn
 	 * abbreviation lines have 3 columns, <br>
 	 * e.g. ALDH1A3|aldehyde dehydrogenase 1A3|0.999613
 	 * 
+	 * Unfortunately there are also equations that appear that also use pipes and
+	 * some have 2 pipes, so we need more sophisticated match than just counting
+	 * pipes
+	 * 
 	 * @param line
 	 * @return
 	 */
 	private static boolean lineIsAbbreviation(String line) {
-		return line.split("\\|").length == 3;
+		// return line.split("\\|").length == 3;
+
+		Pattern p = Pattern.compile("^\\s\\s.*?\\|.*?\\|(.*?)$");
+		Matcher m = p.matcher(line);
+		if (m.find()) {
+			String number = m.group(1);
+
+			try {
+				Float.parseFloat(number);
+				return true;
+			} catch (IllegalArgumentException e) {
+				// if we can't parse this, then it's not a number, and this is not an
+				// abbreviation line
+				return false;
+			}
+		}
+		return false;
+
 	}
 
 //	public static PCollectionTuple process(

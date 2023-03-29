@@ -30,6 +30,7 @@ import com.google.datastore.v1.Entity;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -61,6 +62,11 @@ public class MedlineXmlToTextPipeline {
 
 		void setMedlineXmlDir(String value);
 
+		@Description("path to a file containing PMIDs to skip during the load")
+		String getPmidSkipFilePath();
+
+		void setPmidSkipFilePath(String path);
+
 		@Description("The name of the document collection to process")
 		String getCollection();
 
@@ -79,25 +85,33 @@ public class MedlineXmlToTextPipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
+		// if there is a value for getPmidSkipFilePath, then use that file as the source
+		// of document IDs to skip when loading Medline records, otherwise, query the
+		// Datastore for existing document IDs and skip any existing document ID, unless
+		// overwrite = YES.
+		final PCollectionView<Set<String>> docIdsToSkipSetView = (!options.getPmidSkipFilePath().equals("null"))
+				? PCollectionUtil.loadSetAsMapFromFile("pmids-to-skip", p, options.getPmidSkipFilePath(),
+						Compression.GZIP)
+				: PipelineMain.catalogExistingDocuments(options.getProject(), options.getCollection(),
+						options.getOverwrite(), p);
+
 		// https://beam.apache.org/releases/javadoc/2.3.0/org/apache/beam/sdk/io/FileIO.html
 		String medlineXmlFilePattern = options.getMedlineXmlDir() + "/*.xml.gz";
-		PCollection<ReadableFile> files = p.apply("get XML files to load",FileIO.match().filepattern(medlineXmlFilePattern))
+		PCollection<ReadableFile> files = p
+				.apply("get XML files to load", FileIO.match().filepattern(medlineXmlFilePattern))
 				.apply(FileIO.readMatches().withCompression(Compression.GZIP));
 
-		PCollection<PubmedArticle> pubmedArticles = files
-				.apply("XML --> PubmedArticle",XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet")
-						.withRecordElement("PubmedArticle").withRecordClass(PubmedArticle.class));
+		PCollection<PubmedArticle> pubmedArticles = files.apply("XML --> PubmedArticle",
+				XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet").withRecordElement("PubmedArticle")
+						.withRecordClass(PubmedArticle.class));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				PIPELINE_KEY, pipelineVersion);
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
 
-		final PCollectionView<Set<String>> docIdsSetView = PipelineMain.catalogExistingDocuments(options.getProject(),
-				options.getCollection(), options.getOverwrite(), p);
-
 		PCollectionTuple output = MedlineXmlToTextFn.process(pubmedArticles, outputTextDocCriteria, timestamp,
-				options.getCollection(), docIdsSetView, options.getOverwrite());
+				options.getCollection(), docIdsToSkipSetView, options.getOverwrite());
 
 		/*
 		 * Processing of the Medline XML documents resulted in at least two, and
@@ -131,9 +145,9 @@ public class MedlineXmlToTextPipeline {
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateEntitiesByKey(statusEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
-		
-		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain.getCollectionMappings(nonredundantStatusEntities)
-				.apply(View.<String, Set<String>>asMap());
+
+		PCollectionView<Map<String, Set<String>>> documentIdToCollections = PipelineMain
+				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
 
 		/*
 		 * store the plain text document content in Cloud Datastore - deduplication is
@@ -169,7 +183,6 @@ public class MedlineXmlToTextPipeline {
 		nonredundantFailureEntities.apply("failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
-		
 		p.run().waitUntilFinish();
 
 	}
@@ -190,37 +203,6 @@ public class MedlineXmlToTextPipeline {
 			}
 		}
 		return null;
-	}
-
-	/** Modeled after code in og.apache.beam.sdk.transforms.CombineTest */
-	public static class UniqueStrings extends Combine.CombineFn<String, Set<String>, Set<String>> {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Set<String> createAccumulator() {
-			return new HashSet<>();
-		}
-
-		@Override
-		public Set<String> addInput(Set<String> accumulator, String input) {
-			accumulator.add(input);
-			return accumulator;
-		}
-
-		@Override
-		public Set<String> mergeAccumulators(Iterable<Set<String>> accumulators) {
-			Set<String> all = new HashSet<>();
-			for (Set<String> part : accumulators) {
-				all.addAll(part);
-			}
-			return all;
-		}
-
-		@Override
-		public Set<String> extractOutput(Set<String> accumulator) {
-			return accumulator;
-		}
 	}
 
 }
