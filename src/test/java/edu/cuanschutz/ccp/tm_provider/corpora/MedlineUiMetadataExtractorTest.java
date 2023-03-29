@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.corpora;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -90,6 +91,15 @@ public class MedlineUiMetadataExtractorTest {
 			System.out.println(content);
 		}
 
+	}
+
+	@Test
+	public void testGetMonth() {
+		String month = MedlineUiMetadataExtractor.getMonth("1998 Dec-1999 Jan");
+		assertEquals("12", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2015 Nov-Dec");
+		assertEquals("11", month);
 	}
 
 }
