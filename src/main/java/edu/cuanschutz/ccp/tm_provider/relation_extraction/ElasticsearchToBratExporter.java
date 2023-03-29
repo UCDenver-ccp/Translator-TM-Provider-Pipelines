@@ -72,12 +72,12 @@ public class ElasticsearchToBratExporter {
 	 */
 	private static final int SEARCH_BATCH_SIZE = 10000;
 
-	protected static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic_boolean_query_template.json";
-	private static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER = "MATCH_PLACEHOLDER";
+	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic_boolean_query_template.json";
+	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER = "MATCH_PLACEHOLDER";
 
-	protected static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic_annotatedtext_match_template.json";
-	private static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER = "QUERY_PLACEHOLDER";
-	private static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
+	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic_annotatedtext_match_template.json";
+	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER = "QUERY_PLACEHOLDER";
+	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
 
 	// @formatter:off
 	public static Set<String> IDENTIFIERS_TO_EXCLUDE = CollectionsUtil.createSet(
@@ -445,7 +445,10 @@ public class ElasticsearchToBratExporter {
 		// we'll sort the list so that we can add -1's to the randomIndexesList in order
 		// to ensure all of the -1's appear within the batch size.
 		Collections.sort(redundantIndexesList);
+		System.out.println(redundantIndexesList);
+		System.out.println("batch size: " + batchSize);
 		for (Integer index : redundantIndexesList) {
+			System.out.println("adding -1 at position " + index);
 			randomIndexesList.add(index, -1);
 		}
 
@@ -463,6 +466,8 @@ public class ElasticsearchToBratExporter {
 					String.format("Observed %d index placeholders for redundant sentences but expected %d.",
 							minusOneCount, redundantSentencesToIncludeCount));
 		}
+
+		System.out.println("Random index list: " + randomIndexesList.toString());
 
 		return randomIndexesList;
 	}
@@ -741,7 +746,7 @@ public class ElasticsearchToBratExporter {
 	 * @return
 	 */
 	@VisibleForTesting
-	protected static TextDocument deserializeAnnotatedText(String annotatedText, Set<String> ontologyPrefixes,
+	public static TextDocument deserializeAnnotatedText(String annotatedText, Set<String> ontologyPrefixes,
 			Map<String, Set<String>> ontologyPrefixToAllowableConceptIds) {
 
 		String decodedAnnotatedText = decode(annotatedText);
@@ -772,12 +777,18 @@ public class ElasticsearchToBratExporter {
 						if (ontologyPrefixes.contains(ontologyPrefix)) {
 							String id = conceptId.replace("_", ":");
 
+							// if there are no entries in the map, then no filtering will be done based on
+							// the map
 							if (ontologyPrefixToAllowableConceptIds == null
+									// if there are entries in the map, do the entries apply to the current ontology
+									// prefix? If not, then no filtering is done based on the map
+									|| (ontologyPrefixToAllowableConceptIds != null
+											&& !ontologyPrefixToAllowableConceptIds.containsKey(ontologyPrefix))
+									// if there are entries in the map, and the map contains the ontology prefix,
+									// and the concept id list contains the concept id then continue.
 									|| (ontologyPrefixToAllowableConceptIds != null
 											&& ontologyPrefixToAllowableConceptIds.containsKey(ontologyPrefix)
-											&& ontologyPrefixToAllowableConceptIds.get(ontologyPrefix).contains(id))
-									|| (ontologyPrefixToAllowableConceptIds != null
-											&& !ontologyPrefixToAllowableConceptIds.containsKey(ontologyPrefix))) {
+											&& ontologyPrefixToAllowableConceptIds.get(ontologyPrefix).contains(id))) {
 								TextAnnotation annotation = factory.createAnnotation(spanStart, spanEnd, coveredText,
 										id);
 								annots.add(annotation);

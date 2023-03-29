@@ -8,6 +8,7 @@ FROM amazoncorretto:8
 RUN yum -y install maven wget vim less git tar procps && yum -y clean all && rm -rf /var/cache
 
 COPY entrypoint.sh tm-pipelines-bundled-0.1.0.jar /home/code/
+COPY gobp.ids gocc.ids concept_idf.csv.gz /home/data/
 
 RUN mkdir /home/input
 

@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.relation_extraction.annot_batch_cli;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn.computeSentenceIdentifier;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,11 +14,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
+import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkClass;
 import edu.cuanschutz.ccp.tm_provider.relation_extraction.ElasticsearchToBratExporter;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.file.FileUtil;
+import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
@@ -76,6 +82,26 @@ public class BatchCreateCommand implements Runnable {
 					+ "then a batch name of 'batch_n', where n is an integer, will be used.")
 	private String batchId;
 
+	@Option(names = { "-s",
+			"--subject-idf-threshold" }, required = false, defaultValue = "-1.0", description = "Inverse document frequency threshold for including a subject concept in a sentence to be annotated.")
+	private float subjectIdfThreshold;
+
+	@Option(names = { "-o",
+			"--object-idf-threshold" }, required = false, defaultValue = "-1.0", description = "Inverse document frequency threshold for including an object concept in a sentence to be annotated.")
+	private float objectIdfThreshold;
+
+	@Option(names = { "-z",
+			"--go-bp-ids-file" }, required = true, description = "Precomputed file containing GO identifiers for biological process concepts.")
+	private File goBpIdsFile;
+
+	@Option(names = { "-y",
+			"--go-cc-ids-file" }, required = true, description = "Precomputed file containing GO identifiers for cellular component concepts.")
+	private File goCcIdsFile;
+
+	@Option(names = { "-f",
+			"--concept-idf-file" }, required = true, description = "File with IDF values for all concepts.")
+	private File conceptIdfFile;
+
 	@Override
 	public void run() {
 		createBatch();
@@ -91,9 +117,6 @@ public class BatchCreateCommand implements Runnable {
 		String batchIdentifier = getBatchId(batchId, annotatorDir);
 
 		File batchDir = getBatchDirectory(annotatorDir, batchIdentifier);
-
-//		File redundantBatchDirectory = null;
-//		boolean populateOverlapBatchIdsFile = true;
 
 		System.out.println("Association: " + association.name());
 		System.out.println("Subject class: " + association.getSubjectClass());
@@ -131,8 +154,10 @@ public class BatchCreateCommand implements Runnable {
 			 */
 			int maxReturned = 49999;
 
+			System.out.println("Loading filter map...");
+			Map<String, Set<String>> ontologyPrefixToAllowableConceptIds = loadOntologyPrefixToAllowableConceptIdsMap(
+					association);
 			System.out.println("Searching Elastic...");
-			Map<String, Set<String>> ontologyPrefixToAllowableConceptIds = null;
 			Set<TextDocument> searchResults = ElasticsearchToBratExporter.search(elasticUrl, elasticPort, elasticApiKey,
 					elasticIndexName, maxReturned, ontologyPrefixes, ontologyPrefixToAllowableConceptIds, association,
 					ElasticsearchToBratExporter.IDENTIFIERS_TO_EXCLUDE, alreadyInUseSentenceIds);
@@ -146,6 +171,170 @@ public class BatchCreateCommand implements Runnable {
 			System.exit(-1);
 		}
 
+	}
+
+	/**
+	 * Creates a mapping from ontology prefix to ontology ids. If there is an entry
+	 * for an ontology prefix in this map when it is used downstream, then it is
+	 * used to filter the concept ids that are used. Only concept Ids present in
+	 * this map will be used for a given ontology prefix. The map is loaded based on
+	 * the subject and object classes, as well as the IDF threshold that has been
+	 * specified. If an IDF threshold is < 0 then no filtering based on IDF is done.
+	 * 
+	 * @param association
+	 * @return
+	 * @throws IOException
+	 */
+	private Map<String, Set<String>> loadOntologyPrefixToAllowableConceptIdsMap(BiolinkAssociation association)
+			throws IOException {
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+
+		
+		// if the subject/object is a pairing of GO_BP and GO_CC, we cannot distinguish
+		// between the two in the search, so more development would be needed.
+		BiolinkClass subjectClass = association.getSubjectClass();
+		BiolinkClass objectClass = association.getObjectClass();
+		if (subjectClass == BiolinkClass.CELLULAR_COMPONENT && objectClass == BiolinkClass.BIOLOGICAL_PROCESS
+				|| subjectClass == BiolinkClass.BIOLOGICAL_PROCESS && objectClass == BiolinkClass.CELLULAR_COMPONENT) {
+			throw new IllegalArgumentException("Cannot handle GO_BP + GO_CC pairing. Further development needed.");
+		}
+		System.out.println("Preparing to filter by concept identifiers. Subject class: " + subjectClass.name()
+				+ " Object class: " + objectClass.name());
+
+		// if the subject IDF threshold is > 0 then find the ontology prefixes for the
+		// subject class and grab classes from the concept IDF file. If the subject IDF
+		// threshold is -1, then we don't need to do anything for the subject class.
+		// if the subject class is GO_CC or GO_BP, then we need to first load the
+		// namespace-specific class lists
+		Set<String> subjInputClassIds = getInputClassIds(subjectClass);
+		addConceptIdsAboveIdfThreshold(map, subjectIdfThreshold, subjectClass.getOntologyPrefixes(), subjInputClassIds,
+				conceptIdfFile);
+
+		// if the object class is GO_CC or GO_BP, then we need to first load the
+		// namespace-specific class lists
+		Set<String> objInputClassIds = getInputClassIds(objectClass);
+		addConceptIdsAboveIdfThreshold(map, objectIdfThreshold, objectClass.getOntologyPrefixes(), objInputClassIds,
+				conceptIdfFile);
+
+		System.out.println("******************** Filter map keys: " + map.keySet().toString());
+		
+		return map;
+	}
+
+	/**
+	 * Returns a map from concept prefix to ids. If the inputClassIds set is
+	 * populated, then we only consider concepts from that id set. If an IDF
+	 * threshold is also set, then we will threshold that input set of classes and
+	 * add them to the map if they pass the idf threshold. Otherwise, the ontology
+	 * prefixes set needs to be populated, and we grab all classes from the idf file
+	 * that pass the idf threshold and have one of the requested ontology prefixes.
+	 * If the IDF threshold is < 0 and the ontologyprefixes are set, we won't be
+	 * filtering based on IDF so we don't need to do anything.
+	 * 
+	 * @param map
+	 * @param idfThreshold
+	 * @param ontologyPrefixes
+	 * @param inputClassIds
+	 * @param conceptIdfFile
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	protected static void addConceptIdsAboveIdfThreshold(Map<String, Set<String>> map, float idfThreshold,
+			Set<String> ontologyPrefixes, Set<String> inputClassIds, File conceptIdfFile)
+			throws FileNotFoundException, IOException {
+
+		// if the IDF threshold is < 0 then that is an indication that there should be
+		// no filtering based on IDF
+		if (inputClassIds != null && !inputClassIds.isEmpty()) {
+			populatePrefixToIdMapBasedOnClassListAndIdf(map, idfThreshold, inputClassIds, conceptIdfFile);
+		} else {
+			// there are no inputClassIds, so return all classes with the specified ontology
+			// prefixes that meet the IDF threshold
+			if (idfThreshold > 0) {
+				populatePrefixToIdMapBasedOnOntPrefixAndIdf(map, idfThreshold, ontologyPrefixes, conceptIdfFile);
+			}
+		}
+	}
+
+	/**
+	 * populates the input map with prefix -to- concept ID mappings by returning all
+	 * concepts in the conceptIdfFile that have one of the specified prefixes and
+	 * also pass the IDF threshold
+	 * 
+	 * @param map
+	 * @param idfThreshold
+	 * @param ontologyPrefixes
+	 * @param conceptIdfFile
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	protected static void populatePrefixToIdMapBasedOnOntPrefixAndIdf(Map<String, Set<String>> map, float idfThreshold,
+			Set<String> ontologyPrefixes, File conceptIdfFile) throws IOException, FileNotFoundException {
+		for (StreamLineIterator lineIter = new StreamLineIterator(
+				new GZIPInputStream(new FileInputStream(conceptIdfFile)), CharacterEncoding.UTF_8, null); lineIter
+						.hasNext();) {
+			String line = lineIter.next().getText().replaceAll("\"", "");
+			String[] cols = line.split(",");
+			String id = cols[0];
+			String prefix = getPrefix(id);
+			if (ontologyPrefixes.contains(prefix)) {
+				String level = cols[1];
+				float idf = Float.parseFloat(cols[2]);
+
+				if (idf > idfThreshold && level.equals("document")) {
+					CollectionsUtil.addToOne2ManyUniqueMap(prefix, id, map);
+				}
+			}
+		}
+	}
+
+	/**
+	 * populates the input map with prefix -to- concept ID mappings by returning all
+	 * concepts in input class ids set that also pass the IDF threshold
+	 * 
+	 * @param map
+	 * @param idfThreshold
+	 * @param inputClassIds
+	 * @param conceptIdfFile
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	protected static void populatePrefixToIdMapBasedOnClassListAndIdf(Map<String, Set<String>> map, float idfThreshold,
+			Set<String> inputClassIds, File conceptIdfFile) throws IOException, FileNotFoundException {
+		for (StreamLineIterator lineIter = new StreamLineIterator(
+				new GZIPInputStream(new FileInputStream(conceptIdfFile)), CharacterEncoding.UTF_8, null); lineIter
+						.hasNext();) {
+			String line = lineIter.next().getText().replaceAll("\"", "");
+			String[] cols = line.split(",");
+			String id = cols[0];
+			if (inputClassIds.contains(id)) {
+				String level = cols[1];
+				float idf = Float.parseFloat(cols[2]);
+				// if IDF threshold < 0 then we add to the map regardless
+				if (idfThreshold < 0 || (idf > idfThreshold && level.equals("document"))) {
+					String prefix = getPrefix(id);
+					CollectionsUtil.addToOne2ManyUniqueMap(prefix, id, map);
+				}
+			}
+		}
+	}
+
+	protected static String getPrefix(String id) {
+		return id.split(":")[0];
+	}
+
+	private Set<String> getInputClassIds(BiolinkClass cls) throws IOException {
+		System.out.println("=============== Retrieving specified class IDs for " + cls.name());
+		switch (cls) {
+		case BIOLOGICAL_PROCESS:
+			System.out.println("Loading GO BP IDs file...");
+			return new HashSet<String>(FileReaderUtil.loadLinesFromFile(goBpIdsFile, CharacterEncoding.UTF_8));
+		case CELLULAR_COMPONENT:
+			System.out.println("Loading GO CC IDs file...");
+			return new HashSet<String>(FileReaderUtil.loadLinesFromFile(goCcIdsFile, CharacterEncoding.UTF_8));
+		default:
+			return null;
+		}
 	}
 
 	/**
