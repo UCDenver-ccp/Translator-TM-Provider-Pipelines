@@ -609,17 +609,17 @@ public class PipelineMain {
 	 * @return a non-redundant collection of the input entities filtered based on
 	 *         the entity keys (the String in the KV pair)
 	 */
-	public static PCollection<Entity> deduplicateEntitiesByKey(PCollection<KV<String, Entity>> docId2Entity) {
+	public static <T> PCollection<T> deduplicateEntitiesByKey(PCollection<KV<String, T>> docId2Entity) {
 		// remove any duplicates
-		PCollection<KV<String, Iterable<Entity>>> idToEntities = docId2Entity.apply("group-by-key",
-				GroupByKey.<String, Entity>create());
-		PCollection<Entity> nonredundantStatusEntities = idToEntities.apply("dedup-by-key",
-				ParDo.of(new DoFn<KV<String, Iterable<Entity>>, Entity>() {
+		PCollection<KV<String, Iterable<T>>> idToEntities = docId2Entity.apply("group-by-key",
+				GroupByKey.<String, T>create());
+		PCollection<T> nonredundantStatusEntities = idToEntities.apply("dedup-by-key",
+				ParDo.of(new DoFn<KV<String, Iterable<T>>, T>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext c) {
-						Iterable<Entity> entities = c.element().getValue();
+						Iterable<T> entities = c.element().getValue();
 						// if there are more than one entity, we just return one
 						c.output(entities.iterator().next());
 					}
@@ -646,18 +646,17 @@ public class PipelineMain {
 		return nonredundantStatusEntities;
 	}
 
-	public static PCollection<KV<String, List<String>>> deduplicateDocuments(
-			PCollection<KV<ProcessingStatus, List<String>>> statusEntityToPlainText) {
+	public static <T> PCollection<KV<String, T>> deduplicateDocuments(
+			PCollection<KV<ProcessingStatus, T>> statusEntityToPlainText) {
 
-		PCollection<KV<String, List<String>>> docIdToContent = statusEntityToPlainText.apply(
-				"status_entity-->document_id",
-				ParDo.of(new DoFn<KV<ProcessingStatus, List<String>>, KV<String, List<String>>>() {
+		PCollection<KV<String, T>> docIdToContent = statusEntityToPlainText.apply("status_entity-->document_id",
+				ParDo.of(new DoFn<KV<ProcessingStatus, T>, KV<String, T>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext c) {
 						ProcessingStatus statusEntity = c.element().getKey();
-						List<String> content = c.element().getValue();
+						T content = c.element().getValue();
 						String documentId = statusEntity.getDocumentId();
 						c.output(KV.of(documentId, content));
 					}
@@ -672,18 +671,18 @@ public class PipelineMain {
 	 * @return a non-redundant collection of document-id/document-content pairings
 	 *         filtered using the document-ids (the String in the KV pair)
 	 */
-	public static PCollection<KV<String, List<String>>> deduplicateDocumentsByStringKey(
-			PCollection<KV<String, List<String>>> docIdToPlainText) {
+	public static <T> PCollection<KV<String, T>> deduplicateDocumentsByStringKey(
+			PCollection<KV<String, T>> docIdToPlainText) {
 
-		PCollection<KV<String, Iterable<List<String>>>> idToPlainText = docIdToPlainText.apply("group-by-document-id",
-				GroupByKey.<String, List<String>>create());
-		PCollection<KV<String, List<String>>> nonredundantPlainText = idToPlainText.apply("deduplicate-by-document-id",
-				ParDo.of(new DoFn<KV<String, Iterable<List<String>>>, KV<String, List<String>>>() {
+		PCollection<KV<String, Iterable<T>>> idToPlainText = docIdToPlainText.apply("group-by-document-id",
+				GroupByKey.<String, T>create());
+		PCollection<KV<String, T>> nonredundantPlainText = idToPlainText.apply("deduplicate-by-document-id",
+				ParDo.of(new DoFn<KV<String, Iterable<T>>, KV<String, T>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext c) {
-						Iterable<List<String>> texts = c.element().getValue();
+						Iterable<T> texts = c.element().getValue();
 						String key = c.element().getKey();
 						// if there are more than one entity, we just return one
 						c.output(KV.of(key, texts.iterator().next()));

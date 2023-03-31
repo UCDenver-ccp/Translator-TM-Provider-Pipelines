@@ -271,6 +271,8 @@ public interface DatastoreConstants {
 	 * the given document belongs, e.g. CORD-19
 	 */
 	public static final String STATUS_PROPERTY_COLLECTIONS = "collections";
+	
+	public static final String STATUS_PROPERTY_TEXT_EXTRACTION_DONE = "text_extract";
 
 //	public static final String STATUS_PROPERTY_IN_CORD19_COLLECTION = "in_cord19";
 //	public static final String STATUS_PROPERTY_IN_PMCOA_COLLECTION = "in_pmcoa";

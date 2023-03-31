@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
@@ -46,7 +47,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_EXTRACTION_DONE;
 
 import lombok.Getter;
 
@@ -266,7 +267,8 @@ public enum ProcessingStatusFlag {
 	 */
 	PUBANNOTATION_FILE_EXPORT_DONE(STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE),
 
-	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE);
+	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE),
+	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE);
 
 	@Getter
 	private final String datastoreFlagPropertyName;
