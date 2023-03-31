@@ -190,6 +190,9 @@ public class PipelineMain {
 			case ELASTICSEARCH_LOAD:
 				ElasticsearchLoadPipeline.main(pipelineArgs);
 				break;
+			case TEXT_EXPORT:
+				TextExtractionPipeline.main(pipelineArgs);
+				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
 				break;

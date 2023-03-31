@@ -1,6 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,11 +12,10 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -40,22 +41,23 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
  */
 public class TextExtractionPipeline {
 
-	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXTRACTION;
+	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXPORT;
 
 	public static final String COMMENT_INDICATOR = "###C: ";
 
 	public interface Options extends DataflowPipelineOptions {
-		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
-		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
-		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
+		@Description("This pipeline key will be used to select the input text documents that will be processed")
+		@Required
+		PipelineKey getInputTextPipelineKey();
 
-		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
-				+ "delimited between different document criteria and pipe-delimited within document criteria, "
-				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0")
-		String getInputDocumentCriteria();
+		void setInputTextPipelineKey(PipelineKey value);
 
-		void setInputDocumentCriteria(String docCriteria);
+		@Description("This pipeline version will be used to select the input text documents that will be processed")
+		@Required
+		String getInputTextPipelineVersion();
+
+		void setInputTextPipelineVersion(String value);
 
 		@Description("The document collection to process")
 		String getCollection();
@@ -85,8 +87,9 @@ public class TextExtractionPipeline {
 		// require that the documents have a plain text version
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
-		Set<DocumentCriteria> inputDocCriteria = PipelineMain
-				.compileInputDocumentCriteria(options.getInputDocumentCriteria());
+		Set<DocumentCriteria> inputDocCriteria = new HashSet<DocumentCriteria>(
+				Arrays.asList(new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+						options.getInputTextPipelineKey(), options.getInputTextPipelineVersion())));
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
