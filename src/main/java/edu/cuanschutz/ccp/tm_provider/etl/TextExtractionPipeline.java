@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
@@ -138,8 +139,8 @@ public class TextExtractionPipeline {
 						c.output(element.getValue());
 					}
 				}));
-		nonredundantText.apply("write text",
-				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".txt"));
+		nonredundantText.apply("write text", TextIO.write().to(options.getOutputBucket())
+				.withCompression(Compression.GZIP).withSuffix("." + options.getCollection() + ".txt"));
 
 		p.run().waitUntilFinish();
 	}
