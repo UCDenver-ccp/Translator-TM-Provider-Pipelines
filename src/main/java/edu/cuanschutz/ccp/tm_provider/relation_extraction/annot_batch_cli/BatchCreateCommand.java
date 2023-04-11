@@ -102,6 +102,10 @@ public class BatchCreateCommand implements Runnable {
 			"--concept-idf-file" }, required = true, description = "File with IDF values for all concepts.")
 	private File conceptIdfFile;
 
+	@Option(names = { "-g",
+			"--sentences-per-page" }, required = false, defaultValue = "20", description = "The number of sentences in each BRAT file, i.e., how many will show up on a single page in the BRAT UI")
+	private int sentencesPerPage;
+
 	@Override
 	public void run() {
 		createBatch();
@@ -165,7 +169,7 @@ public class BatchCreateCommand implements Runnable {
 			System.out.println("Search hits returned from Elastic: " + searchResults.size());
 
 			ElasticsearchToBratExporter.createBratFiles(batchDir, association, batchIdentifier, sentenceCount,
-					searchResults, alreadyInUseSentenceIds, redundantSentencesForAnnotation);
+					sentencesPerPage, searchResults, alreadyInUseSentenceIds, redundantSentencesForAnnotation);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);
@@ -189,7 +193,6 @@ public class BatchCreateCommand implements Runnable {
 			throws IOException {
 		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
 
-		
 		// if the subject/object is a pairing of GO_BP and GO_CC, we cannot distinguish
 		// between the two in the search, so more development would be needed.
 		BiolinkClass subjectClass = association.getSubjectClass();
@@ -217,7 +220,7 @@ public class BatchCreateCommand implements Runnable {
 				conceptIdfFile);
 
 		System.out.println("******************** Filter map keys: " + map.keySet().toString());
-		
+
 		return map;
 	}
 
