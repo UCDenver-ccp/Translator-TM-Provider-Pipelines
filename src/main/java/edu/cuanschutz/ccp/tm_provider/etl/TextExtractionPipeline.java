@@ -36,15 +36,21 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 /**
  * Originally written to write text to files to be further processed downstream
  * by the Turku dependency parser. The text of each document is prepended with a
- * comment field "###C: [document ID]" that contains the document ID so that the
- * output of the dependency parser can be segmented into document-specific
- * chunks.
+ * comment field "###C: DOCUMENT_ID\t[document ID]" that contains the document
+ * ID so that the output of the dependency parser can be segmented into
+ * document-specific chunks. The text is also prepended with a comment field
+ * listing the document collections to which the document belongs, e.g. <br>
+ * ###C: DOCUMENT_COLLECTIONS\tcollection1|collection2|collection3
+ *
  */
 public class TextExtractionPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXPORT;
 
 	public static final String COMMENT_INDICATOR = "###C: ";
+	public static final String DOCUMENT_ID_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_ID\t";
+	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_COLLECTIONS\t";
+	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
 
 	public interface Options extends DataflowPipelineOptions {
 

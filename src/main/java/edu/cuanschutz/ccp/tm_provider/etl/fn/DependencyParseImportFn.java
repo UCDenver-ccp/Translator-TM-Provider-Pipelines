@@ -1,10 +1,17 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
+import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -12,24 +19,27 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.tools.ant.util.StringUtils;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.TextExtractionPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.file.conversion.TextDocument;
-import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
+import edu.ucdenver.ccp.common.file.reader.Line;
+import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
+import lombok.Getter;
 
 /**
  * 
  * Consumes Strings which are serialized CONLL-U format of potentially many
- * different documents, outputs distinct chunks for each document in the input
- * as well as sentence annotations in BioNLP format for each document.
+ * different documents, outputs distinct chunks of CONLL-U for each document in
+ * the input.
  * 
  */
 public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String, String>> {
-//	private static final Logger logger = org.apache.log4j.Logger.getLogger(BiocToTextFn.class);
 	private static final long serialVersionUID = 1L;
+
 	/**
 	 * The value in the returned KV pair is a list because it is possible that the
 	 * whole document content string is too large to store in Datastore. The list
@@ -39,94 +49,208 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 	public static TupleTag<KV<String, List<String>>> CONLLU_TAG = new TupleTag<KV<String, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
-	public static TupleTag<KV<String, List<String>>> SENTENCE_TAG = new TupleTag<KV<String, List<String>>>() {
+	public static TupleTag<KV<String, Set<String>>> DOC_ID_TO_COLLECTIONS_TAG = new TupleTag<KV<String, Set<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
-//	@SuppressWarnings("serial")
-//	public static TupleTag<ProcessingStatus> processingStatusTag = new TupleTag<ProcessingStatus>() {
-//	};
 
-	public static PCollectionTuple process(PCollection<KV<String, String>> fileIdToConllu,
-			DocumentCriteria errorDocCriteria, com.google.cloud.Timestamp timestamp) {
+	public static PCollectionTuple process(PCollection<ReadableFile> files, DocumentCriteria errorDocCriteria,
+			com.google.cloud.Timestamp timestamp) {
 
-		return fileIdToConllu.apply("Segment CONLLU into separate docs",
-				ParDo.of(new DoFn<KV<String, String>, KV<String, List<String>>>() {
+		return files.apply("Segment CONLLU into separate docs",
+				ParDo.of(new DoFn<ReadableFile, KV<String, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
 					public void processElement(ProcessContext context) {
 
-						KV<String, String> docIdToConllu = context.element();
-
-						String fileId = docIdToConllu.getKey();
-						String conllu = docIdToConllu.getValue();
+						ReadableFile f = context.element();
+						String filename = f.getMetadata().resourceId().getFilename();
 
 						try {
-							for (BulkConlluIterator bulkConlluIter = new BulkConlluIterator(conllu); bulkConlluIter
-									.hasNext();) {
-								String docId = bulkConlluIter.getNextDocId();
-								String singleConllu = bulkConlluIter.next();
-								String documentText = null;
+							ReadableByteChannel rbc = f.open();
+							try (InputStream stream = Channels.newInputStream(rbc);) {
+								for (BulkConlluIterator bulkConlluIter = new BulkConlluIterator(stream); bulkConlluIter
+										.hasNext();) {
+									String docId = bulkConlluIter.getDocId();
+									Set<String> collections = bulkConlluIter.getCollections();
+									String singleConllu = bulkConlluIter.next();
 
-								String sentenceBionlp = getSentenceBionlp(singleConllu, documentText);
+									List<String> chunkedConllu = PipelineMain.chunkContent(singleConllu);
 
-								List<String> chunkedConllu = PipelineMain.chunkContent(singleConllu);
-								List<String> chunkedSentenceBionlp = PipelineMain.chunkContent(sentenceBionlp);
-
-								context.output(CONLLU_TAG, KV.of(docId, chunkedConllu));
-								context.output(SENTENCE_TAG, KV.of(docId, chunkedSentenceBionlp));
+									context.output(CONLLU_TAG, KV.of(docId, chunkedConllu));
+									context.output(DOC_ID_TO_COLLECTIONS_TAG, KV.of(docId, collections));
+								}
 							}
 
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(errorDocCriteria,
-									"Likely failure during CONLLU parsing.", fileId, t, timestamp);
+									"Likely failure during CONLLU parsing.", filename, t, timestamp);
 							context.output(ETL_FAILURE_TAG, failure);
 						}
 
 					}
 
-					private String getSentenceBionlp(String singleConllu, String documentText) throws IOException {
-						TextDocument td = new TextDocument("1234", "unknown", documentText);
-
-						// TODO: add sentence annotations here - Use ConlluParser????
-
-						/* serialize the annotations into the BioNLP format */
-						BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						bionlpWriter.serialize(td, baos, CharacterEncoding.UTF_8);
-						String serializedAnnotations = baos.toString(CharacterEncoding.UTF_8.getCharacterSetName());
-						return serializedAnnotations;
-					}
-				}).withOutputTags(CONLLU_TAG, TupleTagList.of(SENTENCE_TAG).and(ETL_FAILURE_TAG)));
+				}).withOutputTags(CONLLU_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
-	private static class BulkConlluIterator implements Iterator<String> {
+	protected static class BulkConlluIterator implements Iterator<String> {
 
-		public BulkConlluIterator(String bulkConllu) {
+		/**
+		 * thisDocId corresponds to the next Conll-U document that will be returned;
+		 * note the document ID must be requested prior to calling next() in order for
+		 * it to align with the document that is returned.
+		 */
+		private String thisDocId = null;
+		private Set<String> thisDocCollections = null;
 
+		@Getter
+		private String nextConlluDoc = null;
+		private StringBuilder nextConlluDocBuilder = null;
+		private StreamLineIterator lineIter;
+
+		public BulkConlluIterator(InputStream bulkConlluStream) throws IOException {
+			lineIter = new StreamLineIterator(bulkConlluStream, CharacterEncoding.UTF_8, null);
+			advanceToFirstDoc();
 		}
 
-		public String getNextDocId() {
-			// TODO
-			return null;
+		public String getDocId() {
+			return thisDocId;
+		}
+
+		public Set<String> getCollections() {
+			return thisDocCollections;
+		}
+
+		private void setNextConlluDoc(String s) {
+			this.nextConlluDoc = s;
 		}
 
 		@Override
 		public boolean hasNext() {
-			// TODO Auto-generated method stub
-			return false;
+			if (getNextConlluDoc() == null) {
+				return hasNextDocument();
+			} else {
+				return true;
+			}
 		}
 
 		@Override
 		public String next() {
-			// TODO Auto-generated method stub
-			return null;
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			String toReturn = getNextConlluDoc();
+
+			setNextConlluDoc(null);
+			thisDocCollections = null;
+			if (nextConlluDocBuilder != null) {
+				updateDocIdFromCommentLine(nextConlluDocBuilder.toString());
+			}
+			return toReturn;
+		}
+
+		private boolean hasNextDocument() {
+			if (nextConlluDocBuilder == null) {
+				return false;
+			}
+			getRestOfDocument();
+			return true;
+		}
+
+		private void getRestOfDocument() {
+			while (lineIter.hasNext()) {
+				Line line = lineIter.next();
+				String text = line.getText();
+
+				/*
+				 * if we reach the next comment line that contains a document ID, then the
+				 * current document is complete
+				 */
+				if (text.startsWith(TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX)) {
+					setNextConlluDoc(nextConlluDocBuilder.toString());
+
+					/* reset the string builder and add the document ID line as the first line */
+					nextConlluDocBuilder = new StringBuilder();
+					nextConlluDocBuilder.append(text);
+
+					return;
+				} else if (text.startsWith(TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX)) {
+					updateDocCollectionsFromCommentLine(text);
+					nextConlluDocBuilder.append(text);
+				} else {
+					nextConlluDocBuilder.append(text + "\n");
+				}
+			}
+
+			/*
+			 * if we reach the end of the file, the set nextConlluDoc as above, but set the
+			 * string builder to null to indicate that there are no more conllu documents in
+			 * the file
+			 */
+			setNextConlluDoc(nextConlluDocBuilder.toString());
+			nextConlluDocBuilder = null;
+		}
+
+		/**
+		 * The first line of the document should be a comment line that contains the
+		 * document ID, but we allow for blank lines just in case. If a non-blank line
+		 * is observed, that does not have the document ID, then an error is reported.
+		 * 
+		 * The result of this method is that thisDocId is populated with the document
+		 * ID, and the nextConlluDoc StringBuilder is initialized with the comment line
+		 * as the first line.
+		 */
+		private void advanceToFirstDoc() {
+			while (lineIter.hasNext()) {
+				Line line = lineIter.next();
+				String text = line.getText();
+				if (text.trim().isEmpty()) {
+					continue;
+				} else {
+					/*
+					 * if the text is not empty, then we should have reached a comment containing
+					 * the document ID of the next document. If the line contains text, but not a
+					 * document ID comment, then error as this is unexpected.
+					 */
+					if (text.startsWith(TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX)) {
+						/* here we set the document ID for "this" document */
+						updateDocIdFromCommentLine(text);
+						nextConlluDocBuilder = new StringBuilder();
+						nextConlluDocBuilder.append(text + "\n");
+						break;
+					} else {
+						throw new IllegalStateException(
+								"Unexpected text encountered while segmenting Conll-U file. Expected"
+										+ " a comment line with the document ID, but observed the "
+										+ "following instead: " + text);
+					}
+				}
+
+			}
+		}
+
+		/**
+		 * Parses the document ID from the specified comment line
+		 * 
+		 * @param docIdCommentLine
+		 */
+		private void updateDocIdFromCommentLine(String docIdCommentLine) {
+			thisDocId = StringUtils.removePrefix(docIdCommentLine, TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX);
+		}
+
+		/**
+		 * Parses the document ID from the specified comment line
+		 * 
+		 * @param docIdCommentLine
+		 */
+		private void updateDocCollectionsFromCommentLine(String commentLine) {
+			String collectionsStr = StringUtils.removePrefix(commentLine,
+					TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX);
+			thisDocCollections = new HashSet<String>(Arrays.asList(collectionsStr.split("\\|")));
 		}
 
 	}
 
-	code up TODOs in this class
-	
 }

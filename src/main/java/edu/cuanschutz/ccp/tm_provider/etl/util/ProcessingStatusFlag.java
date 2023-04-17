@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
@@ -66,6 +67,9 @@ public enum ProcessingStatusFlag {
 	DP_DONE(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE),
 
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
+	
+	/* sentences mined from dependency parse output */
+	SENTENCE_VIA_DP_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE),
 
 	CONCEPT_POST_PROCESSING_DONE(STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE),
 

@@ -16,13 +16,18 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.TextExtractionPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * Returns KV pairs mapping document ID to document text where the document text
- * has been prepended with a comment field indicating the document ID, e.g.
- * ###C: [document_id]
+ * has been prepended with a comment field indicating the document ID, e.g. <br>
+ * ###C: DOCUMENT_ID\t[document_id]
+ * 
+ * The text is also prepended with a comment field listing the document
+ * collections to which the document belongs, e.g. <br>
+ * ###C: DOCUMENT_COLLECTIONS\tcollection1|collection2|collection3
  *
  */
 @Data
@@ -59,6 +64,9 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 						KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText = context.element();
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
+						Set<String> collections = statusEntity.getCollections();
+						String docCollectionsStr = CollectionsUtil.createDelimitedString(collections,
+								TextExtractionPipeline.DOCUMENT_COLLECTIONS_DELIMITER);
 
 						try {
 							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
@@ -66,7 +74,16 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 								PipelineMain.logFailure(ETL_FAILURE_TAG, "Unable to extract text for: " + docId,
 										outputDocCriteria, timestamp, out, docId, null);
 							} else {
-								documentText = TextExtractionPipeline.COMMENT_INDICATOR + docId + "\n" + documentText;
+								/*
+								 * Prepend the document text with comment lines. One for the document ID, and
+								 * one for the document collections.
+								 */
+								String docIdCommentLine = TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX + docId
+										+ "\n";
+								String docCollectionsCommentLine = TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX
+										+ docCollectionsStr + "\n";
+								documentText = docIdCommentLine + docCollectionsCommentLine + documentText;
+
 								out.get(EXTRACTED_TEXT_TAG).output(KV.of(statusEntity, documentText));
 							}
 						} catch (Throwable t) {
