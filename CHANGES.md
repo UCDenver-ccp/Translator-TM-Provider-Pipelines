@@ -6,6 +6,7 @@
 * airflow scripts related to processing text with the Turku dependency parser
 * code to extract dependency paths between entities
 * code to index dependency paths (with entities) in elastic search
+* a pipeline to derive sentence annotations from the dependency parse output
 
 
 ## v0.1.0
