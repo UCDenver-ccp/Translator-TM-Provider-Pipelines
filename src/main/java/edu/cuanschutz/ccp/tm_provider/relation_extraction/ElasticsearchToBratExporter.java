@@ -61,12 +61,6 @@ public class ElasticsearchToBratExporter {
 	private static final CharacterEncoding UTF8 = CharacterEncoding.UTF_8;
 
 	/**
-	 * To avoid the annotator having to switch pages in BRAT after annotating each
-	 * sentence, we will include multiple sentences on each page
-	 */
-	private static final int SENTENCES_PER_PAGE = 20;
-
-	/**
 	 * SEARCH_BATCH_SIZE is the number of records requested for each Elasticsearch
 	 * query
 	 */
@@ -94,17 +88,20 @@ public class ElasticsearchToBratExporter {
 	 * @param outputDirectory
 	 * @param biolinkAssociation
 	 * @param batchId
+	 * @param sentencesPerPage            determines how many sentences in each BRAT
+	 *                                    file, i.e., how many will show up on a
+	 *                                    single page in the BRAT UI
 	 * @param inputSentences
 	 * @param previousSentenceIdsFile
 	 * @param redundantSentencesToInclude
 	 * @throws IOException
 	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, Collection<? extends TextDocument> inputSentences, Set<String> previousSentenceIds,
-			List<TextDocument> redundantSentencesToInclude) throws IOException {
+			int batchSize, int sentencesPerPage, Collection<? extends TextDocument> inputSentences,
+			Set<String> previousSentenceIds, List<TextDocument> redundantSentencesToInclude) throws IOException {
 
 		createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize, inputSentences, previousSentenceIds,
-				IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude);
+				IDENTIFIERS_TO_EXCLUDE, sentencesPerPage, redundantSentencesToInclude);
 	}
 
 	/**
