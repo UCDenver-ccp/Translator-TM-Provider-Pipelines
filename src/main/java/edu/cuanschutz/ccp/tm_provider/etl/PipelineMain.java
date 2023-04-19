@@ -157,8 +157,8 @@ public class PipelineMain {
 			case CONCEPT_IDF:
 				ConceptIdfPipeline.main(pipelineArgs);
 				break;
-			case DEPENDENCY_PARSE:
-				DependencyParsePipeline.main(pipelineArgs);
+			case DEPENDENCY_PARSE_IMPORT:
+				DependencyParseStoragePipeline.main(pipelineArgs);
 				break;
 			case FILE_LOAD:
 				LoadFilesPipeline.main(pipelineArgs);

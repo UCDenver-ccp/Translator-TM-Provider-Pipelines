@@ -92,7 +92,7 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 
 					}
 
-				}).withOutputTags(CONLLU_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+				}).withOutputTags(CONLLU_TAG, TupleTagList.of(ETL_FAILURE_TAG).and(DOC_ID_TO_COLLECTIONS_TAG)));
 	}
 
 	protected static class BulkConlluIterator implements Iterator<String> {
@@ -173,12 +173,12 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 
 					/* reset the string builder and add the document ID line as the first line */
 					nextConlluDocBuilder = new StringBuilder();
-					nextConlluDocBuilder.append(text);
+					nextConlluDocBuilder.append(text + "\n");
 
 					return;
 				} else if (text.startsWith(TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX)) {
 					updateDocCollectionsFromCommentLine(text);
-					nextConlluDocBuilder.append(text);
+					nextConlluDocBuilder.append(text + "\n");
 				} else {
 					nextConlluDocBuilder.append(text + "\n");
 				}

@@ -42,6 +42,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
  */
 public class DependencyParseStoragePipeline {
 
+	private static final String DEPENDENY_PARSES_CONLLU_FILE_SUFFIX = ".dependency_parses.conllu.gz";
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.DEPENDENCY_PARSE_IMPORT;
 
 	public interface Options extends DataflowPipelineOptions {
@@ -68,7 +69,8 @@ public class DependencyParseStoragePipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		String dependencyParseFilePattern = options.getBaseDependencyParseFilePath() + "/*.dependeny_parses.conllu.gz";
+		String dependencyParseFilePattern = options.getBaseDependencyParseFilePath() + "/" + options.getCollection()
+				+ "/*" + DEPENDENY_PARSES_CONLLU_FILE_SUFFIX;
 		PCollection<ReadableFile> files = p
 				.apply("get CONLL-U files to load", FileIO.match().filepattern(dependencyParseFilePattern))
 				.apply(FileIO.readMatches().withCompression(Compression.GZIP));
