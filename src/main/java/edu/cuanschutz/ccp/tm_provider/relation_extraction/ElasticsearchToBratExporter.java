@@ -66,10 +66,10 @@ public class ElasticsearchToBratExporter {
 	 */
 	private static final int SEARCH_BATCH_SIZE = 10000;
 
-	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic_boolean_query_template.json";
+	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic/elastic_boolean_query_template.json";
 	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER = "MATCH_PLACEHOLDER";
 
-	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic_annotatedtext_match_template.json";
+	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic/elastic_annotatedtext_match_template.json";
 	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER = "QUERY_PLACEHOLDER";
 	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
 
@@ -642,12 +642,10 @@ public class ElasticsearchToBratExporter {
 	@VisibleForTesting
 	protected static String buildSentenceQuery(Set<Set<String>> ontologyPrefixes) throws IOException {
 		// load boolean query template
-		String booleanQueryTemplate = ClassPathUtil.getContentsFromClasspathResource(ElasticsearchToBratExporter.class,
-				ELASTIC_BOOLEAN_QUERY_TEMPLATE, UTF8);
+		String booleanQueryTemplate = getBooleanQueryTemplateFromClasspath();
 
 		// load annotatedText match template
-		String annotatedTextMatchTemplate = ClassPathUtil.getContentsFromClasspathResource(
-				ElasticsearchToBratExporter.class, ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
+		String annotatedTextMatchTemplate = getAnnotatedTextMatchTemplateFromClasspath();
 
 		// sorting is required only for unit tests so that the output order is
 		// deterministic
@@ -667,6 +665,18 @@ public class ElasticsearchToBratExporter {
 		String query = booleanQueryTemplate.replace(ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER, matches);
 
 		return query;
+	}
+
+	@VisibleForTesting
+	protected static String getAnnotatedTextMatchTemplateFromClasspath() throws IOException {
+		return ClassPathUtil.getContentsFromClasspathResource(
+				ElasticsearchToBratExporter.class, ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
+	}
+
+	@VisibleForTesting
+	protected static String getBooleanQueryTemplateFromClasspath() throws IOException {
+		return ClassPathUtil.getContentsFromClasspathResource(ElasticsearchToBratExporter.class,
+				ELASTIC_BOOLEAN_QUERY_TEMPLATE, UTF8);
 	}
 
 	/**
