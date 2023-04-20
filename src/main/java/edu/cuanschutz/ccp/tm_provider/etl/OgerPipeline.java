@@ -78,6 +78,11 @@ public class OgerPipeline {
 
 		void setInputPipelineVersion(String value);
 
+		@Description("This pipeline version will be used as part of the output document key/name")
+		String getOutputPipelineVersion();
+
+		void setOutputPipelineVersion(String value);
+
 		@Description("The document collection to process")
 		String getCollection();
 
@@ -97,7 +102,7 @@ public class OgerPipeline {
 	}
 
 	public static void main(String[] args) {
-		String pipelineVersion = Version.getProjectVersion();
+//		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		LOGGER.log(Level.INFO, String.format("Running OGER pipeline for concept: ", options.getTargetDocumentType()));
@@ -132,7 +137,7 @@ public class OgerPipeline {
 						options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
-				options.getTargetDocumentFormat(), PIPELINE_KEY, pipelineVersion);
+				options.getTargetDocumentFormat(), PIPELINE_KEY, options.getOutputPipelineVersion());
 		PCollectionTuple output = OgerFn.process(statusEntity2Content, ogerServiceUri.toString(), outputDocCriteria,
 				timestamp, options.getOgerOutputType());
 

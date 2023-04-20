@@ -7,6 +7,8 @@ COLLECTION=$4
 STAGE_LOCATION=$5
 TMP_LOCATION=$6
 PIPELINE_KEY=$7
+OUTPUT_PIPELINE_VERSION=$8
+OVERWRITE=$9
 
 
 TPSF="OGER_${ONT}_DONE"
@@ -22,6 +24,8 @@ echo "TPSF: $TPSF"
 echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
 echo "PIPELINE KEY: $PIPELINE_KEY"
+echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
+echo "OVERWRITE KEY: $OVERWRITE"
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
 --jobName="$JOB_NAME" \
@@ -32,8 +36,9 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
 --targetDocumentFormat="BIONLP" \
 --inputPipelineKey="$PIPELINE_KEY" \
 --inputPipelineVersion='0.1.0' \
+--outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
 --collection="$COLLECTION" \
---overwrite="NO" \
+--overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
