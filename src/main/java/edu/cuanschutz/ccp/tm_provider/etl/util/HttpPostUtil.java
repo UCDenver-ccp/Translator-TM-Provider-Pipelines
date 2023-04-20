@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -9,7 +10,6 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -17,6 +17,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
 
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import lombok.Data;
 
 /**
@@ -43,7 +44,7 @@ public class HttpPostUtil {
 	 * @throws InterruptedException
 	 */
 	public String submit(String payload) throws IOException {
-		
+
 		HttpResponse response = makeHttpRequest(payload);
 //		/*
 //		 * occasionally the server does not respond, or does not respond in time and an
@@ -72,7 +73,16 @@ public class HttpPostUtil {
 //		if (tryCount > 1) {
 //			logger.info("TMPLOG -- recovered HTTPReponse after sleeping.");
 //		}
-		return response.parseAsString();
+
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		try {
+			response.download(os);
+			return os.toString(CharacterEncoding.UTF_8.getCharacterSetName());
+		} finally {
+			if (os != null) {
+				os.close();
+			}
+		}
 	}
 
 	private HttpResponse makeHttpRequest(String payload) throws IOException {
@@ -87,7 +97,8 @@ public class HttpPostUtil {
 		GenericUrl genericUrl = new GenericUrl(targetUri);
 		HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(tokenCredential);
 		HttpTransport transport = new NetHttpTransport();
-		HttpContent content = new ByteArrayContent("application/text", payload.getBytes());
+		HttpContent content = new ByteArrayContent("application/text; charset=utf-8",
+				payload.getBytes(CharacterEncoding.UTF_8.getCharacterSetName()));
 		HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, content);
 
 		response = request.execute();
