@@ -277,11 +277,15 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @return
 	 */
 	private static String processTitleAndAbstractText(String text, List<TextAnnotation> observedAnnotations) {
-		
-		System.out.println("RAW: "+ text);
-		
-		
 		String updatedText = text.trim();
+		// below is a special space being replaced by a regular space
+		updatedText = updatedText.replaceAll(" ", " ");
+
+		// there some records that have line breaks and lots of extra spaces -- these
+		// need to be treated differently when the line break occurs just prior to or
+		// just after a tag. See https://pubmed.ncbi.nlm.nih.gov/31000267/
+		updatedText = updatedText.replaceAll("\\n\\s+<", "<");
+		updatedText = updatedText.replaceAll(">\\n\\s+", ">");
 
 		updatedText = updatedText.replaceAll("\\s\\s+", " ");
 		updatedText = updatedText.replaceAll("\\s?<b>\\s?", "");
@@ -358,11 +362,9 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 				TextAnnotation annot = factory.createAnnotation(tag.getStart(), tag.getStart() + 1, "",
 						tag.getTagText());
 				stack.push(annot);
-				System.out.println("PUSH " + tag.toString());
 			} else {
 				// pop the stack, complete the annotation and add it to the annots list
 				TextAnnotation annot = stack.pop();
-				System.out.println("POP" + tag.toString());
 
 				// validate that the tag type of the popped annot matches the expected tag type
 				if (!tag.getTagText().equals(annot.getClassMention().getMentionName())) {
@@ -377,9 +379,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 				annots.add(annot);
 			}
 			// update the text by removing the tag that was just processed
-			System.out.println("BEFORE: " + updatedText);
 			updatedText = updatedText.replaceFirst(tag.getRegex(), "");
-			System.out.println("AFTER : " + updatedText);
 		}
 
 		/* the stack should be empty at this point */
@@ -411,8 +411,6 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 
 		/* sort the map by tag start index, then choose the first tag and return */
 		Map<Integer, Tag> sortedMap = CollectionsUtil.sortMapByKeys(startIndexToTagMap, SortOrder.ASCENDING);
-
-		System.out.println(sortedMap.toString());
 
 		/* return the first tag */
 		return sortedMap.entrySet().iterator().next().getValue();
