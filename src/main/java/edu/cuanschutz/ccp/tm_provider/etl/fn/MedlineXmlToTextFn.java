@@ -287,13 +287,13 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		updatedText = updatedText.replaceAll("\\n\\s+<", "<");
 		updatedText = updatedText.replaceAll(">\\n\\s+", ">");
 
+		updatedText = updatedText.replaceAll("<b>", "");
+		updatedText = updatedText.replaceAll("</b>", "");
+		updatedText = updatedText.replaceAll("<i>", "");
+		updatedText = updatedText.replaceAll("</i>", "");
+		updatedText = updatedText.replaceAll("<u>", "");
+		updatedText = updatedText.replaceAll("</u>", "");
 		updatedText = updatedText.replaceAll("\\s\\s+", " ");
-		updatedText = updatedText.replaceAll("\\s?<b>\\s?", "");
-		updatedText = updatedText.replaceAll("\\s?</b>\\s?", "");
-		updatedText = updatedText.replaceAll("\\s?<i>\\s?", "");
-		updatedText = updatedText.replaceAll("\\s?</i>\\s?", "");
-		updatedText = updatedText.replaceAll("\\s?<u>\\s?", "");
-		updatedText = updatedText.replaceAll("\\s?</u>\\s?", "");
 
 		updatedText = updatedText.replaceAll("&lt;", "<");
 		updatedText = updatedText.replaceAll("&gt;", ">");
