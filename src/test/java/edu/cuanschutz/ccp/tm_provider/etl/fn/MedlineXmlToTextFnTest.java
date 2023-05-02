@@ -53,7 +53,8 @@ public class MedlineXmlToTextFnTest {
 
 	public static final String SAMPLE_PUBMED20N0001_XML_GZ = "sample-pubmed20n0001.xml.gz";
 	public static final String SAMPLE_PUBMED_XML_GZ = "sample-pubmed.xml.gz";
-	public static final String SAMPLE_SUPRESCRIPT_PUBMED_XML_GZ = "31040849.xml.gz";
+	public static final String SAMPLE_SUPERSCRIPT_PUBMED_XML_GZ = "PMID31040849.xml.gz";
+	private static final String SAMPLE_SUPERSCRIPT_PUBMED_TXT = "PMID31040849.txt";
 
 	@Rule
 	public final transient TestPipeline pipeline = TestPipeline.create();
@@ -394,7 +395,7 @@ public class MedlineXmlToTextFnTest {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 
 		PCollection<PubmedArticle> input = pipeline
-				.apply(Create.of(getSamplePubmedArticles(SAMPLE_SUPRESCRIPT_PUBMED_XML_GZ))
+				.apply(Create.of(getSamplePubmedArticles(SAMPLE_SUPERSCRIPT_PUBMED_XML_GZ))
 						.withCoder(JAXBCoder.of(PubmedArticle.class)));
 
 		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
@@ -411,7 +412,7 @@ public class MedlineXmlToTextFnTest {
 
 		String expectedPmid_1 = "PMID:31040849";
 		String expectedText_1 = ClassPathUtil.getContentsFromClasspathResource(MedlineXmlToTextFnTest.class,
-				"31040849.txt", CharacterEncoding.UTF_8);
+				SAMPLE_SUPERSCRIPT_PUBMED_TXT, CharacterEncoding.UTF_8);
 
 		PAssert.that(output.get(MedlineXmlToTextFn.plainTextTag))
 				.containsInAnyOrder(KV.of(expectedPmid_1, Arrays.asList(expectedText_1)));
