@@ -362,8 +362,9 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 				TextAnnotation annot = factory.createAnnotation(tag.getStart(), tag.getStart() + 1, "",
 						tag.getTagText());
 				stack.push(annot);
-			} else {
-				// pop the stack, complete the annotation and add it to the annots list
+			} else if (tag.getType() != Tag.Type.EMPTY) {
+				// pop the stack, complete the annotation and add it to the annots list unless
+				// this is an empty tag, e.g. <sub/>
 				TextAnnotation annot = stack.pop();
 
 				// validate that the tag type of the popped annot matches the expected tag type
