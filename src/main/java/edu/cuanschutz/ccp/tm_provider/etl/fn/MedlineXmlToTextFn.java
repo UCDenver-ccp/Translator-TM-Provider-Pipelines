@@ -202,7 +202,8 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	}
 
 	public static String extractTitleText(MedlineCitation medlineCitation, List<TextAnnotation> titleAnnotations) {
-		return processTitleAndAbstractText(medlineCitation.getArticle().getArticleTitle().getvalue(), titleAnnotations);
+		return processTitleAndAbstractText(medlineCitation.getArticle().getArticleTitle().getvalue(), titleAnnotations,
+				medlineCitation.getPMID().getvalue());
 	}
 
 	public static String getYearPublished(MedlineCitation medlineCitation) {
@@ -244,6 +245,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	/**
 	 * @param pubmedArticle
 	 * @param annotations
+	 * @param
 	 * @return the abstract text compiled from the {@link PubmedArticle}
 	 */
 	public static String getAbstractText(PubmedArticle pubmedArticle, List<TextAnnotation> annotations) {
@@ -262,7 +264,8 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			}
 		}
 
-		return processTitleAndAbstractText(sb.toString(), annotations);
+		return processTitleAndAbstractText(sb.toString(), annotations,
+				pubmedArticle.getMedlineCitation().getPMID().getvalue());
 	}
 
 	/**
@@ -272,11 +275,13 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @param observedAnnotations annotations indicating where sub- and superscript
 	 *                            text was observed in the input text (title or
 	 *                            abstract)
+	 * @param docId
 	 * 
 	 * @param aText
 	 * @return
 	 */
-	private static String processTitleAndAbstractText(String text, List<TextAnnotation> observedAnnotations) {
+	private static String processTitleAndAbstractText(String text, List<TextAnnotation> observedAnnotations,
+			String docId) {
 		String updatedText = text.trim();
 		// below is a special space being replaced by a regular space
 		updatedText = updatedText.replaceAll(" ", " ");
@@ -308,7 +313,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 		 * recover the subscript and superscript information.
 		 */
 
-		observedAnnotations.addAll(extractSubNSuperscriptAnnotations(updatedText));
+		observedAnnotations.addAll(extractSubNSuperscriptAnnotations(updatedText, docId));
 		updatedText = updatedText.replaceAll("<sub>", "");
 		updatedText = updatedText.replaceAll("</sub>", "");
 		updatedText = updatedText.replaceAll("<sup>", "");
@@ -347,7 +352,7 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 	 * @param text
 	 * @return
 	 */
-	private static Collection<? extends TextAnnotation> extractSubNSuperscriptAnnotations(String text) {
+	private static Collection<? extends TextAnnotation> extractSubNSuperscriptAnnotations(String text, String docId) {
 		List<TextAnnotation> annots = new ArrayList<TextAnnotation>();
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
 
@@ -362,9 +367,12 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 				TextAnnotation annot = factory.createAnnotation(tag.getStart(), tag.getStart() + 1, "",
 						tag.getTagText());
 				stack.push(annot);
-			} else if (tag.getType() != Tag.Type.EMPTY) {
+			} else if (!stack.isEmpty() && tag.getType() != Tag.Type.EMPTY) {
 				// pop the stack, complete the annotation and add it to the annots list unless
-				// this is an empty tag, e.g. <sub/>
+				// this is an empty tag, e.g. <sub/>, or if the stack is empty. There is at
+				// least one example of a </sup> tag that did not have a <sup> tag:
+				// https://pubmed.ncbi.nlm.nih.gov/12897808/
+
 				TextAnnotation annot = stack.pop();
 
 				// validate that the tag type of the popped annot matches the expected tag type
@@ -383,10 +391,15 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 			updatedText = updatedText.replaceFirst(tag.getRegex(), "");
 		}
 
-		/* the stack should be empty at this point */
-		if (!stack.isEmpty()) {
-			throw new IllegalStateException("Annotation stack should be empty at this point.");
-		}
+		/*
+		 * the stack should be empty at this point - but may not be, e.g.
+		 * https://pubmed.ncbi.nlm.nih.gov/23037387/ has a sub tag that is never closed.
+		 * Even if it's not empty, we will just move on and return the annotations that
+		 * were generated.
+		 */
+//		if (!stack.isEmpty()) {
+//			throw new IllegalStateException("Annotation stack should be empty at this point. " + docId);
+//		}
 
 		return annots;
 	}
