@@ -17,7 +17,7 @@ echo "OVERWRITE: $OVERWRITE"
 echo "PROJECT: $PROJECT"
 echo "JOB_NAME: $JOB_NAME"
 
-java -jar target/tm-pipelines-bundled-0.1.0.jar MEDLINE_XML_TO_TEXT \
+java -jar target/tm-pipelines-bundled-0.1.1.jar MEDLINE_XML_TO_TEXT \
 --jobName="$JOB_NAME" \
 --medlineXmlDir="$MEDLINE_XML_DIR" \
 --pmidSkipFilePath="$PMID_SKIP_FILE_PATH" \

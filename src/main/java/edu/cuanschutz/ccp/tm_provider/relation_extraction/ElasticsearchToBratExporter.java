@@ -61,21 +61,15 @@ public class ElasticsearchToBratExporter {
 	private static final CharacterEncoding UTF8 = CharacterEncoding.UTF_8;
 
 	/**
-	 * To avoid the annotator having to switch pages in BRAT after annotating each
-	 * sentence, we will include multiple sentences on each page
-	 */
-	private static final int SENTENCES_PER_PAGE = 20;
-
-	/**
 	 * SEARCH_BATCH_SIZE is the number of records requested for each Elasticsearch
 	 * query
 	 */
 	private static final int SEARCH_BATCH_SIZE = 10000;
 
-	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic_boolean_query_template.json";
+	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE = "elastic/elastic_boolean_query_template.json";
 	public static final String ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER = "MATCH_PLACEHOLDER";
 
-	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic_annotatedtext_match_template.json";
+	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE = "elastic/elastic_annotatedtext_match_template.json";
 	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_QUERY_PLACEHOLDER = "QUERY_PLACEHOLDER";
 	public static final String ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE_BOOLEAN_OPERATOR_PLACEHOLDER = "BOOLEAN_OPERATOR_PLACEHOLDER";
 
@@ -94,17 +88,20 @@ public class ElasticsearchToBratExporter {
 	 * @param outputDirectory
 	 * @param biolinkAssociation
 	 * @param batchId
+	 * @param sentencesPerPage            determines how many sentences in each BRAT
+	 *                                    file, i.e., how many will show up on a
+	 *                                    single page in the BRAT UI
 	 * @param inputSentences
 	 * @param previousSentenceIdsFile
 	 * @param redundantSentencesToInclude
 	 * @throws IOException
 	 */
 	public static void createBratFiles(File outputDirectory, BiolinkAssociation biolinkAssociation, String batchId,
-			int batchSize, Collection<? extends TextDocument> inputSentences, Set<String> previousSentenceIds,
-			List<TextDocument> redundantSentencesToInclude) throws IOException {
+			int batchSize, int sentencesPerPage, Collection<? extends TextDocument> inputSentences,
+			Set<String> previousSentenceIds, List<TextDocument> redundantSentencesToInclude) throws IOException {
 
 		createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize, inputSentences, previousSentenceIds,
-				IDENTIFIERS_TO_EXCLUDE, SENTENCES_PER_PAGE, redundantSentencesToInclude);
+				IDENTIFIERS_TO_EXCLUDE, sentencesPerPage, redundantSentencesToInclude);
 	}
 
 	/**
@@ -645,12 +642,10 @@ public class ElasticsearchToBratExporter {
 	@VisibleForTesting
 	protected static String buildSentenceQuery(Set<Set<String>> ontologyPrefixes) throws IOException {
 		// load boolean query template
-		String booleanQueryTemplate = ClassPathUtil.getContentsFromClasspathResource(ElasticsearchToBratExporter.class,
-				ELASTIC_BOOLEAN_QUERY_TEMPLATE, UTF8);
+		String booleanQueryTemplate = getBooleanQueryTemplateFromClasspath();
 
 		// load annotatedText match template
-		String annotatedTextMatchTemplate = ClassPathUtil.getContentsFromClasspathResource(
-				ElasticsearchToBratExporter.class, ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
+		String annotatedTextMatchTemplate = getAnnotatedTextMatchTemplateFromClasspath();
 
 		// sorting is required only for unit tests so that the output order is
 		// deterministic
@@ -670,6 +665,18 @@ public class ElasticsearchToBratExporter {
 		String query = booleanQueryTemplate.replace(ELASTIC_BOOLEAN_QUERY_TEMPLATE_MATCH_PLACEHOLDER, matches);
 
 		return query;
+	}
+
+	@VisibleForTesting
+	protected static String getAnnotatedTextMatchTemplateFromClasspath() throws IOException {
+		return ClassPathUtil.getContentsFromClasspathResource(
+				ElasticsearchToBratExporter.class, ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
+	}
+
+	@VisibleForTesting
+	protected static String getBooleanQueryTemplateFromClasspath() throws IOException {
+		return ClassPathUtil.getContentsFromClasspathResource(ElasticsearchToBratExporter.class,
+				ELASTIC_BOOLEAN_QUERY_TEMPLATE, UTF8);
 	}
 
 	/**

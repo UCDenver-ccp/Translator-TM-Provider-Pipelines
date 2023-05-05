@@ -119,8 +119,8 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 			td = new TextDocument(docId, "sourcedb", docText);
 
 			for (StreamLineIterator lineIter = new StreamLineIterator(
-					new ByteArrayInputStream(ogerSystemOutput.getBytes()), CharacterEncoding.UTF_8, null); lineIter
-							.hasNext();) {
+					new ByteArrayInputStream(ogerSystemOutput.getBytes(CharacterEncoding.UTF_8.getCharacterSetName())),
+					CharacterEncoding.UTF_8, null); lineIter.hasNext();) {
 				String line = lineIter.next().getText();
 				if (!line.trim().isEmpty()) {
 					String[] cols = line.split("\\t");

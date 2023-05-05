@@ -1,6 +1,9 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util.helper;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Base64;
+
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
 
 /**
  * Utility class for decoding content stored in DataStore. Useful for debugging
@@ -9,11 +12,11 @@ import java.util.Base64;
  */
 public class BlobReader {
 
-	public static void main(String[] args) {
-		String blob = "";
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		String blob = "".trim();
 
 		byte[] decodedBytes = Base64.getDecoder().decode(blob);
-		String decodedString = new String(decodedBytes);
+		String decodedString = new String(decodedBytes, CharacterEncoding.UTF_8.getCharacterSetName());
 		System.out.println(decodedString);
 	}
 }

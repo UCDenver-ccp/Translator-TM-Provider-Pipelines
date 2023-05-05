@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -695,5 +696,18 @@ public class ElasticsearchToBratExporterTest {
 //		assertEquals(10, redundantSentences.size());
 //
 //	}
+	
+	
+	
+	@Test
+	public void testExistenceOfClasspathResources() throws IOException {
+		String booleanQueryTemplate = ElasticsearchToBratExporter.getBooleanQueryTemplateFromClasspath();
+		assertFalse(booleanQueryTemplate.isEmpty());
+		
+		String annotatedTextMatchTemplate = ElasticsearchToBratExporter.getAnnotatedTextMatchTemplateFromClasspath();
+		assertFalse(annotatedTextMatchTemplate.isEmpty());
+		
+	}
+	
 
 }
