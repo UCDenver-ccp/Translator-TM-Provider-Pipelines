@@ -1,4 +1,4 @@
-setuptools==59.5.0
+setuptools==65.5.1
 torch>=1.9
 requests
 flask
