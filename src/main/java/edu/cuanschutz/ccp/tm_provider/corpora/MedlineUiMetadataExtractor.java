@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,6 +39,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.MedlineXmlToTextFn;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileUtil;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 
 /**
  * Initially designed to extract publication metadata for the Translator UI team
@@ -90,8 +92,8 @@ public class MedlineUiMetadataExtractor {
 				String journalName = medlineCitation.getArticle().getJournal().getTitle();
 				String journalIssue = medlineCitation.getArticle().getJournal().getJournalIssue().getIssue();
 				String journalVolume = medlineCitation.getArticle().getJournal().getJournalIssue().getVolume();
-				String articleTitle = MedlineXmlToTextFn.extractTitleText(medlineCitation);
-				String abstractText = MedlineXmlToTextFn.getAbstractText(article);
+				String articleTitle = MedlineXmlToTextFn.extractTitleText(medlineCitation, new ArrayList<TextAnnotation>());
+				String abstractText = MedlineXmlToTextFn.getAbstractText(article, new ArrayList<TextAnnotation>());
 
 				String metadataLine = String.format("PMID:%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", pmid,
 						replaceWithHyphenIfNull(year), replaceWithHyphenIfNull(month), replaceWithHyphenIfNull(day),
