@@ -18,17 +18,13 @@ OUTPUT_BUCKET=$4
 mkdir /home/turku/txt
 pushd /home/turku/txt
 gsutil cp "$TXT_FILE_BUCKET/*.txt.gz" .
-gzip -dc *.txt.gz > /home/turku/all.txt
+cat *.txt.gz > /home/turku/all.txt.gz
 popd
 
 # call the Turku dependency parser here
-cat /home/turku/all.txt | python3 tnpp_parse.py --conf models_craft_dia/pipelines.yaml parse_plaintext > /home/turku/all.conllu
+gunzip -c /home/turku/all.txt.gz | python3 tnpp_parse.py --conf models_craft_dia/pipelines.yaml parse_plaintext | gzip > /home/turku/all.conllu.gz
 [ $? -eq 0 ] || exit 1
 
-# compress the conllu file
-gzip /home/turku/all.conllu
-[ $? -eq 0 ] || exit 1
-
-# export the all.conllu file to a GCP bucket
+# export the all.conllu.gz file to a GCP bucket
 gsutil cp /home/turku/all.conllu.gz "${OUTPUT_BUCKET}/output/dependency_parses/${COLLECTION}/${COLLECTION}.${BATCH}.dependency_parses.conllu.gz"
 [ $? -eq 0 ] || exit 1

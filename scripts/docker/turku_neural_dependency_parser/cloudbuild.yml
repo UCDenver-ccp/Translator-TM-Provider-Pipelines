@@ -24,4 +24,4 @@ steps:
 
 
 substitutions:
-    _TURKU_VERSION: craft_0.1
+    _TURKU_VERSION: craft_0.2
