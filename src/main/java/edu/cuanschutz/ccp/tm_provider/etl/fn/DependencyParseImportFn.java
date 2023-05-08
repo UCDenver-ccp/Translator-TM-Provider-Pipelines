@@ -237,7 +237,7 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 		 * @param docIdCommentLine
 		 */
 		private void updateDocIdFromCommentLine(String docIdCommentLine) {
-			thisDocId = StringUtils.removePrefix(docIdCommentLine, TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX);
+			thisDocId = StringUtils.removePrefix(docIdCommentLine, TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX).trim();
 		}
 
 		/**
