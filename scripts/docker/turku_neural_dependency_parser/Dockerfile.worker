@@ -1,4 +1,6 @@
-FROM python:3.7.12
+FROM pytorch/torchserve:0.7.1-gpu
+
+# FROM tensorflow/tensorflow:1.15.4-gpu
 
 # RUN \
 #     # Update nvidia GPG key - from: https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -10,10 +12,27 @@ FROM python:3.7.12
 #     dpkg -i cuda-keyring_1.0-1_all.deb && \
 #     apt-get update
 
+
+# FROM python:3.7.12
+
+# RUN \
+#     # Update nvidia GPG key - from: https://github.com/NVIDIA/nvidia-docker/issues/1631
+#     # rm /etc/apt/sources.list.d/cuda.list && \
+#     # rm /etc/apt/sources.list.d/nvidia-ml.list && \
+#     # apt-key del 7fa2af80 && \
+#     apt-get update && apt-get install -y --no-install-recommends wget && \
+#     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+#     dpkg -i cuda-keyring_1.0-1_all.deb && \
+#     apt-get update
+USER root
+
 RUN apt-get update && apt-get install -y \
     git \
-    libsndfile-dev \
-    less
+    less \
+    wget
+    # libsndfile-dev \
+    # \
+    # python3-venv
 
 # Installs google cloud sdk, this allows use of gsutil
 # from: https://cloud.google.com/ai-platform/training/docs/custom-containers-training
