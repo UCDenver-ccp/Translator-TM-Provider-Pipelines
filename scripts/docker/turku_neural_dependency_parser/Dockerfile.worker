@@ -1,4 +1,25 @@
-FROM pytorch/torchserve:0.7.1-gpu
+FROM gcr.io/deeplearning-platform-release/base-gpu.py37
+#FROM gcr.io/deeplearning-platform-release/pytorch-gpu
+
+# FROM nvidia/cuda:10.1-cudnn7-runtime
+
+# RUN \
+#     # Update nvidia GPG key - from: https://github.com/NVIDIA/nvidia-docker/issues/1631
+#     rm /etc/apt/sources.list.d/cuda.list && \
+#     rm /etc/apt/sources.list.d/nvidia-ml.list && \
+#     apt-key del 7fa2af80 && \
+#     apt-get update && apt-get install -y --no-install-recommends wget && \
+#     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+#     dpkg -i cuda-keyring_1.0-1_all.deb && \
+#     apt-get update
+
+# RUN apt-get update
+# RUN apt-get install --no-install-recommends -y build-essential software-properties-common
+# RUN add-apt-repository -y ppa:deadsnakes/ppa
+# RUN apt-get install --no-install-recommends -y python3.7 python3-pip python3-setuptools python3-distutils
+# RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
+# RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+#FROM pytorch/torchserve:0.7.1-gpu
 
 # FROM tensorflow/tensorflow:1.15.4-gpu
 
@@ -24,12 +45,34 @@ FROM pytorch/torchserve:0.7.1-gpu
 #     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
 #     dpkg -i cuda-keyring_1.0-1_all.deb && \
 #     apt-get update
-USER root
+#USER root
+
+# RUN apt-get update && apt-get install -y \
+#     software-properties-common && \
+#     add-apt-repository -y ppa:deadsnakes/ppa
+
 
 RUN apt-get update && apt-get install -y \
     git \
     less \
-    wget
+    wget \
+    curl \
+    # python3-pip \
+    python3-venv && \
+    # python-dev && \
+    rm -rf /var/lib/apt/lists/*
+    
+
+# # Installs pip.
+# RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+#     python get-pip.py && \
+#     pip install setuptools && \
+#     rm get-pip.py
+
+WORKDIR /root
+
+# Installs pytorch and torchvision.
+#RUN pip3 install torch==1.0.0 torchvision==0.2.1
     # libsndfile-dev \
     # \
     # python3-venv
@@ -59,6 +102,11 @@ ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
 ## Install the parser
 WORKDIR /home/turku
 RUN git clone https://github.com/TurkuNLP/Turku-neural-parser-pipeline.git ./Turku-neural-parser-pipeline.git
+
+RUN apt-get update && apt-get install -y \
+libsndfile-dev
+
+# RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 WORKDIR /home/turku/Turku-neural-parser-pipeline.git
 
