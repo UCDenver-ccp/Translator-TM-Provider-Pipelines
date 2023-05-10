@@ -26,5 +26,5 @@ gunzip -c /home/turku/all.txt.gz | python3 tnpp_parse.py --conf models_craft_dia
 [ $? -eq 0 ] || exit 1
 
 # export the all.conllu.gz file to a GCP bucket
-gsutil cp /home/turku/all.conllu.gz "${OUTPUT_BUCKET}/output/dependency_parses/${COLLECTION}/${COLLECTION}.${BATCH}.dependency_parses.conllu.gz"
+gsutil cp /home/turku/all.conllu.gz "${OUTPUT_BUCKET}/${COLLECTION}.${BATCH}.dependency_parses.conllu.gz"
 [ $? -eq 0 ] || exit 1
