@@ -7,7 +7,7 @@ ufal.udpipe
 pyyaml
 configargparse
 transformers
-OpenNMT-py==1.2.0
+OpenNMT-py==2.3.0
 git+https://github.com/TurkuNLP/diaparser.git@master
 pytorch_lightning<1.5.0
 torchmetrics==0.6.0
