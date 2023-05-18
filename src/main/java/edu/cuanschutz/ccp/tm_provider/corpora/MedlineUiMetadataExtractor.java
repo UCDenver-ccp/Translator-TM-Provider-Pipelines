@@ -86,13 +86,14 @@ public class MedlineUiMetadataExtractor {
 				List<ArticleDate> articleDate = medlineCitation.getArticle().getArticleDate();
 
 				String year = getYear(yearOrMonthOrDayOrSeasonOrMedlineDate, articleDate);
-				String month = getMonth(yearOrMonthOrDayOrSeasonOrMedlineDate, articleDate);
-				String day = getDay(yearOrMonthOrDayOrSeasonOrMedlineDate, articleDate);
+				String month = getMonth(yearOrMonthOrDayOrSeasonOrMedlineDate, articleDate, pmid);
+				String day = getDay(yearOrMonthOrDayOrSeasonOrMedlineDate, articleDate, pmid);
 				String journalNameAbbreviation = medlineCitation.getArticle().getJournal().getISOAbbreviation();
 				String journalName = medlineCitation.getArticle().getJournal().getTitle();
 				String journalIssue = medlineCitation.getArticle().getJournal().getJournalIssue().getIssue();
 				String journalVolume = medlineCitation.getArticle().getJournal().getJournalIssue().getVolume();
-				String articleTitle = MedlineXmlToTextFn.extractTitleText(medlineCitation, new ArrayList<TextAnnotation>());
+				String articleTitle = MedlineXmlToTextFn.extractTitleText(medlineCitation,
+						new ArrayList<TextAnnotation>());
 				String abstractText = MedlineXmlToTextFn.getAbstractText(article, new ArrayList<TextAnnotation>());
 
 				String metadataLine = String.format("PMID:%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", pmid,
@@ -168,37 +169,39 @@ public class MedlineUiMetadataExtractor {
 		return null;
 	}
 
-	private static String getMonth(List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate, List<ArticleDate> articleDate) {
+	private static String getMonth(List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate, List<ArticleDate> articleDate,
+			String pmid) {
 		for (Object obj : yearOrMonthOrDayOrSeasonOrMedlineDate) {
 			if (obj instanceof MedlineDate) {
 				MedlineDate md = (MedlineDate) obj;
 				String dateStr = md.getvalue();
-				String month = getMonth(dateStr);
+				String month = getMonth(dateStr, pmid);
 				if (month != null) {
 					return month;
 				}
 			} else if (obj instanceof Month) {
 				Month m = (Month) obj;
 				if (m != null) {
-					return m.getvalue();
+					String val = m.getvalue();
+					return getThreeLetterAbbrev(val);
 				}
 			} else if (obj instanceof Season) {
 				Season s = (Season) obj;
 				String season = s.getvalue();
 				if (season.equalsIgnoreCase("winter")) {
-					return "12";
+					return "Jan";
 				}
 				if (season.equalsIgnoreCase("spring")) {
-					return "03";
+					return "Apr";
 				}
 				if (season.equalsIgnoreCase("summer")) {
-					return "06";
+					return "Jul";
 				}
 				if (season.equalsIgnoreCase("fall")) {
-					return "09";
+					return "Oct";
 				}
 				if (season.equalsIgnoreCase("autumn")) {
-					return "09";
+					return "Oct";
 				}
 			}
 		}
@@ -206,69 +209,266 @@ public class MedlineUiMetadataExtractor {
 		for (ArticleDate ad : articleDate) {
 			Month m = ad.getMonth();
 			if (m != null) {
-				return m.getvalue();
+				return getThreeLetterAbbrev(m.getvalue());
 			}
 		}
 		return null;
+	}
+
+	private static String getThreeLetterAbbrev(String month) {
+
+		switch (month) {
+		case "01":
+			return "Jan";
+		case "02":
+			return "Feb";
+		case "03":
+			return "Mar";
+		case "04":
+			return "Apr";
+		case "05":
+			return "May";
+		case "06":
+			return "Jun";
+		case "07":
+			return "Jul";
+		case "08":
+			return "Aug";
+		case "09":
+			return "Sep";
+		case "10":
+			return "Oct";
+		case "11":
+			return "Nov";
+		case "12":
+			return "Dec";
+
+		case "Jan":
+			return "Jan";
+		case "Feb":
+			return "Feb";
+		case "Mar":
+			return "Mar";
+		case "Apr":
+			return "Apr";
+		case "May":
+			return "May";
+		case "Jun":
+			return "Jun";
+		case "Jul":
+			return "Jul";
+		case "Aug":
+			return "Aug";
+		case "Sep":
+			return "Sep";
+		case "Oct":
+			return "Oct";
+		case "Nov":
+			return "Nov";
+		case "Dec":
+			return "Dec";
+
+		default:
+			throw new IllegalArgumentException("unable to convert to 3-letter month: " + month);
+		}
 	}
 
 	/**
 	 * Look for first 3-letter abbreviation and return that as the month
+	 * 
 	 * @param dateStr
+	 * @param pmid
 	 * @return
 	 */
-	protected static String getMonth(String dateStr) {
-		Pattern p = Pattern.compile("(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)");
+	protected static String getMonth(String dateStr, String pmid) {
+		Pattern p = Pattern.compile("(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)|(Mai)",
+				Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(dateStr);
 		if (m.find()) {
-			String month = m.group();
-			switch (month) {
-			case "Jan":
-				return "01";
-			case "Feb":
-				return "02";
-			case "Mar":
-				return "03";
-			case "Apr":
-				return "04";
-			case "May":
-				return "05";
-			case "Jun":
-				return "06";
-			case "Jul":
-				return "07";
-			case "Aug":
-				return "08";
-			case "Sep":
-				return "09";
-			case "Oct":
-				return "10";
-			case "Nov":
-				return "11";
-			case "Dec":
-				return "12";
-
-			default:
-				return null;
+			String month = m.group().toLowerCase();
+			month = month.substring(0, 1).toUpperCase() + month.substring(1);
+			if (month.equalsIgnoreCase("Mai")) {
+				month = "May";
 			}
+			return month;
 		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d 1st Quarter$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jan";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d 2nd Quarter$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Apr";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d 3rd Quarter$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jul";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d 4th Quarter$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Winter(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jan";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Spring(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Apr";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Summer(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jul";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Fall(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Autumn(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Winter(-\\d\\d\\d\\d \\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jan";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Spring(-\\d\\d\\d\\d \\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Apr";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Summer(-\\d\\d\\d\\d \\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jul";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Fall(-\\d\\d\\d\\d \\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d Autumn(-\\d\\d\\d\\d \\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^Winter \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jan";
+		}
+
+		p = Pattern.compile("^Spring \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Apr";
+		}
+
+		p = Pattern.compile("^Summer \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jul";
+		}
+
+		p = Pattern.compile("^Fall \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^Autumn \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d ?-\\d\\d\\d\\d$");
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return null;
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d-\\d\\d\\d\\d Winter(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jan";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d-\\d\\d\\d\\d Spring(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Apr";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d-\\d\\d\\d\\d Summer(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Jul";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d-\\d\\d\\d\\d Fall(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d-\\d\\d\\d\\d Autumn(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return "Oct";
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d( \\d+-\\d+)?$");
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return null;
+		}
+
+		System.out.println("returning null month from: " + dateStr);
+
 		return null;
-		
+//		throw new IllegalArgumentException("This has not yet been implement: month from: " + dateStr + " for " + pmid);
 	}
 
-	private static String getDay(List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate, List<ArticleDate> articleDate) {
+	private static String getDay(List<Object> yearOrMonthOrDayOrSeasonOrMedlineDate, List<ArticleDate> articleDate,
+			String pmid) {
 		for (Object obj : yearOrMonthOrDayOrSeasonOrMedlineDate) {
 			if (obj instanceof MedlineDate) {
 				MedlineDate md = (MedlineDate) obj;
 				String dateStr = md.getvalue();
-				String day = getDay(dateStr);
+				String day = getDay(dateStr, pmid);
 				if (day != null) {
-					return day;
+					return enforceTwoDigitDay(day);
 				}
 			} else if (obj instanceof Day) {
 				Day d = (Day) obj;
 				if (d != null) {
-					return d.getvalue();
+					return enforceTwoDigitDay(d.getvalue());
 				}
 			}
 		}
@@ -276,15 +476,100 @@ public class MedlineUiMetadataExtractor {
 		for (ArticleDate ad : articleDate) {
 			Day d = ad.getDay();
 			if (d != null) {
-				return d.getvalue();
+				return enforceTwoDigitDay(d.getvalue());
 			}
 		}
 		return null;
 	}
 
-	private static String getDay(String dateStr) {
-		// TODO Auto-generated method stub
+	/**
+	 * Forces the day to be two-digits, e.g. 03
+	 * 
+	 * @param getvalue
+	 * @return
+	 */
+	private static String enforceTwoDigitDay(String day) {
+		if (day.length() == 1) {
+			return "0" + day;
+		}
+		return day;
+	}
+
+	protected static String getDay(String dateStr, String pmid) {
+		Pattern p = Pattern.compile(
+				"^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)-(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)$",
+				Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d (Spring)|(Summer)|(Winter)|(Fall)|(Autumn)$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile("^(Spring)|(Summer)|(Winter)|(Fall)|(Autumn) \\d\\d\\d\\d$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d (1st Quarter)|(2nd Quarter)|(3rd Quarter)|(4th Quarter)$",
+				Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile(
+				"^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec) (\\d+)(-\\d+)?$",
+				Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return m.group(13);
+		}
+
+		p = Pattern.compile(
+				"^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)-\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)$",
+				Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d( \\d+-\\d+)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile("^\\d\\d\\d\\d ?-\\d\\d\\d\\d( Winter)?$", Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			// there is no day listed in this pattern
+			return null;
+		}
+
+		p = Pattern.compile(
+				"^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)|(Mai)$",
+				Pattern.CASE_INSENSITIVE);
+		m = p.matcher(dateStr);
+		if (m.find()) {
+			return null;
+		}
+
+		System.out.println("returning null day from: " + dateStr);
+
 		return null;
+//		throw new IllegalArgumentException("This has not yet been implement: day from: " + dateStr + " for " + pmid);
 	}
 
 	/**
