@@ -1,9 +1,9 @@
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.operators.bash_operator  import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.hooks.base_hook import BaseHook
+# from airflow.operators.dummy_operator import DummyOperator
+# from airflow.hooks.base_hook import BaseHook
 from airflow.models import DAG
-from airflow.utils import dates
+# from airflow.utils import dates
 from datetime import datetime, timedelta
 
 from airflow.providers.google.cloud.operators.dataflow import (
@@ -19,8 +19,8 @@ from airflow.providers.google.cloud.sensors.dataflow import (
 
 from medline_xml_util import wrap_title_and_abstract_with_cdata
 import os
-import gzip
-import re
+# import gzip
+# import re
 
 # =============================================================================
 # | This Airflow workflow updates the Publication Metadata API by processing  |
@@ -28,8 +28,8 @@ import re
 # =============================================================================
 
 #====ENVIRONMENT VARIABLES THAT MUST BE SET IN CLOUD COMPOSER====
-# Note that Dataflow is not currently used by this pipeline, 
-# but the environment variable are included in case a DataflowOperator 
+# Note that Dataflow is not currently used by this pipeline,
+# but the environment variable are included in case a DataflowOperator
 # is added in the future
 DATAFLOW_TMP_LOCATION=os.environ.get('DATAFLOW_TMP_LOCATION')
 DATAFLOW_STAGING_LOCATION=os.environ.get('DATAFLOW_STAGING_LOCATION')
@@ -87,8 +87,8 @@ populate_load_directory = BashOperator(
 
 # checks to see if the to_load directory is empty
 def check_for_files_to_process(**kwargs):
-    dir = os.listdir("/home/airflow/gcs/data/pub_metadata_2023/to_load")
-    if len(dir) > 0:
+    load_dir = os.listdir("/home/airflow/gcs/data/pub_metadata_2023/to_load")
+    if len(load_dir) > 0:
         return 'wrap_with_cdata'
     return 'pipeline_end'
 
@@ -100,12 +100,12 @@ check_for_files_to_process = BranchPythonOperator(
         provide_context=True,
         dag=dag)
 
-# wraps the article title and abstract text with CDATA fields - this is 
+# wraps the article title and abstract text with CDATA fields - this is
 # necessary so that the XML parser doesn't fail when it encounters formatting
 # elements, such as <b>, <i>, <sup>, etc., in the titles and abstracts.
 wrap_with_cdata = PythonOperator(
         task_id='wrap_with_cdata',
-        python_callable=wrap_title_and_abstract_with_cdata, 
+        python_callable=wrap_title_and_abstract_with_cdata,
         provide_context=True,
         op_kwargs={'dir': '/home/airflow/gcs/data/pub_metadata_2023/to_load'},
         dag=dag)
@@ -150,7 +150,7 @@ trigger_publication_metadata_delete = BashOperator(
 
 
 # If all upstream tasks succeed, then remove files from the to_load directory.
-# If any of the upstream processes failed then the files will be kept in the 
+# If any of the upstream processes failed then the files will be kept in the
 # to_load directory so that they are processed the next time the workflow runs.
 pipeline_end = BashOperator(
     task_id='pipeline_end',
