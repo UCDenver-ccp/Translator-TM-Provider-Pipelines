@@ -3,12 +3,14 @@ package edu.cuanschutz.ccp.tm_provider.corpora;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -20,7 +22,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.medline.AbstractText;
+import org.medline.DeleteCitation;
 import org.medline.MedlineCitation;
+import org.medline.PMID;
 import org.medline.PubmedArticle;
 import org.medline.PubmedArticleSet;
 
@@ -40,10 +44,13 @@ public class PmidToFileExtractor {
 	protected static void extractPmids(InputStream xmlStream, File outputDirectory, String inputFileName)
 			throws JAXBException, XMLStreamException, IOException {
 
-		File outputFile = new File(outputDirectory, inputFileName + ".ids");
+		File pmidsOutputFile = new File(outputDirectory, inputFileName + ".ids");
+		File deletedPmidsOutputFile = new File(outputDirectory, inputFileName + ".deleted.ids");
 
-		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile, CharacterEncoding.UTF_8,
-				WriteMode.APPEND, FileSuffixEnforcement.OFF)) {
+		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(pmidsOutputFile, CharacterEncoding.UTF_8,
+				WriteMode.APPEND, FileSuffixEnforcement.OFF);
+				BufferedWriter deletedPmidWriter = FileWriterUtil.initBufferedWriter(deletedPmidsOutputFile,
+						CharacterEncoding.UTF_8, WriteMode.APPEND, FileSuffixEnforcement.OFF)) {
 
 			JAXBContext context = JAXBContext.newInstance(PubmedArticleSet.class);
 			Unmarshaller um = context.createUnmarshaller();
@@ -68,18 +75,21 @@ public class PmidToFileExtractor {
 				while (reader.hasNext()
 						&& (!reader.isStartElement() || !reader.getLocalName().equals("PubmedArticle"))) {
 					reader.next();
+					if (reader.isStartElement() && reader.getLocalName().equals("DeleteCitation")) {
+						JAXBElement<DeleteCitation> deleteElement = um.unmarshal(reader, DeleteCitation.class);
+						DeleteCitation dc = deleteElement.getValue();
+						List<PMID> pmidsToBeDeleted = dc.getPMID();
+						for (PMID pmidToDelete : pmidsToBeDeleted) {
+							deletedPmidWriter.write(String.format("%s\t%s\n", pmidToDelete.getvalue(), inputFileName));
+						}
+					}
 				}
-
 			}
-
 			reader.close();
-
 		}
-
 	}
 
 	public static void main(String[] args) {
-
 		File xmlDirectory = new File(args[0]);
 		File outputDirectory = new File(args[1]);
 		int skip = Integer.parseInt(args[2]);
