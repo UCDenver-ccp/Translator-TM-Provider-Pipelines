@@ -281,67 +281,90 @@ public class MedlineUiMetadataExtractor {
 	 * @return
 	 */
 	protected static String getMonth(String dateStr, String pmid) {
-		Pattern p = Pattern.compile("(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)|(Mai)",
+		Pattern p = Pattern.compile(
+				"(Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)|(janvier)|(février)|(mars)|(avril)|(mai)|(juin)|(juillet)|(aout)|(septembre)|(octobre)|(novembre)|(décembre)",
 				Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(dateStr);
 		if (m.find()) {
 			String month = m.group().toLowerCase();
 			month = month.substring(0, 1).toUpperCase() + month.substring(1);
-			if (month.equalsIgnoreCase("Mai")) {
+			if (month.equalsIgnoreCase("janvier")) {
+				month = "Jan";
+			} else if (month.equalsIgnoreCase("février")) {
+				month = "Feb";
+			} else if (month.equalsIgnoreCase("mars")) {
+				month = "Mar";
+			} else if (month.equalsIgnoreCase("avril")) {
+				month = "Apr";
+			} else if (month.equalsIgnoreCase("mai")) {
 				month = "May";
+			} else if (month.equalsIgnoreCase("juin")) {
+				month = "Jun";
+			} else if (month.equalsIgnoreCase("juillet")) {
+				month = "Jul";
+			} else if (month.equalsIgnoreCase("aout")) {
+				month = "Aug";
+			} else if (month.equalsIgnoreCase("septembre")) {
+				month = "Sep";
+			} else if (month.equalsIgnoreCase("octobre")) {
+				month = "Oct";
+			} else if (month.equalsIgnoreCase("novembre")) {
+				month = "Nov";
+			} else if (month.equalsIgnoreCase("décembre")) {
+				month = "Dec";
 			}
 			return month;
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d 1st Quarter$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d (1st)|(First) Quarter$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Jan";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d 2nd Quarter$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d (2nd)|(Second) Quarter$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Apr";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d 3rd Quarter$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d (3rd)|(Third) Quarter$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Jul";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d 4th Quarter$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d (4th)|(Fourth) Quarter$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Oct";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d Winter(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d Winter(-\\w+)?( 01)?$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Jan";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d Spring(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d Spring(-\\w+)?( 01)?$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Apr";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d Summer(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d Summer(-\\w+)?( 01)?$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Jul";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d Fall(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d Fall(-\\w+)?( 01)?$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Oct";
 		}
 
-		p = Pattern.compile("^\\d\\d\\d\\d Autumn(-\\w+)?$", Pattern.CASE_INSENSITIVE);
+		p = Pattern.compile("^\\d\\d\\d\\d Autumn(-\\w+)?( 01)?$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(dateStr);
 		if (m.find()) {
 			return "Oct";

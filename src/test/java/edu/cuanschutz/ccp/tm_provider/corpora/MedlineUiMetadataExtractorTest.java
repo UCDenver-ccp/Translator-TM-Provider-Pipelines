@@ -102,105 +102,119 @@ public class MedlineUiMetadataExtractorTest {
 
 		month = MedlineUiMetadataExtractor.getMonth("2015 Nov-Dec", "1234");
 		assertEquals("Nov", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2009 Dec-2010 Jan", "1234");
 		assertEquals("Dec", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("Spring 2017", "1234");
 		assertEquals("Apr", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2017 Mai", "1234");
 		assertEquals("May", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2017 MAY", "1234");
 		assertEquals("May", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("1975-1976", "1234");
 		assertEquals(null, month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("1976-1977 Winter", "1234");
 		assertEquals("Jan", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("1977-1978 Fall-Winter", "1234");
 		assertEquals("Oct", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2002 Winter-Spring", "1234");
 		assertEquals("Jan", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("1983 Fall-Winter", "1234");
 		assertEquals("Oct", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("1983-1984 Winter-Spring", "1234");
 		assertEquals("Jan", month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2017 1-2", "1234");
 		assertEquals(null, month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2015 -2016", "1234");
 		assertEquals(null, month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2023 Special Issue On COVID-19", "1234");
 		assertEquals(null, month);
-		
+
 		month = MedlineUiMetadataExtractor.getMonth("2012 Autumn-2013 Winter", "1234");
 		assertEquals("Oct", month);
-		
-		
-		
+
+		month = MedlineUiMetadataExtractor.getMonth("2023 First Quarter", "1234");
+		assertEquals("Jan", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2022 Third Quarter", "1234");
+		assertEquals("Jul", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2022 avril", "1234");
+		assertEquals("Apr", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2022 juillet", "1234");
+		assertEquals("Jul", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2023 Spring 01", "1234");
+		assertEquals("Apr", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2022 décembre 01", "1234");
+		assertEquals("Dec", month);
+
 	}
 
 	@Test
 	public void testGetDay() {
 		String day = MedlineUiMetadataExtractor.getDay("2008 Dec 1-8", "1234");
 		assertEquals("1", day);
-		
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2009 Dec-2010 Jan", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2017 Mai", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("1975-1976", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("1976-1977 Winter", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("1977-1978 Fall-Winter", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2002 Winter-Spring", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("1983 Fall-Winter", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("1983-1984 Winter-Spring", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2017 1-2", "1234");
 		assertEquals(null, day);
 
 		day = MedlineUiMetadataExtractor.getDay("2015 -2016", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2023 Special Issue On COVID-19", "1234");
 		assertEquals(null, day);
-		
+
 		day = MedlineUiMetadataExtractor.getDay("2012 Autumn-2013 Winter", "1234");
 		assertEquals(null, day);
 
-		
 	}
 
 	@Test
 	public void testPattern() {
-		Pattern p = Pattern
-				.compile("^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)-\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)$");
+		Pattern p = Pattern.compile(
+				"^\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)-\\d\\d\\d\\d (Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec)$");
 		Matcher m = p.matcher("2009 Dec-2010 Jan");
 		assertTrue(m.find());
-		
+
 	}
 
 }
