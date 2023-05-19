@@ -287,7 +287,9 @@ public class MedlineUiMetadataExtractor {
 			return "Dec";
 
 		default:
-			throw new IllegalArgumentException("unable to convert to 3-letter month: " + month);
+			System.err.println("XXXXXX unable to convert to 3-letter month: " + month);
+			return null;
+//			throw new IllegalArgumentException("unable to convert to 3-letter month: " + month);
 		}
 	}
 
