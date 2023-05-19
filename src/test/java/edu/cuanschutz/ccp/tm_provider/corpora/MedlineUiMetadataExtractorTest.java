@@ -163,6 +163,15 @@ public class MedlineUiMetadataExtractorTest {
 		month = MedlineUiMetadataExtractor.getMonth("2022 décembre 01", "1234");
 		assertEquals("Dec", month);
 
+		month = MedlineUiMetadataExtractor.getMonth("2019 Spring/Summer", "1234");
+		assertEquals("Apr", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("1965 3d Quart", "1234");
+		assertEquals("Jul", month);
+
+		month = MedlineUiMetadataExtractor.getMonth("2020 Supplement Jan", "1234");
+		assertEquals("Jan", month);
+
 	}
 
 	@Test
