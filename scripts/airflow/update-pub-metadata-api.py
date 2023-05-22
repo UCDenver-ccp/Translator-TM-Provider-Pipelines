@@ -168,7 +168,7 @@ clean_ids_dir = BashOperator(
 # If all upstream tasks succeed, then remove files from the to_load directory.
 # If any of the upstream processes failed then the files will be kept in the
 # to_load directory so that they are processed the next time the workflow runs.
-# 
+#
 # Since this rule has the trigger_rule=all_done, it runs regardless of success or fail of the pipeline.
 pipeline_end = BashOperator(
     task_id='pipeline_end',
