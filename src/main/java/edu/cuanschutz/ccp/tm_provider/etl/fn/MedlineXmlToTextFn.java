@@ -377,15 +377,15 @@ public class MedlineXmlToTextFn extends DoFn<PubmedArticle, KV<String, List<Stri
 
 				// validate that the tag type of the popped annot matches the expected tag type
 				if (!tag.getTagText().equals(annot.getClassMention().getMentionName())) {
-					throw new IllegalStateException(String.format("Popped annot not of expected type: %s != %s",
-							tag.getTagText(), annot.getClassMention().getMentionName()));
+					System.err.println(String.format("Popped annot not of expected type: %s != %s for document %s",
+							tag.getTagText(), annot.getClassMention().getMentionName(), docId));
+				} else {
+					int end = tag.getStart();
+					int start = annot.getAnnotationSpanStart();
+					annot.setSpan(new Span(start, end));
+					annot.setCoveredText(updatedText.substring(start, end));
+					annots.add(annot);
 				}
-
-				int end = tag.getStart();
-				int start = annot.getAnnotationSpanStart();
-				annot.setSpan(new Span(start, end));
-				annot.setCoveredText(updatedText.substring(start, end));
-				annots.add(annot);
 			}
 			// update the text by removing the tag that was just processed
 			updatedText = updatedText.replaceFirst(tag.getRegex(), "");
