@@ -70,7 +70,7 @@ dag = DAG(dag_id='update-pub-metadata-api-dag', default_args=args, catchup=False
 # to pub-metadata-update-downloaded-files.txt
 download = BashOperator(
     task_id='download-pubmed-update-files',
-    bash_command="cd /home/airflow/gcs/data/pub_metadata_2023/update_files && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed23n*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > pub-metadata-update-downloaded-files.txt",
+    bash_command="cd /home/airflow/gcs/data/pub_metadata_2023/update_files && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed23n*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > pub-metadata-update-downloaded-files.txt && cat pub-metadata-update-downloaded-files.txt",
     dag=dag)
 
 # TODO: the md5sum verify could be targeted to only the newly downloaded files
