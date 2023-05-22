@@ -6,16 +6,16 @@ from airflow.models import DAG
 # from airflow.utils import dates
 from datetime import datetime, timedelta
 
-from airflow.providers.google.cloud.operators.dataflow import (
-    CheckJobRunning,
-    DataflowCreateJavaJobOperator,
-)
-from airflow.providers.google.cloud.sensors.dataflow import (
-    DataflowJobAutoScalingEventsSensor,
-    DataflowJobMessagesSensor,
-    DataflowJobMetricsSensor,
-    DataflowJobStatusSensor,
-)
+# from airflow.providers.google.cloud.operators.dataflow import (
+#     CheckJobRunning,
+#     DataflowCreateJavaJobOperator,
+# )
+# from airflow.providers.google.cloud.sensors.dataflow import (
+#     DataflowJobAutoScalingEventsSensor,
+#     DataflowJobMessagesSensor,
+#     DataflowJobMetricsSensor,
+#     DataflowJobStatusSensor,
+# )
 
 from medline_xml_util import wrap_title_and_abstract_with_cdata
 import os
@@ -110,6 +110,15 @@ wrap_with_cdata = PythonOperator(
         op_kwargs={'dir': '/home/airflow/gcs/data/pub_metadata_2023/to_load'},
         dag=dag)
 
+
+# create a file containing the PMIDs to add -- this will be used to update the file-based catalog of PMIDs that have been processed
+# the PMIDs are mined from the Medline XML files
+update_pmids_files = BashOperator(
+    task_id='update_pmids_files',
+    bash_command="mkdir -p /home/airflow/gcs/data/pub_metadata_2023/ids && jar -tf /home/airflow/gcs/data/$TM_PIPELINES_JAR_NAME | grep PmidToFileExtractor && java -cp /home/airflow/gcs/data/$TM_PIPELINES_JAR_NAME edu.cuanschutz.ccp.tm_provider.corpora.PmidToFileExtractor /home/airflow/gcs/data/pub_metadata_2023/to_load /home/airflow/gcs/data/pub_metadata_2023/ids 0 && cp /home/airflow/gcs/data/pub_metadata_2023/all.pmids.gz /home/airflow/gcs/data/pub_metadata_2023/all.pmids.bak.gz && gunzip /home/airflow/gcs/data/pub_metadata_2023/all.pmids.gz && cat /home/airflow/gcs/data/pub_metadata_2023/ids/*.gz.ids /home/airflow/gcs/data/pub_metadata_2023/all.pmids | sort | uniq > /home/airflow/gcs/data/pub_metadata_2023/all.pmids.temp && mv /home/airflow/gcs/data/pub_metadata_2023/all.pmids.temp /home/airflow/gcs/data/pub_metadata_2023/all.pmids && gzip /home/airflow/gcs/data/pub_metadata_2023/all.pmids && cp /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted.gz /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted.bak.gz && gunzip /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted.gz && cat /home/airflow/gcs/data/pub_metadata_2023/ids/*.gz.deleted.ids /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted | sort | uniq > /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted.temp && mv /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted.temp /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted && gzip /home/airflow/gcs/data/pub_metadata_2023/all.pmids.deleted",
+    env={'TM_PIPELINES_JAR_NAME': TM_PIPELINES_JAR_NAME},
+    dag=dag)
+
 # create the publication metadata files
 create_publication_metadata = BashOperator(
     task_id='create_publication_metadata',
@@ -149,12 +158,22 @@ trigger_publication_metadata_delete = BashOperator(
     dag=dag)
 
 
+# clean up after the pmid file creation process by deleting all files in the ids directory
+clean_ids_dir = BashOperator(
+    task_id='clean_ids_dir',
+    bash_command="rm -rf /home/airflow/gcs/data/pub_metadata_2023/ids",
+    trigger_rule="all_done",
+    dag=dag)
+
 # If all upstream tasks succeed, then remove files from the to_load directory.
 # If any of the upstream processes failed then the files will be kept in the
 # to_load directory so that they are processed the next time the workflow runs.
+# 
+# Since this rule has the trigger_rule=all_done, it runs regardless of success or fail of the pipeline.
 pipeline_end = BashOperator(
     task_id='pipeline_end',
     bash_command="rm /home/airflow/gcs/data/pub_metadata_2023/to_load/* && rm /home/airflow/gcs/data/pub_metadata_2023/metadata/*",
+    trigger_rule="all_done",
     dag=dag)
 
 
@@ -162,6 +181,8 @@ verify_md5.set_upstream(download)
 populate_load_directory.set_upstream(verify_md5)
 check_for_files_to_process.set_upstream(populate_load_directory)
 wrap_with_cdata.set_upstream(check_for_files_to_process)
+update_pmids_files.set_upstream(wrap_with_cdata)
+clean_ids_dir.set_upstream(update_pmids_files)
 create_publication_metadata.set_upstream(wrap_with_cdata)
 aggregate_publication_metadata.set_upstream(create_publication_metadata)
 move_aggregate_publication_data_to_bucket.set_upstream(aggregate_publication_metadata)
