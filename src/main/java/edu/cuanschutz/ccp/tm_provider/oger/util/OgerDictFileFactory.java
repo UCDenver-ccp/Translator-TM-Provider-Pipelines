@@ -59,7 +59,7 @@ public class OgerDictFileFactory {
 		OWLClass diseaseCharacteristic = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0021125");
 		OWLClass defectCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0008568");
 		OWLClass thyroidTumorCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0015074");
-		
+
 		int count = 0;
 		List<String> singleTokenRelatedSynonyms = new ArrayList<String>();
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
@@ -91,7 +91,7 @@ public class OgerDictFileFactory {
 					if (cls.equals(defectCls)) {
 						synonyms.remove("defect");
 					}
-					
+
 					if (cls.equals(thyroidTumorCls)) {
 						synonyms.remove("THYROID");
 					}
@@ -240,6 +240,51 @@ public class OgerDictFileFactory {
 					writeDictLine(alreadyWritten, writer, dictLine);
 				}
 
+			}
+		}
+	}
+
+	/**
+	 * @param moleproChemicalLabelFile - file provided by MolePro that contains
+	 *                                 labels mapped to pubchem identifiers
+	 * @param dictFile
+	 * @throws IOException
+	 */
+	public static void createChemicalOgerDictFile(File moleproChemicalLabelFile, File dictFile) throws IOException {
+
+		String id = null;
+		Set<String> labels = new HashSet<String>();
+		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+			for (StreamLineIterator lineIter = new StreamLineIterator(moleproChemicalLabelFile, CharacterEncoding.UTF_8,
+					null); lineIter.hasNext();) {
+				String line = lineIter.next().getText();
+				String[] cols = line.split("\\t");
+
+				
+				String pubchemId = cols[0];
+				String label = cols[1];
+
+				if (id == null || id.equals(pubchemId)) {
+					id = pubchemId;
+					labels.add(label);
+				} else {
+					// we've reached a new pubchem ID so it's time to serialize the labels for the
+					// previous ID and then reset the id and set
+					for (String lbl : labels) {
+						String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
+						writeDictLine(new HashSet<String>(), writer, dictLine);
+					}
+
+					id = pubchemId;
+					labels = new HashSet<String>();
+					labels.add(label);
+				}
+			}
+
+			// write the final set of labels
+			for (String lbl : labels) {
+				String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
+				writeDictLine(new HashSet<String>(), writer, dictLine);
 			}
 		}
 	}
