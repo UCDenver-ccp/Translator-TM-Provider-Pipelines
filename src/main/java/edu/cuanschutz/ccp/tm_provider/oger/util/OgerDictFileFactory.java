@@ -61,7 +61,7 @@ public class OgerDictFileFactory {
 		OWLClass thyroidTumorCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0015074");
 
 		int count = 0;
-		List<String> singleTokenRelatedSynonyms = new ArrayList<String>();
+//		List<String> singleTokenRelatedSynonyms = new ArrayList<String>();
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
 			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
 				OWLClass cls = classIterator.next();
@@ -82,11 +82,11 @@ public class OgerDictFileFactory {
 					synonyms.add(label);
 					synonyms = augmentSynonyms(synonyms);
 
-					for (String syn : relatedSyns) {
-						if (!syn.contains(" ")) {
-							singleTokenRelatedSynonyms.add(syn);
-						}
-					}
+//					for (String syn : relatedSyns) {
+//						if (!syn.contains(" ")) {
+//							singleTokenRelatedSynonyms.add(syn);
+//						}
+//					}
 
 					if (cls.equals(defectCls)) {
 						synonyms.remove("defect");
@@ -108,13 +108,13 @@ public class OgerDictFileFactory {
 			}
 		}
 
-		Collections.sort(singleTokenRelatedSynonyms);
-		try (BufferedWriter writer = FileWriterUtil
-				.initBufferedWriter(new File(dictFile.getParentFile(), "mondo_single_token_related_synonyms.txt"))) {
-			for (String syn : singleTokenRelatedSynonyms) {
-				writer.write(syn + "\n");
-			}
-		}
+//		Collections.sort(singleTokenRelatedSynonyms);
+//		try (BufferedWriter writer = FileWriterUtil
+//				.initBufferedWriter(new File(dictFile.getParentFile(), "mondo_single_token_related_synonyms.txt"))) {
+//			for (String syn : singleTokenRelatedSynonyms) {
+//				writer.write(syn + "\n");
+//			}
+//		}
 
 	}
 
