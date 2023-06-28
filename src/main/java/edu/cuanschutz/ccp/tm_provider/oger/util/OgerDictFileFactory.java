@@ -260,24 +260,25 @@ public class OgerDictFileFactory {
 				String line = lineIter.next().getText();
 				String[] cols = line.split("\\t");
 
-				
 				String pubchemId = cols[0];
-				String label = cols[1];
+				String label = processChemicalLabel(pubchemId, cols[1]);
 
-				if (id == null || id.equals(pubchemId)) {
-					id = pubchemId;
-					labels.add(label);
-				} else {
-					// we've reached a new pubchem ID so it's time to serialize the labels for the
-					// previous ID and then reset the id and set
-					for (String lbl : labels) {
-						String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
-						writeDictLine(new HashSet<String>(), writer, dictLine);
+				if (label != null) {
+					if (id == null || id.equals(pubchemId)) {
+						id = pubchemId;
+						labels.add(label);
+					} else {
+						// we've reached a new pubchem ID so it's time to serialize the labels for the
+						// previous ID and then reset the id and set
+						for (String lbl : labels) {
+							String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
+							writeDictLine(new HashSet<String>(), writer, dictLine);
+						}
+
+						id = pubchemId;
+						labels = new HashSet<String>();
+						labels.add(label);
 					}
-
-					id = pubchemId;
-					labels = new HashSet<String>();
-					labels.add(label);
 				}
 			}
 
@@ -287,6 +288,66 @@ public class OgerDictFileFactory {
 				writeDictLine(new HashSet<String>(), writer, dictLine);
 			}
 		}
+	}
+
+	private static String processChemicalLabel(String id, String s) {
+		// if < 4 characters after removing punctuation, then exclude
+		String sNoPunct = s.replaceAll("\\p{Punct}", "");
+		if (sNoPunct.length() < 4) {
+//			System.out.println("Excluding: "+ s);
+			return null;
+		}
+
+		// if there's only one comma, then move the right side to be in front of the
+		// left side
+		String[] cols = s.split(",");
+		if (cols.length == 2) {
+			String l = cols[1] + (cols[1].endsWith("-") ? "" : " ") + cols[0];
+//			System.out.println("Flipping: " + cols[1] + " | " + cols[0] + " = " + l);
+			return l;
+		} else if (cols.length > 2) {
+			// exclude labels with more than one comma
+//			System.out.println("Excluding -- too many commas: " + s);
+			return null;
+		}
+
+		// remove labels that are > 30% digits
+		String noDigits = s.replaceAll("\\d", "").replaceAll("\\s", "");
+		float percentDigits = (float) (s.length() - noDigits.length()) / (float) s.length();
+		if (percentDigits > 0.3) {
+//			System.out.println("Exclude based on percent digits: " + s);
+			return null;
+		}
+
+		// if the label is surrounded by square brackets, remove them
+		if (s.startsWith("[") && s.endsWith("]")) {
+			return s.substring(1, s.length() - 1);
+		}
+
+		// specific exclusions
+		if (id.equalsIgnoreCase("PUBCHEM.COMPOUND:444212") && s.equalsIgnoreCase("Acid")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:139199449") && s.equalsIgnoreCase("ligand")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:4201") && s.equalsIgnoreCase("solution")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:3036828") && s.equalsIgnoreCase("methyl")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:135616186") && s.equalsIgnoreCase("focus")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:135438605") && s.equalsIgnoreCase("focus")) {
+			return null;
+		}
+		if (id.equalsIgnoreCase("pubchem.compound:4641") && s.equalsIgnoreCase("optimal")) {
+			return null;
+		}
+
+		return s;
 	}
 
 	private static void writeDictLine(Set<String> alreadyWritten, BufferedWriter writer, String dictLine)
