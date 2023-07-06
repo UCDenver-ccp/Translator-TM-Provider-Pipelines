@@ -4,8 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -21,36 +19,87 @@ import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil.SynonymType;
 import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
+import lombok.Data;
 
-public class OgerDictFileFactory {
+@Data
+public abstract class OgerDictFileFactory {
 
-	public static void createOgerDictionaryFile(File ontologyFile, File dictFile, String ontMainType, String ontKey)
-			throws OWLOntologyCreationException, FileNotFoundException, IOException {
-		OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
+	public enum SynonymSelection {
+		EXACT_ONLY, EXACT_PLUS_RELATED
+	}
 
+	private final String mainType;
+	private final String ontologyPrefix;
+	private final SynonymSelection synSelection;
+	private final List<String> classesToExclude;
+
+	public void createOgerDictionaryFile(File ontologyFile, File dictFile) throws IOException {
 		int count = 0;
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+			OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
+			Set<OWLClass> exclusionClasses = getExclusionClasses(ontUtil);
 			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
 				OWLClass cls = classIterator.next();
 				if (count++ % 10000 == 0) {
 					System.out.println("progress: " + count);
 				}
-				if (cls.getIRI().toString().contains(ontKey)) {
+				if (exclusionClasses.contains(cls)) {
+					continue;
+				}
+				if (cls.getIRI().toString().contains(ontologyPrefix)) {
 					String label = ontUtil.getLabel(cls);
 					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
+					if (synSelection == SynonymSelection.EXACT_PLUS_RELATED) {
+						Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
+						synonyms.addAll(relatedSyns);
+					}
+					synonyms.add(label);
+					synonyms = augmentSynonyms(cls.getIRI().toString(), synonyms);
+					synonyms = filterSynonyms(cls.getIRI().toString(), synonyms);
 
 					if (label != null) {
-						writer.write(getDictLine(ontKey, cls.getIRI().toString(), label, label, ontMainType, true));
+						writer.write(
+								getDictLine(ontologyPrefix, cls.getIRI().toString(), label, label, mainType, true));
 						for (String syn : synonyms) {
-							writer.write(getDictLine(ontKey, cls.getIRI().toString(), syn, label, ontMainType, true));
+							writer.write(
+									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
 						}
 					} else {
 						System.out.println("null label id: " + cls.getIRI().toString());
 					}
 				}
 			}
+		} catch (OWLOntologyCreationException e) {
+			throw new IOException(e);
 		}
 	}
+
+	/**
+	 * Return the OWLClass objects for the specified classesToExclude including all
+	 * descendents
+	 * 
+	 * @param ontUtil
+	 * @return
+	 */
+	private Set<OWLClass> getExclusionClasses(OntologyUtil ontUtil) {
+		Set<OWLClass> clses = new HashSet<OWLClass>();
+		if (classesToExclude != null) {
+			for (String clsName : classesToExclude) {
+				OWLClass cls = ontUtil.getOWLClassFromId(clsName);
+				clses.add(cls);
+				clses.addAll(ontUtil.getDescendents(cls));
+				if (cls == null) {
+					throw new IllegalArgumentException(
+							String.format("Unable to find exlusion class (%s) in the ontology.", clsName));
+				}
+			}
+		}
+		return clses;
+	}
+
+	protected abstract Set<String> augmentSynonyms(String iri, Set<String> syns);
+
+	protected abstract Set<String> filterSynonyms(String iri, Set<String> syns);
 
 	public static void createOgerDictionaryFile_MONDO(File ontologyFile, File dictFile, String ontMainType,
 			String ontKey) throws OWLOntologyCreationException, FileNotFoundException, IOException {
