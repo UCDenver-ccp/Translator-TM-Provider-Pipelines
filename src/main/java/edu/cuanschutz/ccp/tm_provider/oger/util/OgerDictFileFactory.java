@@ -33,9 +33,27 @@ public abstract class OgerDictFileFactory {
 	private final SynonymSelection synSelection;
 	private final List<String> classesToExclude;
 
-	public void createOgerDictionaryFile(File ontologyFile, File dictFile) throws IOException {
+	/**
+	 * For an input ontology, this method creates two OGER dictionary files. One for
+	 * strings that will be processed in a case-insensitive manner. The other will
+	 * be used for case-sensitive search, and is targeted at acronyms an
+	 * abbreviations that are in all or mostly all caps.
+	 * 
+	 * @param ontologyFile
+	 * @param dictDirectory the directory where dictionary files will be created
+	 * @para dictFileNamePrefix a prefix to be used for the generated dictionary
+	 *       files
+	 * @throws IOException
+	 */
+	public void createOgerDictionaryFile(File ontologyFile, File dictDirectory) throws IOException {
 		int count = 0;
-		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+
+		File caseInsensitiveDictFile = new File(dictDirectory,
+				String.format("%s.case_insensitive.tsv", ontologyPrefix));
+		File caseSensitiveDictFile = new File(dictDirectory, String.format("%s.case_sensitive.tsv", ontologyPrefix));
+
+		try (BufferedWriter caseSensWriter = FileWriterUtil.initBufferedWriter(caseSensitiveDictFile);
+				BufferedWriter caseInsensWriter = FileWriterUtil.initBufferedWriter(caseInsensitiveDictFile)) {
 			OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
 			Set<OWLClass> exclusionClasses = getExclusionClasses(ontUtil);
 			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
@@ -46,7 +64,11 @@ public abstract class OgerDictFileFactory {
 				if (exclusionClasses.contains(cls)) {
 					continue;
 				}
-				if (cls.getIRI().toString().contains(ontologyPrefix)) {
+				String ontologyIdPrefix = ontologyPrefix;
+				if (ontologyPrefix.contains("GO_")) {
+					ontologyIdPrefix = "GO";
+				}
+				if (cls.getIRI().toString().contains(ontologyIdPrefix)) {
 					String label = ontUtil.getLabel(cls);
 					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
 					if (synSelection == SynonymSelection.EXACT_PLUS_RELATED) {
@@ -54,14 +76,26 @@ public abstract class OgerDictFileFactory {
 						synonyms.addAll(relatedSyns);
 					}
 					synonyms.add(label);
+					synonyms = fixLabels(synonyms);
 					synonyms = augmentSynonyms(cls.getIRI().toString(), synonyms);
-					synonyms = filterSynonyms(cls.getIRI().toString(), synonyms);
+
+					/*
+					 * split the synonyms into two sets, one that will be match in a case sensitive
+					 * manner, and one that will be case insensitive
+					 */
+
+					Set<String> caseSensitiveSyns = getCaseSensitiveSynonyms(synonyms);
+
+					/* the synonyms set becomes the case-insensitive set */
+					synonyms.removeAll(caseSensitiveSyns);
 
 					if (label != null) {
-						writer.write(
-								getDictLine(ontologyPrefix, cls.getIRI().toString(), label, label, mainType, true));
+						for (String syn : caseSensitiveSyns) {
+							caseSensWriter.write(
+									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
+						}
 						for (String syn : synonyms) {
-							writer.write(
+							caseInsensWriter.write(
 									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
 						}
 					} else {
@@ -72,6 +106,77 @@ public abstract class OgerDictFileFactory {
 		} catch (OWLOntologyCreationException e) {
 			throw new IOException(e);
 		}
+	}
+
+	/**
+	 * @param synonyms
+	 * @return a set containing the synonyms that should be match in a
+	 *         case-sensitive manner
+	 */
+	public static Set<String> getCaseSensitiveSynonyms(Set<String> synonyms) {
+		Set<String> caseSensitiveSyns = new HashSet<String>();
+		for (String syn : synonyms) {
+			if (isCaseSensitive(syn)) {
+				caseSensitiveSyns.add(syn);
+			}
+		}
+
+		return caseSensitiveSyns;
+	}
+
+	/**
+	 * Return any string that is > 50% uppercase
+	 * 
+	 * @param syn
+	 * @return
+	 */
+	protected static boolean isCaseSensitive(String s) {
+
+		String sTrimmed = s.trim();
+		int ucCount = 0;
+		for (int i = 0; i < sTrimmed.length(); i++) {
+			char c = sTrimmed.charAt(i);
+			if (Character.isUpperCase(c) || Character.isDigit(c)) {
+				ucCount++;
+			}
+		}
+		float percentUpper = (float) ucCount / (float) sTrimmed.length();
+		return percentUpper > 0.5;
+	}
+
+	/**
+	 * removes any stopwords in the input set
+	 * 
+	 * @param input
+	 * @return
+	 */
+	protected Set<String> removeStopWords(Set<String> input) {
+		Set<String> updatedSet = new HashSet<String>();
+		Set<String> stopwords = new HashSet<String>(StopWordUtil.STOPWORDS);
+		for (String syn : input) {
+			if (!stopwords.contains(syn.toLowerCase())) {
+				updatedSet.add(syn);
+			}
+		}
+		return updatedSet;
+	}
+
+	/**
+	 * remove words from the input set that are less than length l (in character
+	 * count)
+	 * 
+	 * @param input
+	 * @param l
+	 * @return
+	 */
+	protected Set<String> removeWordsLessThenLength(Set<String> input, int l) {
+		Set<String> updatedSet = new HashSet<String>();
+		for (String syn : input) {
+			if (syn.length() >= l) {
+				updatedSet.add(syn);
+			}
+		}
+		return updatedSet;
 	}
 
 	/**
@@ -99,7 +204,7 @@ public abstract class OgerDictFileFactory {
 
 	protected abstract Set<String> augmentSynonyms(String iri, Set<String> syns);
 
-	protected abstract Set<String> filterSynonyms(String iri, Set<String> syns);
+//	protected abstract Set<String> filterSynonyms(String iri, Set<String> syns);
 
 	public static void createOgerDictionaryFile_MONDO(File ontologyFile, File dictFile, String ontMainType,
 			String ontKey) throws OWLOntologyCreationException, FileNotFoundException, IOException {
@@ -199,10 +304,8 @@ public abstract class OgerDictFileFactory {
 		toAdd = new HashSet<String>();
 		for (String syn : toReturn) {
 			if (syn.contains(", formerly")) {
-				System.out.println("Adding: " + syn.replace(", formerly", ""));
 				toAdd.add(syn.replace(", formerly", ""));
 			} else if (syn.contains("(formerly)")) {
-				System.out.println("Adding: " + syn.replace("(formerly)", ""));
 				toAdd.add(syn.replace("(formerly)", ""));
 			}
 		}
@@ -399,7 +502,7 @@ public abstract class OgerDictFileFactory {
 		return s;
 	}
 
-	private static void writeDictLine(Set<String> alreadyWritten, BufferedWriter writer, String dictLine)
+	public static void writeDictLine(Set<String> alreadyWritten, BufferedWriter writer, String dictLine)
 			throws IOException {
 		if (!alreadyWritten.contains(dictLine)) {
 			writer.write(dictLine);
@@ -407,7 +510,7 @@ public abstract class OgerDictFileFactory {
 		}
 	}
 
-	private static String getDictLine(String ontKey, String iri, String label, String primaryLabel, String ontMainType,
+	public static String getDictLine(String ontKey, String iri, String label, String primaryLabel, String ontMainType,
 			boolean processId) {
 		String id = iri;
 		if (processId) {
@@ -430,6 +533,14 @@ public abstract class OgerDictFileFactory {
 		}
 
 		return label.trim();
+	}
+
+	protected static Set<String> fixLabels(Set<String> labels) {
+		Set<String> fixed = new HashSet<String>();
+		for (String l : labels) {
+			fixed.add(fixLabel(l));
+		}
+		return fixed;
 	}
 
 }
