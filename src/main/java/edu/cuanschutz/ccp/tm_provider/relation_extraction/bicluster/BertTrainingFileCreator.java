@@ -8,10 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.RegExUtils;
-import org.apache.tools.ant.types.RegularExpression;
-
-import com.ctc.wstx.util.StringUtil;
 
 import edu.cuanschutz.ccp.tm_provider.relation_extraction.bicluster.PerchaAltmanPartIFileParser.Theme;
 import edu.cuanschutz.ccp.tm_provider.relation_extraction.bicluster.PerchaAltmanPartIIFileParser.Sentence;
@@ -45,10 +41,10 @@ public class BertTrainingFileCreator {
 				// affects_expression
 				Set<Theme> themesToInclude = CollectionsUtil.createSet(Theme.B_BINDING, Theme.W_ENHANCES_RESPONSE,
 						Theme.Vplus_ACTIVATES, Theme.E_AFFECTS_EXPRESSION, Theme.I_SIGNALING_PATHWAY,
-						 Theme.Rg_REGULATION 
-						
+						Theme.Rg_REGULATION
+
 //						Theme.H_SAME_PROTEIN_OR_COMPLEX, Theme.Q_PRODUCTION_BY_CELL_POPULATION
-						);
+				);
 
 				createBertTrainingFile(bertTrainingFile, themeToSentencesMap, themesToInclude);
 
@@ -146,7 +142,7 @@ public class BertTrainingFileCreator {
 		// be replacing the wrong string with the placeholder. If this works and we end
 		// up using this method with our own data then we can make sure that the
 		// placeholders are put in the proper position always.
-		
+
 //		System.out.println("sentence: " + originalSentence);
 //		System.out.println("entity1 text: " + entity1Text);
 //		System.out.println("entity1 placeholder: " + entity1Placeholder);
