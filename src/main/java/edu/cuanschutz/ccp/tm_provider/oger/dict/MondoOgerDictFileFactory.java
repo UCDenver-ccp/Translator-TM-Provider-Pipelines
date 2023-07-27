@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.oger.dict;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,9 +12,13 @@ import edu.ucdenver.ccp.common.string.StringUtil;
 
 public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 
+	
+	
 	private static final String DISEASE_CHARACTERISTIC = "http://purl.obolibrary.org/obo/MONDO_0021125";
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
+	public static List<String> EXCLUDED_CLASSES = Arrays.asList(DISEASE_CHARACTERISTIC);
+	
 	public MondoOgerDictFileFactory() {
 		super("disease", "MONDO", SynonymSelection.EXACT_ONLY, Arrays.asList(DISEASE_CHARACTERISTIC));
 	}

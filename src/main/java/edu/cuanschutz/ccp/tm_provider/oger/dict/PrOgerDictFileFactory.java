@@ -13,7 +13,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
 	public PrOgerDictFileFactory() {
-		super("protein", "PR", SynonymSelection.EXACT_ONLY, null);
+		super("protein", "PR", SynonymSelection.EXACT_PLUS_RELATED, null);
 	}
 
 	@Override
