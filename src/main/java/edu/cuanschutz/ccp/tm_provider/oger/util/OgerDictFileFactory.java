@@ -70,6 +70,12 @@ public abstract class OgerDictFileFactory {
 				}
 				if (cls.getIRI().toString().contains(ontologyIdPrefix)) {
 					String label = ontUtil.getLabel(cls);
+
+					// TODO: getSynonyms gets messed up when there's an &quot; in the label -- and
+					// somehow a backslash gets inserted -- the backslash breaks OGER during load.
+					// For now we simply remove the backslash from the label as it doesn't happen
+					// often.
+
 					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
 					if (synSelection == SynonymSelection.EXACT_PLUS_RELATED) {
 						Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
@@ -510,6 +516,19 @@ public abstract class OgerDictFileFactory {
 		}
 	}
 
+	/**
+	 * Ensure there are 6 columns
+	 * 
+	 * @param line
+	 */
+	public static void validateDictLine(String line) {
+		String[] cols = line.split("\t");
+		if (cols.length != 6) {
+			throw new IllegalArgumentException(String.format("Unexpected column count (%d) on line: %s", cols.length,
+					line.replaceAll("\\t", "[TAB]")));
+		}
+	}
+
 	public static String getDictLine(String ontKey, String iri, String label, String primaryLabel, String ontMainType,
 			boolean processId) {
 		String id = iri;
@@ -521,17 +540,32 @@ public abstract class OgerDictFileFactory {
 		}
 
 		// first column is empty (should be UMLS CUI)
-		return String.format("\t%s\t%s\t%s\t%s\t%s\n", ontKey, id, label, primaryLabel, ontMainType);
+		String line = String.format("\t%s\t%s\t%s\t%s\t%s\n", ontKey.trim(), id.trim(), label.trim(),
+				primaryLabel.trim(), ontMainType.trim());
+		validateDictLine(line);
+		return line;
 	}
 
-	static String fixLabel(String label) {
-		if (label.contains("\"")) {
-			label = label.substring(0, label.indexOf("\""));
+	protected static String fixLabel(String label) {
+		// replace \" with "
+//		System.out.println("0: " + label);
+		label = label.replaceAll("\\\\\"", "\"");
+
+//		System.out.println("1: " + label);
+
+		// if there is an odd number of quotes, and there is one at the end of the
+		// label, then remove it
+		if (label.split("\"").length % 2 == 1 && label.endsWith("\"")) {
+			label = StringUtil.removeSuffix(label, "\"");
 		}
+//		System.out.println("2: " + label);
+
+		// remove parentheticals
 		if (StringUtil.endsWithRegex(label, "[(][^)]+[)]")) {
 			label = StringUtil.removeSuffixRegex(label, "[(][^)]+[)]");
 		}
 
+//		System.out.println("3: " + label);
 		return label.trim();
 	}
 

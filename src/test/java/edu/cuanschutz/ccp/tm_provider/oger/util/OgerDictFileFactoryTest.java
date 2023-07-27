@@ -21,5 +21,7 @@ public class OgerDictFileFactoryTest {
 	public void testFixLabel() {
 		assertEquals("3-ketoacyl-CoA synthase 9",
 				OgerDictFileFactory.fixLabel("3-ketoacyl-CoA synthase 9 (Arabidopsis thaliana)"));
+		
+		assertEquals("Unclassified Pleomorphic sarcoma", OgerDictFileFactory.fixLabel("Unclassified Pleomorphic sarcoma (formerly \\\"malignant fibrous histiocytoma\\\")\""));
 	}
 }
