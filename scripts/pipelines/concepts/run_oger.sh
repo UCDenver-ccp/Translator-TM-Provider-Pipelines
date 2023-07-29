@@ -27,7 +27,7 @@ echo "PIPELINE KEY: $PIPELINE_KEY"
 echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
 echo "OVERWRITE KEY: $OVERWRITE"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
+java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.2.0.jar OGER \
 --jobName="$JOB_NAME" \
 --ogerServiceUri="$SERVICE_URL" \
 --ogerOutputType=TSV \
@@ -35,7 +35,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
 --targetDocumentType="$TDT" \
 --targetDocumentFormat="BIONLP" \
 --inputPipelineKey="$PIPELINE_KEY" \
---inputPipelineVersion='0.1.0' \
+--inputPipelineVersion='0.3.0' \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
 --collection="$COLLECTION" \
 --overwrite="$OVERWRITE" \

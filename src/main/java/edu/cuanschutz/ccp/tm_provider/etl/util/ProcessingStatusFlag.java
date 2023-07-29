@@ -1,5 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
@@ -19,6 +20,9 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MIN_NORM_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_DRUGBANK_DONE;
@@ -46,7 +50,6 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
 
 import lombok.Getter;
 
@@ -57,7 +60,7 @@ public enum ProcessingStatusFlag {
 	TEXT_DONE(STATUS_PROPERTY_TEXT_DONE),
 
 	SECTIONS_DONE(STATUS_PROPERTY_SECTIONS_DONE),
-	
+
 	ABBREVIATIONS_DONE(STATUS_PROPERTY_ABBREVIATIONS_DONE),
 	/**
 	 * true if dependency parsing is complete
@@ -77,6 +80,10 @@ public enum ProcessingStatusFlag {
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
+
+	OGER_CS_DONE(STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE),
+	OGER_CIMAX_DONE(STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE),
+	OGER_CIMIN_DONE(STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MIN_NORM_DONE),
 
 	/**
 	 * 
