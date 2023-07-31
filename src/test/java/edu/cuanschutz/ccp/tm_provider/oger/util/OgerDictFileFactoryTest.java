@@ -4,6 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Test;
 
 public class OgerDictFileFactoryTest {
@@ -21,7 +25,28 @@ public class OgerDictFileFactoryTest {
 	public void testFixLabel() {
 		assertEquals("3-ketoacyl-CoA synthase 9",
 				OgerDictFileFactory.fixLabel("3-ketoacyl-CoA synthase 9 (Arabidopsis thaliana)"));
+
+		assertEquals("Unclassified Pleomorphic sarcoma", OgerDictFileFactory
+				.fixLabel("Unclassified Pleomorphic sarcoma (formerly \\\"malignant fibrous histiocytoma\\\")\""));
+	}
+
+	@Test
+	public void testGetCaseSensitiveSynonyms() {
+		Set<String> synonyms = new HashSet<String>(Arrays.asList("BRCA1"));
+		Set<String> csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
+		Set<String> expectedCsSynonyms = new HashSet<String>(Arrays.asList("BRCA1", "Brca1"));
+		assertEquals(expectedCsSynonyms, csSynonyms);
 		
-		assertEquals("Unclassified Pleomorphic sarcoma", OgerDictFileFactory.fixLabel("Unclassified Pleomorphic sarcoma (formerly \\\"malignant fibrous histiocytoma\\\")\""));
+		synonyms = new HashSet<String>(Arrays.asList("RAD51"));
+		csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
+		expectedCsSynonyms = new HashSet<String>(Arrays.asList("RAD51", "Rad51"));
+		assertEquals(expectedCsSynonyms, csSynonyms);
+		
+		
+		synonyms = new HashSet<String>(Arrays.asList("TNFβ"));
+		csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
+		expectedCsSynonyms = new HashSet<String>(Arrays.asList("TNFβ"));
+		assertEquals(expectedCsSynonyms, csSynonyms);
+		
 	}
 }

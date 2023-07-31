@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -139,23 +141,30 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 			synonyms.removeAll(caseSensitiveSyns);
 
 			for (String synonym : caseSensitiveSyns) {
-				String dictLine = OgerDictFileFactory.getDictLine("SNOMEDCT", previousConceptId, synonym, randomName,
-						"procedure", false);
+				String dictLine = OgerDictFileFactory.getDictLine("SNOMEDCT", "SNOMEDCT:" + previousConceptId, synonym,
+						randomName, "procedure", false);
 				OgerDictFileFactory.writeDictLine(alreadyWritten, caseSensWriter, dictLine);
 			}
 
 			for (String synonym : synonyms) {
-				String dictLine = OgerDictFileFactory.getDictLine("SNOMEDCT", previousConceptId, synonym, randomName,
-						"procedure", false);
+				String dictLine = OgerDictFileFactory.getDictLine("SNOMEDCT", "SNOMEDCT:" + previousConceptId, synonym,
+						randomName, "procedure", false);
 				OgerDictFileFactory.writeDictLine(alreadyWritten, caseInsensWriter, dictLine);
 			}
 		}
 	}
 
+	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList());
+
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
 		Set<String> toReturn = removeStopWords(syns);
-		toReturn = removeWordsLessThenLength(toReturn, 2);
+		toReturn = removeWordsLessThenLength(toReturn, 3);
+
+		if (IRIS_TO_EXCLUDE.contains(iri)) {
+			toReturn = Collections.emptySet();
+		}
+
 		return toReturn;
 	}
 

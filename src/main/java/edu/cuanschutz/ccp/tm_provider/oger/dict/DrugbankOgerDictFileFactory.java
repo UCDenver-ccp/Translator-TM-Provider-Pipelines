@@ -3,6 +3,8 @@ package edu.cuanschutz.ccp.tm_provider.oger.dict;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,6 +25,9 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 	public DrugbankOgerDictFileFactory() {
 		super("drug", "DRUGBANK", SynonymSelection.EXACT_ONLY, null);
 	}
+
+	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415" // Rabbit
+	));
 
 	@Override
 	public void createOgerDictionaryFile(File drugbankXmlFile, File dictDirectory) throws IOException {
@@ -75,7 +80,10 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
 		Set<String> toReturn = removeStopWords(syns);
-		toReturn = removeWordsLessThenLength(toReturn, 2);
+		toReturn = removeWordsLessThenLength(toReturn, 3);
+		if (IRIS_TO_EXCLUDE.contains(iri)) {
+			toReturn = Collections.emptySet();
+		}
 		return toReturn;
 	}
 

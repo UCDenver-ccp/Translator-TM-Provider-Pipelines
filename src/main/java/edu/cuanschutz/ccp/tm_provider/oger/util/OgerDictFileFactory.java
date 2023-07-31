@@ -124,6 +124,23 @@ public abstract class OgerDictFileFactory {
 		for (String syn : synonyms) {
 			if (isCaseSensitive(syn)) {
 				caseSensitiveSyns.add(syn);
+
+				// if the synonym is all uppercase, then add a version where the first letter is
+				// uppercase by the other letters are lowercase, e.g. Brca1 or Rad51
+				if (syn.matches("^[A-Z]+[0-9]+")) {
+					StringBuilder alternate = new StringBuilder();
+					for (Character c : syn.toCharArray()) {
+						if (alternate.length() == 0) {
+							alternate.append(Character.toUpperCase(c));
+						} else if (Character.isAlphabetic(c)) {
+							alternate.append(Character.toLowerCase(c));
+						} else {
+							alternate.append(c);
+						}
+					}
+					caseSensitiveSyns.add(alternate.toString());
+				}
+
 			}
 		}
 
@@ -131,12 +148,16 @@ public abstract class OgerDictFileFactory {
 	}
 
 	/**
-	 * Return any string that is > 50% uppercase
+	 * Return any string that is > 50% uppercase, or starts with number
 	 * 
 	 * @param syn
 	 * @return
 	 */
 	protected static boolean isCaseSensitive(String s) {
+
+		if (s.matches("^\\d")) {
+			return true;
+		}
 
 		String sTrimmed = s.trim();
 		int ucCount = 0;
