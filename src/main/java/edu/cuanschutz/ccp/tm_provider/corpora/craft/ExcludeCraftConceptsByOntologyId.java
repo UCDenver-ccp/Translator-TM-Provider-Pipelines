@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.corpora.craft;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +34,10 @@ public class ExcludeCraftConceptsByOntologyId {
 	private static final CharacterEncoding ENCODING = CharacterEncoding.UTF_8;
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
+	private static final Set<String> INDIVIDUAL_CLASSES_TO_REMOVE = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "CL_0000000" // cell
+			));
+
 	public static void excludeClasses(File ontologyFile, List<String> irisToExclude, File bionlpDir, File craftBaseDir)
 			throws OWLOntologyCreationException, IOException {
 		OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
@@ -58,6 +63,11 @@ public class ExcludeCraftConceptsByOntologyId {
 			for (TextAnnotation annot : td.getAnnotations()) {
 				OWLClass cls = getOwlClass(ontUtil, annot);
 				if (cls != null) {
+					if (INDIVIDUAL_CLASSES_TO_REMOVE.contains(cls.getIRI().toString())) {
+						toRemove.add(annot);
+						continue;
+					}
+
 					Set<OWLClass> ancestors = ontUtil.getAncestors(cls);
 					for (OWLClass excludeCls : excludedClasses) {
 						if (ancestors.contains(excludeCls)) {

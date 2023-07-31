@@ -348,7 +348,7 @@ public class ExcludeCraftNestedConcepts {
 	 * @param ext
 	 * @throws IOException
 	 */
-	private static void serializeAnnotationFiles(String docId, Map<Ont, TextDocument> ontToDocMap, File bionlpBaseDir,
+	protected static void serializeAnnotationFiles(String docId, Map<Ont, TextDocument> ontToDocMap, File bionlpBaseDir,
 			WithExtensionClasses ext) throws IOException {
 		BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
 		for (Entry<Ont, TextDocument> entry : ontToDocMap.entrySet()) {
