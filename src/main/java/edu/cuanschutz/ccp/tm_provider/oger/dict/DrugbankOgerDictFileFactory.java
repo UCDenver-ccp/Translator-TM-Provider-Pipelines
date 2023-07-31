@@ -26,7 +26,18 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 		super("drug", "DRUGBANK", SynonymSelection.EXACT_ONLY, null);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415" // Rabbit
+	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415", // Rabbit
+			"DRUGBANK:DB10633", // Fig
+			"DRUGBANK:DB14245", // Snail
+			"DRUGBANK:DB10551", // Pea
+			"DRUGBANK:DB09393", // amino acids
+			"DRUGBANK:DB09145", // Water
+			"DRUGBANK:DB04540", // Cholesterol
+			"DRUGBANK:DB11017", // Yeast
+			"DRUGBANK:DB10632", // Date
+			"DRUGBANK:DB12938", // Balance
+			"DRUGBANK:DB10519", // Chicken
+			"DRUGBANK:DB02891" // Beam
 	));
 
 	@Override
