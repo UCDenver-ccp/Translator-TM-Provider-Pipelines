@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
+import edu.ucdenver.ccp.common.string.StringUtil;
 
 public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 
@@ -17,8 +18,7 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(CELLULAR_COMPONENT, BIOLOGICAL_PROCESS));
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(
-			"", //
+	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList("", //
 			"", //
 			"", //
 			"", //
@@ -38,17 +38,36 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 			"", //
 			"", //
 			""));
-	
+
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
-		
+		augmentActivitySynonyms(toReturn);
+
 		if (IRIS_TO_EXCLUDE.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
-		
+
 		return toReturn;
+	}
+
+	/**
+	 * for synonyms that end in "activity", create a synonym that does not include
+	 * "activity"
+	 * 
+	 * @param toReturn
+	 */
+	private void augmentActivitySynonyms(Set<String> toReturn) {
+		Set<String> toAdd = new HashSet<String>();
+		for (String syn : toReturn) {
+			if (syn.endsWith(" activity")) {
+				String withoutActivity = StringUtil.removeSuffix(syn, " activity");
+				System.out.println("ACTIVITY: " + withoutActivity);
+				toAdd.add(withoutActivity);
+			}
+		}
+		toReturn.addAll(toAdd);
 	}
 
 }
