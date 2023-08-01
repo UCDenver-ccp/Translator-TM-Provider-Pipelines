@@ -233,122 +233,122 @@ public abstract class OgerDictFileFactory {
 
 //	protected abstract Set<String> filterSynonyms(String iri, Set<String> syns);
 
-	public static void createOgerDictionaryFile_MONDO(File ontologyFile, File dictFile, String ontMainType,
-			String ontKey) throws OWLOntologyCreationException, FileNotFoundException, IOException {
-		OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
-
-		OWLClass diseaseCharacteristic = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0021125");
-		OWLClass defectCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0008568");
-		OWLClass thyroidTumorCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0015074");
-
-		int count = 0;
-//		List<String> singleTokenRelatedSynonyms = new ArrayList<String>();
-		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
-			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
-				OWLClass cls = classIterator.next();
-				if (count++ % 10000 == 0) {
-					System.out.println("progress: " + count);
-				}
-				Set<OWLClass> ancestors = ontUtil.getAncestors(cls);
-				if (ancestors.contains(diseaseCharacteristic) || cls.equals(diseaseCharacteristic)) {
-					// exclude all descendents of disease_characteristic
-					continue;
-				}
-
-				if (cls.getIRI().toString().contains(ontKey)) {
-					String label = ontUtil.getLabel(cls);
-					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
-					Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
-					synonyms.addAll(relatedSyns);
-					synonyms.add(label);
-					synonyms = augmentSynonyms(synonyms);
-
-//					for (String syn : relatedSyns) {
-//						if (!syn.contains(" ")) {
-//							singleTokenRelatedSynonyms.add(syn);
-//						}
+//	public static void createOgerDictionaryFile_MONDO(File ontologyFile, File dictFile, String ontMainType,
+//			String ontKey) throws OWLOntologyCreationException, FileNotFoundException, IOException {
+//		OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
+//
+//		OWLClass diseaseCharacteristic = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0021125");
+//		OWLClass defectCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0008568");
+//		OWLClass thyroidTumorCls = ontUtil.getOWLClassFromId("http://purl.obolibrary.org/obo/MONDO_0015074");
+//
+//		int count = 0;
+////		List<String> singleTokenRelatedSynonyms = new ArrayList<String>();
+//		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(dictFile)) {
+//			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
+//				OWLClass cls = classIterator.next();
+//				if (count++ % 10000 == 0) {
+//					System.out.println("progress: " + count);
+//				}
+//				Set<OWLClass> ancestors = ontUtil.getAncestors(cls);
+//				if (ancestors.contains(diseaseCharacteristic) || cls.equals(diseaseCharacteristic)) {
+//					// exclude all descendents of disease_characteristic
+//					continue;
+//				}
+//
+//				if (cls.getIRI().toString().contains(ontKey)) {
+//					String label = ontUtil.getLabel(cls);
+//					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
+//					Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
+//					synonyms.addAll(relatedSyns);
+//					synonyms.add(label);
+//					synonyms = augmentSynonyms(synonyms);
+//
+////					for (String syn : relatedSyns) {
+////						if (!syn.contains(" ")) {
+////							singleTokenRelatedSynonyms.add(syn);
+////						}
+////					}
+//
+//					if (cls.equals(defectCls)) {
+//						synonyms.remove("defect");
 //					}
-
-					if (cls.equals(defectCls)) {
-						synonyms.remove("defect");
-					}
-
-					if (cls.equals(thyroidTumorCls)) {
-						synonyms.remove("THYROID");
-					}
-
-					if (label != null) {
-						writer.write(getDictLine(ontKey, cls.getIRI().toString(), label, label, ontMainType, true));
-						for (String syn : synonyms) {
-							writer.write(getDictLine(ontKey, cls.getIRI().toString(), syn, label, ontMainType, true));
-						}
-					} else {
-						System.out.println("null label id: " + cls.getIRI().toString());
-					}
-				}
-			}
-		}
-
-//		Collections.sort(singleTokenRelatedSynonyms);
-//		try (BufferedWriter writer = FileWriterUtil
-//				.initBufferedWriter(new File(dictFile.getParentFile(), "mondo_single_token_related_synonyms.txt"))) {
-//			for (String syn : singleTokenRelatedSynonyms) {
-//				writer.write(syn + "\n");
+//
+//					if (cls.equals(thyroidTumorCls)) {
+//						synonyms.remove("THYROID");
+//					}
+//
+//					if (label != null) {
+//						writer.write(getDictLine(ontKey, cls.getIRI().toString(), label, label, ontMainType, true));
+//						for (String syn : synonyms) {
+//							writer.write(getDictLine(ontKey, cls.getIRI().toString(), syn, label, ontMainType, true));
+//						}
+//					} else {
+//						System.out.println("null label id: " + cls.getIRI().toString());
+//					}
+//				}
 //			}
 //		}
-
-	}
-
-	private static Set<String> augmentSynonyms(Set<String> synonyms) {
-
-		Set<String> toReturn = new HashSet<String>(synonyms);
-
-		// remove stopwords
-		Set<String> stopwords = new HashSet<String>(StopWordUtil.STOPWORDS);
-		Set<String> toRemove = new HashSet<String>();
-		for (String syn : toReturn) {
-			if (stopwords.contains(syn.toLowerCase())) {
-				toRemove.add(syn);
-			}
-		}
-		toReturn.removeAll(toRemove);
-
-		// for all classes that are "... virus infection" -- add a synonym that is just
-		// "... virus"
-		Set<String> toAdd = new HashSet<String>();
-		for (String syn : toReturn) {
-			if (syn.endsWith("virus infection")) {
-				String virus = StringUtil.removeSuffix(syn, " infection");
-				toAdd.add(virus);
-			} else if (syn.endsWith("virus infections")) {
-				String virus = StringUtil.removeSuffix(syn, " infections");
-				toAdd.add(virus);
-			}
-		}
-		toReturn.addAll(toAdd);
-
-		// remove ", formerly" or "(formerly)"
-		toAdd = new HashSet<String>();
-		for (String syn : toReturn) {
-			if (syn.contains(", formerly")) {
-				toAdd.add(syn.replace(", formerly", ""));
-			} else if (syn.contains("(formerly)")) {
-				toAdd.add(syn.replace("(formerly)", ""));
-			}
-		}
-		toReturn.addAll(toAdd);
-
-		// remove single character synonyms
-		toRemove = new HashSet<String>();
-		for (String syn : toReturn) {
-			if (syn.length() == 1) {
-				toRemove.add(syn);
-			}
-		}
-		toReturn.removeAll(toRemove);
-
-		return toReturn;
-	}
+//
+////		Collections.sort(singleTokenRelatedSynonyms);
+////		try (BufferedWriter writer = FileWriterUtil
+////				.initBufferedWriter(new File(dictFile.getParentFile(), "mondo_single_token_related_synonyms.txt"))) {
+////			for (String syn : singleTokenRelatedSynonyms) {
+////				writer.write(syn + "\n");
+////			}
+////		}
+//
+//	}
+//
+//	private static Set<String> augmentSynonyms(Set<String> synonyms) {
+//
+//		Set<String> toReturn = new HashSet<String>(synonyms);
+//
+//		// remove stopwords
+//		Set<String> stopwords = new HashSet<String>(StopWordUtil.STOPWORDS);
+//		Set<String> toRemove = new HashSet<String>();
+//		for (String syn : toReturn) {
+//			if (stopwords.contains(syn.toLowerCase())) {
+//				toRemove.add(syn);
+//			}
+//		}
+//		toReturn.removeAll(toRemove);
+//
+//		// for all classes that are "... virus infection" -- add a synonym that is just
+//		// "... virus"
+//		Set<String> toAdd = new HashSet<String>();
+//		for (String syn : toReturn) {
+//			if (syn.endsWith("virus infection")) {
+//				String virus = StringUtil.removeSuffix(syn, " infection");
+//				toAdd.add(virus);
+//			} else if (syn.endsWith("virus infections")) {
+//				String virus = StringUtil.removeSuffix(syn, " infections");
+//				toAdd.add(virus);
+//			}
+//		}
+//		toReturn.addAll(toAdd);
+//
+//		// remove ", formerly" or "(formerly)"
+//		toAdd = new HashSet<String>();
+//		for (String syn : toReturn) {
+//			if (syn.contains(", formerly")) {
+//				toAdd.add(syn.replace(", formerly", ""));
+//			} else if (syn.contains("(formerly)")) {
+//				toAdd.add(syn.replace("(formerly)", ""));
+//			}
+//		}
+//		toReturn.addAll(toAdd);
+//
+//		// remove single character synonyms
+//		toRemove = new HashSet<String>();
+//		for (String syn : toReturn) {
+//			if (syn.length() == 1) {
+//				toRemove.add(syn);
+//			}
+//		}
+//		toReturn.removeAll(toRemove);
+//
+//		return toReturn;
+//	}
 
 	// this block commented as it depends on an update to the datasource fileparser
 	// library to make the Synonym class visible.
@@ -581,9 +581,9 @@ public abstract class OgerDictFileFactory {
 		}
 //		System.out.println("2: " + label);
 
-		// remove parentheticals
-		if (StringUtil.endsWithRegex(label, "[(][^)]+[)]")) {
-			label = StringUtil.removeSuffixRegex(label, "[(][^)]+[)]");
+		// remove parentheticals when they occur at the end of the label and there is a space between label text and the parenthetical
+		if (StringUtil.endsWithRegex(label, " [(][^)]+[)]")) {
+			label = StringUtil.removeSuffixRegex(label, " [(][^)]+[)]");
 		}
 
 //		System.out.println("3: " + label);

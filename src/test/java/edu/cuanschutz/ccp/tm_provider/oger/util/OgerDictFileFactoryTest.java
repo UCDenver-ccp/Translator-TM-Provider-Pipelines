@@ -28,6 +28,8 @@ public class OgerDictFileFactoryTest {
 
 		assertEquals("Unclassified Pleomorphic sarcoma", OgerDictFileFactory
 				.fixLabel("Unclassified Pleomorphic sarcoma (formerly \\\"malignant fibrous histiocytoma\\\")\""));
+
+		assertEquals("hu(P1)", OgerDictFileFactory.fixLabel("hu(P1)"));
 	}
 
 	@Test
@@ -36,17 +38,16 @@ public class OgerDictFileFactoryTest {
 		Set<String> csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
 		Set<String> expectedCsSynonyms = new HashSet<String>(Arrays.asList("BRCA1", "Brca1"));
 		assertEquals(expectedCsSynonyms, csSynonyms);
-		
+
 		synonyms = new HashSet<String>(Arrays.asList("RAD51"));
 		csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
 		expectedCsSynonyms = new HashSet<String>(Arrays.asList("RAD51", "Rad51"));
 		assertEquals(expectedCsSynonyms, csSynonyms);
-		
-		
+
 		synonyms = new HashSet<String>(Arrays.asList("TNFβ"));
 		csSynonyms = OgerDictFileFactory.getCaseSensitiveSynonyms(synonyms);
 		expectedCsSynonyms = new HashSet<String>(Arrays.asList("TNFβ"));
 		assertEquals(expectedCsSynonyms, csSynonyms);
-		
+
 	}
 }
