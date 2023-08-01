@@ -17,7 +17,7 @@ public class GoCcOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(MOLECULAR_FUNCTION, BIOLOGICAL_PROCESS));
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList());
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
@@ -28,7 +28,7 @@ public class GoCcOgerDictFileFactory extends OgerDictFileFactory {
 			syns.add("nucleoli");
 		}
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 

@@ -16,15 +16,14 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 	private static final String CHEBI_SUBATOMIC_PARTICLE = "http://purl.obolibrary.org/obo/CHEBI_36342";
 	private static final String CHEBI_ATOM = "http://purl.obolibrary.org/obo/CHEBI_33250";
 	private static final String CHEBI_GROUP = "http://purl.obolibrary.org/obo/CHEBI_24433";
-	public static List<String> EXCLUDED_CLASSES = Arrays.asList(CHEBI_ROLE, CHEBI_SUBATOMIC_PARTICLE, CHEBI_ATOM,
+	public static List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(CHEBI_ROLE, CHEBI_SUBATOMIC_PARTICLE, CHEBI_ATOM,
 			CHEBI_GROUP);
 
 	public ChebiOgerDictFileFactory() {
-		super("chemical", "CHEBI", SynonymSelection.EXACT_PLUS_RELATED,
-				Arrays.asList(CHEBI_ROLE, CHEBI_SUBATOMIC_PARTICLE, CHEBI_ATOM, CHEBI_GROUP));
+		super("chemical", "CHEBI", SynonymSelection.EXACT_PLUS_RELATED, EXCLUDED_ROOT_CLASSES);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "CHEBI_15035", // retinal
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "CHEBI_15035", // retinal
 			OBO_PURL + "CHEBI_18367", // phosphate
 			OBO_PURL + "CHEBI_26020", // phosphate
 			OBO_PURL + "CHEBI_36976", // nucleotide
@@ -55,7 +54,7 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		toReturn = filterSynonyms(toReturn);
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 		return toReturn;

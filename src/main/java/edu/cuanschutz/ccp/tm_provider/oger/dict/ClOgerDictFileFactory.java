@@ -15,7 +15,7 @@ public class ClOgerDictFileFactory extends OgerDictFileFactory {
 		super("cell", "CL", SynonymSelection.EXACT_ONLY, null);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "CL_0000000", // cell
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "CL_0000000", // cell
 			OBO_PURL + "CL_0000378", // supporting cells
 			OBO_PURL + "CL_0000619" // supporting cells
 	));
@@ -30,7 +30,7 @@ public class ClOgerDictFileFactory extends OgerDictFileFactory {
 		if (iri.equals("CL:0000589")) { // cochlear inner hair cell
 			toReturn.add("inner hair cell");
 		}
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 		return toReturn;

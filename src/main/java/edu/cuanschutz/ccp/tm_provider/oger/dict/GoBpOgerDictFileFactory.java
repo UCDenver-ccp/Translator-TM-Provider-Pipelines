@@ -17,7 +17,7 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(MOLECULAR_FUNCTION, CELLULAR_COMPONENT));
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "GO_0003002", // region
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "GO_0003002", // region
 			OBO_PURL + "GO_0023052", // signal
 			OBO_PURL + "GO_0035282" // segments
 	));
@@ -32,7 +32,7 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 			toReturn.add("alternative splicing");
 		}
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 

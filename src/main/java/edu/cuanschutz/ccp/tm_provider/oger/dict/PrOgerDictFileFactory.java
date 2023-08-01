@@ -17,7 +17,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 		super("protein", "PR", SynonymSelection.EXACT_PLUS_RELATED, null);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "PR_000000001", // protein
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "PR_000000001", // protein
 			OBO_PURL + "PR_000003507" // chimeric protein
 	));
 
@@ -28,7 +28,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		toReturn = filterSpecificSynonyms(iri, toReturn);
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 

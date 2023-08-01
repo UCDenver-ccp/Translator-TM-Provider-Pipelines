@@ -17,7 +17,7 @@ public class UberonOgerDictFileFactory extends OgerDictFileFactory {
 		super("anatomy", "UBERON", SynonymSelection.EXACT_ONLY, null);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "UBERON_2000106", // extension
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "UBERON_2000106", // extension
 			OBO_PURL + "UBERON_0004529", // projection
 			OBO_PURL + "UBERON_0000914", // organismal segment
 			OBO_PURL + "UBERON_0000025" // tube
@@ -29,7 +29,7 @@ public class UberonOgerDictFileFactory extends OgerDictFileFactory {
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		toReturn = filterSpecificSynonyms(iri, toReturn);
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 
@@ -41,12 +41,9 @@ public class UberonOgerDictFileFactory extends OgerDictFileFactory {
 		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
 
 		map.put(OBO_PURL + "UBERON_2001463", new HashSet<String>(Arrays.asList("bars")));
-		map.put(OBO_PURL + "UBERON_0014402", new HashSet<String>(Arrays.asList("sex-specific")));
-		map.put(OBO_PURL + "UBERON_0014402", new HashSet<String>(Arrays.asList("gender-specific")));
-		map.put(OBO_PURL + "UBERON_2000859", new HashSet<String>(Arrays.asList("ha(pu)")));
-		map.put(OBO_PURL + "UBERON_2000859", new HashSet<String>(Arrays.asList("ha")));
-		map.put(OBO_PURL + "UBERON_0003062", new HashSet<String>(Arrays.asList("shield")));
-		map.put(OBO_PURL + "UBERON_0003062", new HashSet<String>(Arrays.asList("organizer")));
+		map.put(OBO_PURL + "UBERON_0014402", new HashSet<String>(Arrays.asList("sex-specific", "gender-specific")));
+		map.put(OBO_PURL + "UBERON_2000859", new HashSet<String>(Arrays.asList("ha(pu)", "ha")));
+		map.put(OBO_PURL + "UBERON_0003062", new HashSet<String>(Arrays.asList("shield", "organizer")));
 		map.put(OBO_PURL + "UBERON_0007380", new HashSet<String>(Arrays.asList("scales")));
 		map.put(OBO_PURL + "UBERON_0001093", new HashSet<String>(Arrays.asList("axis")));
 		map.put(OBO_PURL + "UBERON_2000271", new HashSet<String>(Arrays.asList("radials")));

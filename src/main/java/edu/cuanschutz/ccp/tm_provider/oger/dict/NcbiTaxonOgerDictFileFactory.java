@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,11 +16,15 @@ public class NcbiTaxonOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String TAXONOMIC_RANK_IRI = "http://purl.obolibrary.org/obo/NCBITaxon#_taxonomic_rank";
 
+	public static final List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(TAXONOMIC_RANK_IRI);
+	
+	
+
 	public NcbiTaxonOgerDictFileFactory() {
-		super("organism", "NCBITaxon", SynonymSelection.EXACT_ONLY, Arrays.asList(TAXONOMIC_RANK_IRI));
+		super("organism", "NCBITaxon", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "NCBITaxon_3493" // Fig
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "NCBITaxon_3493" // Fig
 	));
 
 	@Override
@@ -32,7 +37,7 @@ public class NcbiTaxonOgerDictFileFactory extends OgerDictFileFactory {
 			toReturn.add("C. elegans");
 		}
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 
@@ -49,8 +54,7 @@ public class NcbiTaxonOgerDictFileFactory extends OgerDictFileFactory {
 		map.put(OBO_PURL + "NCBITaxon_1", new HashSet<String>(Arrays.asList("root")));
 		map.put(OBO_PURL + "NCBITaxon_15957", new HashSet<String>(Arrays.asList("Timothy")));
 		map.put(OBO_PURL + "NCBITaxon_6754", new HashSet<String>(Arrays.asList("cancer")));
-		map.put(OBO_PURL + "NCBITaxon_3554", new HashSet<String>(Arrays.asList("β")));
-		map.put(OBO_PURL + "NCBITaxon_3554", new HashSet<String>(Arrays.asList("beta")));
+		map.put(OBO_PURL + "NCBITaxon_3554", new HashSet<String>(Arrays.asList("β", "beta")));
 		map.put(OBO_PURL + "NCBITaxon_1118549", new HashSet<String>(Arrays.asList("electron")));
 		map.put(OBO_PURL + "NCBITaxon_79338", new HashSet<String>(Arrays.asList("codon")));
 		map.put(OBO_PURL + "NCBITaxon_29278", new HashSet<String>(Arrays.asList("vectors")));

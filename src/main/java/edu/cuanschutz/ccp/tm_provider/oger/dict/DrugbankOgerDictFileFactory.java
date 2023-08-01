@@ -26,7 +26,7 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 		super("drug", "DRUGBANK", SynonymSelection.EXACT_ONLY, null);
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415", // Rabbit
+	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415", // Rabbit
 			"DRUGBANK:DB10633", // Fig
 			"DRUGBANK:DB14245", // Snail
 			"DRUGBANK:DB10551", // Pea
@@ -92,7 +92,7 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 		return toReturn;

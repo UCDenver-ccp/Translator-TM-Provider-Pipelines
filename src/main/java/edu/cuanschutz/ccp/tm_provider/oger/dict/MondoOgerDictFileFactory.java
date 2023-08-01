@@ -16,13 +16,13 @@ public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 	private static final String DISEASE_CHARACTERISTIC = "http://purl.obolibrary.org/obo/MONDO_0021125";
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
-	public static List<String> EXCLUDED_CLASSES = Arrays.asList(DISEASE_CHARACTERISTIC);
+	public static List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(DISEASE_CHARACTERISTIC);
 
 	public MondoOgerDictFileFactory() {
 		super("disease", "MONDO", SynonymSelection.EXACT_ONLY, Arrays.asList(DISEASE_CHARACTERISTIC));
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList(OBO_PURL + "MONDO_0000001", // disease
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "MONDO_0000001", // disease
 			OBO_PURL + "MONDO_0002254", // syndrome
 			OBO_PURL + "MONDO_0021178" // injury
 	));
@@ -46,7 +46,7 @@ public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 			toReturn.add("hypertension");
 		}
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 

@@ -18,7 +18,7 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(CELLULAR_COMPONENT, BIOLOGICAL_PROCESS));
 	}
 
-	private static final Set<String> IRIS_TO_EXCLUDE = new HashSet<String>(Arrays.asList());
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
@@ -26,7 +26,7 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		augmentActivitySynonyms(toReturn);
 
-		if (IRIS_TO_EXCLUDE.contains(iri)) {
+		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
 
