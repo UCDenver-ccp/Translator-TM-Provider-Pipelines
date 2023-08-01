@@ -339,10 +339,13 @@ public class CraftDatastoreRetriever {
 	}
 
 	public static void main(String[] args) {
-		File outputDir = new File(
-				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/craft-output-files");
 
-		File ogerOutputDir = new File("/Users/bill/projects/ncats-translator/concept-recognition/july2023/oger");
+		String version = args[0];
+		File outputDir = new File(String.format(
+				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/craft-output-files/%s", version));
+
+		File ogerOutputDir = new File(
+				String.format("/Users/bill/projects/ncats-translator/concept-recognition/july2023/oger/%s", version));
 		File go2namespaceFile = new File(
 				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/go2namespace.tsv.gz");
 		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
@@ -356,9 +359,8 @@ public class CraftDatastoreRetriever {
 //		}
 
 		try {
-//			new CraftDatastoreRetriever().getOgerDocuments(outputDir);
+			new CraftDatastoreRetriever().getOgerDocuments(outputDir);
 			createOgerFiles(outputDir, go2namespaceFile, ogerOutputDir, craftBaseDir);
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
