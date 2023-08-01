@@ -20,7 +20,7 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 			CHEBI_GROUP);
 
 	public ChebiOgerDictFileFactory() {
-		super("chemical", "CHEBI", SynonymSelection.EXACT_PLUS_RELATED, EXCLUDED_ROOT_CLASSES);
+		super("chemical", "CHEBI", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 	}
 
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "CHEBI_15035", // retinal
