@@ -173,7 +173,7 @@ public class ExcludeCraftConceptsByOntologyId {
 					bionlpBaseDir, craftBaseDir);
 
 			System.out.println("UBERON...");
-			excludeClasses(uberonOwlFile, Collections.emptyList(),
+			excludeClasses(uberonOwlFile, UberonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
 					UberonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, bionlpBaseDir, craftBaseDir);
 
 		} catch (OWLOntologyCreationException | IOException e) {

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,9 +13,14 @@ import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
 public class UberonOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
+	
+	
+	private static final String LIFE_CYCLE_IRI = "http://purl.obolibrary.org/obo/UBERON_0000104";
+	
+	public static final List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(LIFE_CYCLE_IRI);
 
 	public UberonOgerDictFileFactory() {
-		super("anatomy", "UBERON", SynonymSelection.EXACT_ONLY, null);
+		super("anatomy", "UBERON", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 	}
 
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "UBERON_2000106", // extension
