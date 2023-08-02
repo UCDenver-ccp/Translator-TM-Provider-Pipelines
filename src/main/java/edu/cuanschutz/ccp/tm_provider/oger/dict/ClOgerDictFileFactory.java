@@ -15,10 +15,11 @@ public class ClOgerDictFileFactory extends OgerDictFileFactory {
 		super("cell", "CL", SynonymSelection.EXACT_ONLY, null);
 	}
 
-	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "CL_0000000", // cell
-			OBO_PURL + "CL_0000378", // supporting cells
-			OBO_PURL + "CL_0000619" // supporting cells
-	));
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "CL_0000000", // cell
+					OBO_PURL + "CL_0000378", // supporting cells
+					OBO_PURL + "CL_0000619" // supporting cells
+			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
