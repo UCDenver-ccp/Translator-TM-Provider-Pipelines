@@ -17,15 +17,15 @@ public class NcbiTaxonOgerDictFileFactory extends OgerDictFileFactory {
 	private static final String TAXONOMIC_RANK_IRI = "http://purl.obolibrary.org/obo/NCBITaxon#_taxonomic_rank";
 
 	public static final List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(TAXONOMIC_RANK_IRI);
-	
-	
 
 	public NcbiTaxonOgerDictFileFactory() {
 		super("organism", "NCBITaxon", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 	}
 
-	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "NCBITaxon_3493" // Fig
-	));
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "NCBITaxon_3493", // Fig
+					OBO_PURL + "NCBITaxon_169495" // This
+			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
