@@ -148,7 +148,7 @@ public abstract class OgerDictFileFactory {
 	}
 
 	/**
-	 * Return any string that is > 50% uppercase, or starts with number
+	 * Return any string that is > 40% uppercase, or starts with number
 	 * 
 	 * @param syn
 	 * @return
@@ -168,7 +168,7 @@ public abstract class OgerDictFileFactory {
 			}
 		}
 		float percentUpper = (float) ucCount / (float) sTrimmed.length();
-		return percentUpper > 0.5;
+		return percentUpper > 0.4;
 	}
 
 	/**
