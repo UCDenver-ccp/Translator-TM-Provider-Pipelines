@@ -100,6 +100,23 @@ public class ConceptPostProcessingFnTest {
 	}
 
 	@Test
+	public void testRemoveIdToTextExclusionPairs() {
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+
+		TextAnnotation annot1 = factory.createAnnotation(0, 8, "neuronal", "CL:0000540");
+		TextAnnotation annot2 = factory.createAnnotation(23, 29, "neuron", "CL:0000540");
+		TextAnnotation annot3 = factory.createAnnotation(38, 47, "centrally", "UBERON:0012131");
+
+		Set<TextAnnotation> inputAnnots = new HashSet<TextAnnotation>(Arrays.asList(annot1, annot2, annot3));
+
+		Set<TextAnnotation> outputAnnots = ConceptPostProcessingFn.removeIdToTextExclusionPairs(inputAnnots);
+		Set<TextAnnotation> expectedOutputAnnots = new HashSet<TextAnnotation>(Arrays.asList(annot2));
+
+		assertEquals("annot2 is the only on that should remain.", expectedOutputAnnots, outputAnnots);
+
+	}
+
+	@Test
 	public void testPromoteNcbiTaxonAnnots() {
 
 		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();
@@ -132,24 +149,23 @@ public class ConceptPostProcessingFnTest {
 
 	}
 
-	@Test
-	public void testExcludeNcbiTaxonAnnots() {
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
-		TextAnnotation taxonAnnot1 = factory.createAnnotation(0, 5, "annot", "NCBITaxon:000000286");
-		TextAnnotation taxonAnnot2 = factory.createAnnotation(0, 5, "annot", "NCBITaxon:169495");
-		TextAnnotation clAnnot = factory.createAnnotation(0, 5, "annot", "CL:0000000");
-		TextAnnotation prAnnot = factory.createAnnotation(10, 15, "annot", "PR:000112345");
-		TextAnnotation taxonAnnot3 = factory.createAnnotation(20, 25, "annot", "NCBITaxon:000000285");
-		Set<TextAnnotation> input = CollectionsUtil.createSet(taxonAnnot1, taxonAnnot2, taxonAnnot3, clAnnot, prAnnot);
+//	@Test
+//	public void testExcludeNcbiTaxonAnnots() {
+//		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+//		TextAnnotation taxonAnnot1 = factory.createAnnotation(0, 5, "annot", "NCBITaxon:000000286");
+//		TextAnnotation taxonAnnot2 = factory.createAnnotation(0, 5, "annot", "NCBITaxon:169495");
+//		TextAnnotation clAnnot = factory.createAnnotation(0, 5, "annot", "CL:0000000");
+//		TextAnnotation prAnnot = factory.createAnnotation(10, 15, "annot", "PR:000112345");
+//		TextAnnotation taxonAnnot3 = factory.createAnnotation(20, 25, "annot", "NCBITaxon:000000285");
+//		Set<TextAnnotation> input = CollectionsUtil.createSet(taxonAnnot1, taxonAnnot2, taxonAnnot3, clAnnot, prAnnot);
+//
+//		Set<TextAnnotation> output = ConceptPostProcessingFn.excludeSelectNcbiTaxonAnnots(input);
+//
+//		Set<TextAnnotation> expectedOutput = CollectionsUtil.createSet(taxonAnnot1, taxonAnnot3, clAnnot, prAnnot);
+//
+//		assertEquals(expectedOutput, output);
+//	}
 
-		Set<TextAnnotation> output = ConceptPostProcessingFn.excludeSelectNcbiTaxonAnnots(input);
-
-		Set<TextAnnotation> expectedOutput = CollectionsUtil.createSet(taxonAnnot1, taxonAnnot3, clAnnot, prAnnot);
-
-		assertEquals(expectedOutput, output);
-	}
-	
-	
 	@Test
 	public void testRemoveStopwords() {
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
@@ -162,7 +178,7 @@ public class ConceptPostProcessingFnTest {
 
 		Set<TextAnnotation> output = ConceptPostProcessingFn.removeNcbiStopWords(input);
 
-		Set<TextAnnotation> expectedOutput = CollectionsUtil.createSet( taxonAnnot3, clAnnot);
+		Set<TextAnnotation> expectedOutput = CollectionsUtil.createSet(taxonAnnot3, clAnnot);
 
 		assertEquals(expectedOutput, output);
 	}

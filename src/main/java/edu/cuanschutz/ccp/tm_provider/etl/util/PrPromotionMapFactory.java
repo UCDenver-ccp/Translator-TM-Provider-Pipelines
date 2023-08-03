@@ -103,14 +103,21 @@ public class PrPromotionMapFactory {
 	}
 
 	public static void main(String[] args) {
-		File prOwlFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+//		File prOwlFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+//
+//		File outputFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
 
-		File outputFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
+		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
+
+		File prOwlFile = new File(ontBase, "pr.owl");
+
+		File outputFile = new File(ontBase, "pr-promotion-map.tsv");
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(prOwlFile)));
+			OntologyUtil ontUtil = new OntologyUtil(prOwlFile);
+//			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(prOwlFile)));
 			new PrPromotionMapFactory(ontUtil).createMappingFile(writer);
 
 		} catch (FileNotFoundException e) {
