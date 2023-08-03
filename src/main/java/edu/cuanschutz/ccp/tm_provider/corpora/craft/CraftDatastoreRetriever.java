@@ -9,9 +9,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -28,12 +31,15 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.Filter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Value;
 
 import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts.Ont;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileReaderUtil;
 import edu.ucdenver.ccp.common.file.FileUtil;
@@ -57,7 +63,48 @@ public class CraftDatastoreRetriever {
 	// Create an authorized Datastore service using Application Default Credentials.
 	private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
 
+	public enum FilterByCrf {
+		YES, NO
+	}
+
+	public enum Target {
+		/**
+		 * OGER indicates retrieve the raw OGER output
+		 */
+		OGER,
+		/**
+		 * PP = Post-processed
+		 */
+		PP,
+		/**
+		 * PP_CRF = Post-processed then filtered by CRF
+		 */
+		PP_CRF
+	}
+
 	/**
+	 * Retrieve the CRAFT text documents from Datastore
+	 * 
+	 * @param outputDirectory
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public void getTextDocuments(File outputDirectory) throws FileNotFoundException, IOException {
+
+		Filter craftCollectionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, "CRAFT");
+		Filter textFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_TYPE, DocumentType.TEXT.name());
+
+		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, textFilter);
+
+		runDatastoreQuery(outputDirectory, filter);
+
+	}
+
+	/**
+	 * Retrieve all OGER documents in the CRAFT collection - for each document, this
+	 * should retrieve 3 documents corresponding to the case-sensitive,
+	 * case-insensitive-min-norm, and case-insensitive-max-norm OGER runs
+	 * 
 	 * @param outputDirectory
 	 * @throws FileNotFoundException
 	 * @throws IOException
@@ -65,8 +112,19 @@ public class CraftDatastoreRetriever {
 	public void getOgerDocuments(File outputDirectory) throws FileNotFoundException, IOException {
 
 		Filter craftCollectionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, "CRAFT");
-		EntityQuery query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.DOCUMENT_KIND)
-				.setFilter(craftCollectionFilter).build();
+		Filter ogerPipelineFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE,
+				PipelineKey.OGER.name());
+
+		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, ogerPipelineFilter);
+
+		runDatastoreQuery(outputDirectory, filter);
+
+	}
+
+	private void runDatastoreQuery(File outputDirectory, CompositeFilter filter)
+			throws IOException, FileNotFoundException {
+		EntityQuery query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.DOCUMENT_KIND).setFilter(filter)
+				.build();
 
 		QueryResults<Entity> queryResults = datastore.run(query);
 		while (queryResults.hasNext()) {
@@ -85,8 +143,57 @@ public class CraftDatastoreRetriever {
 				writer.write(content);
 			}
 
-			System.out.println(docId + " -- " + docType + " -- " + content.substring(0, 20));
 		}
+	}
+
+	/**
+	 * Retrieve all post-processed concept documents in the CRAFT collection
+	 * 
+	 * @param outputDirectory
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public void getPostProcessedDocuments(File outputDirectory, Target target)
+			throws FileNotFoundException, IOException {
+
+		FilterByCrf filterByCrf = (target == Target.PP_CRF) ? FilterByCrf.YES : FilterByCrf.NO;
+
+		Filter craftCollectionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, "CRAFT");
+		Filter pipelineFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE,
+				PipelineKey.CONCEPT_POST_PROCESS.name());
+		Filter crfFilter = null;
+		if (filterByCrf == FilterByCrf.YES) {
+			crfFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_TYPE, DocumentType.CONCEPT_ALL.name());
+		} else {
+			crfFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_TYPE,
+					DocumentType.CONCEPT_ALL_UNFILTERED.name());
+		}
+
+		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, pipelineFilter, crfFilter);
+
+		runDatastoreQuery(outputDirectory, filter);
+
+//		EntityQuery query = Query.newEntityQueryBuilder().setKind(DatastoreConstants.DOCUMENT_KIND).setFilter(filter)
+//				.build();
+//
+//		QueryResults<Entity> queryResults = datastore.run(query);
+//		while (queryResults.hasNext()) {
+//			Entity entity = queryResults.next();
+//			Map<String, Value<?>> properties = entity.getProperties();
+//
+//			String docId = properties.get(DatastoreConstants.DOCUMENT_PROPERTY_ID).get().toString();
+//			docId = StringUtil.removePrefix(docId, "craft-");
+//			docId = StringUtil.removeLastCharacter(docId);
+//			String content = new String(entity.getBlob(DOCUMENT_PROPERTY_CONTENT).toByteArray());
+//			String docType = properties.get(DatastoreConstants.DOCUMENT_PROPERTY_TYPE).get().toString();
+//
+//			File outputFile = new File(outputDirectory, String.format("%s.%s", docId, docType.toLowerCase()));
+//
+//			try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
+//				writer.write(content);
+//			}
+//
+//		}
 
 	}
 
@@ -101,8 +208,8 @@ public class CraftDatastoreRetriever {
 	 * @param outputDir
 	 * @throws IOException
 	 */
-	private static void createOgerFiles(File datastoreDir, File go2namespaceFile, File outputDir, File craftBaseDir)
-			throws IOException {
+	private static void createOgerFiles(File datastoreDir, File go2namespaceFile, File outputDir, File craftBaseDir,
+			Target target) throws IOException {
 		System.out.println("Loading go2ontmap...");
 		Map<String, Ont> goCurieToOntMap = loadMapFile(go2namespaceFile);
 
@@ -114,19 +221,60 @@ public class CraftDatastoreRetriever {
 			String docId = txtFile.getName().split("\\.")[0];
 			System.out.println("Processing: " + docId);
 			File dir = docIdToDirMap.get(docId);
-			File csFile = new File(datastoreDir, String.format("%s.concept_cs", docId));
-			File ciminFile = new File(datastoreDir, String.format("%s.concept_cimin", docId));
-			File cimaxFile = new File(datastoreDir, String.format("%s.concept_cimax", docId));
+
+			List<File> annotFiles = new ArrayList<File>();
+
+			switch (target) {
+			case OGER:
+				annotFiles.addAll(getOgerFiles(datastoreDir, docId));
+				break;
+			case PP:
+				annotFiles.addAll(getPostProcFiles(datastoreDir, docId, target));
+				break;
+			case PP_CRF:
+				annotFiles.addAll(getPostProcFiles(datastoreDir, docId, target));
+				break;
+			default:
+				throw new IllegalArgumentException("should not be here");
+			}
 
 			Map<Ont, TextDocument> ontToDocMap = initOntToDocMap(docId, txtFile);
-			populateOntToDocMap(docId, csFile, txtFile, ontToDocMap, goCurieToOntMap);
-			populateOntToDocMap(docId, ciminFile, txtFile, ontToDocMap, goCurieToOntMap);
-			populateOntToDocMap(docId, cimaxFile, txtFile, ontToDocMap, goCurieToOntMap);
+			for (File file : annotFiles) {
+				populateOntToDocMap(docId, file, txtFile, ontToDocMap, goCurieToOntMap);
+			}
 
 			serializeBionlpFiles(docId, ontToDocMap, dir);
 
 		}
 
+	}
+
+	/**
+	 * @param datastoreDir
+	 * @param docId
+	 * @param target
+	 * @return the post-processed annotation file for the specified docId
+	 */
+	private static Collection<? extends File> getPostProcFiles(File datastoreDir, String docId, Target target) {
+		String suffix = (target == Target.PP_CRF) ? DocumentType.CONCEPT_ALL.name().toLowerCase()
+				: DocumentType.CONCEPT_ALL_UNFILTERED.name().toLowerCase();
+
+		File ppFile = new File(datastoreDir, String.format("%s.%s", docId, suffix));
+
+		return Arrays.asList(ppFile);
+	}
+
+	/**
+	 * @param datastoreDir
+	 * @param docId
+	 * @return the three OGER files associated with the given docId
+	 */
+	private static Collection<? extends File> getOgerFiles(File datastoreDir, String docId) {
+		File csFile = new File(datastoreDir, String.format("%s.concept_cs", docId));
+		File ciminFile = new File(datastoreDir, String.format("%s.concept_cimin", docId));
+		File cimaxFile = new File(datastoreDir, String.format("%s.concept_cimax", docId));
+
+		return Arrays.asList(csFile, ciminFile, cimaxFile);
 	}
 
 	/**
@@ -341,11 +489,15 @@ public class CraftDatastoreRetriever {
 	public static void main(String[] args) {
 
 		String version = args[0];
-		File outputDir = new File(String.format(
-				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/craft-output-files/%s", version));
+		Target target = Target.valueOf(args[1]);
 
-		File ogerOutputDir = new File(
-				String.format("/Users/bill/projects/ncats-translator/concept-recognition/july2023/oger/%s", version));
+		File intermediateOutputDir = new File(String.format(
+				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/craft-output-files/%s/%s",
+				target.name().toLowerCase(), version));
+
+		File finalOutputDir = new File(
+				String.format("/Users/bill/projects/ncats-translator/concept-recognition/july2023/%s/%s",
+						target.name().toLowerCase(), version));
 		File go2namespaceFile = new File(
 				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/go2namespace.tsv.gz");
 		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
@@ -358,9 +510,26 @@ public class CraftDatastoreRetriever {
 //			e.printStackTrace();
 //		}
 
+		intermediateOutputDir.mkdirs();
+		finalOutputDir.mkdirs();
+
 		try {
-			new CraftDatastoreRetriever().getOgerDocuments(outputDir);
-			createOgerFiles(outputDir, go2namespaceFile, ogerOutputDir, craftBaseDir);
+			CraftDatastoreRetriever cdr = new CraftDatastoreRetriever();
+			cdr.getTextDocuments(intermediateOutputDir);
+			switch (target) {
+			case OGER:
+				cdr.getOgerDocuments(intermediateOutputDir);
+				break;
+			case PP:
+				cdr.getPostProcessedDocuments(intermediateOutputDir, target);
+				break;
+			case PP_CRF:
+				cdr.getPostProcessedDocuments(intermediateOutputDir, target);
+				break;
+			default:
+				throw new IllegalArgumentException("should not be here");
+			}
+			createOgerFiles(intermediateOutputDir, go2namespaceFile, finalOutputDir, craftBaseDir, target);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
