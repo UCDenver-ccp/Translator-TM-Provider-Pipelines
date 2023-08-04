@@ -19,6 +19,8 @@ public class OgerDictFileFactoryTest {
 		assertTrue(OgerDictFileFactory.isCaseSensitive("SD3"));
 		assertTrue(OgerDictFileFactory.isCaseSensitive("SD2a"));
 		assertFalse(OgerDictFileFactory.isCaseSensitive("Wiskott-Aldrich syndrome"));
+		
+		assertTrue(OgerDictFileFactory.isCaseSensitive("casE"));
 	}
 
 	@Test

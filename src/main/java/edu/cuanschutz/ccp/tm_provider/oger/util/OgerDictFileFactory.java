@@ -2,12 +2,13 @@ package edu.cuanschutz.ccp.tm_provider.oger.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -148,17 +149,21 @@ public abstract class OgerDictFileFactory {
 	}
 
 	/**
-	 * Return any string that is > 40% uppercase, or starts with number
+	 * Return any string that is > 40% uppercase, or starts with number, or has a
+	 * mix of uppercase and lowercase letters, but the uppercase letters aren't just
+	 * the first letters of words
 	 * 
 	 * @param syn
 	 * @return
 	 */
 	protected static boolean isCaseSensitive(String s) {
 
+		// if it starts with a number, consider it case-sensitive
 		if (s.matches("^\\d")) {
 			return true;
 		}
 
+		// if there are more than 40% uppercase+digits, consider it case sensitive
 		String sTrimmed = s.trim();
 		int ucCount = 0;
 		for (int i = 0; i < sTrimmed.length(); i++) {
@@ -166,9 +171,24 @@ public abstract class OgerDictFileFactory {
 			if (Character.isUpperCase(c) || Character.isDigit(c)) {
 				ucCount++;
 			}
+
 		}
 		float percentUpper = (float) ucCount / (float) sTrimmed.length();
-		return percentUpper > 0.4;
+		if (percentUpper > 0.4) {
+			return true;
+		}
+
+		// if there are a mix of upper and lowercase letters and the uppercase letters
+		// aren't just the first letter of the word, then consider case-sensitive, e.g.
+		// casE
+		Pattern p = Pattern.compile("[a-z][A-Z]");
+		Matcher m = p.matcher(s);
+		if (m.find()) {
+			return true;
+		}
+
+		return false;
+
 	}
 
 	/**
@@ -581,7 +601,8 @@ public abstract class OgerDictFileFactory {
 		}
 //		System.out.println("2: " + label);
 
-		// remove parentheticals when they occur at the end of the label and there is a space between label text and the parenthetical
+		// remove parentheticals when they occur at the end of the label and there is a
+		// space between label text and the parenthetical
 		if (StringUtil.endsWithRegex(label, " [(][^)]+[)]")) {
 			label = StringUtil.removeSuffixRegex(label, " [(][^)]+[)]");
 		}
