@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
+import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 public class ClOgerDictFileFactory extends OgerDictFileFactory {
 
@@ -22,7 +23,7 @@ public class ClOgerDictFileFactory extends OgerDictFileFactory {
 			));
 
 	@Override
-	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
+	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		if (iri.equals("CL:0000601")) { // cochlear outer hair cell

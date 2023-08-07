@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
+import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
@@ -23,7 +24,7 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 	));
 
 	@Override
-	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
+	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
 import edu.ucdenver.ccp.common.string.StringUtil;
+import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 
@@ -21,7 +22,7 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
 
 	@Override
-	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
+	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		augmentActivitySynonyms(toReturn);

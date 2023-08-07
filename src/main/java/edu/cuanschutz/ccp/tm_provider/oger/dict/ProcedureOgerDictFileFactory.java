@@ -16,9 +16,7 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.reader.Line;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord.Synonym;
-import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugbankXmlFileRecordReader;
+import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 /**
  * TODO: implement this - from Drugbank XML file
@@ -130,7 +128,7 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 			String randomName = synonyms.iterator().next();
 
 			// then output the synonyms to file b/c this concept is a procedure
-			synonyms = augmentSynonyms(previousConceptId, synonyms);
+			synonyms = augmentSynonyms(previousConceptId, synonyms, null);
 			/*
 			 * split the synonyms into two sets, one that will be match in a case sensitive
 			 * manner, and one that will be case insensitive
@@ -157,7 +155,7 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
 
 	@Override
-	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
+	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 

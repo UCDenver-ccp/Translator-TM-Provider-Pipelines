@@ -71,32 +71,24 @@ public abstract class OgerDictFileFactory {
 				}
 				if (cls.getIRI().toString().contains(ontologyIdPrefix)) {
 					String label = ontUtil.getLabel(cls);
-
-					// TODO: getSynonyms gets messed up when there's an &quot; in the label -- and
-					// somehow a backslash gets inserted -- the backslash breaks OGER during load.
-					// For now we simply remove the backslash from the label as it doesn't happen
-					// often.
-
-					Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
-					if (synSelection == SynonymSelection.EXACT_PLUS_RELATED) {
-						Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
-						synonyms.addAll(relatedSyns);
-					}
-					synonyms.add(label);
-					synonyms = fixLabels(synonyms);
-					synonyms = augmentSynonyms(cls.getIRI().toString(), synonyms);
-
-					/*
-					 * split the synonyms into two sets, one that will be match in a case sensitive
-					 * manner, and one that will be case insensitive
-					 */
-
-					Set<String> caseSensitiveSyns = getCaseSensitiveSynonyms(synonyms);
-
-					/* the synonyms set becomes the case-insensitive set */
-					synonyms.removeAll(caseSensitiveSyns);
-
 					if (label != null) {
+						// TODO: getSynonyms gets messed up when there's an &quot; in the label -- and
+						// somehow a backslash gets inserted -- the backslash breaks OGER during load.
+						// For now we simply remove the backslash from the label as it doesn't happen
+						// often.
+
+						Set<String> synonyms = getSynonyms(ontUtil, cls, label, synSelection);
+						synonyms = augmentSynonyms(cls.getIRI().toString(), synonyms, ontUtil);
+						/*
+						 * split the synonyms into two sets, one that will be match in a case sensitive
+						 * manner, and one that will be case insensitive
+						 */
+
+						Set<String> caseSensitiveSyns = getCaseSensitiveSynonyms(synonyms);
+
+						/* the synonyms set becomes the case-insensitive set */
+						synonyms.removeAll(caseSensitiveSyns);
+
 						for (String syn : caseSensitiveSyns) {
 							caseSensWriter.write(
 									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
@@ -113,6 +105,27 @@ public abstract class OgerDictFileFactory {
 		} catch (OWLOntologyCreationException e) {
 			throw new IOException(e);
 		}
+	}
+
+	/**
+	 * Return a set containing the label and synonyms for the specified OWLClass
+	 * 
+	 * @param ontUtil
+	 * @param cls
+	 * @param label
+	 * @param synSelection
+	 * @return
+	 */
+	public static Set<String> getSynonyms(OntologyUtil ontUtil, OWLClass cls, String label,
+			SynonymSelection synSelection) {
+		Set<String> synonyms = ontUtil.getSynonyms(cls, SynonymType.EXACT);
+		if (synSelection == SynonymSelection.EXACT_PLUS_RELATED) {
+			Set<String> relatedSyns = ontUtil.getSynonyms(cls, SynonymType.RELATED);
+			synonyms.addAll(relatedSyns);
+		}
+		synonyms.add(label);
+		synonyms = fixLabels(synonyms);
+		return synonyms;
 	}
 
 	/**
@@ -249,7 +262,7 @@ public abstract class OgerDictFileFactory {
 		return clses;
 	}
 
-	protected abstract Set<String> augmentSynonyms(String iri, Set<String> syns);
+	protected abstract Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil);
 
 //	protected abstract Set<String> filterSynonyms(String iri, Set<String> syns);
 

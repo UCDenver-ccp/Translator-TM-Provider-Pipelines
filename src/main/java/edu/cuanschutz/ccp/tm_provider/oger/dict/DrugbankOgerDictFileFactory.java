@@ -13,6 +13,7 @@ import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord.Synonym;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugbankXmlFileRecordReader;
+import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 /**
  * NOTE: there was a POM exclusion necessary in order for this to run (see the
@@ -63,7 +64,7 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 					}
 				}
 
-				syns = augmentSynonyms(drugbankId, syns);
+				syns = augmentSynonyms(drugbankId, syns, null);
 				/*
 				 * split the synonyms into two sets, one that will be match in a case sensitive
 				 * manner, and one that will be case insensitive
@@ -89,7 +90,7 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 	}
 
 	@Override
-	protected Set<String> augmentSynonyms(String iri, Set<String> syns) {
+	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
 		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
