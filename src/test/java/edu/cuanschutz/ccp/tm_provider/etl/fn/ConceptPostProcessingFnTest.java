@@ -117,6 +117,68 @@ public class ConceptPostProcessingFnTest {
 	}
 
 	@Test
+	public void testRemoveSpuriousMatches() {
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+
+		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		idToOgerDictEntriesMap.put("PR:O74957",
+				new HashSet<String>(Arrays.asList("Spom972h-ago1", "PAZ Piwi domain protein ago1")));
+
+		idToOgerDictEntriesMap.put("PR:000012547", new HashSet<String>(Arrays.asList("Per1")));
+
+		TextAnnotation legitAnnot1 = factory.createAnnotation(0, 28, "PAZ Piwi domain protein ago1", "PR:O74957");
+		TextAnnotation legitAnnot2 = factory.createAnnotation(0, 30, "PAZ Piwi domain protein (ago1)", "PR:O74957");
+		TextAnnotation spuriousAnnot1 = factory.createAnnotation(0, 6, "ago [1", "PR:O74957");
+
+		Set<TextAnnotation> allAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(legitAnnot1, legitAnnot2, spuriousAnnot1));
+		Set<TextAnnotation> updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots,
+				idToOgerDictEntriesMap);
+		Set<TextAnnotation> expectedUpdatedAnnotations = new HashSet<TextAnnotation>(
+				Arrays.asList(legitAnnot1, legitAnnot2));
+		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
+
+		TextAnnotation spuriousAnnot2 = factory.createAnnotation(0, 4, "per", "PR:000012547");
+
+		allAnnots = new HashSet<TextAnnotation>(Arrays.asList(spuriousAnnot2));
+		updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots, idToOgerDictEntriesMap);
+		expectedUpdatedAnnotations = new HashSet<TextAnnotation>(Arrays.asList());
+		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
+
+		TextAnnotation spuriousAnnot3 = factory.createAnnotation(0, 4, "12.3", "PR:000012547");
+
+		allAnnots = new HashSet<TextAnnotation>(Arrays.asList(spuriousAnnot3));
+		updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots, idToOgerDictEntriesMap);
+		expectedUpdatedAnnotations = new HashSet<TextAnnotation>(Arrays.asList());
+		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
+
+	}
+
+	@Test
+	public void testRemoveSpuriousMatches_UnexpectedGoCcExclusions() {
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+
+		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		idToOgerDictEntriesMap.put("GO:0030424", new HashSet<String>(Arrays.asList("axon")));
+		idToOgerDictEntriesMap.put("GO:0005764", new HashSet<String>(Arrays.asList("lysosome")));
+		idToOgerDictEntriesMap.put("GO:0005737", new HashSet<String>(Arrays.asList("cytoplasm")));
+
+		TextAnnotation legitAnnot1 = factory.createAnnotation(0, 5, "axons", "GO:0030424");
+		TextAnnotation legitAnnot2 = factory.createAnnotation(0, 9, "lysosomal", "GO:0005764");
+		TextAnnotation legitAnnot3 = factory.createAnnotation(0, 9, "cytoplasmic", "GO:0005737");
+
+		Set<TextAnnotation> allAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(legitAnnot1, legitAnnot2, legitAnnot3));
+		Set<TextAnnotation> updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots,
+				idToOgerDictEntriesMap);
+		Set<TextAnnotation> expectedUpdatedAnnotations = new HashSet<TextAnnotation>(
+				Arrays.asList(legitAnnot1, legitAnnot2, legitAnnot3));
+		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
+	}
+
+	@Test
 	public void testPromoteNcbiTaxonAnnots() {
 
 		Map<String, Set<String>> ancestorMap = new HashMap<String, Set<String>>();

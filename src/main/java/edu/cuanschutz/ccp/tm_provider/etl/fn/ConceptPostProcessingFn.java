@@ -3,6 +3,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -29,6 +31,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
@@ -65,7 +68,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria,
 			PCollectionView<Map<String, Set<String>>> extensionToOboMapView,
-			PCollectionView<Map<String, String>> prPromotionMapView,
+			PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView,
 			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView,
 //			PCollectionView<Map<String, Set<String>>> oboToAncestorsMapView, 
 			FilterFlag filterFlag) {
@@ -81,7 +84,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						String docId = statusEntity.getDocumentId();
 
 						Map<String, Set<String>> extensionToOboMap = context.sideInput(extensionToOboMapView);
-						Map<String, String> prPromotionMap = context.sideInput(prPromotionMapView);
+						Map<String, Set<String>> idToOgerDictEntriesMap = context.sideInput(idToOgerDictEntriesMapView);
 						Map<String, Set<String>> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
 //						Map<String, Set<String>> oboToAncestorsMap = context.sideInput(oboToAncestorsMapView);
 
@@ -100,33 +103,60 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 										.getDocTypeToContentMap(statusEntity.getDocumentId(),
 												statusEntityToText.getValue());
 
-
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
 										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
 //								throw new IllegalArgumentException(String.format("docTypeToAnnotsMap size for %s: %d -- %s",
 //										docId, docTypeToAnnotsMap.size(), docTypeToAnnotsMap.keySet().toString()));
 
-								
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
-								allAnnots = convertExtensionToObo(allAnnots, extensionToOboMap);
-								allAnnots = promotePrAnnots(allAnnots, prPromotionMap);
-								allAnnots = promoteNcbiTaxonAnnots(allAnnots, ncbitaxonPromotionMap);
-								allAnnots = removeNcbiStopWords(allAnnots);
-								allAnnots = removeIdToTextExclusionPairs(allAnnots);
+								Set<TextAnnotation> nonRedundantAnnots = new HashSet<TextAnnotation>();
+								// remove all slots so that duplicate annotations will be condensed. There is a
+								// slot for the theme id, e.g., T32, which will prevent duplicate annotations
+								// from being condensed in the set -- the clone method creates a clone of the
+								// annotation without any slots
+								for (TextAnnotation annot : allAnnots) {
+									nonRedundantAnnots.add(PipelineMain.clone(annot));
+								}
+
+								nonRedundantAnnots = convertExtensionToObo(nonRedundantAnnots, extensionToOboMap);
+//								nonRedundantAnnots = promotePrAnnots(nonRedundantAnnots, prPromotionMap);
+								nonRedundantAnnots = promoteNcbiTaxonAnnots(nonRedundantAnnots, ncbitaxonPromotionMap);
+								nonRedundantAnnots = removeNcbiStopWords(nonRedundantAnnots);
+								nonRedundantAnnots = removeIdToTextExclusionPairs(nonRedundantAnnots);
+								nonRedundantAnnots = removeSpuriousMatches(nonRedundantAnnots, idToOgerDictEntriesMap);
+
+								// check for duplicates
+								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
+								for (int i = 0; i < annots.size(); i++) {
+									for (int j = 0; j < annots.size(); j++) {
+										if (i != j) {
+											TextAnnotation annot1 = annots.get(i);
+											TextAnnotation annot2 = annots.get(j);
+											if (annot1.getClassMention().getMentionName()
+													.equals(annot2.getClassMention().getMentionName())) {
+												if (annot1.getAggregateSpan().equals(annot2.getAggregateSpan())) {
+													throw new IllegalStateException("Found duplicates: \n"
+															+ annot1.toString() + "\n" + annot2.toString());
+												}
+											}
+										}
+
+									}
+								}
 
 								// the removals below should now be handled at the OGER level
-//								allAnnots = excludeSelectNcbiTaxonAnnots(allAnnots);
-//								allAnnots = removeIrrelevantHpConcepts(allAnnots, oboToAncestorsMap);
-//								allAnnots = removeIrrelevantMondoConcepts(allAnnots, oboToAncestorsMap);
-//								allAnnots = removeIrrelevantUberonConcepts(allAnnots, oboToAncestorsMap);
-//								allAnnots = removeIrrelevantChebiConcepts(allAnnots, oboToAncestorsMap);
+//								nonRedundantAnnots = excludeSelectNcbiTaxonAnnots(nonRedundantAnnots);
+//								nonRedundantAnnots = removeIrrelevantHpConcepts(nonRedundantAnnots, oboToAncestorsMap);
+//								nonRedundantAnnots = removeIrrelevantMondoConcepts(nonRedundantAnnots, oboToAncestorsMap);
+//								nonRedundantAnnots = removeIrrelevantUberonConcepts(nonRedundantAnnots, oboToAncestorsMap);
+//								nonRedundantAnnots = removeIrrelevantChebiConcepts(nonRedundantAnnots, oboToAncestorsMap);
 
 								String documentText = PipelineMain.getDocumentText(docs);
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
 										documentText);
-								td.addAnnotations(allAnnots);
+								td.addAnnotations(nonRedundantAnnots);
 								BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 								String bionlp = null;
 								try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -142,9 +172,78 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						}
 					}
 
-				}).withSideInputs(extensionToOboMapView, prPromotionMapView, ncbiTaxonAncestorMapView
+				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView
 //						,oboToAncestorsMapView
 		).withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * OGER sometimes matches substrings of a label and considers it a complete
+	 * match for unknown reasons. This method attempts to filter out these spurious
+	 * matches by comparing the matched text to the available dictionary entries for
+	 * the concept. If there is not substantial agreement with one of the dictionary
+	 * entries, then the match is excluded.
+	 * 
+	 * @param allAnnots
+	 * @param idToOgerDictEntriesMap
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Set<TextAnnotation> removeSpuriousMatches(Set<TextAnnotation> allAnnots,
+			Map<String, Set<String>> idToOgerDictEntriesMap) {
+		LevenshteinDistance ld = LevenshteinDistance.getDefaultInstance();
+		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>();
+
+		for (TextAnnotation annot : allAnnots) {
+			String id = annot.getClassMention().getMentionName();
+			String coveredText = annot.getCoveredText();
+
+			// if the covered text is just digits and punctuation, then we will exclude it
+			if (isDigitsAndPunctOnly(coveredText)) {
+				continue;
+			}
+
+			if (idToOgerDictEntriesMap.containsKey(id)) {
+				Set<String> dictEntries = idToOgerDictEntriesMap.get(id);
+				for (String dictEntry : dictEntries) {
+					Integer dist = ld.apply(coveredText.toLowerCase(), dictEntry.toLowerCase());
+					float percentChange = (float) dist / (float) dictEntry.length();
+					if (coveredText.contains("/") && percentChange != 0.0) {
+						// slashes seem to cause lots of false positives, so we won't accept a slash in
+						// a match unless it matches 100% with one of the dictionary entries
+						continue;
+					}
+					if (percentChange < 0.3) {
+						// 0.3 allows for some change due to normalizations
+
+						// However, if the covered text is characters but the closest match is
+						// characters with a number suffix, then we exclude, e.g. per matching Per1.
+						boolean exclude = false;
+						if (dictEntry.toLowerCase().startsWith(coveredText.toLowerCase())) {
+							String suffix = StringUtil.removePrefix(dictEntry.toLowerCase(), coveredText.toLowerCase());
+							if (suffix.matches("\\d+")) {
+								exclude = true;
+							}
+						}
+
+						if (!exclude) {
+							toReturn.add(annot);
+						}
+					}
+					System.out.println(String.format("%s -- %s == %d %f", coveredText, dictEntry, dist, percentChange));
+				}
+			}
+		}
+
+		return toReturn;
+	}
+
+	private static boolean isDigitsAndPunctOnly(String coveredText) {
+		coveredText = coveredText.replaceAll("\\d", "");
+		coveredText = coveredText.replace("\\p{Punct}", "");
+		// actually if there is just one letter left, we will still count it as digits
+		// and punct only
+		return coveredText.trim().length() < 2;
 	}
 
 	@VisibleForTesting

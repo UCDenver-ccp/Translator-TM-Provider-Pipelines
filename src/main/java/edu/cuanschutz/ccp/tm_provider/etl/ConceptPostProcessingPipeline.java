@@ -70,15 +70,20 @@ public class ConceptPostProcessingPipeline {
 
 		void setRequiredProcessingStatusFlags(String flags);
 
-		@Description("path to the PR promotion map file")
-		String getPrPromotionMapFilePath();
+		@Description("path to the ID-to-Oger-Dict-Entry map file")
+		String getIdToOgerDictEntryMapFilePath();
 
-		void setPrPromotionMapFilePath(String path);
+		void setIdToOgerDictEntryMapFilePath(String path);
 
-		@Description("delimiter used to separate columns in the PR promotion map file")
-		Delimiter getPrPromotionMapFileDelimiter();
+		@Description("delimiter used to separate columns in the ID-to-Oger-Dict-Entry map file")
+		Delimiter getIdToOgerDictEntryMapFileDelimiter();
 
-		void setPrPromotionMapFileDelimiter(Delimiter delimiter);
+		void setIdToOgerDictEntryMapFileDelimiter(Delimiter delimiter);
+
+		@Description("delimiter used to separate values in the 2nd column in the ID-to-Oger-Dict-Entry map file")
+		Delimiter getIdToOgerDictEntryMapFileSetDelimiter();
+
+		void setIdToOgerDictEntryMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("path to the NCBITaxon promotion map file")
 		String getNcbiTaxonPromotionMapFilePath();
@@ -171,15 +176,21 @@ public class ConceptPostProcessingPipeline {
 						Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
-		final PCollectionView<Map<String, String>> prPromotionMapView = PCollectionUtil
-				.fromTwoColumnFiles("pr-promotion map", p, options.getPrPromotionMapFilePath(),
-						options.getPrPromotionMapFileDelimiter(), Compression.GZIP)
-				.apply(View.<String, String>asMap());
+//		final PCollectionView<Map<String, String>> prPromotionMapView = PCollectionUtil
+//				.fromTwoColumnFiles("pr-promotion map", p, options.getPrPromotionMapFilePath(),
+//						options.getPrPromotionMapFileDelimiter(), Compression.GZIP)
+//				.apply(View.<String, String>asMap());
 
 		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = PCollectionUtil
 				.fromKeyToSetTwoColumnFiles("ncbitaxon promotion map", p, options.getNcbiTaxonPromotionMapFilePath(),
 						options.getNcbiTaxonPromotionMapFileDelimiter(),
 						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
+				.apply(View.<String, Set<String>>asMap());
+
+		final PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView = PCollectionUtil
+				.fromKeyToSetTwoColumnFiles("id to oger dict entry map", p, options.getIdToOgerDictEntryMapFilePath(),
+						options.getIdToOgerDictEntryMapFileDelimiter(),
+						options.getIdToOgerDictEntryMapFileSetDelimiter(), Compression.GZIP)
 				.apply(View.<String, Set<String>>asMap());
 
 		// ancestormap is no longer needed
@@ -197,7 +208,7 @@ public class ConceptPostProcessingPipeline {
 				PIPELINE_KEY, pipelineVersion);
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
-				inputDocCriteria, extensionToOboMapView, prPromotionMapView, ncbiTaxonPromotionMapView, // ancestorMapView,
+				inputDocCriteria, extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonPromotionMapView, // ancestorMapView,
 				options.getFilterFlag());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output

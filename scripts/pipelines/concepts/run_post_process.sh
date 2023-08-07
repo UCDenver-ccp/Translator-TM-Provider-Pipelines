@@ -34,17 +34,21 @@ echo "INPUT_DOC_CRITERIA: $INPUT_DOC_CRITERIA"
 
 REQUIRED_FLAGS='TEXT_DONE'
 
-PR_PROMOTION_MAP_FILE_PATH="${BUCKET}/ontology-resources/pr-promotion-map.tsv.gz"
+# PR_PROMOTION_MAP_FILE_PATH="${BUCKET}/ontology-resources/pr-promotion-map.tsv.gz"
+ID_TO_OGER_DICT_ENTRY_MAP_FILE_PATH="${BUCKET}/ontology-resources/idToDictEntryMap.tsv.gz"
 NCBITAXON_PROMOTION_MAP_FILE_PATH="${BUCKET}/ontology-resources/ncbitaxon-promotion-map.tsv.gz"
 EXTENSION_MAP_FILE_PATH="${BUCKET}/ontology-resources/craft-mapping-files/*.txt.gz"
 #ANCESTOR_MAP_FILE_PATH="${BUCKET}/ontology-resources/ontology-class-ancestor-map.tsv.gz"
+
+
 
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.2.0.jar CONCEPT_POST_PROCESS \
 --jobName="$JOB_NAME" \
 --inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
 --requiredProcessingStatusFlags="$REQUIRED_FLAGS" \
---prPromotionMapFilePath="$PR_PROMOTION_MAP_FILE_PATH" \
---prPromotionMapFileDelimiter='TAB' \
+--idToOgerDictEntryMapFilePath="$ID_TO_OGER_DICT_ENTRY_MAP_FILE_PATH" \
+--idToOgerDictEntryMapFileDelimiter='TAB' \
+--idToOgerDictEntryMapFileSetDelimiter='PIPE' \
 --ncbiTaxonPromotionMapFilePath="$NCBITAXON_PROMOTION_MAP_FILE_PATH" \
 --ncbiTaxonPromotionMapFileDelimiter='TAB' \
 --ncbiTaxonPromotionMapFileSetDelimiter='PIPE' \
