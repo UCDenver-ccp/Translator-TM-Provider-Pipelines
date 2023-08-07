@@ -80,12 +80,19 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 			throw new IOException(e);
 		}
 		System.out.println("complete.");
-		File caseInsensitiveDictFile = new File(dictDirectory,
-				String.format("%s.case_insensitive.tsv", ONTOLOGY_PREFIX));
+
+		// PR families get sent to the max_normfile
+		File caseInsensitiveMaxNormDictFile = new File(dictDirectory,
+				String.format("%s.case_insensitive_max_norm.tsv", ONTOLOGY_PREFIX));
+		File caseInsensitiveMinNormDictFile = new File(dictDirectory,
+				String.format("%s.case_insensitive_min_norm.tsv", ONTOLOGY_PREFIX));
 		File caseSensitiveDictFile = new File(dictDirectory, String.format("%s.case_sensitive.tsv", ONTOLOGY_PREFIX));
 
 		try (BufferedWriter caseSensWriter = FileWriterUtil.initBufferedWriter(caseSensitiveDictFile);
-				BufferedWriter caseInsensWriter = FileWriterUtil.initBufferedWriter(caseInsensitiveDictFile)) {
+				BufferedWriter caseInsensMinNormWriter = FileWriterUtil
+						.initBufferedWriter(caseInsensitiveMinNormDictFile);
+				BufferedWriter caseInsensMaxNormWriter = FileWriterUtil
+						.initBufferedWriter(caseInsensitiveMaxNormDictFile)) {
 
 			Set<OWLClass> skipped = new HashSet<OWLClass>();
 			Set<OWLClass> used = new HashSet<OWLClass>();
@@ -105,7 +112,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 						used.add(cls);
 						Map<String, Set<String>> synonymToSourceMap = new HashMap<String, Set<String>>();
 						extractSynonyms(ontUtil, synonymToSourceMap, cls);
-						writeDictLines(cls, synonymToSourceMap, caseSensWriter, caseInsensWriter);
+						writeDictLines(cls, synonymToSourceMap, caseSensWriter, caseInsensMaxNormWriter);
 					} else if (isGeneLevel(cls, ontUtil)) {
 
 						// if this class has gene-level children, then skip
@@ -126,7 +133,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 							extractSynonyms(ontUtil, synonymToSourceMap, descendant);
 						}
 
-						writeDictLines(cls, synonymToSourceMap, caseSensWriter, caseInsensWriter);
+						writeDictLines(cls, synonymToSourceMap, caseSensWriter, caseInsensMinNormWriter);
 //						Set<String> caseInsensitiveSyns = new HashSet<String>(synonymToSourceMap.keySet());
 //						Set<String> caseSensitiveSyns = getCaseSensitiveSynonyms(caseInsensitiveSyns);
 //						/* the synonyms set becomes the case-insensitive set */
@@ -194,7 +201,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 
 						Map<String, Set<String>> synonymToSourceMap = new HashMap<String, Set<String>>();
 						extractSynonyms(ontUtil, synonymToSourceMap, skippedCls);
-						writeDictLines(skippedCls, synonymToSourceMap, caseSensWriter, caseInsensWriter);
+						writeDictLines(skippedCls, synonymToSourceMap, caseSensWriter, caseInsensMinNormWriter);
 
 					}
 
@@ -292,7 +299,6 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 		return iri.substring(index).replace("_", ":");
 	}
 
-	
 	private boolean isFamilyLevel(OWLClass cls, OntologyUtil ontUtil) {
 		List<String> comments = ontUtil.getComments(cls);
 		if (comments != null && !comments.isEmpty()) {
@@ -304,6 +310,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 		}
 		return false;
 	}
+
 	private boolean isGeneLevel(OWLClass cls, OntologyUtil ontUtil) {
 		List<String> comments = ontUtil.getComments(cls);
 		if (comments != null && !comments.isEmpty()) {
