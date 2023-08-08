@@ -41,6 +41,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import edu.ucdenver.ccp.nlp.core.mention.ClassMention;
 import edu.ucdenver.ccp.nlp.core.mention.ComplexSlotMention;
+import edu.ucdenver.ccp.nlp.core.mention.SingleSlotFillerExpectedException;
 import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -52,6 +53,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	private static final long serialVersionUID = 1L;
 
 	private static final String HAS_SHORT_FORM_SLOT = "has_short_form";
+	private static final String LONG_FORM_ABBREV_CLASS = "long_form";
+	private static final String SHORT_FORM_ABBREV_CLASS = "short_form";
 
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<ProcessingStatus, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
@@ -225,13 +228,25 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param abbrevAnnots
 	 * @return
 	 */
-	private static Set<TextAnnotation> getShortFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
+	public static Set<TextAnnotation> getShortFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
 		Set<TextAnnotation> shortFormAnnots = new HashSet<TextAnnotation>();
 		for (TextAnnotation abbrevAnnot : abbrevAnnots) {
-			ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
-			Collection<ClassMention> classMentions = csm.getClassMentions();
-			for (ClassMention cm : classMentions) {
-				shortFormAnnots.add(cm.getTextAnnotation());
+			String type = abbrevAnnot.getClassMention().getMentionName();
+			if (type.equals(SHORT_FORM_ABBREV_CLASS)) {
+				shortFormAnnots.add(abbrevAnnot);
+			} else if (type.equals(LONG_FORM_ABBREV_CLASS)) {
+				ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+				if (csm != null) {
+					Collection<ClassMention> classMentions = csm.getClassMentions();
+					for (ClassMention cm : classMentions) {
+						shortFormAnnots.add(cm.getTextAnnotation());
+					}
+				}
+			} else {
+				// we don't expect to be here as there should only be short and long form
+				// annotations
+				throw new IllegalArgumentException("Observed abbreviation annotation of unexpected type: " + type
+						+ " -- " + abbrevAnnot.getSingleLineRepresentation());
 			}
 		}
 
@@ -239,17 +254,25 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	}
 
 	/**
-	 * return the long form abbreviation annots from the input set
+	 * return the long form abbreviation annots from the input set. Long-form
+	 * abbreviations are defined their type being "long_form" AND they must have a
+	 * slot filler for the has_short_form slot.
 	 * 
 	 * @param abbrevAnnots
 	 * @return
 	 */
-	private static Set<TextAnnotation> getLongFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
+	public static Set<TextAnnotation> getLongFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
 		Set<TextAnnotation> longFormAnnots = new HashSet<TextAnnotation>();
 		for (TextAnnotation abbrevAnnot : abbrevAnnots) {
-			ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
-			if (csm != null) {
-				longFormAnnots.add(abbrevAnnot);
+			String type = abbrevAnnot.getClassMention().getMentionName();
+			if (type.equals(LONG_FORM_ABBREV_CLASS)) {
+				ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+				if (csm != null) {
+					Collection<ClassMention> classMentions = csm.getClassMentions();
+					if (classMentions.size() == 1) {
+						longFormAnnots.add(abbrevAnnot);
+					}
+				}
 			}
 		}
 
@@ -395,7 +418,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param longAbbrevAnnot
 	 * @return
 	 */
-	private static TextAnnotation getShortAbbrevAnnot(TextAnnotation longAbbrevAnnot) {
+	public static TextAnnotation getShortAbbrevAnnot(TextAnnotation longAbbrevAnnot) {
 		ComplexSlotMention csm = longAbbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
 		return csm.getSingleSlotValue().getTextAnnotation();
 	}
