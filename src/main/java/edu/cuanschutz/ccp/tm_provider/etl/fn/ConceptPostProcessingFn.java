@@ -3,7 +3,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -126,6 +125,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								nonRedundantAnnots = removeNcbiStopWords(nonRedundantAnnots);
 								nonRedundantAnnots = removeIdToTextExclusionPairs(nonRedundantAnnots);
 								nonRedundantAnnots = removeSpuriousMatches(nonRedundantAnnots, idToOgerDictEntriesMap);
+								nonRedundantAnnots = removeMatchesLessThan(nonRedundantAnnots, 4);
 
 								// check for duplicates
 								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
@@ -175,6 +175,25 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView
 //						,oboToAncestorsMapView
 		).withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * remove annotations whose covered text is less than the specified threshold
+	 * 
+	 * @param nonRedundantAnnots
+	 * @param lengthThreshold
+	 * @return
+	 */
+	protected static Set<TextAnnotation> removeMatchesLessThan(Set<TextAnnotation> annots, int lengthThreshold) {
+		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>();
+
+		for (TextAnnotation annot : annots) {
+			if (annot.getCoveredText().length() >= lengthThreshold) {
+				toReturn.add(annot);
+			}
+		}
+
+		return toReturn;
 	}
 
 	/**
@@ -284,6 +303,9 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		CollectionsUtil.addToOne2ManyUniqueMap("GO:0005694", "chromosomal", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000062", "organisms", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "centrally", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001451", "central", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001427", "radial", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "centrally", map);
