@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.oger.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -55,7 +57,10 @@ public abstract class OgerDictFileFactory {
 
 		try (BufferedWriter caseSensWriter = FileWriterUtil.initBufferedWriter(caseSensitiveDictFile);
 				BufferedWriter caseInsensWriter = FileWriterUtil.initBufferedWriter(caseInsensitiveDictFile)) {
-			OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
+
+			OntologyUtil ontUtil = ontologyFile.getName().endsWith(".gz")
+					? new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)))
+					: new OntologyUtil(ontologyFile);
 			Set<OWLClass> exclusionClasses = getExclusionClasses(ontUtil);
 			for (Iterator<OWLClass> classIterator = ontUtil.getClassIterator(); classIterator.hasNext();) {
 				OWLClass cls = classIterator.next();
