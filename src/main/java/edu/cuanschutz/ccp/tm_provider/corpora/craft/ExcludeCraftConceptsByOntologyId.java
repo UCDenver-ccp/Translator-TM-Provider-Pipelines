@@ -169,8 +169,8 @@ public class ExcludeCraftConceptsByOntologyId {
 					bionlpBaseDir, craftBaseDir);
 
 			System.out.println("SO...");
-			excludeClasses(soOwlFile, Collections.emptyList(), SoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					bionlpBaseDir, craftBaseDir);
+			excludeClasses(soOwlFile, SoOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
+					SoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, bionlpBaseDir, craftBaseDir);
 
 			System.out.println("UBERON...");
 			excludeClasses(uberonOwlFile, UberonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
