@@ -341,14 +341,23 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		// select the appropriate overlapping concept if there are multiple and populate
 		// the abbrevAnnotToConceptIdMap that is returned
 		Map<TextAnnotation, String> abbrevAnnotToConceptIdMap = new HashMap<TextAnnotation, String>();
+		LevenshteinDistance ld = LevenshteinDistance.getDefaultInstance();
 
 		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : abbrevAnnotToConceptAnnotsMap.entrySet()) {
 			TextAnnotation longAbbrevAnnot = entry.getKey();
 			TextAnnotation overlappingConceptAnnot = selectConceptAnnot(entry.getValue());
 
+			// require a significant level of overlap in order to assign the concept id to
+			// the abbreviation
+			// we'll start with 90% overlap
+
 			if (overlappingConceptAnnot != null) {
-				String conceptId = overlappingConceptAnnot.getClassMention().getMentionName();
-				abbrevAnnotToConceptIdMap.put(longAbbrevAnnot, conceptId);
+				Integer dist = ld.apply(longAbbrevAnnot.getCoveredText(), overlappingConceptAnnot.getCoveredText());
+				float percentChange = (float) dist / (float) longAbbrevAnnot.getCoveredText().length();
+				if (percentChange < 0.1) {
+					String conceptId = overlappingConceptAnnot.getClassMention().getMentionName();
+					abbrevAnnotToConceptIdMap.put(longAbbrevAnnot, conceptId);
+				}
 			}
 		}
 
