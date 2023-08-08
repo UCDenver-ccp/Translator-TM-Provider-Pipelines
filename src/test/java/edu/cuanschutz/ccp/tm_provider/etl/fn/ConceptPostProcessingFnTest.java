@@ -1,7 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +14,10 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
+import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
@@ -245,4 +252,120 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(expectedOutput, output);
 	}
 
+	@Test
+	public void testRemoveAllAbbreviationShortFormAnnots() throws IOException {
+
+		String sentence1 = "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine.";
+
+		// 01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+		String sentence2 = "The function of aldehyde dehydrogenase 1A3 (ALDH1A3) in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD.";
+
+		String documentText = sentence1 + " " + sentence2;
+
+		Map<String, Span> sentenceToSpanMap = new HashMap<String, Span>();
+		sentenceToSpanMap.put(sentence1, new Span(0, 134));
+		sentenceToSpanMap.put(sentence2, new Span(0 + 135, 132 + 135));
+
+		// @formatter:off
+		String abbreviationsBionlp = 
+				"T1\tlong_form 0 24\tAldehyde dehydrogenase 1\n" +
+		        "T2\tshort_form 26 31\tALDH1\n" + 
+				"T3\tlong_form 67 86\tParkinson's disease\n" +
+		        "T4\tshort_form 88 90\tPD\n" +
+				"T5\tlong_form 151 177\taldehyde dehydrogenase 1A3\n" + 
+		        "T6\tshort_form 179 186\tALDH1A3\n" + 
+				"R1\thas_short_form Arg1:T3 Arg2:T4\n" +
+				"R2\thas_short_form Arg1:T1 Arg2:T2\n" +
+				"R3\thas_short_form Arg1:T5 Arg2:T6\n";
+		// @formatter:on
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument abbrevDoc = bionlpReader.readDocument("PMID:12345", "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(documentText.getBytes()), CharacterEncoding.UTF_8);
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+		TextAnnotation aldh1LongAnnot = factory.createAnnotation(0, 24, "Aldehyde dehydrogenase 1", "PR:1");
+		TextAnnotation aldh1ShortAnnot = factory.createAnnotation(26, 31, "ALDH1", "PR:1");
+		TextAnnotation spuriousAldh1ShortAnnot = factory.createAnnotation(26, 31, "ALDH1", "PR:111");
+
+		TextAnnotation pdLongAnnot = factory.createAnnotation(67, 86, "Parkinson's disease", "MONDO:1");
+		TextAnnotation pdShortAnnot = factory.createAnnotation(88, 90, "PD", "MONDO:1");
+
+		TextAnnotation aldh1a3LongAnnot = factory.createAnnotation(151, 177, "aldehyde dehydrogenase 1A3", "PR:2");
+		TextAnnotation aldhLongAnnot = factory.createAnnotation(151, 173, "aldehyde dehydrogenase", "PR:3");
+		TextAnnotation aldh1a3ShortAnnot = factory.createAnnotation(179, 186, "ALDH1A3", "PR:2");
+
+		Set<TextAnnotation> inputAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(aldh1LongAnnot, aldh1ShortAnnot, spuriousAldh1ShortAnnot, pdLongAnnot, pdShortAnnot,
+						aldh1a3LongAnnot, aldhLongAnnot, aldh1a3ShortAnnot));
+		Set<TextAnnotation> updatedAnnots = ConceptPostProcessingFn.removeAllAbbreviationShortFormAnnots(inputAnnots,
+				abbrevDoc.getAnnotations());
+
+		Set<TextAnnotation> expectedUpdatedAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(aldh1LongAnnot, pdLongAnnot, aldh1a3LongAnnot, aldhLongAnnot));
+
+		assertEquals(expectedUpdatedAnnots, updatedAnnots);
+	}
+
+	@Test
+	public void testPropagateAbbreviationLongFormConceptsToShortFormMentions() throws IOException {
+		String sentence1 = "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine.";
+
+		// 01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+		String sentence2 = "The function of aldehyde dehydrogenase 1A3 (ALDH1A3) in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD.";
+
+		String documentText = sentence1 + " " + sentence2;
+
+		Map<String, Span> sentenceToSpanMap = new HashMap<String, Span>();
+		sentenceToSpanMap.put(sentence1, new Span(0, 134));
+		sentenceToSpanMap.put(sentence2, new Span(0 + 135, 132 + 135));
+
+		// @formatter:off
+		String abbreviationsBionlp = 
+				"T1\tlong_form 0 24\tAldehyde dehydrogenase 1\n" +
+		        "T2\tshort_form 26 31\tALDH1\n" + 
+				"T3\tlong_form 67 86\tParkinson's disease\n" +
+		        "T4\tshort_form 88 90\tPD\n" +
+				"T5\tlong_form 151 177\taldehyde dehydrogenase 1A3\n" + 
+		        "T6\tshort_form 179 186\tALDH1A3\n" + 
+				"R1\thas_short_form Arg1:T3 Arg2:T4\n" +
+				"R2\thas_short_form Arg1:T1 Arg2:T2\n" +
+				"R3\thas_short_form Arg1:T5 Arg2:T6\n";
+		// @formatter:on
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument abbrevDoc = bionlpReader.readDocument("PMID:12345", "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(documentText.getBytes()), CharacterEncoding.UTF_8);
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
+		TextAnnotation aldh1LongAnnot = factory.createAnnotation(0, 24, "Aldehyde dehydrogenase 1", "PR:1");
+		TextAnnotation aldh1ShortAnnot = factory.createAnnotation(26, 31, "ALDH1", "PR:1");
+		TextAnnotation newAldh1ShortAnnot = factory.createAnnotation(298, 303, "ALDH1", "PR:1");
+
+		TextAnnotation pdLongAnnot = factory.createAnnotation(67, 86, "Parkinson's disease", "MONDO:1");
+		TextAnnotation pdShortAnnot = factory.createAnnotation(88, 90, "PD", "MONDO:1");
+		TextAnnotation newPdShortAnnot = factory.createAnnotation(335, 337, "PD", "MONDO:1");
+
+		TextAnnotation aldh1a3LongAnnot = factory.createAnnotation(151, 177, "aldehyde dehydrogenase 1A3", "PR:2");
+		TextAnnotation aldhLongAnnot = factory.createAnnotation(151, 173, "aldehyde dehydrogenase", "PR:3");
+		TextAnnotation aldh1a3ShortAnnot = factory.createAnnotation(179, 186, "ALDH1A3", "PR:2");
+
+		Set<TextAnnotation> inputAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(aldh1LongAnnot, pdLongAnnot, aldh1a3LongAnnot, aldhLongAnnot));
+
+		Set<TextAnnotation> updatedAnnots = ConceptPostProcessingFn
+				.propagateAbbreviationLongFormConceptsToShortFormMentions(inputAnnots, abbrevDoc.getAnnotations(),
+						"PMID:12345", documentText);
+
+		// the short form annots should be populated, including two new annots at the
+		// end of the second sentence; the ALDH1A3 annot should be correct since the
+		// code looks for the longest overlap of a long-form annot
+		Set<TextAnnotation> expectedUpdatedAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(aldh1LongAnnot, aldh1ShortAnnot, newAldh1ShortAnnot, pdLongAnnot, pdShortAnnot,
+						newPdShortAnnot, aldh1a3LongAnnot, aldhLongAnnot, aldh1a3ShortAnnot));
+
+		assertEquals(expectedUpdatedAnnots, updatedAnnots);
+	}
 }

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -29,12 +31,16 @@ import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
+import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
+import edu.ucdenver.ccp.nlp.core.mention.ClassMention;
+import edu.ucdenver.ccp.nlp.core.mention.ComplexSlotMention;
 import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,6 +50,8 @@ import lombok.EqualsAndHashCode;
 public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final String HAS_SHORT_FORM_SLOT = "has_short_form";
 
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<ProcessingStatus, List<String>>> ANNOTATIONS_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
@@ -93,20 +101,24 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 							if (!docs.keySet().equals(requiredDocumentCriteria)) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to complete post-processing due to missing annotation documents for: "
-												+ docId + " -- contains (" + statusEntityToText.getValue().size() + ") "
-												+ statusEntityToText.getValue().keySet().toString(),
+												+ docId + " -- contains (" + docs.size() + ") "
+												+ docs.keySet().toString(),
 										outputDocCriteria, timestamp, out, docId, null);
 							} else {
 
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
-										.getDocTypeToContentMap(statusEntity.getDocumentId(),
-												statusEntityToText.getValue());
+										.getDocTypeToContentMap(statusEntity.getDocumentId(), docs);
 
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
 										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
 //								throw new IllegalArgumentException(String.format("docTypeToAnnotsMap size for %s: %d -- %s",
 //										docId, docTypeToAnnotsMap.size(), docTypeToAnnotsMap.keySet().toString()));
+
+								Collection<TextAnnotation> abbrevAnnots = docTypeToContentMap
+										.get(DocumentType.ABBREVIATIONS);
+
+								String documentText = PipelineMain.getDocumentText(docs);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
@@ -126,6 +138,10 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								nonRedundantAnnots = removeIdToTextExclusionPairs(nonRedundantAnnots);
 								nonRedundantAnnots = removeSpuriousMatches(nonRedundantAnnots, idToOgerDictEntriesMap);
 								nonRedundantAnnots = removeMatchesLessThan(nonRedundantAnnots, 4);
+								nonRedundantAnnots = removeAllAbbreviationShortFormAnnots(nonRedundantAnnots,
+										abbrevAnnots);
+								nonRedundantAnnots = propagateAbbreviationLongFormConceptsToShortFormMentions(
+										nonRedundantAnnots, abbrevAnnots, docId, documentText);
 
 								// check for duplicates
 								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
@@ -153,7 +169,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 //								nonRedundantAnnots = removeIrrelevantUberonConcepts(nonRedundantAnnots, oboToAncestorsMap);
 //								nonRedundantAnnots = removeIrrelevantChebiConcepts(nonRedundantAnnots, oboToAncestorsMap);
 
-								String documentText = PipelineMain.getDocumentText(docs);
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
 										documentText);
 								td.addAnnotations(nonRedundantAnnots);
@@ -175,6 +190,214 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView
 //						,oboToAncestorsMapView
 		).withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * For every abbreviation, look for mentions of the short form text in the
+	 * document and remove any concept annotations that overlap with the short form
+	 * mention
+	 * 
+	 * @param nonRedundantAnnots
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	protected static Set<TextAnnotation> removeAllAbbreviationShortFormAnnots(Set<TextAnnotation> inputAnnots,
+			Collection<TextAnnotation> abbrevAnnots) {
+
+		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>(inputAnnots);
+		Set<TextAnnotation> shortFormAnnots = getShortFormAnnots(abbrevAnnots);
+		for (TextAnnotation annot : inputAnnots) {
+			for (TextAnnotation shortFormAnnot : shortFormAnnots) {
+				if (annot.overlaps(shortFormAnnot)) {
+					toReturn.remove(annot);
+					break;
+				}
+			}
+		}
+
+		return toReturn;
+	}
+
+	/**
+	 * Returns the short form annotations for the input set of abbreviation
+	 * annotations
+	 * 
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	private static Set<TextAnnotation> getShortFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
+		Set<TextAnnotation> shortFormAnnots = new HashSet<TextAnnotation>();
+		for (TextAnnotation abbrevAnnot : abbrevAnnots) {
+			ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+			Collection<ClassMention> classMentions = csm.getClassMentions();
+			for (ClassMention cm : classMentions) {
+				shortFormAnnots.add(cm.getTextAnnotation());
+			}
+		}
+
+		return shortFormAnnots;
+	}
+
+	/**
+	 * return the long form abbreviation annots from the input set
+	 * 
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	private static Set<TextAnnotation> getLongFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
+		Set<TextAnnotation> longFormAnnots = new HashSet<TextAnnotation>();
+		for (TextAnnotation abbrevAnnot : abbrevAnnots) {
+			ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+			if (csm != null) {
+				longFormAnnots.add(abbrevAnnot);
+			}
+		}
+
+		return longFormAnnots;
+	}
+
+	/**
+	 * For every abbreviation, look to see if it overlaps substantially with an
+	 * existing concept annotation. If it does, propagate that concept to all
+	 * mentions of the short form text in the document.
+	 * 
+	 * @param nonRedundantAnnots
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	protected static Set<TextAnnotation> propagateAbbreviationLongFormConceptsToShortFormMentions(
+			Set<TextAnnotation> inputAnnots, Collection<TextAnnotation> abbrevAnnots, String docId,
+			String documentText) {
+
+		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
+
+		Set<TextAnnotation> longFormAnnots = getLongFormAnnots(abbrevAnnots);
+
+		Map<TextAnnotation, String> abbrevAnnotToConceptIdMap = matchConceptsToAbbreviations(inputAnnots,
+				longFormAnnots);
+
+		for (Entry<TextAnnotation, String> entry : abbrevAnnotToConceptIdMap.entrySet()) {
+			TextAnnotation longAbbrevAnnot = entry.getKey();
+			TextAnnotation shortAbbrevAnnot = getShortAbbrevAnnot(longAbbrevAnnot);
+			String conceptId = entry.getValue();
+
+			Set<TextAnnotation> propagatedShortAnnots = propagateShortAnnot(docId, documentText, shortAbbrevAnnot,
+					conceptId);
+			outputAnnots.addAll(propagatedShortAnnots);
+		}
+
+		return outputAnnots;
+
+	}
+
+	/**
+	 * For each of the long form abbreviation annotations, look to see if there is
+	 * an overlapping concept annotation. If there are multiple overlapping
+	 * annotations, choose the longest. If there are multiple of the same size, then
+	 * what??? -- maybe don't assign a concept ID since it it ambiguous.
+	 * 
+	 * @param inputAnnots
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	private static Map<TextAnnotation, String> matchConceptsToAbbreviations(Set<TextAnnotation> conceptAnnots,
+			Collection<TextAnnotation> longFormAbbrevAnnots) {
+
+		Map<TextAnnotation, Set<TextAnnotation>> abbrevAnnotToConceptAnnotsMap = new HashMap<TextAnnotation, Set<TextAnnotation>>();
+
+		// TODO: this could be optimized potentially
+		for (TextAnnotation longAbbrevAnnot : longFormAbbrevAnnots) {
+			for (TextAnnotation conceptAnnot : conceptAnnots) {
+				if (longAbbrevAnnot.overlaps(conceptAnnot)) {
+					CollectionsUtil.addToOne2ManyUniqueMap(longAbbrevAnnot, conceptAnnot,
+							abbrevAnnotToConceptAnnotsMap);
+				}
+			}
+		}
+
+		// select the appropriate overlapping concept if there are multiple and populate
+		// the abbrevAnnotToConceptIdMap that is returned
+		Map<TextAnnotation, String> abbrevAnnotToConceptIdMap = new HashMap<TextAnnotation, String>();
+
+		for (Entry<TextAnnotation, Set<TextAnnotation>> entry : abbrevAnnotToConceptAnnotsMap.entrySet()) {
+			TextAnnotation longAbbrevAnnot = entry.getKey();
+			TextAnnotation overlappingConceptAnnot = selectConceptAnnot(entry.getValue());
+
+			if (overlappingConceptAnnot != null) {
+				String conceptId = overlappingConceptAnnot.getClassMention().getMentionName();
+				abbrevAnnotToConceptIdMap.put(longAbbrevAnnot, conceptId);
+			}
+		}
+
+		return abbrevAnnotToConceptIdMap;
+
+	}
+
+	/**
+	 * If there is only one annotation, return it. If there are multiple, return the
+	 * longest one. If there are multiple, but each are the same length, return null
+	 * since we can't disambiguate.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	private static TextAnnotation selectConceptAnnot(Set<TextAnnotation> annots) {
+		if (annots.size() == 1) {
+			return annots.iterator().next();
+		}
+		Map<Integer, Set<TextAnnotation>> map = new HashMap<Integer, Set<TextAnnotation>>();
+		for (TextAnnotation annot : annots) {
+			CollectionsUtil.addToOne2ManyUniqueMap(annot.length(), annot, map);
+		}
+
+		Map<Integer, Set<TextAnnotation>> sortedMap = CollectionsUtil.sortMapByKeys(map, SortOrder.DESCENDING);
+
+		// if the first entry only has a single text annotation then return it. If it
+		// has multiple, return null;
+		Set<TextAnnotation> longestAnnots = sortedMap.entrySet().iterator().next().getValue();
+		if (longestAnnots.size() == 1) {
+			return longestAnnots.iterator().next();
+		}
+
+		return null;
+
+	}
+
+	/**
+	 * Look for the coveredtext of the specified short form abbreviation within the
+	 * document text and create new annotations with the specified concept id for
+	 * each occurrence of the text.
+	 * 
+	 * @param documentText
+	 * @param shortAbbrevAnnot
+	 * @param conceptId
+	 * @return
+	 */
+	private static Set<TextAnnotation> propagateShortAnnot(String docId, String documentText,
+			TextAnnotation shortAbbrevAnnot, String conceptId) {
+		Set<TextAnnotation> propagagedAnnots = new HashSet<TextAnnotation>();
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+		Pattern p = Pattern.compile(String.format("\\b(%s)\\b", shortAbbrevAnnot.getCoveredText()));
+		Matcher m = p.matcher(documentText);
+		while (m.find()) {
+			String coveredText = m.group(1);
+			int spanStart = m.start(1);
+			int spanEnd = m.end(1);
+			TextAnnotation annot = factory.createAnnotation(spanStart, spanEnd, coveredText, conceptId);
+			propagagedAnnots.add(annot);
+		}
+		return propagagedAnnots;
+	}
+
+	/**
+	 * Return the short abbrevation annot for the specified long abbreviation annot
+	 * 
+	 * @param longAbbrevAnnot
+	 * @return
+	 */
+	private static TextAnnotation getShortAbbrevAnnot(TextAnnotation longAbbrevAnnot) {
+		ComplexSlotMention csm = longAbbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+		return csm.getSingleSlotValue().getTextAnnotation();
 	}
 
 	/**
