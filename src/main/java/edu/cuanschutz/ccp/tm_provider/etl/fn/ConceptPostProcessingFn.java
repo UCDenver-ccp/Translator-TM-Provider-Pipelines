@@ -41,7 +41,6 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import edu.ucdenver.ccp.nlp.core.mention.ClassMention;
 import edu.ucdenver.ccp.nlp.core.mention.ComplexSlotMention;
-import edu.ucdenver.ccp.nlp.core.mention.SingleSlotFillerExpectedException;
 import edu.ucdenver.ccp.nlp.core.util.StopWordUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -134,17 +133,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 									nonRedundantAnnots.add(PipelineMain.clone(annot));
 								}
 
-								nonRedundantAnnots = convertExtensionToObo(nonRedundantAnnots, extensionToOboMap);
-//								nonRedundantAnnots = promotePrAnnots(nonRedundantAnnots, prPromotionMap);
-								nonRedundantAnnots = promoteNcbiTaxonAnnots(nonRedundantAnnots, ncbitaxonPromotionMap);
-								nonRedundantAnnots = removeNcbiStopWords(nonRedundantAnnots);
-								nonRedundantAnnots = removeIdToTextExclusionPairs(nonRedundantAnnots);
-								nonRedundantAnnots = removeSpuriousMatches(nonRedundantAnnots, idToOgerDictEntriesMap);
-								nonRedundantAnnots = removeMatchesLessThan(nonRedundantAnnots, 4);
-								nonRedundantAnnots = removeAllAbbreviationShortFormAnnots(nonRedundantAnnots,
-										abbrevAnnots);
-								nonRedundantAnnots = propagateAbbreviationLongFormConceptsToShortFormMentions(
-										nonRedundantAnnots, abbrevAnnots, docId, documentText);
+								nonRedundantAnnots = postProcess(docId, extensionToOboMap, idToOgerDictEntriesMap,
+										ncbitaxonPromotionMap, abbrevAnnots, documentText, nonRedundantAnnots);
 
 								// check for duplicates
 								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
@@ -193,6 +183,81 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView
 //						,oboToAncestorsMapView
 		).withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * Modify the annotations via various post-processing techniques, most to remove
+	 * likely false positives
+	 * 
+	 * @param docId
+	 * @param extensionToOboMap
+	 * @param idToOgerDictEntriesMap
+	 * @param ncbitaxonPromotionMap
+	 * @param abbrevAnnots
+	 * @param documentText
+	 * @param inputAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Set<TextAnnotation> postProcess(String docId, Map<String, Set<String>> extensionToOboMap,
+			Map<String, Set<String>> idToOgerDictEntriesMap, Map<String, Set<String>> ncbitaxonPromotionMap,
+			Collection<TextAnnotation> abbrevAnnots, String documentText, Set<TextAnnotation> inputAnnots) {
+
+		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
+		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
+		inputAnnots = removeNcbiStopWords(inputAnnots);
+		inputAnnots = resolveHpMondoOverlaps(inputAnnots);
+		inputAnnots = removeIdToTextExclusionPairs(inputAnnots);
+		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
+		inputAnnots = removeMatchesLessThan(inputAnnots, 4);
+		inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
+		inputAnnots = propagateAbbreviationLongFormConceptsToShortFormMentions(inputAnnots, abbrevAnnots, docId,
+				documentText);
+		return inputAnnots;
+	}
+
+	public enum Ont {
+		HP, MONDO
+	}
+
+	/**
+	 * If there is an HP annotation that has the identical span as a MONDO
+	 * annotation, then we simply discard the HP annotation and keep the MONDO
+	 * annotation. Doing so will allow the abbreviation code to work with the
+	 * remaining MONDO annotation. Previously, because there are two overlapping
+	 * annotations with the same span, the abbreviation code would not consider
+	 * propagating a concept identifier b/c it can't disambiguate between two with
+	 * identical spans.
+	 * 
+	 * @param inputAnnots
+	 * @return
+	 */
+	private static Set<TextAnnotation> resolveHpMondoOverlaps(Set<TextAnnotation> inputAnnots) {
+		Map<Span, Map<Ont, Set<TextAnnotation>>> map = new HashMap<Span, Map<Ont, Set<TextAnnotation>>>();
+		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>(inputAnnots);
+		for (TextAnnotation annot : inputAnnots) {
+			String conceptId = annot.getClassMention().getMentionName();
+			if (conceptId.startsWith("HP:") || conceptId.startsWith("MONDO:")) {
+				Span span = annot.getAggregateSpan();
+				if (!map.containsKey(span)) {
+					Map<Ont, Set<TextAnnotation>> innerMap = new HashMap<Ont, Set<TextAnnotation>>();
+					map.put(span, innerMap);
+				}
+				Ont ont = conceptId.startsWith("HP:") ? Ont.HP : Ont.MONDO;
+				CollectionsUtil.addToOne2ManyUniqueMap(ont, annot, map.get(span));
+			}
+		}
+
+		for (Entry<Span, Map<Ont, Set<TextAnnotation>>> entry : map.entrySet()) {
+			Map<Ont, Set<TextAnnotation>> innerMap = entry.getValue();
+			if (innerMap.size() > 1) {
+				// grab the HP annot(s) and remove them from the set of annotations that gets
+				// returned
+				toReturn.removeAll(innerMap.get(Ont.HP));
+			}
+		}
+
+		return toReturn;
 	}
 
 	/**
@@ -497,6 +562,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 							String suffix = StringUtil.removePrefix(dictEntry.toLowerCase(), coveredText.toLowerCase());
 							if (suffix.matches("\\d+")) {
 								exclude = true;
+//								System.out.println("Excluding due to closest match has number suffix: " + annot.getAggregateSpan().toString() + " "
+//										+ coveredText + " -- " + annot.getClassMention().getMentionName());
 							}
 						}
 
@@ -504,7 +571,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 							toReturn.add(annot);
 						}
 					}
-					System.out.println(String.format("%s -- %s == %d %f", coveredText, dictEntry, dist, percentChange));
+//					System.out.println(String.format("%s -- %s == %d %f", coveredText, dictEntry, dist, percentChange));
 				}
 			}
 		}
@@ -569,6 +636,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000094", "membrane organization", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000160", "intestinal", map);
 		CollectionsUtil.addToOne2ManyUniqueMap("HP:0030212", "collecting", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0005047", "sterile", map);
 
 		return map;
 	}
