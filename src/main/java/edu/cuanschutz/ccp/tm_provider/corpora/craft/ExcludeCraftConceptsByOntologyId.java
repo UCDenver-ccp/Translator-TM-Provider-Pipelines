@@ -1,12 +1,14 @@
 package edu.cuanschutz.ccp.tm_provider.corpora.craft;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -14,8 +16,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.ChebiOgerDictFileFactory;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.ClOgerDictFileFactory;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.GoBpOgerDictFileFactory;
-import edu.cuanschutz.ccp.tm_provider.oger.dict.GoCcOgerDictFileFactory;
-import edu.cuanschutz.ccp.tm_provider.oger.dict.GoMfOgerDictFileFactory;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.MondoOgerDictFileFactory;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.NcbiTaxonOgerDictFileFactory;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.PrOgerDictFileFactory;
@@ -48,7 +48,9 @@ public class ExcludeCraftConceptsByOntologyId {
 
 		Set<OWLClass> excludedClasses = new HashSet<OWLClass>();
 
-		OntologyUtil ontUtil = new OntologyUtil(ontologyFile);
+		OntologyUtil ontUtil = ontologyFile.getName().endsWith(".gz")
+				? new OntologyUtil(new GZIPInputStream(new FileInputStream(ontologyFile)))
+				: new OntologyUtil(ontologyFile);
 		// add the individually excluded classes
 		for (String iri : individualIrisToExclude) {
 			OWLClass cls = ontUtil.getOWLClassFromId(iri);
@@ -120,22 +122,26 @@ public class ExcludeCraftConceptsByOntologyId {
 
 	public static void main(String[] args) {
 		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
-		File chebiOwlFile = new File(ontBase, "chebi.owl");
-		File clOwlFile = new File(ontBase, "cl.owl");
-		File goOwlFile = new File(ontBase, "go.owl");
-		File prOwlFile = new File(ontBase, "pr.owl");
-		File soOwlFile = new File(ontBase, "so.owl");
-		File uberonOwlFile = new File(ontBase, "uberon.owl");
-		File mondoOwlFile = new File(ontBase, "mondo.owl");
-		File ncbiTaxonOwlFile = new File(ontBase, "ncbitaxon.owl");
+		File chebiOwlFile = new File(ontBase, "chebi.owl.gz");
+		File clOwlFile = new File(ontBase, "cl.owl.gz");
+		File goOwlFile = new File(ontBase, "go.owl.gz");
+		File prOwlFile = new File(ontBase, "pr.owl.gz");
+		File soOwlFile = new File(ontBase, "so.owl.gz");
+		File uberonOwlFile = new File(ontBase, "uberon.owl.gz");
+		File mondoOwlFile = new File(ontBase, "mondo.owl.gz");
+		File ncbiTaxonOwlFile = new File(ontBase, "ncbitaxon.owl.gz");
 
 		File craftBaseDir = new File("/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft.git");
 //		File bionlpBaseDir = new File(
 //				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/bionlp-no-nested");
+
+		// before running, copy the files from the bionlp-original directory into the
+		// bionlp-exclude-specific directory
 		File bionlpBaseDir = new File(
 				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/bionlp-exclude-specific");
 
 		try {
+
 			System.out.println("CHEBI...");
 			excludeClasses(chebiOwlFile, ChebiOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
 					ChebiOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, bionlpBaseDir, craftBaseDir);
