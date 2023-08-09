@@ -416,12 +416,28 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			// the abbreviation
 			// we'll start with 90% overlap
 
+			// will will also look at what is not matched. If the only thing remaining not
+			// matched is a number, especially if it's at the end of the abbreviation
+			// covered text, then we will not assign the identifier. Not matching the number
+			// can be a strong indicator that the concept identifier is not correct.
+
 			if (overlappingConceptAnnot != null) {
-				Integer dist = ld.apply(longAbbrevAnnot.getCoveredText(), overlappingConceptAnnot.getCoveredText());
-				float percentChange = (float) dist / (float) longAbbrevAnnot.getCoveredText().length();
+				String longAbbrevText = longAbbrevAnnot.getCoveredText();
+				String overlappingAnnotText = overlappingConceptAnnot.getCoveredText();
+				Integer dist = ld.apply(longAbbrevText, overlappingAnnotText);
+				float percentChange = (float) dist / (float) longAbbrevText.length();
 				if (percentChange < 0.1) {
-					String conceptId = overlappingConceptAnnot.getClassMention().getMentionName();
-					abbrevAnnotToConceptIdMap.put(longAbbrevAnnot, conceptId);
+					// if the difference is just the number at the end of the label, then do not
+					// match
+					boolean skip = false;
+					if (StringUtil.endsWithRegex(longAbbrevText, "\\d+")
+							&& !StringUtil.endsWithRegex(overlappingAnnotText, "\\d+")) {
+						skip = true;
+					}
+					if (!skip) {
+						String conceptId = overlappingConceptAnnot.getClassMention().getMentionName();
+						abbrevAnnotToConceptIdMap.put(longAbbrevAnnot, conceptId);
+					}
 				}
 			}
 		}
