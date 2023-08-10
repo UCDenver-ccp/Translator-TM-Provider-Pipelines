@@ -18,10 +18,13 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(MOLECULAR_FUNCTION, CELLULAR_COMPONENT));
 	}
 
-	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "GO_0003002", // region
-			OBO_PURL + "GO_0023052", // signal
-			OBO_PURL + "GO_0035282" // segments
-	));
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "GO_0003002", // region
+					OBO_PURL + "GO_0023052", // signal
+					OBO_PURL + "GO_0035282", // segments
+					OBO_PURL + "GO_0046960" // sensitization
+
+			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {

@@ -7,7 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -152,7 +154,10 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 		}
 	}
 
-	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
+	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList("243114000", // support
+			"10012005", // expression
+			"14788002" // sensitivity
+	));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
@@ -166,4 +171,21 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 		return toReturn;
 	}
 
+	protected static Set<String> filterSpecificSynonyms(String iri, Set<String> syns) {
+
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+
+		map.put("363778006", new HashSet<String>(Arrays.asList("phenotype")));
+		map.put("386397008", new HashSet<String>(Arrays.asList("presence")));
+		map.put("363779003", new HashSet<String>(Arrays.asList("genotype")));
+		map.put("4365001", new HashSet<String>(Arrays.asList("repair")));
+		map.put("122501008", new HashSet<String>(Arrays.asList("fusion")));
+		Set<String> updatedSyns = new HashSet<String>(syns);
+
+		if (map.containsKey(iri)) {
+			updatedSyns.removeAll(map.get(iri));
+		}
+
+		return updatedSyns;
+	}
 }

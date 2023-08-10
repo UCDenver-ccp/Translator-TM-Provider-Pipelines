@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.oger.dict;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,19 +9,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.semanticweb.owlapi.model.OWLAnnotationValue;
+import org.semanticweb.owlapi.model.OWLClass;
+
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
+import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
+	private static final String CHEBI_FORMULA_IRI = "http://purl.obolibrary.org/obo/chebi/formula";
+
 	private static final String CHEBI_ROLE = "http://purl.obolibrary.org/obo/CHEBI_50906";
 	private static final String CHEBI_SUBATOMIC_PARTICLE = "http://purl.obolibrary.org/obo/CHEBI_36342";
 	private static final String CHEBI_ATOM = "http://purl.obolibrary.org/obo/CHEBI_33250";
 	private static final String CHEBI_GROUP = "http://purl.obolibrary.org/obo/CHEBI_24433";
+	private static final String CHEBI_ALPHA_AMINO_ACID = "http://purl.obolibrary.org/obo/CHEBI_33704";
+
 	public static List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(CHEBI_ROLE, CHEBI_SUBATOMIC_PARTICLE, CHEBI_ATOM,
-			CHEBI_GROUP);
+			CHEBI_GROUP, CHEBI_ALPHA_AMINO_ACID);
 
 	public ChebiOgerDictFileFactory() {
 		super("chemical", "CHEBI", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
@@ -50,7 +59,8 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 					OBO_PURL + "CHEBI_18059", // lipid
 					OBO_PURL + "CHEBI_75958", // solution
 					OBO_PURL + "CHEBI_27889", // lead
-					OBO_PURL + "CHEBI_24870" // ion
+					OBO_PURL + "CHEBI_24870", // ion
+					OBO_PURL + "CHEBI_15377" // water
 			));
 
 	@Override
@@ -60,10 +70,38 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 		toReturn = filterSynonyms(toReturn);
 		toReturn = filterSpecificSynonyms(iri, toReturn);
 
+		addChemicalFormula(iri, toReturn, ontUtil);
+
 		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
+
+		if (iri.equals(OBO_PURL + "CHEBI_26710")) {
+			toReturn.add("NaCl"); // formula in chebi.owl is ClNa
+		}
+
 		return toReturn;
+	}
+
+	private void addChemicalFormula(String iri, Set<String> toReturn, OntologyUtil ontUtil) {
+
+		OWLClass cls = ontUtil.getOWLClassFromId(iri);
+
+		Collection<OWLAnnotationValue> values = ontUtil.getAnnotationPropertyValues(cls, CHEBI_FORMULA_IRI);
+		for (OWLAnnotationValue value : values) {
+			String formula = value.toString();
+			if (formula.startsWith("\"")) {
+				formula = StringUtil.removePrefix(formula, "\"");
+			}
+			if (formula.endsWith("\"^^xsd:string")) {
+				formula = StringUtil.removeSuffix(formula, "\"^^xsd:string");
+			}
+			if (formula.endsWith("\"")) {
+				formula = StringUtil.removeSuffix(formula, "\"");
+			}
+			System.out.println("FORMULA: " + formula);
+			toReturn.add(formula);
+		}
 	}
 
 	private Set<String> filterSynonyms(Set<String> synonyms) {

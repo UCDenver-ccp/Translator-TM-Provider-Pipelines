@@ -15,18 +15,59 @@ import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String DISEASE_CHARACTERISTIC = "http://purl.obolibrary.org/obo/MONDO_0021125";
+	private static final String DISEASE_SUSCEPTIBILITY = "http://purl.obolibrary.org/obo/MONDO_0042489";
+
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
-	public static List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(DISEASE_CHARACTERISTIC);
+	public static List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList(DISEASE_CHARACTERISTIC, DISEASE_SUSCEPTIBILITY);
 
 	public MondoOgerDictFileFactory() {
-		super("disease", "MONDO", SynonymSelection.EXACT_ONLY, Arrays.asList(DISEASE_CHARACTERISTIC));
+		super("disease", "MONDO", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 	}
 
-	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList(OBO_PURL + "MONDO_0000001", // disease
-			OBO_PURL + "MONDO_0002254", // syndrome
-			OBO_PURL + "MONDO_0021178" // injury
-	));
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "MONDO_0000001", // disease
+					OBO_PURL + "MONDO_0002254", // syndrome
+					OBO_PURL + "MONDO_0021178", // injury
+					OBO_PURL + "MONDO_0006025", // autosomal recessive condition
+					OBO_PURL + "MONDO_0000429", // autosomal genetic disease
+					OBO_PURL + "MONDO_0003847", // Mendelian disease
+					OBO_PURL + "MONDO_0700096", // human disease or disorder
+					OBO_PURL + "MONDO_0020683", // acute disease
+					OBO_PURL + "MONDO_0002409", // auditory system disorder
+					OBO_PURL + "MONDO_0002657", // breast disorder
+					OBO_PURL + "MONDO_0045024", // cancer or benign tumor
+					OBO_PURL + "MONDO_0004995", // cardiovascular disorder
+					OBO_PURL + "MONDO_0003900", // connective tissue disorder
+					OBO_PURL + "MONDO_0004335", // digestive system disorder
+					OBO_PURL + "MONDO_0021147", // disorder of development or morphogenesis
+					OBO_PURL + "MONDO_0002022", // disorder of orbital region
+					OBO_PURL + "MONDO_0024458", // disorder of visual system
+					OBO_PURL + "MONDO_0005151", // endocrine system disorder
+					OBO_PURL + "MONDO_0005570", // hematologic disorder
+					OBO_PURL + "MONDO_0043543", // iatrogenic disease
+					OBO_PURL + "MONDO_0700007", // idiopathic disease
+					OBO_PURL + "MONDO_0005046", // immune system disorder
+					OBO_PURL + "MONDO_0021166", // inflammatory disease
+					OBO_PURL + "MONDO_0002051", // integumentary system disorder
+					OBO_PURL + "MONDO_0005066", // metabolic disease
+					OBO_PURL + "MONDO_0044970", // mitochondrial disease
+					OBO_PURL + "MONDO_0006858", // mouth disorder
+					OBO_PURL + "MONDO_0002081", // musculoskeletal system disorder
+					OBO_PURL + "MONDO_0005071", // nervous system disorder
+					OBO_PURL + "MONDO_0005137", // nutritional disorder
+					OBO_PURL + "MONDO_0700003", // obstetric disorder
+					OBO_PURL + "MONDO_0100366", // occupational disorder
+					OBO_PURL + "MONDO_0024623", // otorhinolaryngologic disease
+					OBO_PURL + "MONDO_0100086", // perinatal disease
+					OBO_PURL + "MONDO_0029000", // poisoning
+					OBO_PURL + "MONDO_0002025", // psychiatric disorder
+					OBO_PURL + "MONDO_0043459", // radiation-induced disorder
+					OBO_PURL + "MONDO_0005039", // reproductive system disorder
+					OBO_PURL + "MONDO_0005087", // respiratory system disorder
+					OBO_PURL + "MONDO_0044991", // upper digestive tract disorder
+					OBO_PURL + "MONDO_0002118" // urinary system disorder
+			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
@@ -150,6 +191,7 @@ public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 		map.put(OBO_PURL + "MONDO_0006466", new HashSet<String>(Arrays.asList("settle"))); //
 		map.put(OBO_PURL + "MONDO_0014493", new HashSet<String>(Arrays.asList("chai"))); //
 		map.put(OBO_PURL + "MONDO_0004938", new HashSet<String>(Arrays.asList("dependence"))); //
+		map.put(OBO_PURL + "MONDO_0015285", new HashSet<String>(Arrays.asList("lamb"))); //
 
 		Set<String> updatedSyns = new HashSet<String>(syns);
 

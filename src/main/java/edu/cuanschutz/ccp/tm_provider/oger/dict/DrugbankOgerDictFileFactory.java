@@ -27,6 +27,7 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 		super("drug", "DRUGBANK", SynonymSelection.EXACT_ONLY, null);
 	}
 
+	
 	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415", // Rabbit
 			"DRUGBANK:DB10633", // Fig
 			"DRUGBANK:DB14245", // Snail
@@ -38,7 +39,8 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 			"DRUGBANK:DB10632", // Date
 			"DRUGBANK:DB12938", // Balance
 			"DRUGBANK:DB10519", // Chicken
-			"DRUGBANK:DB02891" // Beam
+			"DRUGBANK:DB02891", // Beam
+			"DRUGBANK:DB10549" // orange extract
 	));
 
 	@Override
