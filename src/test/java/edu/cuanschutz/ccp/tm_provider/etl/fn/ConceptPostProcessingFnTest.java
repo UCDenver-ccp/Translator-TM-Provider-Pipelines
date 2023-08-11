@@ -414,7 +414,7 @@ public class ConceptPostProcessingFnTest {
 		TextAnnotation abbrevAnnot4 = factory.createAnnotation(166, 169, "ERG", "short_form");
 		DefaultComplexSlotMention csm2 = new DefaultComplexSlotMention("has_short_form");
 		csm2.addClassMention(abbrevAnnot4.getClassMention());
-		abbrevAnnot4.getClassMention().addComplexSlotMention(csm2);
+		abbrevAnnot3.getClassMention().addComplexSlotMention(csm2);
 
 		abbrevAnnots.add(abbrevAnnot1);
 		abbrevAnnots.add(abbrevAnnot3);
