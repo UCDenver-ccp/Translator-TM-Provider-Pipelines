@@ -95,11 +95,20 @@ public class SoOgerDictFileFactory extends OgerDictFileFactory {
 			toReturn = Collections.emptySet();
 		}
 
-		if (iri.equals(OBO_PURL + "SO_0000704")) {
-			toReturn.add("genes");
-		} else if (iri.equals(OBO_PURL + "SO_0000673")) {
-			toReturn.add("transcripts");
+		// add plurals
+		Set<String> toAdd = new HashSet<String>();
+		for (String syn : toReturn) {
+			if (!isCaseSensitive(syn)) {
+				toAdd.add(syn + "s");
+			}
 		}
+
+		toReturn.addAll(toAdd);
+//		if (iri.equals(OBO_PURL + "SO_0000704")) {
+//			toReturn.add("genes");
+//		} else if (iri.equals(OBO_PURL + "SO_0000673")) {
+//			toReturn.add("transcripts");
+//		}
 
 		return toReturn;
 	}
