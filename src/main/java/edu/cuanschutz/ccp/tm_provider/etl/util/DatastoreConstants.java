@@ -128,6 +128,9 @@ public interface DatastoreConstants {
 	 * 
 	 */
 	public static final String STATUS_PROPERTY_TEXT_DONE = "text";
+
+	public static final String STATUS_PROPERTY_TEXT_AUG_DONE = "text_aug";
+	
 	public static final String STATUS_PROPERTY_SECTIONS_DONE = "sections";
 	
 	public static final String STATUS_PROPERTY_ABBREVIATIONS_DONE = "abbrev";

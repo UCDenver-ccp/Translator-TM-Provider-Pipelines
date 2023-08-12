@@ -49,6 +49,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_AUG_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
 
 import lombok.Getter;
@@ -58,6 +59,8 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	TEXT_DONE(STATUS_PROPERTY_TEXT_DONE),
+	
+	TEXT_AUG_DONE(STATUS_PROPERTY_TEXT_AUG_DONE),
 
 	SECTIONS_DONE(STATUS_PROPERTY_SECTIONS_DONE),
 

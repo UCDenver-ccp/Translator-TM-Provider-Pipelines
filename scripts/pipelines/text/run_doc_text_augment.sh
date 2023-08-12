@@ -1,0 +1,47 @@
+#!/bin/sh
+# this creates a version of the document text that has sentences appended at the bottom related to abbreviation handling
+
+
+PROJECT=$1
+COLLECTION=$2
+STAGE_LOCATION=$3
+TMP_LOCATION=$4
+TEXT_PIPELINE_KEY=$5
+TEXT_PIPELINE_VERSION=$6
+SENTENCE_PIPELINE_VERSION=$7
+ABBREVIATION_PIPELINE_VERSION=$8
+OUTPUT_PIPELINE_VERSION=$9
+JAR_VERSION=${10}
+OVERWRITE=${11}
+
+JOB_NAME=$(echo "DOC-TEXT-AUG-${COLLECTION}-${TEXT_PIPELINE_KEY}" | tr '_' '-')
+
+echo "COLLECTION: $COLLECTION"
+echo "PROJECT: $PROJECT"
+echo "JOB_NAME: $JOB_NAME"
+echo "TEXT PIPELINE KEY: $TEXT_PIPELINE_KEY"
+echo "TEXT PIPELINE VERSION: $TEXT_PIPELINE_VERSION"
+echo "SENTENCE PIPELINE VERSION: $SENTENCE_PIPELINE_VERSION"
+echo "ABBREVIATION PIPELINE VERSION: $ABBREVIATION_PIPELINE_VERSION"
+echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
+echo "OVERWRITE KEY: $OVERWRITE"
+
+java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar DOC_TEXT_AUGMENTATION \
+--jobName="$JOB_NAME" \
+--textPipelineKey="$TEXT_PIPELINE_KEY" \
+--textPipelineVersion="$TEXT_PIPELINE_VERSION" \
+--sentencePipelineVersion="$SENTENCE_PIPELINE_VERSION" \
+--abbreviationPipelineVersion="$ABBREVIATION_PIPELINE_VERSION" \
+--outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
+--collection="$COLLECTION" \
+--overwrite="$OVERWRITE" \
+--project="${PROJECT}" \
+--stagingLocation="$STAGE_LOCATION" \
+--gcpTempLocation="$TMP_LOCATION" \
+--workerZone=us-central1-c \
+--region=us-central1 \
+--numWorkers=10 \
+--maxNumWorkers=50 \
+--autoscalingAlgorithm=THROUGHPUT_BASED \
+--defaultWorkerLogLevel=INFO \
+--runner=DataflowRunner

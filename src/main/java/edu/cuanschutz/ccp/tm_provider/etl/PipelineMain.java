@@ -190,6 +190,9 @@ public class PipelineMain {
 			case ELASTICSEARCH_LOAD:
 				ElasticsearchLoadPipeline.main(pipelineArgs);
 				break;
+			case DOC_TEXT_AUGMENTATION:
+				DocumentTextAugmentationPipeline.main(pipelineArgs);
+				break;
 			case DRY_RUN:
 				DryRunPipeline.main(pipelineArgs);
 				break;
@@ -925,7 +928,8 @@ public class PipelineMain {
 			DocumentType type = entry.getKey();
 			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
 
-			// TODO: this needs to be revised with the newly grouped OGER output, e.g. CONCEPT_CS, CONCEPT_MIN, CONCEPT_CIMAX
+			// TODO: this needs to be revised with the newly grouped OGER output, e.g.
+			// CONCEPT_CS, CONCEPT_MIN, CONCEPT_CIMAX
 			// if there isn't a pair for the CONCEPT then output it without filtering
 			if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
 				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
