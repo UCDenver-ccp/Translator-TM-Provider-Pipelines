@@ -1,6 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,6 +27,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
@@ -194,11 +197,14 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param augmentedDocumentText
 	 * @param inputAnnots
 	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
 	 */
 	@VisibleForTesting
 	protected static Set<TextAnnotation> postProcess(String docId, Map<String, Set<String>> extensionToOboMap,
 			Map<String, Set<String>> idToOgerDictEntriesMap, Map<String, Set<String>> ncbitaxonPromotionMap,
-			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots) {
+			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots)
+			throws FileNotFoundException, IOException {
 
 		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
 		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
@@ -215,7 +221,33 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
 		inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
 
+		inputAnnots = removeNestedConceptAnnotations(inputAnnots);
+
+//		inputAnnots = removeAnnotationsByDocumentZone(inputAnnots, zoneAnnots);
+
 		return inputAnnots;
+	}
+
+	/**
+	 * This method removes annotations that are nested inside other annotations,
+	 * e.g., it will remove the UBERON:blood annotation nested in the
+	 * CL:red_blood_cell annotation.
+	 * 
+	 * @param inputAnnots
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	private static Set<TextAnnotation> removeNestedConceptAnnotations(Set<TextAnnotation> inputAnnots)
+			throws FileNotFoundException, IOException {
+		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
+
+		Set<TextAnnotation> nestedAnnotations = ExcludeCraftNestedConcepts
+				.identifyNestedAnnotations(new ArrayList<TextAnnotation>(inputAnnots), null);
+
+		outputAnnots.removeAll(nestedAnnotations);
+
+		return outputAnnots;
 	}
 
 	/**

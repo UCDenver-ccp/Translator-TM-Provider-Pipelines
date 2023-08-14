@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -991,9 +992,11 @@ public class ConceptPostProcessingFnTest {
 		12345	protein	286	289	ERG	PR:000007173|PR:P11308	PR:000007173		S1	PR
 	 * 
 	 * </pre>
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
 	 */
 	@Test
-	public void testPostProcess() {
+	public void testPostProcess() throws FileNotFoundException, IOException {
 
 		String docId = "craft-16110338";
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
@@ -1111,10 +1114,13 @@ public class ConceptPostProcessingFnTest {
 		TextAnnotation annot16 = factory.createAnnotation(26, 30, "ESCS", "MONDO:0100288");
 
 		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(
-				Arrays.asList(annot1, annot2, annot16, annot4, annot5,
+				Arrays.asList(annot1, 
+						// annot2, - excluded b/c it's nested in annot1 
+						annot16, annot4, annot5,
 						// annot6, - excluded b/c it's an HP annot that has the exact same span as a
 						// MONDO
-						annot7, annot8,
+						annot7, 
+						// annot8, - excluded b/c it's nested in annot7
 						// annot9, annot10, - excluded because they are a short form of an abbreviation
 						annot11, annot12
 				// , annot13 - excluded b/c sensitivity is not close enough to sensitization,
@@ -1144,9 +1150,12 @@ public class ConceptPostProcessingFnTest {
 	12345	organism	179	182	Pea	Pisum sativum	NCBITaxon:3888		S1	NCBITaxon
 	12345	molecular_function	184	195	DNA binding	DNA binding	GO:0003677		S1	GO_MF
 	 * </pre>
+	 * 
+	 * @throws IOException
+	 * @throws FileNotFoundException
 	 */
 	@Test
-	public void testPostProcess2() {
+	public void testPostProcess2() throws FileNotFoundException, IOException {
 
 		String docId = "craft-15836427";
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);

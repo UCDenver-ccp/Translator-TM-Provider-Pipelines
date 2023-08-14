@@ -115,7 +115,7 @@ public class ExcludeCraftNestedConcepts {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	protected static Set<TextAnnotation> identifyNestedAnnotations(List<TextAnnotation> annotations,
+	public static Set<TextAnnotation> identifyNestedAnnotations(List<TextAnnotation> annotations,
 			BufferedWriter logWriter) throws FileNotFoundException, IOException {
 		List<Set<TextAnnotation>> overlappingAnnotSets = getOverlappingAnnotSets(annotations);
 		Set<TextAnnotation> nestedAnnotations = new HashSet<TextAnnotation>();
@@ -235,11 +235,11 @@ public class ExcludeCraftNestedConcepts {
 							discard = annot1;
 						}
 
-						System.out.println(String.format("keeping: %s [%d..%d] %s instead of: %s [%d..%d] %s",
-								keep.getCoveredText(), keep.getAnnotationSpanStart(), keep.getAnnotationSpanEnd(),
-								keep.getClassMention().getMentionName(), discard.getCoveredText(),
-								discard.getAnnotationSpanStart(), discard.getAnnotationSpanEnd(),
-								discard.getClassMention().getMentionName()));
+//						System.out.println(String.format("keeping: %s [%d..%d] %s instead of: %s [%d..%d] %s",
+//								keep.getCoveredText(), keep.getAnnotationSpanStart(), keep.getAnnotationSpanEnd(),
+//								keep.getClassMention().getMentionName(), discard.getCoveredText(),
+//								discard.getAnnotationSpanStart(), discard.getAnnotationSpanEnd(),
+//								discard.getClassMention().getMentionName()));
 
 					}
 				}
