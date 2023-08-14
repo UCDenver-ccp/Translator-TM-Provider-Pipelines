@@ -1,6 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -8,16 +12,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
 
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.Overlap;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.AugmentedSentence;
+import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
-import edu.ucdenver.ccp.knowtator.ComplexSlotMention;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
@@ -311,7 +318,7 @@ public class ConceptPostProcessingFnTest {
 	}
 
 	@Test
-	public void testPropagateAbbreviationLongFormConceptsToShortFormMentions() throws IOException {
+	public void testPropagateRegularAbbreviations() throws IOException {
 		String sentence1 = "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine.";
 
 		// 01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -357,9 +364,8 @@ public class ConceptPostProcessingFnTest {
 		Set<TextAnnotation> inputAnnots = new HashSet<TextAnnotation>(
 				Arrays.asList(aldh1LongAnnot, pdLongAnnot, aldh1a3LongAnnot, aldhLongAnnot));
 
-		Set<TextAnnotation> updatedAnnots = ConceptPostProcessingFn
-				.propagateAbbreviationLongFormConceptsToShortFormMentions(inputAnnots, abbrevDoc.getAnnotations(),
-						"PMID:12345", documentText);
+		Set<TextAnnotation> updatedAnnots = ConceptPostProcessingFn.propagateRegularAbbreviations(inputAnnots,
+				abbrevDoc.getAnnotations(), "PMID:12345", documentText);
 
 		// the short form annots should be populated, including two new annots at the
 		// end of the second sentence; the ALDH1A3 annot should be correct since the
@@ -369,6 +375,598 @@ public class ConceptPostProcessingFnTest {
 						newPdShortAnnot, aldh1a3LongAnnot, aldhLongAnnot, aldh1a3ShortAnnot));
 
 		assertEquals(expectedUpdatedAnnots, updatedAnnots);
+	}
+
+	private String getSentence1Text() {
+		return "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells.";
+	}
+
+	private String getSentence2Text() {
+		return "The function of aldehyde dehydrogenase 1A3 (ALDH1A3) in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD with the help of ES cells, and ES as its own thing.";
+	}
+
+	private String getDocumentText() {
+		return getSentence1Text() + " " + getSentence2Text();
+	}
+
+	private String getAugSent1aText() {
+		return "Aldehyde dehydrogenase 1         has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells.";
+	}
+
+	private String getAugSent1bText() {
+		return "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease      by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells.";
+	}
+
+	private String getAugSent1cText() {
+		return "Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem      cells.";
+	}
+
+	private String getAugSent2aText() {
+		return "The function of aldehyde dehydrogenase 1A3           in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD with the help of ES cells, and ES as its own thing.";
+	}
+
+	private TextDocument getAbbreviationDoc() throws IOException {
+		// @formatter:off
+		String abbreviationsBionlp = 
+				"T1\tlong_form 0 24\tAldehyde dehydrogenase 1\n" +
+		        "T2\tshort_form 26 31\tALDH1\n" + 
+				"T3\tlong_form 67 86\tParkinson's disease\n" +
+		        "T4\tshort_form 88 90\tPD\n" +
+		        "T5\tlong_form 161 175\tembryonic stem\n" +
+		        "T6\tshort_form 177 179\tES\n" +
+				"T7\tlong_form 204 230\taldehyde dehydrogenase 1A3\n" + 
+		        "T8\tshort_form 232 239\tALDH1A3\n" + 
+				"R1\thas_short_form Arg1:T3 Arg2:T4\n" +
+				"R2\thas_short_form Arg1:T1 Arg2:T2\n" +
+				"R3\thas_short_form Arg1:T5 Arg2:T6\n" +
+				"R4\thas_short_form Arg1:T7 Arg2:T8\n";
+		// @formatter:on
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument abbrevDoc = bionlpReader.readDocument(docId, "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(getDocumentText().getBytes()), CharacterEncoding.UTF_8);
+		return abbrevDoc;
+	}
+
+	private TextAnnotation getAldh1AbbrevAnnot() throws IOException {
+		for (TextAnnotation annot : getAbbreviationDoc().getAnnotations()) {
+			if (annot.getCoveredText().equals("Aldehyde dehydrogenase 1")) {
+				return annot;
+			}
+		}
+		throw new IllegalStateException("Did not find abbrev annot.");
+	}
+
+	private TextAnnotation getPdAbbrevAnnot() throws IOException {
+		for (TextAnnotation annot : getAbbreviationDoc().getAnnotations()) {
+			if (annot.getCoveredText().equals("Parkinson's disease")) {
+				return annot;
+			}
+		}
+		throw new IllegalStateException("Did not find abbrev annot.");
+	}
+
+	private TextAnnotation getAldh1a3AbbrevAnnot() throws IOException {
+		for (TextAnnotation annot : getAbbreviationDoc().getAnnotations()) {
+			if (annot.getCoveredText().equals("aldehyde dehydrogenase 1A3")) {
+				return annot;
+			}
+		}
+		throw new IllegalStateException("Did not find abbrev annot.");
+	}
+
+	private TextAnnotation getEsAbbrevAnnot() throws IOException {
+		for (TextAnnotation annot : getAbbreviationDoc().getAnnotations()) {
+			if (annot.getCoveredText().equals("embryonic stem")) {
+				return annot;
+			}
+		}
+		throw new IllegalStateException("Did not find abbrev annot.");
+
+	}
+
+	private static final String docId = "PMID:12345";
+	private static final TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+
+	private enum ConceptAnnot {
+		ALDH1_LONG_ANNOT, ALDH1_SHORT_ANNOT, PD_LONG_ANNOT, PD_SHORT_ANNOT, ALDH1A3_LONG_ANNOT, ALDH1A3_SHORT_ANNOT,
+		ALDH_LONG_ANNOT, ES_LONG_ANNOT, ES_SHORT_ANNOT,
+
+		AUG_1A_ALDH1_LONG_ANNOT, AUG_1B_ALDH1_LONG_ANNOT, AUG_1C_ALDH1_LONG_ANNOT, AUG_1A_PD_LONG_ANNOT,
+		AUG_1B_PD_LONG_ANNOT, AUG_1C_PD_LONG_ANNOT, AUG_1A_ES_LONG_ANNOT, AUG_1B_ES_LONG_ANNOT, AUG_1C_ES_LONG_ANNOT,
+		AUG_2A_ALDH1A3_LONG_ANNOT, AUG_2A_ALDH_LONG_ANNOT,
+
+		AUG_1C_EMBRYONIC_STEM_CELLS_ANNOT, ORIG_EMBRYONIC_STEM_CELLS_ANNOT, ORIG_ES_CELLS_ANNOT, ORIG_ES_ANNOT
+	}
+
+	private TextAnnotation getConceptAnnot(ConceptAnnot ca) throws IOException {
+		switch (ca) {
+		case ALDH1_LONG_ANNOT:
+			return factory.createAnnotation(0, 24, "Aldehyde dehydrogenase 1", "PR:1");
+		case ALDH1_SHORT_ANNOT:
+			return factory.createAnnotation(26, 31, "ALDH1", "PR:1");
+		case PD_LONG_ANNOT:
+			return factory.createAnnotation(67, 86, "Parkinson's disease", "MONDO:1");
+		case PD_SHORT_ANNOT:
+			return factory.createAnnotation(88, 90, "PD", "MONDO:1");
+		case ALDH1A3_LONG_ANNOT:
+			return factory.createAnnotation(204, 230, "aldehyde dehydrogenase 1A3", "PR:2");
+		case ALDH1A3_SHORT_ANNOT:
+			return factory.createAnnotation(232, 239, "ALDH1A3", "PR:2");
+		case ALDH_LONG_ANNOT:
+			return factory.createAnnotation(204, 226, "aldehyde dehydrogenase", "PR:3");
+		case ES_LONG_ANNOT:
+			return factory.createAnnotation(161, 175, "embryonic stem", "X:1");
+		case ES_SHORT_ANNOT:
+			return factory.createAnnotation(177, 179, "ES", "X:1");
+
+		// this next group of annotations are those found by OGER in the augmented
+		// section of the doc txt
+		case AUG_1A_ALDH1_LONG_ANNOT:
+			int offset = getAugSent1aAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(0 + offset, 24 + offset, "Aldehyde dehydrogenase 1", "PR:1");
+		case AUG_1B_ALDH1_LONG_ANNOT:
+			offset = getAugSent1bAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(0 + offset, 24 + offset, "Aldehyde dehydrogenase 1", "PR:1");
+		case AUG_1C_ALDH1_LONG_ANNOT:
+			offset = getAugSent1cAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(0 + offset, 24 + offset, "Aldehyde dehydrogenase 1", "PR:1");
+		case AUG_1A_PD_LONG_ANNOT:
+			offset = getAugSent1aAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(67 + offset, 86 + offset, "Parkinson's disease", "MONDO:1");
+		case AUG_1B_PD_LONG_ANNOT:
+			offset = getAugSent1bAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(67 + offset, 86 + offset, "Parkinson's disease", "MONDO:1");
+		case AUG_1C_PD_LONG_ANNOT:
+			offset = getAugSent1cAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(67 + offset, 86 + offset, "Parkinson's disease", "MONDO:1");
+		case AUG_1A_ES_LONG_ANNOT:
+			offset = getAugSent1aAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(161 + offset, 175 + offset, "embryonic stem", "X:1");
+		case AUG_1B_ES_LONG_ANNOT:
+			offset = getAugSent1bAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(161 + offset, 175 + offset, "embryonic stem", "X:1");
+		case AUG_1C_ES_LONG_ANNOT:
+			offset = getAugSent1cAnnot().getAnnotationSpanStart();
+			return factory.createAnnotation(161 + offset, 175 + offset, "embryonic stem", "X:1");
+		case AUG_2A_ALDH1A3_LONG_ANNOT:
+			offset = getAugSent2aAnnot().getAnnotationSpanStart() - getSentence1Text().length() - 1;
+			return factory.createAnnotation(204 + offset, 230 + offset, "aldehyde dehydrogenase 1A3", "PR:2");
+		case AUG_2A_ALDH_LONG_ANNOT:
+			offset = getAugSent2aAnnot().getAnnotationSpanStart() - getSentence1Text().length() - 1;
+			return factory.createAnnotation(204 + offset, 226 + offset, "aldehyde dehydrogenase", "PR:3");
+		case AUG_1C_EMBRYONIC_STEM_CELLS_ANNOT:
+			// this is the annotation that gets mapped in the augmented doc text for
+			// embryonic stem cells
+			String esCellsLongStr = "embryonic stem      cells";
+			int start = getDocTextWithAugmentedSection().indexOf(esCellsLongStr);
+			return factory.createAnnotation(start, start + esCellsLongStr.length(), esCellsLongStr, "CL:1");
+
+		// this next group of annotations are new annotations created during
+		// post-processing/abbreviation handling
+		case ORIG_EMBRYONIC_STEM_CELLS_ANNOT:
+			// this is the corresponding annotation to the one that got mapped in the
+			// augmented doc text
+			return factory.createAnnotation(161, 186, "embryonic stem (ES) cells", "CL:1");
+		case ORIG_ES_CELLS_ANNOT:
+			// this is the ES cells annotation in the original document text
+			String esCellsShortStr = "ES cells";
+			start = getDocumentText().indexOf(esCellsShortStr);
+			return factory.createAnnotation(start, start + esCellsShortStr.length(), esCellsShortStr, "CL:1");
+		case ORIG_ES_ANNOT:
+			// this is the ES annotation (separate from the ES cells annotation) in the
+			// original document text
+			String esStr = "ES";
+			start = getDocumentText().lastIndexOf(esStr);
+			return factory.createAnnotation(start, start + esStr.length(), esStr, "X:1");
+		default:
+			throw new IllegalArgumentException("Unknown concept annot: " + ca.name());
+		}
+	}
+
+	/**
+	 * @return the set of TextAnnotations that would have been returned from Oger
+	 *         (or some other concept recognition system)
+	 * @throws IOException
+	 */
+	private Set<TextAnnotation> getOgerConceptAnnots() throws IOException {
+		return new HashSet<TextAnnotation>(Arrays.asList(getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT), getConceptAnnot(ConceptAnnot.ALDH1A3_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.ALDH_LONG_ANNOT), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT),
+
+				getConceptAnnot(ConceptAnnot.AUG_1A_ALDH1_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_1B_ALDH1_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_1C_ALDH1_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_1A_PD_LONG_ANNOT), getConceptAnnot(ConceptAnnot.AUG_1B_PD_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_1C_PD_LONG_ANNOT), getConceptAnnot(ConceptAnnot.AUG_1A_ES_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_1B_ES_LONG_ANNOT), getConceptAnnot(ConceptAnnot.AUG_1C_ES_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_2A_ALDH1A3_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.AUG_2A_ALDH_LONG_ANNOT),
+
+				getConceptAnnot(ConceptAnnot.AUG_1C_EMBRYONIC_STEM_CELLS_ANNOT)));
+	}
+
+	/**
+	 * @return OGER concepts that overlap with sentence 1
+	 * @throws IOException
+	 */
+	private Set<TextAnnotation> getOgerConceptAnnotsSent1() throws IOException {
+		return new HashSet<TextAnnotation>(Arrays.asList(getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT)));
+	}
+
+	/**
+	 * @return OGER concepts that overlap with sentence 2
+	 * @throws IOException
+	 */
+	private Set<TextAnnotation> getOgerConceptAnnotsSent2() throws IOException {
+		return new HashSet<TextAnnotation>(Arrays.asList(getConceptAnnot(ConceptAnnot.ALDH1A3_LONG_ANNOT),
+				getConceptAnnot(ConceptAnnot.ALDH_LONG_ANNOT)));
+	}
+
+	/**
+	 * Ensure that the concepts in each sentence overlap with the correct sentence
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testSentenceLevelConceptSets() throws IOException {
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent1()) {
+			assertTrue(conceptAnnot.overlaps(getSentence1Annot()));
+		}
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent2()) {
+			assertTrue(conceptAnnot.overlaps(getSentence2Annot()));
+		}
+	}
+
+	/**
+	 * 
+	 * <pre>
+	 * Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells. The function of aldehyde dehydrogenase 1A3 (ALDH1A3) in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD with the help of ES cells.
+	 * zzzDOCUMENTzENDzzz
+	 * AUGSENT	0	0	31
+	 * Aldehyde dehydrogenase 1         has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells.
+	 * AUGSENT	0	67	90
+	 * Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease      by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem (ES) cells.
+	 * AUGSENT	0	161	179
+	 * Aldehyde dehydrogenase 1 (ALDH1) has been shown to protect against Parkinson's disease (PD) by reducing toxic metabolites of dopamine and stunting the growth of embryonic stem      cells.
+	 * AUGSENT	188	204	239
+	 * The function of aldehyde dehydrogenase 1A3           in invasion was assessed by performing transwell assays and animal experiments; it was shown to interact with ALDH1 and provide protection against PD with the help of ES cells.
+	 * </pre>
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	private String getDocTextWithAugmentedSection() throws IOException {
+		Collection<TextAnnotation> sentenceAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(getSentence1Annot(), getSentence2Annot()));
+
+		String augmentedDocumentText = DocumentTextAugmentationFn.augmentDocumentText(getDocumentText(),
+				getAbbreviationDoc().getAnnotations(), sentenceAnnots);
+		return augmentedDocumentText;
+	}
+
+	private TextAnnotation getSentence1Annot() {
+		String sentence1 = getSentence1Text();
+		return factory.createAnnotation(0, sentence1.length(), sentence1, "sentence");
+	}
+
+	private TextAnnotation getSentence2Annot() {
+		String sentence1 = getSentence1Text();
+		String sentence2 = getSentence2Text();
+		return factory.createAnnotation(sentence1.length() + 1, sentence1.length() + 1 + sentence2.length(), sentence2,
+				"sentence");
+	}
+
+	private TextAnnotation getAugSent1aAnnot() {
+		String augSent1aMetadata = "AUGSENT\t0\t0\t31";
+		int augSent1aStart = getDocumentText().length() + 1 + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER.length()
+				+ 1 + augSent1aMetadata.length() + 1;
+		TextAnnotation annot = factory.createAnnotation(augSent1aStart, augSent1aStart + getAugSent1aText().length(),
+				getAugSent1aText(), "sentence");
+		return annot;
+	}
+
+	private TextAnnotation getAugSent1bAnnot() {
+		String augSent1bMetadata = "AUGSENT\t0\t67\t90";
+		int augSent1bStart = getAugSent1aAnnot().getAnnotationSpanEnd() + 1 + augSent1bMetadata.length() + 1;
+		TextAnnotation annot = factory.createAnnotation(augSent1bStart, augSent1bStart + getAugSent1bText().length(),
+				getAugSent1bText(), "sentence");
+		return annot;
+
+	}
+
+	private TextAnnotation getAugSent1cAnnot() {
+		String augSent1cMetadata = "AUGSENT\t0\t161\t179";
+		int augSent1cStart = getAugSent1bAnnot().getAnnotationSpanEnd() + 1 + augSent1cMetadata.length() + 1;
+		TextAnnotation annot = factory.createAnnotation(augSent1cStart, augSent1cStart + getAugSent1cText().length(),
+				getAugSent1cText(), "sentence");
+		return annot;
+
+	}
+
+	private TextAnnotation getAugSent2aAnnot() {
+		String augSent2aMetadata = "AUGSENT\t188\t204\t239";
+		int augSent2aStart = getAugSent1cAnnot().getAnnotationSpanEnd() + 1 + augSent2aMetadata.length() + 1;
+		TextAnnotation annot = factory.createAnnotation(augSent2aStart, augSent2aStart + getAugSent2aText().length(),
+				getAugSent2aText(), "sentence");
+		return annot;
+
+	}
+
+	private AugmentedSentence getAugSent1a() {
+		return new AugmentedSentence("1", getAugSent1aAnnot(), getSentence1Annot().getAnnotationSpanStart(), 0, 31);
+	}
+
+	private AugmentedSentence getAugSent1b() {
+		return new AugmentedSentence("2", getAugSent1bAnnot(), getSentence1Annot().getAnnotationSpanStart(), 67, 90);
+	}
+
+	private AugmentedSentence getAugSent1c() {
+		return new AugmentedSentence("3", getAugSent1cAnnot(), getSentence1Annot().getAnnotationSpanStart(), 161, 179);
+	}
+
+	private AugmentedSentence getAugSent2a() {
+		return new AugmentedSentence("4", getAugSent2aAnnot(), getSentence2Annot().getAnnotationSpanStart(), 204, 239);
+	}
+
+	private List<AugmentedSentence> getAugmentedSentences() {
+		return Arrays.asList(getAugSent1a(), getAugSent1b(), getAugSent1c(), getAugSent2a());
+	}
+
+	/**
+	 * validate the sample sentence spans against the document text to make sure
+	 * they are correct
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testValidateSentenceSpans() throws IOException {
+		// confirm that the sentence spans are correct
+		for (TextAnnotation sentAnnot : Arrays.asList(getSentence1Annot(), getSentence2Annot(), getAugSent1aAnnot(),
+				getAugSent1bAnnot(), getAugSent1cAnnot(), getAugSent2aAnnot())) {
+			assertEquals(sentAnnot.getCoveredText(), getDocTextWithAugmentedSection()
+					.substring(sentAnnot.getAnnotationSpanStart(), sentAnnot.getAnnotationSpanEnd()));
+		}
+	}
+
+	/**
+	 * validate the sample concept annotation spans against the document text to
+	 * make sure they are correct
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testValidateConceptAnnotSpans() throws IOException {
+		for (ConceptAnnot ca : ConceptAnnot.values()) {
+			TextAnnotation annot = getConceptAnnot(ca);
+			assertEquals(annot.getCoveredText(), getDocTextWithAugmentedSection()
+					.substring(annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd()));
+		}
+	}
+
+	@Test
+	public void testPropagateHybridAbbreviations() throws IOException {
+
+		TextDocument abbrevDoc = getAbbreviationDoc();
+
+		Set<TextAnnotation> updatedAnnots = ConceptPostProcessingFn.propagateHybridAbbreviations(getOgerConceptAnnots(),
+				abbrevDoc.getAnnotations(), "PMID:12345", getDocTextWithAugmentedSection());
+
+		// the ES cell and ES annotations should have been added
+		Set<TextAnnotation> expectedUpdatedAnnots = new HashSet<TextAnnotation>(getOgerConceptAnnots());
+		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT));
+		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_ES_CELLS_ANNOT));
+		
+		// failing b/c this one is missing
+		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_ES_ANNOT));
+
+		assertEquals(expectedUpdatedAnnots, updatedAnnots);
+
+		// test that the hybrid abbreviation annotation is removed from the abbrev set
+		Set<TextAnnotation> longFormAnnots = ConceptPostProcessingFn.getLongFormAnnots(abbrevDoc.getAnnotations());
+		Set<TextAnnotation> expectedLongAbbrevAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(getAldh1AbbrevAnnot(), getPdAbbrevAnnot(), getAldh1a3AbbrevAnnot()));
+
+		assertEquals(expectedLongAbbrevAnnots, longFormAnnots);
+
+	}
+
+	/**
+	 * Test that we get a mapping from the AugmentedSentence to the concepts that
+	 * overlap with the augmented sentence. The concepts, however, should have had
+	 * their spans transformed such that they are relative to the original sentence.
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testMapSentToAugConceptAnnots() throws IOException {
+		Map<AugmentedSentence, Set<TextAnnotation>> mapOrigSentToConceptAnnots = ConceptPostProcessingFn
+				.mapSentToConceptAnnots(getAugmentedSentences(), getOgerConceptAnnots(), Overlap.AUG_SENTENCE);
+
+		Map<AugmentedSentence, Set<TextAnnotation>> expectedMap = new HashMap<AugmentedSentence, Set<TextAnnotation>>();
+
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent1()) {
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1a(), conceptAnnot, expectedMap);
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1b(), conceptAnnot, expectedMap);
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(), conceptAnnot, expectedMap);
+		}
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(),
+				getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT), expectedMap);
+
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent2()) {
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent2a(), conceptAnnot, expectedMap);
+		}
+
+		assertEquals(expectedMap.size(), mapOrigSentToConceptAnnots.size());
+
+		assertEquals(expectedMap.get(getAugSent1a()), mapOrigSentToConceptAnnots.get(getAugSent1a()));
+		assertEquals(expectedMap.get(getAugSent1b()), mapOrigSentToConceptAnnots.get(getAugSent1b()));
+		assertEquals(expectedMap.get(getAugSent1c()), mapOrigSentToConceptAnnots.get(getAugSent1c()));
+		assertEquals(expectedMap.get(getAugSent2a()), mapOrigSentToConceptAnnots.get(getAugSent2a()));
+
+	}
+
+	/**
+	 * same as above, but the concept annotations matched should now overlap with
+	 * the original sentence (not a sentence in the augmented section)
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testMapSentToOrigConceptAnnots() throws IOException {
+		Map<AugmentedSentence, Set<TextAnnotation>> mapOrigSentToConceptAnnots = ConceptPostProcessingFn
+				.mapSentToConceptAnnots(getAugmentedSentences(), getOgerConceptAnnots(), Overlap.ORIG_SENTENCE);
+
+		Map<AugmentedSentence, Set<TextAnnotation>> expectedMap = new HashMap<AugmentedSentence, Set<TextAnnotation>>();
+
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent1()) {
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1a(), conceptAnnot, expectedMap);
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1b(), conceptAnnot, expectedMap);
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(), conceptAnnot, expectedMap);
+		}
+		for (TextAnnotation conceptAnnot : getOgerConceptAnnotsSent2()) {
+			CollectionsUtil.addToOne2ManyUniqueMap(getAugSent2a(), conceptAnnot, expectedMap);
+		}
+
+		assertEquals(expectedMap.size(), mapOrigSentToConceptAnnots.size());
+
+		assertEquals(expectedMap.get(getAugSent1a()), mapOrigSentToConceptAnnots.get(getAugSent1a()));
+		assertEquals(expectedMap.get(getAugSent1b()), mapOrigSentToConceptAnnots.get(getAugSent1b()));
+		assertEquals(expectedMap.get(getAugSent1c()), mapOrigSentToConceptAnnots.get(getAugSent1c()));
+		assertEquals(expectedMap.get(getAugSent2a()), mapOrigSentToConceptAnnots.get(getAugSent2a()));
+
+	}
+
+	@Test
+	public void testMapAugSentToAugConceptAnnots() throws IOException {
+		Map<AugmentedSentence, Set<TextAnnotation>> mapAugSentToConceptAnnots = ConceptPostProcessingFn
+				.mapAugSentToAugConceptAnnots(getAugmentedSentences(), getOgerConceptAnnots());
+
+		Map<AugmentedSentence, Set<TextAnnotation>> expectedMap = new HashMap<AugmentedSentence, Set<TextAnnotation>>();
+
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1a(), getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1a(), getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1a(), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1b(), getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1b(), getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1b(), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(), getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(), getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent1c(),
+				getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT), expectedMap);
+
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent2a(), getConceptAnnot(ConceptAnnot.ALDH1A3_LONG_ANNOT),
+				expectedMap);
+		CollectionsUtil.addToOne2ManyUniqueMap(getAugSent2a(), getConceptAnnot(ConceptAnnot.ALDH_LONG_ANNOT),
+				expectedMap);
+
+		assertEquals(expectedMap.size(), mapAugSentToConceptAnnots.size());
+		assertEquals(expectedMap, mapAugSentToConceptAnnots);
+	}
+
+	@Test
+	public void testMapConceptsToAbbrevAnnots() throws IOException {
+		Map<TextAnnotation, TextAnnotation> mapConceptsToAbbrevAnnots = ConceptPostProcessingFn
+				.mapConceptsToAbbrevAnnots(getOgerConceptAnnots(), getAbbreviationDoc().getAnnotations());
+
+		Map<TextAnnotation, TextAnnotation> expectedMap = new HashMap<TextAnnotation, TextAnnotation>();
+
+		expectedMap.put(getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT), getAldh1AbbrevAnnot());
+		expectedMap.put(getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT), getPdAbbrevAnnot());
+		expectedMap.put(getConceptAnnot(ConceptAnnot.ALDH1A3_LONG_ANNOT), getAldh1a3AbbrevAnnot());
+		expectedMap.put(getConceptAnnot(ConceptAnnot.ALDH_LONG_ANNOT), getAldh1a3AbbrevAnnot());
+		expectedMap.put(getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT), getEsAbbrevAnnot());
+
+		assertEquals(expectedMap, mapConceptsToAbbrevAnnots);
+
+	}
+
+	/**
+	 * test that the {@link AugmentedSentence} objects are properly parsed from the
+	 * augmented section of the doc text
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testGetAugmentedSentences() throws IOException {
+		List<AugmentedSentence> augmentedSentences = ConceptPostProcessingFn
+				.getAugmentedSentences(getDocTextWithAugmentedSection(), docId);
+
+		assertEquals(getAugmentedSentences(), augmentedSentences);
+	}
+
+	@Test
+	public void testFindConceptsOnlyInAugmentedText() throws IOException {
+
+		Set<TextAnnotation> conceptsOnlyInAugmentedText = ConceptPostProcessingFn
+				.findConceptsOnlyInAugmentedText(getOgerConceptAnnots(), getDocTextWithAugmentedSection(), docId);
+
+		Set<TextAnnotation> expectedConcepts = new HashSet<TextAnnotation>(
+				Arrays.asList(getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT)));
+
+		assertEquals(expectedConcepts, conceptsOnlyInAugmentedText);
+
+	}
+
+	@Test
+	public void testMapShortFormPlusTextToConceptId() throws IOException {
+		Map<TextAnnotation, TextAnnotation> conceptToAbbrevMap = new HashMap<TextAnnotation, TextAnnotation>();
+
+		conceptToAbbrevMap.put(getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT), getEsAbbrevAnnot());
+
+		Map<String, String> shortFormPlusTextToConceptIdMap = ConceptPostProcessingFn
+				.mapShortFormPlusTextToConceptId(conceptToAbbrevMap, getDocumentText());
+
+		Map<String, String> expectedMap = new HashMap<String, String>();
+		expectedMap.put("ES cells", "CL:1");
+
+		assertEquals(expectedMap, shortFormPlusTextToConceptIdMap);
+
+	}
+
+	@Test
+	public void testfilterNewConceptAnnot() throws IOException {
+
+		TextAnnotation bestConceptAnnot = getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT);
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+		TextAnnotation tooShortConceptAnnot = factory.createAnnotation(bestConceptAnnot.getAnnotationSpanStart(),
+				bestConceptAnnot.getAnnotationSpanStart() + 4, "embr", "CL:1");
+
+		Set<TextAnnotation> augConceptAnnots = new HashSet<TextAnnotation>();
+		// this is the one that will be returned b/c it encompasses the entire
+		// abbreviation
+		augConceptAnnots.add(tooShortConceptAnnot);
+
+		TextAnnotation outputConceptAnnot = ConceptPostProcessingFn.filterNewConceptAnnot(augConceptAnnots,
+				getAugSent1c());
+
+		assertNull("should be null b/c it does not encompass the entire abbreviation", outputConceptAnnot);
+
+		TextAnnotation shorterConceptAnnot = factory.createAnnotation(bestConceptAnnot.getAnnotationSpanStart(),
+				bestConceptAnnot.getAnnotationSpanEnd() - 1, "embr", "CL:1");
+
+		augConceptAnnots = new HashSet<TextAnnotation>();
+		augConceptAnnots.add(bestConceptAnnot);
+		augConceptAnnots.add(tooShortConceptAnnot);
+		augConceptAnnots.add(shorterConceptAnnot);
+
+		outputConceptAnnot = ConceptPostProcessingFn.filterNewConceptAnnot(augConceptAnnots, getAugSent1c());
+		assertNotNull(outputConceptAnnot);
+		assertEquals(bestConceptAnnot, outputConceptAnnot);
+
 	}
 
 	/**
@@ -470,7 +1068,8 @@ public class ConceptPostProcessingFnTest {
 
 		CollectionsUtil.addToOne2ManyUniqueMap("GO:0046960", "sensitization", idToOgerDictEntriesMap);
 
-		String documentText = "Enhanced S-cone syndrome (ESCS) is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram (ERG) with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light. ";
+		String documentText = "Enhanced S-cone syndrome (ESCS) is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram (ERG) with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light."
+				+ "\n" + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER + "\n";
 
 		TextAnnotation annot1 = factory.createAnnotation(0, 24, "Enhanced S-cone syndrome", "MONDO:0100288");
 		TextAnnotation annot2 = factory.createAnnotation(9, 15, "S-cone", "CL:0003050");
@@ -626,7 +1225,8 @@ public class ConceptPostProcessingFnTest {
 
 		CollectionsUtil.addToOne2ManyUniqueMap("GO:0003677", "DNA binding", idToOgerDictEntriesMap);
 
-		String documentText = "These findings prompted us to analyze mice in which we integrated EWS-Pea3, a break-point fusion product between the amino-terminal domain of the Ewing sarcoma (EWS) gene and the Pea3 DNA binding domain.";
+		String documentText = "These findings prompted us to analyze mice in which we integrated EWS-Pea3, a break-point fusion product between the amino-terminal domain of the Ewing sarcoma (EWS) gene and the Pea3 DNA binding domain."
+				+ "\n" + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER + "\n";
 
 		TextAnnotation annot1 = factory.createAnnotation(38, 42, "mice", "NCBITaxon:10088");
 		TextAnnotation annot2 = factory.createAnnotation(38, 42, "mice", "NCBITaxon:10095");
@@ -675,13 +1275,13 @@ public class ConceptPostProcessingFnTest {
 				// annot2, - should get promoted to taxon from annot 1
 				// annot3, annot4, - removed b/c it is the same text as a short form
 				// abbreviation
-				//annot5, - gets excluded b/c it is < 4 characters
+				// annot5, - gets excluded b/c it is < 4 characters
 				annot6, annot7,
 				// annot8, - excluded b/c it's a HP annot overlapping a MONDO annot
 				annot9,
 				// annot10,annot11 - excluded because they are a short form of an abbreviation
-				annot12, 
-				//annot13,  - gets excluded b/c it is < 4 characters
+				annot12,
+				// annot13, - gets excluded b/c it is < 4 characters
 				annot14, annot15, annot16, annot17));
 
 //		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());

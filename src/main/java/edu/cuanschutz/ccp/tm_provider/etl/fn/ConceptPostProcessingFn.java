@@ -2,6 +2,7 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -95,7 +97,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						Map<String, Set<String>> extensionToOboMap = context.sideInput(extensionToOboMapView);
 						Map<String, Set<String>> idToOgerDictEntriesMap = context.sideInput(idToOgerDictEntriesMapView);
 						Map<String, Set<String>> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
-//						Map<String, Set<String>> oboToAncestorsMap = context.sideInput(oboToAncestorsMapView);
 
 						try {
 							// check to see if all documents are present
@@ -114,13 +115,17 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
 										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
-//								throw new IllegalArgumentException(String.format("docTypeToAnnotsMap size for %s: %d -- %s",
-//										docId, docTypeToAnnotsMap.size(), docTypeToAnnotsMap.keySet().toString()));
-
 								Collection<TextAnnotation> abbrevAnnots = docTypeToContentMap
 										.get(DocumentType.ABBREVIATIONS);
 
-								String documentText = PipelineMain.getDocumentText(docs);
+								// this component requires the augmented document text - this text consists of
+								// the original document text followed by sentences from the text that have been
+								// added to the document in altered form so that they can also be processed by
+								// the concept recognition machinery. Specifically, these are sentences that
+								// contain abbreviation definitions where the short form part of the definition
+								// has been replaced by whitespace. The replacement by whitespace allows for
+								// concept recognition matches that may not otherwise occur.
+								String augmentedDocumentText = PipelineMain.getDocumentText(docs);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
@@ -134,7 +139,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								}
 
 								nonRedundantAnnots = postProcess(docId, extensionToOboMap, idToOgerDictEntriesMap,
-										ncbitaxonPromotionMap, abbrevAnnots, documentText, nonRedundantAnnots);
+										ncbitaxonPromotionMap, abbrevAnnots, augmentedDocumentText, nonRedundantAnnots);
 
 								// check for duplicates
 								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
@@ -155,15 +160,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 									}
 								}
 
-								// the removals below should now be handled at the OGER level
-//								nonRedundantAnnots = excludeSelectNcbiTaxonAnnots(nonRedundantAnnots);
-//								nonRedundantAnnots = removeIrrelevantHpConcepts(nonRedundantAnnots, oboToAncestorsMap);
-//								nonRedundantAnnots = removeIrrelevantMondoConcepts(nonRedundantAnnots, oboToAncestorsMap);
-//								nonRedundantAnnots = removeIrrelevantUberonConcepts(nonRedundantAnnots, oboToAncestorsMap);
-//								nonRedundantAnnots = removeIrrelevantChebiConcepts(nonRedundantAnnots, oboToAncestorsMap);
-
 								TextDocument td = new TextDocument(statusEntity.getDocumentId(), "unknown",
-										documentText);
+										augmentedDocumentText);
 								td.addAnnotations(nonRedundantAnnots);
 								BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 								String bionlp = null;
@@ -180,9 +178,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						}
 					}
 
-				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView
-//						,oboToAncestorsMapView
-		).withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView)
+				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
 	/**
@@ -194,14 +191,16 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param idToOgerDictEntriesMap
 	 * @param ncbitaxonPromotionMap
 	 * @param abbrevAnnots
-	 * @param documentText
+	 * @param augmentedDocumentText
 	 * @param inputAnnots
 	 * @return
 	 */
 	@VisibleForTesting
 	protected static Set<TextAnnotation> postProcess(String docId, Map<String, Set<String>> extensionToOboMap,
 			Map<String, Set<String>> idToOgerDictEntriesMap, Map<String, Set<String>> ncbitaxonPromotionMap,
-			Collection<TextAnnotation> abbrevAnnots, String documentText, Set<TextAnnotation> inputAnnots) {
+			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots) {
+
+		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
 
 		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
 		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
@@ -211,9 +210,21 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
 		inputAnnots = removeMatchesLessThan(inputAnnots, 4);
 		inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
-		inputAnnots = propagateAbbreviationLongFormConceptsToShortFormMentions(inputAnnots, abbrevAnnots, docId,
-				documentText);
+
+		inputAnnots = propagateHybridAbbreviations(inputAnnots, abbrevAnnots, docId, augmentedDocumentText);
+		inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
 		return inputAnnots;
+	}
+
+	/**
+	 * Return the original document text as extracted from the augmented document
+	 * text
+	 * 
+	 * @param augmentedDocumentText
+	 * @return
+	 */
+	private static String getOriginalDocText(String augmentedDocumentText) {
+		return augmentedDocumentText.split(UtilityOgerDictFileFactory.DOCUMENT_END_MARKER)[0];
 	}
 
 	public enum Ont {
@@ -345,6 +356,396 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	}
 
 	/**
+	 * Hybrid abbreviations consist of an abbreviation that is used with a word or
+	 * words later in the document. For example, "embryonic stem (ES) cells" is a
+	 * hybrid abbreviation definition if later in the document we see use of "ES
+	 * cells". These abbreviations are handled separately from regular abbreviations
+	 * because sometimes the abbreviation part is a different type of entity, e.g.,
+	 * maybe a disease, and we don't want to blindly propagate an incorrect entity,
+	 * so we check to see if we can identify these hybrid abbreviations first.
+	 * 
+	 * @param inputAnnots
+	 * @param abbrevAnnots
+	 * @param docId
+	 * @param augmentedDocumentText
+	 * @return
+	 */
+	protected static Set<TextAnnotation> propagateHybridAbbreviations(Set<TextAnnotation> conceptAnnots,
+			Collection<TextAnnotation> abbrevAnnots, String docId, String augmentedDocumentText) {
+
+		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
+
+		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(conceptAnnots);
+
+		// identify concept matches in the augmented sentences (sentences where the
+		// short form abbreviation was removed) that weren't matched in the original
+		// sentences
+
+		// spans for these new concepts should now be relative to the original document
+		// text
+		Set<TextAnnotation> newConceptsInAugmentedDocText = findConceptsOnlyInAugmentedText(conceptAnnots,
+				augmentedDocumentText, docId);
+
+		// at this point, the only reason there will be new concepts is due to hiding of
+		// the abbreviation short forms, so all new concepts should overlap with
+		// abbreviation definitions, but perhaps we should check anyway.
+		Map<TextAnnotation, TextAnnotation> newConceptToLongformAbbrevAnnotMap = mapConceptsToAbbrevAnnots(
+				newConceptsInAugmentedDocText, abbrevAnnots);
+
+		outputAnnots.addAll(newConceptToLongformAbbrevAnnotMap.keySet());
+
+		// for each concept/abbrev annot pair, look for short form + the end of the
+		// match ,e.g., ES cells, in the rest of
+		// the document.
+		Map<String, String> shortFormPlusToConceptIdMap = mapShortFormPlusTextToConceptId(
+				newConceptToLongformAbbrevAnnotMap, originalDocumentText);
+
+		// propagate those kinds of matches and somehow prevent the ES propagation.
+		for (Entry<String, String> entry : shortFormPlusToConceptIdMap.entrySet()) {
+			String abbrevText = entry.getKey();
+			String conceptId = entry.getValue();
+			Set<TextAnnotation> propagatedShortAnnots = propagateShortAnnot(docId, originalDocumentText, abbrevText,
+					conceptId);
+
+			outputAnnots.addAll(propagatedShortAnnots);
+		}
+		
+		// now look for mentions of the short form that do not also have the additional text and create new annotations for those matches
+		
+
+		// remove the abbreviations that were propagated so that they won't be processed
+		// by other downstream abbreviation components
+		Collection<TextAnnotation> hybridAbbrevAnnots = newConceptToLongformAbbrevAnnotMap.values();
+		abbrevAnnots.removeAll(hybridAbbrevAnnots);
+
+		return outputAnnots;
+	}
+
+	/**
+	 * for each concept that is overlapping an abbreviation, look for any trailing
+	 * text after the short form. Combine that trailing text with the short form
+	 * abbreviation text, and look to see if that combination text appears later in
+	 * the document text. If it does appear, add a map entry.
+	 * 
+	 * @param newConceptToLongformAbbrevAnnotMap
+	 * @param originalDocumentText
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Map<String, String> mapShortFormPlusTextToConceptId(
+			Map<TextAnnotation, TextAnnotation> conceptToAbbrevMap, String originalDocumentText) {
+		Map<String, String> map = new HashMap<String, String>();
+
+		for (Entry<TextAnnotation, TextAnnotation> entry : conceptToAbbrevMap.entrySet()) {
+			TextAnnotation conceptAnnot = entry.getKey();
+			TextAnnotation longAbbrevAnnot = entry.getValue();
+
+			TextAnnotation shortAbbrevAnnot = getShortAbbrevAnnot(longAbbrevAnnot);
+
+			int conceptEnd = conceptAnnot.getAnnotationSpanEnd();
+			// +1 to include the likely parenthesis
+			int shortAbbrevEnd = shortAbbrevAnnot.getAnnotationSpanEnd() + 1;
+
+			if (conceptEnd > shortAbbrevEnd) {
+				String hybridEnd = originalDocumentText.substring(shortAbbrevEnd, conceptEnd);
+				String hybridAbbrevText = originalDocumentText.substring(shortAbbrevAnnot.getAnnotationSpanStart(),
+						shortAbbrevAnnot.getAnnotationSpanEnd()) + hybridEnd;
+
+				Pattern p = Pattern.compile(String.format("\\b(%s)\\b", hybridAbbrevText));
+				Matcher m = p.matcher(originalDocumentText);
+				int count = 0;
+				while (m.find()) {
+					count++;
+				}
+
+				// if we see any of the hybrid text in the document, then we add an entry from
+				// the hybrid text to the concept id
+				// TODO:this should really be the indication to classify an abbreviation as a
+				// hybrid abbreviation
+				if (count > 0) {
+					map.put(hybridAbbrevText, conceptAnnot.getClassMention().getMentionName());
+				}
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Create a mapping from the input concept annotations to abbreviation
+	 * annotations that they overlap
+	 * 
+	 * @param newConceptsInAugmentedDocText
+	 * @param abbrevAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Map<TextAnnotation, TextAnnotation> mapConceptsToAbbrevAnnots(Set<TextAnnotation> conceptAnnots,
+			Collection<TextAnnotation> abbrevAnnots) {
+
+		Map<TextAnnotation, TextAnnotation> map = new HashMap<TextAnnotation, TextAnnotation>();
+
+		for (TextAnnotation conceptAnnot : conceptAnnots) {
+			for (TextAnnotation abbrevAnnot : getLongFormAnnots(abbrevAnnots)) {
+				if (conceptAnnot.overlaps(abbrevAnnot)) {
+					map.put(conceptAnnot, abbrevAnnot);
+				}
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Looks at concepts in the augmented portion of the document text and compares
+	 * them to the concepts in the original document text, returning concepts that
+	 * are not present in the original document text. The concept annotations that
+	 * are returned have been updated such that their spans are relevant to the
+	 * original document text.
+	 * 
+	 * @param conceptAnnots
+	 * @param augmentedDocumentText
+	 * @param docId
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Set<TextAnnotation> findConceptsOnlyInAugmentedText(Set<TextAnnotation> conceptAnnots,
+			String augmentedDocumentText, String docId) {
+
+		Set<TextAnnotation> newConceptAnnots = new HashSet<TextAnnotation>();
+
+		List<AugmentedSentence> augmentedSentences = getAugmentedSentences(augmentedDocumentText, docId);
+
+		// concept annot spans should be relative to the original document text
+		Map<AugmentedSentence, Set<TextAnnotation>> augSentToAugConceptAnnotsMap = mapSentToConceptAnnots(
+				augmentedSentences, conceptAnnots, Overlap.AUG_SENTENCE);
+
+		Map<AugmentedSentence, Set<TextAnnotation>> augSentToOrigConceptAnnotsMap = mapSentToConceptAnnots(
+				augmentedSentences, conceptAnnots, Overlap.ORIG_SENTENCE);
+
+		// the spans of the annotations in the two maps above have been aligned such
+		// that they are all relative to the original document text. So, if there was a
+		// concept that was identified in the augmented text, its annotation is
+		// included, however its span has been converted such that it is relative to the
+		// original sentence.
+
+		// we loop over the augSentToAugConceptAnnotsMap because it might have
+		// annotations in a sentence that the original does not
+		for (Entry<AugmentedSentence, Set<TextAnnotation>> entry : augSentToAugConceptAnnotsMap.entrySet()) {
+			AugmentedSentence augSent = entry.getKey();
+
+			Set<TextAnnotation> augConceptAnnots = entry.getValue();
+			Set<TextAnnotation> origConceptAnnots = augSentToOrigConceptAnnotsMap.get(augSent);
+
+			// we should be left with any "new" concept annots that appear only in the
+			// augmented text
+			if (origConceptAnnots != null) {
+				augConceptAnnots.removeAll(origConceptAnnots);
+			}
+//			origConceptAnnots.removeAll(augConceptAnnots);
+
+			if (augConceptAnnots.size() > 0) {
+				// if there is > 1 new concept, then we need to filter to get just one (I think)
+				TextAnnotation newConceptAnnot = filterNewConceptAnnot(augConceptAnnots, augSent);
+				if (newConceptAnnot != null) {
+					newConceptAnnots.add(newConceptAnnot);
+				}
+			}
+		}
+
+		return newConceptAnnots;
+	}
+
+	/**
+	 * It is possible that the augmented text is matched by more than one concept.
+	 * This method is used to filter down to a single concept. We are going to
+	 * require that the entire abbreviation be encompassed by the concept
+	 * annotation, and we will select the longest concept annotation if there are
+	 * multiple that meet the encompassing criteria.
+	 * 
+	 * @param augConceptAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static TextAnnotation filterNewConceptAnnot(Set<TextAnnotation> augConceptAnnots,
+			AugmentedSentence augSent) {
+
+//		System.out.println(String.format("augsent - orig span start: %d -- abbrev span: [%d, %d] ",
+//				augSent.getOriginalSpanStart(), augSent.getAbbrevSpanStart(), augSent.getAbbrevSpanEnd()));
+
+		Map<Integer, Set<TextAnnotation>> lengthToConceptAnnotMap = new HashMap<Integer, Set<TextAnnotation>>();
+
+		Span abbrevSpan = new Span(augSent.getAbbrevSpanStart(), augSent.getAbbrevSpanEnd());
+		for (TextAnnotation conceptAnnot : augConceptAnnots) {
+//			int offset = augSent.getAnnot().getAnnotationSpanStart() - augSent.getOriginalSpanStart();
+//			Span relativeConceptSpan = new Span(conceptAnnot.getAnnotationSpanStart() - offset,
+//					conceptAnnot.getAnnotationSpanEnd() - offset);
+//			System.out.println("relative span: " + relativeConceptSpan.toString());
+
+//			if (relativeConceptSpan.containsSpan(abbrevSpan)) {
+			if (conceptAnnot.getAggregateSpan().containsSpan(abbrevSpan)) {
+				CollectionsUtil.addToOne2ManyUniqueMap(conceptAnnot.length(), conceptAnnot, lengthToConceptAnnotMap);
+			}
+		}
+
+		Map<Integer, Set<TextAnnotation>> sortedMap = CollectionsUtil.sortMapByKeys(lengthToConceptAnnotMap,
+				SortOrder.DESCENDING);
+
+		for (Entry<Integer, Set<TextAnnotation>> entry : sortedMap.entrySet()) {
+			Set<TextAnnotation> conceptAnnots = entry.getValue();
+
+			if (conceptAnnots.size() == 1) {
+				return conceptAnnots.iterator().next();
+			} else {
+				// we have a tie and no way to break the tie, so we won't use this abbreviation
+				// to propagate new concept annotations.
+				// TODO: potentially break tie with embeddings usage
+				break;
+			}
+		}
+		return null;
+	}
+
+	public enum Overlap {
+		ORIG_SENTENCE, AUG_SENTENCE
+	}
+
+	/**
+	 * Create a mapping from the augmented sentence object to the original concept
+	 * annotations, i.e., those that were observed in the original (non-augmented)
+	 * document text.
+	 * 
+	 * @param augmentedSentences
+	 * @param conceptAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Map<AugmentedSentence, Set<TextAnnotation>> mapSentToConceptAnnots(
+			List<AugmentedSentence> augmentedSentences, Set<TextAnnotation> conceptAnnots, Overlap relative) {
+
+//		for (TextAnnotation conceptAnnot : conceptAnnots) {
+//			System.out.println(String.format("INPUT %s %s %s", conceptAnnot.getCoveredText(),
+//					conceptAnnot.getSpans().toString(), conceptAnnot.getClassMention().getMentionName()));
+//		}
+
+//		System.out.println("======= mapping " + relative.name() + " ========");
+		Map<AugmentedSentence, Set<TextAnnotation>> map = new HashMap<AugmentedSentence, Set<TextAnnotation>>();
+
+		for (AugmentedSentence augSent : augmentedSentences) {
+			for (TextAnnotation conceptAnnot : conceptAnnots) {
+				Span sentSpan = (relative == Overlap.AUG_SENTENCE) ? augSent.getAnnot().getAggregateSpan()
+						: new Span(augSent.getOriginalSpanStart(),
+								augSent.getOriginalSpanStart() + augSent.getAnnot().getCoveredText().length());
+				if (conceptAnnot.getAggregateSpan().overlaps(sentSpan)) {
+
+					if (relative == Overlap.AUG_SENTENCE) {
+						int offset = augSent.getAnnot().getAnnotationSpanStart() - augSent.getOriginalSpanStart();
+						Span relativeSpan = new Span(conceptAnnot.getAnnotationSpanStart() - offset,
+								conceptAnnot.getAnnotationSpanEnd() - offset);
+						// if we don't clone, then we are changing the input set of annotations which
+						// has downstream effects
+						conceptAnnot = PipelineMain.clone(conceptAnnot);
+						conceptAnnot.setSpans(Arrays.asList(relativeSpan));
+					}
+
+//					System.out.println(String.format("Adding to AugSent %s - %s %s %s", augSent.getId(),
+//							conceptAnnot.getCoveredText(), conceptAnnot.getSpans().toString(),
+//							conceptAnnot.getClassMention().getMentionName()));
+					CollectionsUtil.addToOne2ManyUniqueMap(augSent, conceptAnnot, map);
+				}
+			}
+		}
+
+		return map;
+
+	}
+
+	/**
+	 * Create a mapping from the augmented sentences to the concepts that were
+	 * observed in them, however the concept annotations must have their spans
+	 * updated so that they are relative to the original sentence.
+	 * 
+	 * @param augmentedSentences
+	 * @param conceptAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Map<AugmentedSentence, Set<TextAnnotation>> mapAugSentToAugConceptAnnots(
+			List<AugmentedSentence> augmentedSentences, Set<TextAnnotation> conceptAnnots) {
+		Map<AugmentedSentence, Set<TextAnnotation>> map = new HashMap<AugmentedSentence, Set<TextAnnotation>>();
+
+		for (AugmentedSentence augSent : augmentedSentences) {
+			for (TextAnnotation conceptAnnot : conceptAnnots) {
+				if (conceptAnnot.overlaps(augSent.getAnnot())) {
+					// update the concept annotation span such that it is relative to the original
+					// sentence
+					int offset = augSent.getAnnot().getAnnotationSpanStart() - augSent.getOriginalSpanStart();
+					Span updatedSpan = new Span(conceptAnnot.getAnnotationSpanStart() - offset,
+							conceptAnnot.getAnnotationSpanEnd() - offset);
+					conceptAnnot.setSpans(Arrays.asList(updatedSpan));
+					CollectionsUtil.addToOne2ManyUniqueMap(augSent, conceptAnnot, map);
+				}
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * parse the augmented doc text section and return a list of
+	 * {@link AugmentedSentence} objects
+	 * 
+	 * @param documentTextWithAugmentedSection
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static List<AugmentedSentence> getAugmentedSentences(String documentTextWithAugmentedSection,
+			String docId) {
+		List<AugmentedSentence> asList = new ArrayList<AugmentedSentence>();
+
+		String docText = documentTextWithAugmentedSection.split(UtilityOgerDictFileFactory.DOCUMENT_END_MARKER)[0];
+
+		String augmentedText = documentTextWithAugmentedSection
+				.split(UtilityOgerDictFileFactory.DOCUMENT_END_MARKER)[1];
+
+		int offset = docText.length() + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER.length() + 1;
+		String[] lines = augmentedText.split("\\n");
+		// first line is a blank line, then there should be pairs of metadata + aug
+		// sentence lines
+		int id = 1;
+		for (int i = 1; i < lines.length; i += 2) {
+			String metadataLine = lines[i];
+			offset += metadataLine.length() + 1;
+			String sentenceLine = lines[i + 1];
+
+			String[] cols = metadataLine.split("\\t");
+			int origSentenceStart = Integer.parseInt(cols[1]);
+			int abbrevStart = Integer.parseInt(cols[2]);
+			int abbrevEnd = Integer.parseInt(cols[3]);
+
+			TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+
+			TextAnnotation sentAnnot = factory.createAnnotation(offset, sentenceLine.length() + offset, sentenceLine,
+					"sentence");
+			AugmentedSentence as = new AugmentedSentence(Integer.toString(id++), sentAnnot, origSentenceStart,
+					abbrevStart, abbrevEnd);
+			asList.add(as);
+			offset += sentenceLine.length() + 1;
+		}
+
+		return asList;
+	}
+
+	@Data
+	protected static class AugmentedSentence {
+		private final String id;
+		private final TextAnnotation annot;
+		private final int originalSpanStart;
+		private final int abbrevSpanStart;
+		private final int abbrevSpanEnd;
+	}
+
+	/**
 	 * For every abbreviation, look to see if it overlaps substantially with an
 	 * existing concept annotation. If it does, propagate that concept to all
 	 * mentions of the short form text in the document.
@@ -353,9 +754,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param abbrevAnnots
 	 * @return
 	 */
-	protected static Set<TextAnnotation> propagateAbbreviationLongFormConceptsToShortFormMentions(
-			Set<TextAnnotation> inputAnnots, Collection<TextAnnotation> abbrevAnnots, String docId,
-			String documentText) {
+	protected static Set<TextAnnotation> propagateRegularAbbreviations(Set<TextAnnotation> inputAnnots,
+			Collection<TextAnnotation> abbrevAnnots, String docId, String documentText) {
 
 		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
 
@@ -369,8 +769,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			TextAnnotation shortAbbrevAnnot = getShortAbbrevAnnot(longAbbrevAnnot);
 			String conceptId = entry.getValue();
 
-			Set<TextAnnotation> propagatedShortAnnots = propagateShortAnnot(docId, documentText, shortAbbrevAnnot,
-					conceptId);
+			Set<TextAnnotation> propagatedShortAnnots = propagateShortAnnot(docId, documentText,
+					shortAbbrevAnnot.getCoveredText(), conceptId);
 			outputAnnots.addAll(propagatedShortAnnots);
 		}
 
@@ -486,11 +886,11 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 * @param conceptId
 	 * @return
 	 */
-	private static Set<TextAnnotation> propagateShortAnnot(String docId, String documentText,
-			TextAnnotation shortAbbrevAnnot, String conceptId) {
+	private static Set<TextAnnotation> propagateShortAnnot(String docId, String documentText, String abbrevText,
+			String conceptId) {
 		Set<TextAnnotation> propagagedAnnots = new HashSet<TextAnnotation>();
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
-		Pattern p = Pattern.compile(String.format("\\b(%s)\\b", shortAbbrevAnnot.getCoveredText()));
+		Pattern p = Pattern.compile(String.format("\\b(%s)\\b", abbrevText));
 		Matcher m = p.matcher(documentText);
 		while (m.find()) {
 			String coveredText = m.group(1);
@@ -657,114 +1057,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		return map;
 	}
 
-//	/**
-//	 * only keep descendants of chemical substance or role
-//	 * (http://purl.obolibrary.org/obo/CHEBI_59999,
-//	 * http://purl.obolibrary.org/obo/CHEBI_50906)
-//	 * 
-//	 * @param annots
-//	 * @param oboToAncestorsMap
-//	 * @return
-//	 */
-//	private static Set<TextAnnotation> removeIrrelevantChebiConcepts(Set<TextAnnotation> annots,
-//			Map<String, Set<String>> oboToAncestorsMap) {
-//		String chemicalSubstance = "CHEBI:59999";
-//		String role = "CHEBI:50906";
-//		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
-//		for (TextAnnotation annot : annots) {
-//			String id = annot.getClassMention().getMentionName();
-//			if (id.startsWith("CHEBI")) {
-//				if (oboToAncestorsMap.containsKey(id) && (oboToAncestorsMap.get(id).contains(chemicalSubstance)
-//						|| oboToAncestorsMap.get(id).contains(role))) {
-//					toKeep.add(annot);
-//				}
-//			} else {
-//				toKeep.add(annot);
-//			}
-//		}
-//
-//		return toKeep;
-//	}
-//
-//	/**
-//	 * only keep descendants of anatomical entity
-//	 * (http://purl.obolibrary.org/obo/UBERON_0001062)
-//	 * 
-//	 * @param annots
-//	 * @param oboToAncestorsMap
-//	 * @return
-//	 */
-//	private static Set<TextAnnotation> removeIrrelevantUberonConcepts(Set<TextAnnotation> annots,
-//			Map<String, Set<String>> oboToAncestorsMap) {
-//		String anatomicalEntity = "UBERON:0001062";
-//		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
-//		for (TextAnnotation annot : annots) {
-//			String id = annot.getClassMention().getMentionName();
-//			if (id.startsWith("UBERON")) {
-//				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(anatomicalEntity)) {
-//					toKeep.add(annot);
-//				}
-//			} else {
-//				toKeep.add(annot);
-//			}
-//		}
-//
-//		return toKeep;
-//	}
-//
-//	/**
-//	 * only keep descendants of Disease or Disorder
-//	 * (http://purl.obolibrary.org/obo/MONDO_0000001)
-//	 * 
-//	 * @param annots
-//	 * @param oboToAncestorsMap
-//	 * @return
-//	 */
-//	private static Set<TextAnnotation> removeIrrelevantMondoConcepts(Set<TextAnnotation> annots,
-//			Map<String, Set<String>> oboToAncestorsMap) {
-//		String diseaseOrDisorder = "MONDO:0000001";
-//		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
-//		for (TextAnnotation annot : annots) {
-//			String id = annot.getClassMention().getMentionName();
-//			if (id.startsWith("MONDO")) {
-//				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(diseaseOrDisorder)) {
-//					toKeep.add(annot);
-//				}
-//			} else {
-//				toKeep.add(annot);
-//			}
-//		}
-//
-//		return toKeep;
-//	}
-//
-//	/**
-//	 * only keep descendants of Phenotypic Abnormality
-//	 * (http://purl.obolibrary.org/obo/HP_0000118)
-//	 * 
-//	 * @param annots
-//	 * @param oboToAncestorsMap
-//	 * @return
-//	 */
-//	private static Set<TextAnnotation> removeIrrelevantHpConcepts(Set<TextAnnotation> annots,
-//			Map<String, Set<String>> oboToAncestorsMap) {
-//
-//		String phenotypicAbnormality = "HP:0000118";
-//		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
-//		for (TextAnnotation annot : annots) {
-//			String id = annot.getClassMention().getMentionName();
-//			if (id.startsWith("HP")) {
-//				if (oboToAncestorsMap.containsKey(id) && oboToAncestorsMap.get(id).contains(phenotypicAbnormality)) {
-//					toKeep.add(annot);
-//				}
-//			} else {
-//				toKeep.add(annot);
-//			}
-//		}
-//
-//		return toKeep;
-//	}
-
 	@VisibleForTesting
 	protected static Set<TextAnnotation> removeNcbiStopWords(Set<TextAnnotation> annots) {
 		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
@@ -779,21 +1071,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 		return toKeep;
 	}
-
-//	@VisibleForTesting
-//	protected static Set<TextAnnotation> excludeSelectNcbiTaxonAnnots(Set<TextAnnotation> annots) {
-//		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
-//
-//		for (TextAnnotation annot : annots) {
-//			String type = annot.getClassMention().getMentionName();
-//			if (!NCBITAXON_IDS_TO_EXCLUDE.contains(type)) {
-//				// keep annotations that are not in the exclude list
-//				toKeep.add(annot);
-//			}
-//		}
-//
-//		return toKeep;
-//	}
 
 	/**
 	 * If there are taxon annotations with the same span, keep the more general

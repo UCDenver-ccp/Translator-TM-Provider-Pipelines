@@ -168,8 +168,9 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 					// column, and the abbreviation annotation start span in the 3rd column. The
 					// augmented sentence text will appear on the second line.
 
-					sb.append(String.format("%s\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
-							sentenceAnnot.getAnnotationSpanStart(), longFormAnnot.getAnnotationSpanStart()));
+					sb.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
+							sentenceAnnot.getAnnotationSpanStart(), longFormAnnot.getAnnotationSpanStart(),
+							shortFormAnnot.getAnnotationSpanEnd()));
 					sb.append(String.format("%s\n", augmentedSentenceText));
 
 				} else {

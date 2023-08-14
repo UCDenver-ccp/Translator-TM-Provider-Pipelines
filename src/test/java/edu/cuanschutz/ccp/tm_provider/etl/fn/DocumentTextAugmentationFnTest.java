@@ -71,13 +71,13 @@ public class DocumentTextAugmentationFnTest {
 		String augmentedDocumentText = DocumentTextAugmentationFn.augmentDocumentText(documentText, abbrevAnnots,
 				sentenceAnnots);
 
-		String expectedAugSent2aMetadataLine = String.format("%s\t%d\t%d",
+		String expectedAugSent2aMetadataLine = String.format("%s\t%d\t%d\t%d",
 				DocumentTextAugmentationFn.AUGMENTED_SENTENCE_INDICATOR, sentenceAnnot2.getAnnotationSpanStart(),
-				abbrevAnnot1.getAnnotationSpanStart());
+				abbrevAnnot1.getAnnotationSpanStart(), abbrevAnnot2.getAnnotationSpanEnd());
 
-		String expectedAugSent2bMetadataLine = String.format("%s\t%d\t%d",
+		String expectedAugSent2bMetadataLine = String.format("%s\t%d\t%d\t%d",
 				DocumentTextAugmentationFn.AUGMENTED_SENTENCE_INDICATOR, sentenceAnnot2.getAnnotationSpanStart(),
-				abbrevAnnot3.getAnnotationSpanStart());
+				abbrevAnnot3.getAnnotationSpanStart(), abbrevAnnot4.getAnnotationSpanEnd());
 
 		String expectedAugSent2aText = "Enhanced S-cone syndrome        is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram (ERG) with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light.";
 		String expectedAugSent2bText = "Enhanced S-cone syndrome (ESCS) is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram       with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light.";
