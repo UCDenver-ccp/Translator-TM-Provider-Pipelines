@@ -51,16 +51,16 @@ public class ExcludeCraftNestedConcepts {
 	 * annotations have been removed.
 	 * 
 	 * @param craftBaseDir
-	 * @param noNestedBionlpBaseDir
-	 * @param originalBionlpBaseDir
+	 * @param outputBionlpBaseDir
+	 * @param inputBionlpBaseDir
 	 * @param docText
 	 * @throws IOException
 	 */
-	public static void excludeNestedAnnotations(File craftBaseDir, File originalBionlpBaseDir,
-			File noNestedBionlpBaseDir) throws IOException {
+	public static void excludeNestedAnnotations(File craftBaseDir, File inputBionlpBaseDir,
+			File outputBionlpBaseDir) throws IOException {
 		List<String> docIds = loadCraftDocumentIds(craftBaseDir);
 
-		File exclusionLogDir = new File(noNestedBionlpBaseDir.getParentFile(), "nested-exclusions");
+		File exclusionLogDir = new File(outputBionlpBaseDir.getParentFile(), "nested-exclusions");
 		if (!exclusionLogDir.exists()) {
 			exclusionLogDir.mkdirs();
 		}
@@ -70,11 +70,11 @@ public class ExcludeCraftNestedConcepts {
 			try (BufferedWriter logWriter = FileWriterUtil.initBufferedWriter(logFile)) {
 //				for (WithExtensionClasses ext : WithExtensionClasses.values()) {
 				WithExtensionClasses ext = WithExtensionClasses.NO;
-				Map<Ont, TextDocument> ontToDocMap = loadOntToDocMap(docId, craftBaseDir, originalBionlpBaseDir, ext);
+				Map<Ont, TextDocument> ontToDocMap = loadOntToDocMap(docId, craftBaseDir, inputBionlpBaseDir, ext);
 
 				filterNestedConceptAnnotations(ontToDocMap, ontToDocMap.values().iterator().next().getText(),
 						logWriter);
-				serializeAnnotationFiles(docId, ontToDocMap, noNestedBionlpBaseDir, ext);
+				serializeAnnotationFiles(docId, ontToDocMap, outputBionlpBaseDir, ext);
 //				}
 			}
 		}
@@ -426,13 +426,15 @@ public class ExcludeCraftNestedConcepts {
 
 	public static void main(String[] args) {
 		File craftBaseDir = new File("/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft.git");
-		File originalBionlpBaseDir = new File(
-				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/bionlp-original");
-		File noNestedbionlpBaseDir = new File(
-				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/bionlp-no-nested");
+		File inputBionlpBaseDir = new File(
+				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-exclude-specific");
+		File outputBionlpBaseDir = new File(
+				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested");
 
+		outputBionlpBaseDir.mkdirs();
+		
 		try {
-			excludeNestedAnnotations(craftBaseDir, originalBionlpBaseDir, noNestedbionlpBaseDir);
+			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
