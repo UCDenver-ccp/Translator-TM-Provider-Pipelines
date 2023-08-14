@@ -489,11 +489,30 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 				// if we see any of the hybrid text in the document, then we add an entry from
 				// the hybrid text to the concept id
-				// TODO:this should really be the indication to classify an abbreviation as a
-				// hybrid abbreviation
 				if (count > 0) {
 					map.put(hybridAbbrevText, conceptAnnot.getClassMention().getMentionName());
 				}
+
+				// allow for plurals
+				if (hybridAbbrevText.endsWith("s")) {
+					hybridAbbrevText = StringUtil.removeSuffix(hybridAbbrevText, "s");
+				} else {
+					hybridAbbrevText = hybridAbbrevText + "s";
+				}
+
+				p = Pattern.compile(String.format("\\b(%s)\\b", hybridAbbrevText));
+				m = p.matcher(originalDocumentText);
+				count = 0;
+				while (m.find()) {
+					count++;
+				}
+
+				// if we see any of the hybrid text in the document, then we add an entry from
+				// the hybrid text to the concept id
+				if (count > 0) {
+					map.put(hybridAbbrevText, conceptAnnot.getClassMention().getMentionName());
+				}
+
 			}
 		}
 
@@ -981,6 +1000,12 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		for (TextAnnotation annot : allAnnots) {
 			String id = annot.getClassMention().getMentionName();
 			String coveredText = annot.getCoveredText();
+			// in the hybrid abbreviation handling, we sometimes get matches that contain
+			// consecutive whitespace, e.g., from where the short form portion of an
+			// abbreviation was removed in the covered text. Here we condense consecutive
+			// spaces into a single space so that the levenshstein distance calculation
+			// below isn't adversely affected.
+			coveredText = coveredText.replaceAll("\\s+", " ");
 
 			// if the covered text is just digits and punctuation, then we will exclude it
 			if (isDigitsAndPunctOnly(coveredText)) {

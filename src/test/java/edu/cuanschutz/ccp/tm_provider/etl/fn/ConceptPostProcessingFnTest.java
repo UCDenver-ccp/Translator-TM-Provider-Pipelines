@@ -23,6 +23,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.AugmentedSe
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
@@ -1307,6 +1308,95 @@ public class ConceptPostProcessingFnTest {
 						getConceptAnnot(ConceptAnnot.ORIG_ES_CELLS_ANNOT)));
 
 		assertEquals(expectedFilteredAnnots, filteredAnnots);
+	}
+
+	private String get11597317AugmentedDocText() throws IOException {
+		return ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMID11597317.augmented.txt",
+				CharacterEncoding.UTF_8);
+	}
+
+	private List<TextAnnotation> get11597317ClAbbrevAnnots() throws IOException {
+		// @formatter:off
+				String abbreviationsBionlp = 
+						"T1\tlong_form 1999 2019\tdouble-strand breaks\n" + 
+						"T2\tshort_form 2021 2025\tDSBs\n" + 
+						"T3\tlong_form 2709 2723\tembryonic stem\n" + 
+						"T4\tshort_form 2725 2727\tES\n" + 
+						"T5\tlong_form 9980 9997\tsingle-strand DNA\n" + 
+						"T6\tshort_form 9999 10004\tssDNA\n" + 
+						"T7\tlong_form 10011 10028\tdouble-strand DNA\n" + 
+						"T8\tshort_form 10030 10035\tdsDNA\n" + 
+						"R1\thas_short_form Arg1:T3 Arg2:T4\n" + 
+						"R2\thas_short_form Arg1:T7 Arg2:T8\n" + 
+						"R3\thas_short_form Arg1:T1 Arg2:T2\n" + 
+						"R4\thas_short_form Arg1:T5 Arg2:T6\n" + 
+						"";
+				// @formatter:on
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument abbrevDoc = bionlpReader.readDocument("craft-11597317", "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(get11597317AugmentedDocText().getBytes()), CharacterEncoding.UTF_8);
+		return abbrevDoc.getAnnotations();
+	}
+
+	private List<TextAnnotation> get11597317ClOgerAnnots() throws IOException {
+		// @formatter:off
+		String abbreviationsBionlp = 
+				"T1\tCL:0002322 14704 14729\tembryonic stem      cells\n" 
+			;
+		// @formatter:on
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument td = bionlpReader.readDocument("craft-11597317", "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(get11597317AugmentedDocText().getBytes()), CharacterEncoding.UTF_8);
+		return td.getAnnotations();
+	}
+
+	@Test
+	public void testCL11597317() throws IOException {
+		String docId = "craft-11597317";
+		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		
+		String entries = "ESC|embryonic stem cell";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+		}
+
+		Collection<TextAnnotation> abbrevAnnots = get11597317ClAbbrevAnnots();
+		Set<TextAnnotation> ogerAnnots = new HashSet<TextAnnotation>(get11597317ClOgerAnnots());
+		String augmentedDocText = get11597317AugmentedDocText();
+
+		assertEquals(1, ogerAnnots.size());
+		
+		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
+				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+		String coveredText = "embryonic stem (ES) cells";
+		int start = augmentedDocText.indexOf(coveredText);
+		TextAnnotation esFullAnnot = factory.createAnnotation(start, start + coveredText.length(), coveredText,
+				"CL:0002322");
+
+		coveredText = "ES cell";
+		start = augmentedDocText.indexOf(coveredText);
+		TextAnnotation esCellAnnot = factory.createAnnotation(start, start + coveredText.length(), coveredText,
+				"CL:0002322");
+
+		coveredText = "ES cells";
+		start = augmentedDocText.indexOf(coveredText);
+		TextAnnotation esCellsAnnot = factory.createAnnotation(start, start + coveredText.length(), coveredText,
+				"CL:0002322");
+
+		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(esFullAnnot, esCellAnnot, esCellsAnnot));
+
+		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
+		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
+
 	}
 
 }
