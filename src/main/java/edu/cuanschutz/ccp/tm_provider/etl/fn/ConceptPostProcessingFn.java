@@ -200,8 +200,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			Map<String, Set<String>> idToOgerDictEntriesMap, Map<String, Set<String>> ncbitaxonPromotionMap,
 			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots) {
 
-		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
-
 		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
 		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
 		inputAnnots = removeNcbiStopWords(inputAnnots);
@@ -212,8 +210,35 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
 
 		inputAnnots = propagateHybridAbbreviations(inputAnnots, abbrevAnnots, docId, augmentedDocumentText);
+		inputAnnots = filterAnnotsInAugmentedDocSection(inputAnnots, augmentedDocumentText);
+
+		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
 		inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
+
 		return inputAnnots;
+	}
+
+	/**
+	 * Remove any concept annotation that appears in the augmented document text
+	 * section - we are cleaning up after the hybrid abbreviation handling.
+	 * 
+	 * @param inputAnnots
+	 * @param augmentedDocumentText
+	 * @return
+	 */
+	protected static Set<TextAnnotation> filterAnnotsInAugmentedDocSection(Set<TextAnnotation> inputAnnots,
+			String augmentedDocumentText) {
+		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
+
+		int augmentedSectionStart = augmentedDocumentText.indexOf(UtilityOgerDictFileFactory.DOCUMENT_END_MARKER);
+
+		for (TextAnnotation annot : inputAnnots) {
+			if (annot.getAnnotationSpanStart() >= augmentedSectionStart) {
+				outputAnnots.remove(annot);
+			}
+		}
+
+		return outputAnnots;
 	}
 
 	/**
@@ -409,14 +434,18 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 			outputAnnots.addAll(propagatedShortAnnots);
 		}
-		
-		// now look for mentions of the short form that do not also have the additional text and create new annotations for those matches
-		
+
+		// we won't remove these -- it is possible that they will appear without the
+		// hybrid extra text, so we will allow the regular abbreviation processing to
+		// make use of them. Ultimately, any overlapping annotations will be resolved
+		// when we remove nested entity annotation. So, for example, any spurious ES
+		// annotations will be removed b/c they overlap with the long "ES cells"
+		// annotations.
 
 		// remove the abbreviations that were propagated so that they won't be processed
 		// by other downstream abbreviation components
-		Collection<TextAnnotation> hybridAbbrevAnnots = newConceptToLongformAbbrevAnnotMap.values();
-		abbrevAnnots.removeAll(hybridAbbrevAnnots);
+//		Collection<TextAnnotation> hybridAbbrevAnnots = newConceptToLongformAbbrevAnnotMap.values();
+//		abbrevAnnots.removeAll(hybridAbbrevAnnots);
 
 		return outputAnnots;
 	}

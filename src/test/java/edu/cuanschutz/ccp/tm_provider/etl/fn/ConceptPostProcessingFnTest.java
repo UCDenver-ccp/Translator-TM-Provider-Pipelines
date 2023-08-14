@@ -758,16 +758,15 @@ public class ConceptPostProcessingFnTest {
 		Set<TextAnnotation> expectedUpdatedAnnots = new HashSet<TextAnnotation>(getOgerConceptAnnots());
 		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT));
 		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_ES_CELLS_ANNOT));
-		
-		// failing b/c this one is missing
-		expectedUpdatedAnnots.add(getConceptAnnot(ConceptAnnot.ORIG_ES_ANNOT));
 
 		assertEquals(expectedUpdatedAnnots, updatedAnnots);
 
 		// test that the hybrid abbreviation annotation is removed from the abbrev set
+		// -- Actually, we shouldn't remove these abbreviations as they could appear on
+		// their own without the hybrid extra text.
 		Set<TextAnnotation> longFormAnnots = ConceptPostProcessingFn.getLongFormAnnots(abbrevDoc.getAnnotations());
 		Set<TextAnnotation> expectedLongAbbrevAnnots = new HashSet<TextAnnotation>(
-				Arrays.asList(getAldh1AbbrevAnnot(), getPdAbbrevAnnot(), getAldh1a3AbbrevAnnot()));
+				Arrays.asList(getAldh1AbbrevAnnot(), getPdAbbrevAnnot(), getAldh1a3AbbrevAnnot(), getEsAbbrevAnnot()));
 
 		assertEquals(expectedLongAbbrevAnnots, longFormAnnots);
 
@@ -1287,6 +1286,27 @@ public class ConceptPostProcessingFnTest {
 //		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
 		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
 
+	}
+
+	@Test
+	public void testFilterAnnotsInAugmentedDocSection() throws IOException {
+		TextDocument abbrevDoc = getAbbreviationDoc();
+
+		Set<TextAnnotation> conceptAnnots = ConceptPostProcessingFn.propagateHybridAbbreviations(getOgerConceptAnnots(),
+				abbrevDoc.getAnnotations(), "PMID:12345", getDocTextWithAugmentedSection());
+
+		Set<TextAnnotation> filteredAnnots = ConceptPostProcessingFn.filterAnnotsInAugmentedDocSection(conceptAnnots,
+				getDocTextWithAugmentedSection());
+
+		// the ES cell and ES annotations should have been added
+		Set<TextAnnotation> expectedFilteredAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(getConceptAnnot(ConceptAnnot.ALDH1_LONG_ANNOT),
+						getConceptAnnot(ConceptAnnot.PD_LONG_ANNOT), getConceptAnnot(ConceptAnnot.ALDH1A3_LONG_ANNOT),
+						getConceptAnnot(ConceptAnnot.ALDH_LONG_ANNOT), getConceptAnnot(ConceptAnnot.ES_LONG_ANNOT),
+						getConceptAnnot(ConceptAnnot.ORIG_EMBRYONIC_STEM_CELLS_ANNOT),
+						getConceptAnnot(ConceptAnnot.ORIG_ES_CELLS_ANNOT)));
+
+		assertEquals(expectedFilteredAnnots, filteredAnnots);
 	}
 
 }
