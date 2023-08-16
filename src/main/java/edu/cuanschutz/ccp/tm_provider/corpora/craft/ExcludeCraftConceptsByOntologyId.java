@@ -2,14 +2,18 @@ package edu.cuanschutz.ccp.tm_provider.corpora.craft;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.beam.repackaged.core.org.apache.commons.compress.utils.IOUtils;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
@@ -36,16 +40,26 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
  * was designed to remove those concepts from the CRAFT gold standard so that
  * they are not part of the evaluation. The concepts that are excluded can be
  * found as part of the OGER dictionary factories.
- * 
- * We currently only exclude classes for CHEBI and MONDO
  *
  */
 public class ExcludeCraftConceptsByOntologyId {
 	private static final CharacterEncoding ENCODING = CharacterEncoding.UTF_8;
 	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
+	/**
+	 * This method does the exclusion of classes. It overwrites the bionlp files as
+	 * it updates them.
+	 * 
+	 * @param ontologyFile
+	 * @param rootIrisToExclude
+	 * @param individualIrisToExclude
+	 * @param bionlpDir
+	 * @param craftBaseDir
+	 * @throws OWLOntologyCreationException
+	 * @throws IOException
+	 */
 	public static void excludeClasses(File ontologyFile, Collection<String> rootIrisToExclude,
-			Collection<String> individualIrisToExclude, File bionlpInputDir, File bionlpOutputDir, File craftBaseDir)
+			Collection<String> individualIrisToExclude, File bionlpDir, File craftBaseDir)
 			throws OWLOntologyCreationException, IOException {
 
 		Set<OWLClass> excludedClasses = new HashSet<OWLClass>();
@@ -77,11 +91,11 @@ public class ExcludeCraftConceptsByOntologyId {
 		}
 
 		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
-		for (Iterator<File> fileIter = FileUtil.getFileIterator(bionlpInputDir, true, "bionlp"); fileIter.hasNext();) {
-			File inputBionlpFile = fileIter.next();
-			String docId = inputBionlpFile.getName().split("\\.")[0];
+		for (Iterator<File> fileIter = FileUtil.getFileIterator(bionlpDir, true, "bionlp"); fileIter.hasNext();) {
+			File bionlpFile = fileIter.next();
+			String docId = bionlpFile.getName().split("\\.")[0];
 			File txtFile = ExcludeCraftNestedConcepts.getTextFile(docId, craftBaseDir);
-			TextDocument td = bionlpReader.readDocument(docId, "craft", inputBionlpFile, txtFile, ENCODING);
+			TextDocument td = bionlpReader.readDocument(docId, "craft", bionlpFile, txtFile, ENCODING);
 
 			Set<TextAnnotation> toRemove = new HashSet<TextAnnotation>();
 			for (TextAnnotation annot : td.getAnnotations()) {
@@ -99,14 +113,11 @@ public class ExcludeCraftConceptsByOntologyId {
 				td.getAnnotations().remove(remove);
 				OWLClass cls = getOwlClass(ontUtil, remove);
 				System.out.println("Removing: " + remove.getClassMention().getMentionName() + " "
-						+ ontUtil.getLabel(cls) + " from " + inputBionlpFile.getAbsolutePath());
+						+ ontUtil.getLabel(cls) + " from " + bionlpFile.getAbsolutePath());
 			}
 
-			File outputBionlpFile = new File(bionlpOutputDir,
-					inputBionlpFile.getParentFile().getName() + "/" + inputBionlpFile.getName());
-			outputBionlpFile.getParentFile().mkdirs();
 			BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
-			bionlpWriter.serialize(td, outputBionlpFile, ENCODING);
+			bionlpWriter.serialize(td, bionlpFile, ENCODING);
 
 		}
 
@@ -121,6 +132,38 @@ public class ExcludeCraftConceptsByOntologyId {
 		}
 		OWLClass cls = ontUtil.getOWLClassFromId(iri);
 		return cls;
+	}
+
+	public static void validateExcudedClasses(File baseBionlpDirectory, File craftBaseDir) throws IOException {
+
+		List<Collection<String>> excludedClassSets = Arrays.asList(ChebiOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				ChebiOgerDictFileFactory.EXCLUDED_ROOT_CLASSES, MondoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				MondoOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
+				NcbiTaxonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				ClOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, GoBpOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				GoCcOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				GoMfOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, PrOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+				SoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, SoOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
+				UberonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, UberonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES);
+
+		for (Collection<String> excludedClassSet : excludedClassSets) {
+			BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+			for (Iterator<File> fileIter = FileUtil.getFileIterator(baseBionlpDirectory, true, "bionlp"); fileIter
+					.hasNext();) {
+				File bionlpFile = fileIter.next();
+				String docId = bionlpFile.getName().split("\\.")[0];
+				File txtFile = ExcludeCraftNestedConcepts.getTextFile(docId, craftBaseDir);
+				TextDocument td = bionlpReader.readDocument(docId, "craft", bionlpFile, txtFile, ENCODING);
+				for (TextAnnotation annot : td.getAnnotations()) {
+					String id = annot.getClassMention().getMentionName();
+					String purl = OBO_PURL + id.replace(":", "_");
+					if (excludedClassSet.contains(purl)) {
+						throw new IllegalStateException(
+								String.format("Found excluded class: %s in file %s", id, bionlpFile.getAbsolutePath()));
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -151,51 +194,61 @@ public class ExcludeCraftConceptsByOntologyId {
 
 		try {
 
+			// the first step is to create the directory structure, and populated it with
+			// bionlp files from the inputBionlp directory
+			for (Iterator<File> fileIter = FileUtil.getFileIterator(inputBionlpBaseDir, true, "bionlp"); fileIter
+					.hasNext();) {
+				File bionlpFile = fileIter.next();
+				File outputBionlpFile = new File(outputBionlpBaseDir,
+						bionlpFile.getParentFile().getName() + "/" + bionlpFile.getName());
+				outputBionlpFile.getParentFile().mkdirs();
+				try (FileOutputStream outputStream = new FileOutputStream(outputBionlpFile)) {
+					IOUtils.copy(bionlpFile, outputStream);
+				}
+
+			}
+
 			System.out.println("CHEBI...");
 			excludeClasses(chebiOwlFile, ChebiOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
-					ChebiOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, inputBionlpBaseDir, outputBionlpBaseDir,
-					craftBaseDir);
+					ChebiOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("MONDO...");
 			excludeClasses(mondoOwlFile, MondoOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
-					MondoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, inputBionlpBaseDir, outputBionlpBaseDir,
-					craftBaseDir);
+					MondoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("NCBITaxon...");
 			excludeClasses(ncbiTaxonOwlFile, NcbiTaxonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
-					NcbiTaxonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, inputBionlpBaseDir, outputBionlpBaseDir,
-					craftBaseDir);
+					NcbiTaxonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("CL...");
 			excludeClasses(clOwlFile, Collections.emptyList(), ClOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					inputBionlpBaseDir, outputBionlpBaseDir, craftBaseDir);
+					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("GO_BP...");
 			excludeClasses(goOwlFile, Collections.emptyList(), GoBpOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					inputBionlpBaseDir, outputBionlpBaseDir, craftBaseDir);
+					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("GO_CC...");
 			excludeClasses(goOwlFile, Collections.emptyList(), GoCcOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					inputBionlpBaseDir, outputBionlpBaseDir, craftBaseDir);
+					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("GO_MF...");
 			excludeClasses(goOwlFile, Collections.emptyList(), GoMfOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					inputBionlpBaseDir, outputBionlpBaseDir, craftBaseDir);
+					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("PR...");
 			excludeClasses(prOwlFile, Collections.emptyList(), PrOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					inputBionlpBaseDir, outputBionlpBaseDir, craftBaseDir);
+					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("SO...");
 			excludeClasses(soOwlFile, SoOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
-					SoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, inputBionlpBaseDir, outputBionlpBaseDir,
-					craftBaseDir);
+					SoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("UBERON...");
 			excludeClasses(uberonOwlFile, UberonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
-					UberonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, inputBionlpBaseDir, outputBionlpBaseDir,
-					craftBaseDir);
+					UberonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
+			validateExcudedClasses(outputBionlpBaseDir, craftBaseDir);
 		} catch (OWLOntologyCreationException | IOException e) {
 			e.printStackTrace();
 		}

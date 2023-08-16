@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +36,7 @@ public class ExcludeCraftNestedConcepts {
 	// there are too few MOP annotations
 	public enum Ont {
 		CHEBI, CL, GO_BP, GO_CC, GO_MF, MONDO, // MOP,
-		NCBITaxon, PR, SO, UBERON
+		NCBITaxon, PR, SO, UBERON, DRUGBANK, HP, SNOMEDCT
 	}
 
 	public enum WithExtensionClasses {
@@ -56,8 +57,8 @@ public class ExcludeCraftNestedConcepts {
 	 * @param docText
 	 * @throws IOException
 	 */
-	public static void excludeNestedAnnotations(File craftBaseDir, File inputBionlpBaseDir,
-			File outputBionlpBaseDir) throws IOException {
+	public static void excludeNestedAnnotations(File craftBaseDir, File inputBionlpBaseDir, File outputBionlpBaseDir)
+			throws IOException {
 		List<String> docIds = loadCraftDocumentIds(craftBaseDir);
 
 		File exclusionLogDir = new File(outputBionlpBaseDir.getParentFile(), "nested-exclusions");
@@ -205,16 +206,23 @@ public class ExcludeCraftNestedConcepts {
 			for (TextAnnotation annot2 : overlappingSet) {
 				if (!annot1.equals(annot2)) {
 					if (annot1.getAggregateSpan().equals(annot2.getAggregateSpan())) {
-						// TODO: If the annotations are to the same span, but from two different
-						// ontologies then we pick one randomly for now; this is not ideal - but to make
-						// it deterministic we will select the one with the concept id that is
-						// alphabetically last -- this is to get PR instead of GO_CC. The ontology is
-						// the first part of the annotation ID, so we can used that as a proxy here.
-						if (annot1.getAnnotationID().compareTo(annot2.getAnnotationID()) < 0) {
-							nested.add(annot1);
-						} else {
-							nested.add(annot2);
-						}
+
+						// keep them both - if we want to consolidate, do that explicitly in a separate
+						// step similar to how we consolidate MONDO/HP concepts.
+
+//						// TODO: If the annotations are to the same span, but from two different
+//						// ontologies then we pick one randomly for now; this is not ideal - but to make
+//						// it deterministic we will select the one with the concept id that is
+//						// alphabetically last -- this is to get PR instead of GO_CC. The ontology is
+//						// the first part of the annotation ID, so we can used that as a proxy here.
+//						Map<String, TextAnnotation> map = new HashMap<String, TextAnnotation>();
+//						String id1 = annot1.getClassMention().getMentionName();
+//						String id2 = annot2.getClassMention().getMentionName();
+//						map.put(id1, annot1);
+//						map.put(id2, annot2);
+//						List<String> ids = Arrays.asList(id1, id2);
+//						Collections.sort(ids);
+//						nested.add(map.get(ids.get(1)));
 					} else if (encompasses(annot1, annot2)) {
 						nested.add(annot2);
 					} else if (encompasses(annot2, annot1)) {
@@ -235,6 +243,7 @@ public class ExcludeCraftNestedConcepts {
 							discard = annot1;
 						}
 
+						nested.add(discard);
 //						System.out.println(String.format("keeping: %s [%d..%d] %s instead of: %s [%d..%d] %s",
 //								keep.getCoveredText(), keep.getAnnotationSpanStart(), keep.getAnnotationSpanEnd(),
 //								keep.getClassMention().getMentionName(), discard.getCoveredText(),
@@ -260,8 +269,8 @@ public class ExcludeCraftNestedConcepts {
 				errorMsg.append(String.format("OVER:   %s\n", annot.getSingleLineRepresentation()));
 			}
 
-			throw new IllegalStateException(
-					"Not sure how to handle non-encompassing overlap...\n" + errorMsg.toString());
+//			throw new IllegalStateException(
+//					"Not sure how to handle non-encompassing overlap...\n" + errorMsg.toString());
 		}
 
 		overlappingSet.removeAll(nested);
@@ -433,8 +442,11 @@ public class ExcludeCraftNestedConcepts {
 
 		outputBionlpBaseDir.mkdirs();
 		
+		
+
 		try {
 			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir);
+			ExcludeCraftConceptsByOntologyId.validateExcudedClasses(outputBionlpBaseDir, craftBaseDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
