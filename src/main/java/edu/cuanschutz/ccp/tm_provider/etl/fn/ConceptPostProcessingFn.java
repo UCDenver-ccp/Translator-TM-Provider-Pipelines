@@ -206,26 +206,77 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots)
 			throws FileNotFoundException, IOException {
 
+//		System.out.println(String.format("1 annot count: %d", inputAnnots.size()));
 		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
+//		System.out.println(String.format("2 annot count: %d", inputAnnots.size()));
 		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
+//		System.out.println(String.format("3 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeNcbiStopWords(inputAnnots);
+//		System.out.println(String.format("4 annot count: %d", inputAnnots.size()));		
+		inputAnnots = removeAnythingWithOddBracketCount(inputAnnots);
+//		System.out.println(String.format("4 annot count: %d", inputAnnots.size()));
 		inputAnnots = resolveHpMondoOverlaps(inputAnnots);
+//		System.out.println(String.format("5 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeIdToTextExclusionPairs(inputAnnots);
+//		System.out.println(String.format("6 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
+//		System.out.println(String.format("7 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeMatchesLessThan(inputAnnots, 4);
+//		System.out.println(String.format("8 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
+//		System.out.println(String.format("9 annot count: %d", inputAnnots.size()));
 
 		inputAnnots = propagateHybridAbbreviations(inputAnnots, abbrevAnnots, docId, augmentedDocumentText);
+//		System.out.println(String.format("10 annot count: %d", inputAnnots.size()));
 		inputAnnots = filterAnnotsInAugmentedDocSection(inputAnnots, augmentedDocumentText);
+//		System.out.println(String.format("11 annot count: %d", inputAnnots.size()));
 
 		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
 		inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
+//		System.out.println(String.format("12 annot count: %d", inputAnnots.size()));
 
 		inputAnnots = removeNestedConceptAnnotations(inputAnnots);
+//		System.out.println(String.format("13 annot count: %d", inputAnnots.size()));
 
 //		inputAnnots = removeAnnotationsByDocumentZone(inputAnnots, zoneAnnots);
 
 		return inputAnnots;
+	}
+
+	/**
+	 * It doesn't happen often, but there was at least one instance in the CRAFT
+	 * training set: 14611657.concept_cs:T76 PR:000013158 13789 13793 PP{V
+	 * 
+	 * @param inputAnnots
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static Set<TextAnnotation> removeAnythingWithOddBracketCount(Set<TextAnnotation> inputAnnots) {
+		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
+		for (TextAnnotation annot : inputAnnots) {
+			String ct = annot.getCoveredText();
+			// if there are any non-matching brackets, then we will exclude
+			if (ct.contains("{") || ct.contains("}")) {
+				if (countChar(ct, '{') - countChar(ct, '}') % 2 != 0) {
+					outputAnnots.remove(annot);
+				}
+			}
+			if (ct.contains("[") || ct.contains("]")) {
+				if (countChar(ct, '[') - countChar(ct, ']') % 2 != 0) {
+					outputAnnots.remove(annot);
+				}
+			}
+			if (ct.contains("(") || ct.contains(")")) {
+				if (countChar(ct, '(') - countChar(ct, ')') % 2 != 0) {
+					outputAnnots.remove(annot);
+				}
+			}
+		}
+		return outputAnnots;
+	}
+
+	private static long countChar(String s, char c) {
+		return s.chars().filter(ch -> ch == c).count();
 	}
 
 	/**
@@ -244,6 +295,13 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 		Set<TextAnnotation> nestedAnnotations = ExcludeCraftNestedConcepts
 				.identifyNestedAnnotations(new ArrayList<TextAnnotation>(inputAnnots), null);
+
+//		craft-11597317.
+//		T7	GO:0000725 428 450	recombinational repair
+//		T8	SNOMEDCT:4365001 444 450	repair
+//		
+//		T12	GO:0000725 428 450	recombinational repair
+//		T13	SNOMEDCT:4365001 444 450	repair
 
 		outputAnnots.removeAll(nestedAnnotations);
 

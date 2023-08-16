@@ -992,8 +992,9 @@ public class ConceptPostProcessingFnTest {
 		12345	protein	286	289	ERG	PR:000007173|PR:P11308	PR:000007173		S1	PR
 	 * 
 	 * </pre>
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
+	 * 
+	 * @throws IOException
+	 * @throws FileNotFoundException
 	 */
 	@Test
 	public void testPostProcess() throws FileNotFoundException, IOException {
@@ -1113,19 +1114,18 @@ public class ConceptPostProcessingFnTest {
 
 		TextAnnotation annot16 = factory.createAnnotation(26, 30, "ESCS", "MONDO:0100288");
 
-		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(
-				Arrays.asList(annot1, 
-						// annot2, - excluded b/c it's nested in annot1 
-						annot16, annot4, annot5,
-						// annot6, - excluded b/c it's an HP annot that has the exact same span as a
-						// MONDO
-						annot7, 
-						// annot8, - excluded b/c it's nested in annot7
-						// annot9, annot10, - excluded because they are a short form of an abbreviation
-						annot11, annot12
-				// , annot13 - excluded b/c sensitivity is not close enough to sensitization,
-				// annot14, annot15 - excluded because they are a short form of an abbreviation
-				));
+		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(Arrays.asList(annot1,
+				// annot2, - excluded b/c it's nested in annot1
+				annot16, annot4, annot5,
+				// annot6, - excluded b/c it's an HP annot that has the exact same span as a
+				// MONDO
+				annot7,
+				// annot8, - excluded b/c it's nested in annot7
+				// annot9, annot10, - excluded because they are a short form of an abbreviation
+				annot11, annot12
+		// , annot13 - excluded b/c sensitivity is not close enough to sensitization,
+		// annot14, annot15 - excluded because they are a short form of an abbreviation
+		));
 
 //		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
 		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
@@ -1350,11 +1350,18 @@ public class ConceptPostProcessingFnTest {
 	}
 
 	private List<TextAnnotation> get11597317ClOgerAnnots() throws IOException {
+//	  0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123
+//		Finally, genetic measurements of recombination frequency have shown that Brca1-/- embryonic
+//		sentence starts at 14622
+//		14712-14622 + 2627 = 
 		// @formatter:off
 		String abbreviationsBionlp = 
-				"T1\tCL:0002322 14704 14729\tembryonic stem      cells\n" 
+				"T1\tUBERON:1 2717 2721\tstem\n" +
+				"T2\tCL:0002322 14704 14729\tembryonic stem      cells\n" 
 			;
 		// @formatter:on
+
+		System.out.println(String.format("STEM STR: %s", get11597317AugmentedDocText().substring(2719, 2723)));
 
 		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
 		TextDocument td = bionlpReader.readDocument("craft-11597317", "example",
@@ -1369,18 +1376,22 @@ public class ConceptPostProcessingFnTest {
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
-		
+
 		String entries = "ESC|embryonic stem cell";
 		for (String s : entries.split("\\|")) {
 			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+		}
+		entries = "stem";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
 		}
 
 		Collection<TextAnnotation> abbrevAnnots = get11597317ClAbbrevAnnots();
 		Set<TextAnnotation> ogerAnnots = new HashSet<TextAnnotation>(get11597317ClOgerAnnots());
 		String augmentedDocText = get11597317AugmentedDocText();
 
-		assertEquals(1, ogerAnnots.size());
-		
+		assertEquals(2, ogerAnnots.size());
+
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
 				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
 
@@ -1406,6 +1417,116 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
 		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
 
+	}
+
+	@Test
+	public void testHandlingOfExactOverlapOfConcepts() throws IOException {
+		String docId = "craft-11597317";
+		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+
+		String entries = "embryonic stem cell";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+		}
+		entries = "embryonic stem cell";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
+		}
+
+		String abbreviationsBionlp = "T1\tUBERON:1 2709 2734\tembryonic stem      cells\n"
+				+ "T2\tCL:0002322 2709 2734\tembryonic stem      cells\n";
+		System.out.println(String.format("STEM STR: %s", get11597317AugmentedDocText().substring(2709, 2734)));
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument td = bionlpReader.readDocument("craft-11597317", "example",
+				new ByteArrayInputStream(abbreviationsBionlp.getBytes()),
+				new ByteArrayInputStream(get11597317AugmentedDocText().getBytes()), CharacterEncoding.UTF_8);
+
+		Collection<TextAnnotation> abbrevAnnots = new HashSet<TextAnnotation>();
+		Set<TextAnnotation> ogerAnnots = new HashSet<TextAnnotation>(td.getAnnotations());
+		String augmentedDocText = get11597317AugmentedDocText();
+
+		assertEquals(2, ogerAnnots.size());
+
+		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
+				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+
+		// the same two annotations should still be present
+		assertEquals(2, postProcessedAnnots.size());
+
+		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(td.getAnnotations());
+
+		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
+		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
+
+	}
+
+	@Test
+	public void testHandlingOfPartialOverlapOfConcepts() throws IOException {
+		String docId = "craft-11597317";
+		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+
+		String entries = "embryonic stem cell";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+		}
+		entries = "Brca1-/- embryonic stem";
+		for (String s : entries.split("\\|")) {
+			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
+		}
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+		TextAnnotation clAnnot = factory.createAnnotation(2709, 2734, "embryonic stem      cells", "CL:0002322");
+		TextAnnotation uberonAnnot = factory.createAnnotation(2700, 2721, "Brca1-/- embryonic stem", "UBERON:1");
+
+		Collection<TextAnnotation> abbrevAnnots = new HashSet<TextAnnotation>();
+		Set<TextAnnotation> ogerAnnots = new HashSet<TextAnnotation>(Arrays.asList(clAnnot, uberonAnnot));
+		String augmentedDocText = get11597317AugmentedDocText();
+
+		assertEquals(2, ogerAnnots.size());
+
+		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
+				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+
+		// the UBERON concept should remain b/c it appears first in the document (this
+		// is an arbitrary inclusion criteria that is being used)
+		assertEquals(1, postProcessedAnnots.size());
+
+		Set<TextAnnotation> expectedPostProcessedAnnots = new HashSet<TextAnnotation>(Arrays.asList(uberonAnnot));
+
+		assertEquals(expectedPostProcessedAnnots.size(), postProcessedAnnots.size());
+		assertEquals(expectedPostProcessedAnnots, postProcessedAnnots);
+
+	}
+
+	@Test
+	public void testRemoveAnythingWithASingleBracket() {
+
+		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
+		TextAnnotation clAnnot = factory.createAnnotation(2709, 2734, "embryonic stem      cells", "CL:0002322");
+		TextAnnotation uberonAnnot = factory.createAnnotation(2700, 2721, "Brca1-/- embryonic stem", "UBERON:1");
+		TextAnnotation prAnnot1 = factory.createAnnotation(13789, 13793, "PP{V", "PR:000013158");
+		TextAnnotation prAnnot2 = factory.createAnnotation(3789, 3793, "PP}V", "PR:000013158");
+		TextAnnotation prAnnot3 = factory.createAnnotation(789, 793, "PP]V", "PR:000013158");
+		TextAnnotation prAnnot4 = factory.createAnnotation(89, 93, "PP[V", "PR:000013158");
+		TextAnnotation prAnnot5 = factory.createAnnotation(113789, 113793, "PP(V", "PR:000013158");
+		TextAnnotation prAnnot6 = factory.createAnnotation(213789, 213793, "PP)V", "PR:000013158");
+		TextAnnotation prAnnot7 = factory.createAnnotation(313789, 313793, "PP{V}", "PR:000013158");
+		TextAnnotation prAnnot8 = factory.createAnnotation(413789, 413793, "PP(V)", "PR:000013158");
+
+		Set<TextAnnotation> outputAnnots = ConceptPostProcessingFn
+				.removeAnythingWithOddBracketCount(new HashSet<TextAnnotation>(Arrays.asList(clAnnot, uberonAnnot,
+						prAnnot1, prAnnot2, prAnnot3, prAnnot4, prAnnot5, prAnnot6, prAnnot7, prAnnot8)));
+
+		Set<TextAnnotation> expectedOutputAnnots = new HashSet<TextAnnotation>(
+				Arrays.asList(clAnnot, uberonAnnot, prAnnot7, prAnnot8));
+
+		assertEquals(expectedOutputAnnots.size(), outputAnnots.size());
+		assertEquals(expectedOutputAnnots, outputAnnots);
 	}
 
 }
