@@ -27,6 +27,7 @@ public class HpOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
 			Arrays.asList(OBO_PURL + "HP_0001548" // overgrowth
+
 			));
 
 	@Override
@@ -46,6 +47,9 @@ public class HpOgerDictFileFactory extends OgerDictFileFactory {
 
 		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
 
+		map.put(OBO_PURL + "HP_0030212", new HashSet<String>(Arrays.asList("Collecting")));
+		map.put(OBO_PURL + "HP_0000733", new HashSet<String>(Arrays.asList("Stereotyped")));
+
 		Set<String> updatedSyns = new HashSet<String>(syns);
 
 		if (map.containsKey(iri)) {
@@ -54,4 +58,5 @@ public class HpOgerDictFileFactory extends OgerDictFileFactory {
 
 		return updatedSyns;
 	}
+
 }

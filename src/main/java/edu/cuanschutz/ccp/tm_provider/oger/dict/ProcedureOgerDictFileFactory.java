@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -28,11 +29,13 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String PROCEDURE_SNOMED_ID = "71388002";
 
+	private static final List<String> EXCLUDED_ROOT_CLASSES = Arrays.asList();//"54709006" // body measurement (procedure)
+	
 	private final Set<String> procedureIdentifiers;
 
 	public ProcedureOgerDictFileFactory(File snomedTransitiveSubclassRelationsFile)
 			throws FileNotFoundException, IOException {
-		super("procedure", "SNOMEDCT", SynonymSelection.EXACT_ONLY, null);
+		super("procedure", "SNOMEDCT", SynonymSelection.EXACT_ONLY, EXCLUDED_ROOT_CLASSES);
 		procedureIdentifiers = loadIdentifiers(snomedTransitiveSubclassRelationsFile);
 	}
 
@@ -158,6 +161,104 @@ public class ProcedureOgerDictFileFactory extends OgerDictFileFactory {
 			"10012005", // expression
 			"14788002" // sensitivity
 	));
+	
+	
+//	snomedct:119265000 assisting
+//	   1 snomedct:119265000 assistant
+//	   1 snomedct:118629009 trains
+//	   1 snomedct:118629009 train
+//	   snomedct:119271006 obliterated
+//	   snomedct:122467006 fitness
+//	   1 snomedct:122465003 reconstructed
+//	   1 snomedct:122464004 augmented
+//	   snomedct:122869004 measurment
+//	   1 snomedct:122869004 measurement procedure
+//	   1 snomedct:122546009 stretching
+//	   1 snomedct:122502001 anchors
+//	   1 snomedct:122502001 anchor
+//	   snomedct:14509009 eviscerated
+//	   1 snomedct:1431002 attachment
+//	   1 snomedct:1431002 attach
+//	   1 snomedct:19207007 manipulate
+//	   1 snomedct:18629005 medical treatments
+//	   1 snomedct:183376001 mobilized
+//	   1 snomedct:183376001 mobilize
+//	   1 snomedct:182832007 medical management
+//	   1 snomedct:169443000 preventive
+//	   1 snomedct:223482009 discuss
+//	   1 snomedct:223458004 reporting
+//	   1 snomedct:21147007 clip
+//	   1 snomedct:225313009 supervision
+//	   1 snomedct:225307000 specialization
+//	   1 snomedct:225414002 generally observed
+//	   1 snomedct:243115004 family support
+//	   1 snomedct:233546007 needles
+//	   1 snomedct:231097002 cups
+//	   1 snomedct:229824005 positivity
+//	   1 snomedct:229494005 friction
+//	   1 snomedct:229169001 running in circles
+//	   snomedct:250194009 cells, phenotypically
+//	   snomedct:252628008 platform test
+//	   snomedct:2677003 stripping
+//	   snomedct:252886007 refractive
+//	   1 snomedct:29513000 syringes
+//	   1 snomedct:28485005 reinforcing
+//	   1 snomedct:28485005 reinforces
+//	   snomedct:29703006 complementation observed
+//	   snomedct:304383000 total proteins
+//	   1 snomedct:313556000 serum free fatty acid levels
+//	   1 snomedct:313402005 plasma amino acids levels
+//	   snomedct:33230000 activity test
+//	   1 snomedct:32750006 inspected	
+//	   snomedct:35860002 pinned
+//	   1 snomedct:35860002 pin
+//	   1 snomedct:35860002 nails
+//	   1 snomedct:33879002 inoculating
+//	   1 snomedct:33747003 blood sugar levels
+//	   snomedct:363778006 phenotypical
+//	   snomedct:387713003 operation
+//	   1 snomedct:386639001 aborting
+//	   1 snomedct:386476006 touch
+//	   1 snomedct:386453008 support group
+//	   1 snomedct:386053000 assessments
+//	   1 snomedct:373784005 medical care
+//	   1 snomedct:39250009 enucleating
+//	   1 snomedct:392230005 needles
+//	   snomedct:39857003 weigh
+//	   snomedct:410617001 adjustable
+//	   1 snomedct:410614008 constructive
+//	   1 snomedct:410538000 scheduled
+//	   1 snomedct:410025003 clamped
+//	   snomedct:41902000 cross_match
+//	   snomedct:4365001 repaired
+//	   snomedct:444635008 digitally
+//	   snomedct:67191004 changes in bone length
+//	   snomedct:781087000 medical care
+//	   snomedct:8378006 trimming
+//	   snomedct:91400004 bisection
+//	   2 snomedct:118629009 instructs
+//	   2 snomedct:118629009 instruction
+//	   2 snomedct:115979005 stabilizes
+//	   2 snomedct:115956009 releases
+//	   2 snomedct:122869004 measurable
+//	   2 snomedct:122545008 stimulator
+//	   2 snomedct:122502001 anchored
+//	   2 snomedct:122467006 fits
+//	   2 snomedct:122464004 augment
+//	   snomedct:14509009 evidently
+//	   2 snomedct:231287002 infiltrate
+//	   2 snomedct:229824005 positionally
+//	   2 snomedct:229057006 meets
+//	   2 snomedct:21147007 clips
+//	   2 snomedct:21147007 clipping
+//	   2 snomedct:19207007 manipulating
+//	   2 snomedct:257941004 tubule
+//	   2 snomedct:252886007 refraction
+	   
+	   
+	   
+	
+	
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {

@@ -68,7 +68,8 @@ public class NcbiTaxonOgerDictFileFactory extends OgerDictFileFactory {
 		map.put(OBO_PURL + "NCBITaxon_37965", new HashSet<String>(Arrays.asList("hybrid")));
 		map.put(OBO_PURL + "NCBITaxon_117893", new HashSet<String>(Arrays.asList("rays")));
 		map.put(OBO_PURL + "NCBITaxon_1925465", new HashSet<String>(Arrays.asList("major")));
-
+		map.put(OBO_PURL + "NCBITaxon_189528", new HashSet<String>(Arrays.asList("Indicator")));
+		
 		Set<String> updatedSyns = new HashSet<String>(syns);
 
 		if (map.containsKey(iri)) {

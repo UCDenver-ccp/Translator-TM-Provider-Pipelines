@@ -13,13 +13,26 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 
 	private static final String CELLULAR_COMPONENT = "http://purl.obolibrary.org/obo/GO_0005575";
 	private static final String BIOLOGICAL_PROCESS = "http://purl.obolibrary.org/obo/GO_0008150";
+	private static final String OBO_PURL = "http://purl.obolibrary.org/obo/";
 
 	public GoMfOgerDictFileFactory() {
 		super("molecular_function", "GO_MF", SynonymSelection.EXACT_ONLY,
 				Arrays.asList(CELLULAR_COMPONENT, BIOLOGICAL_PROCESS));
 	}
 
-	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
+	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
+			Arrays.asList(OBO_PURL + "GO_0141047", // tag
+					OBO_PURL + "GO_0004806", // tag
+					OBO_PURL + "GO_0015267", // channel
+					OBO_PURL + "GO_0048018", // signaling molecules
+					OBO_PURL + "GO_0008158", // patched
+					OBO_PURL + "GO_0022804", // pump
+					OBO_PURL + "GO_0022804", // carriers
+					OBO_PURL + "GO_0022836", // gated channel
+					OBO_PURL + "GO_0070026", // no binding
+					OBO_PURL + "GO_0050998", // no binding
+					OBO_PURL + "GO_0031386" // protein -tagged
+			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {

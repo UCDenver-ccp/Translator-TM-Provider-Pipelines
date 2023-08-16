@@ -650,6 +650,7 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 		map.put(OBO_PURL + "PR_Q2PRK7", new HashSet<String>(Arrays.asList("odorant receptor")));
 		map.put(OBO_PURL + "PR_000005419", new HashSet<String>(Arrays.asList("predicted protein")));
 		map.put(OBO_PURL + "PR_Q9UQG0", new HashSet<String>(Arrays.asList("polymerase")));
+		map.put(OBO_PURL + "PR_000001308", new HashSet<String>(Arrays.asList("BLAST")));
 
 		Set<String> updatedSyns = new HashSet<String>(syns);
 

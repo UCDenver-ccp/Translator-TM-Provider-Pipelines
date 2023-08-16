@@ -1170,37 +1170,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		return toKeep;
 	}
 
-	/**
-	 * @return a map where the key is the concept curie and the set contains
-	 *         instances of text that indicate an incorrect OGER identification of
-	 *         the concept - typically this is due to a match resulting from
-	 *         normalization of the original label
-	 */
-	private static Map<String, Set<String>> initIdToTextExclusionMap() {
-		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
-
-		CollectionsUtil.addToOne2ManyUniqueMap("CL:0000540", "neuronal", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:0043473", "pigmented", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:0007349", "cellular", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:0005694", "chromosomal", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000062", "organisms", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "central", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "centrally", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001451", "central", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001427", "radial", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "centrally", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001451", "centrally", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001427", "radially", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000094", "membrane organization", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000160", "intestinal", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("HP:0030212", "collecting", map);
-		CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0005047", "sterile", map);
-
-		return map;
-	}
-
 	@VisibleForTesting
 	protected static Set<TextAnnotation> removeNcbiStopWords(Set<TextAnnotation> annots) {
 		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
@@ -1350,6 +1319,42 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 		return toKeep;
 
+	}
+
+	/**
+	 * @return a map where the key is the concept curie and the set contains
+	 *         instances of text that indicate an incorrect OGER identification of
+	 *         the concept - typically this is due to a match resulting from
+	 *         normalization of the original label
+	 */
+	private static Map<String, Set<String>> initIdToTextExclusionMap() {
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+
+		CollectionsUtil.addToOne2ManyUniqueMap("CL:0000540", "neuronal", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0043473", "pigmented", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0007349", "cellular", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0005694", "chromosomal", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000062", "organisms", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:3010060", "centrally", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001451", "central", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001427", "radial", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0012131", "centrally", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001451", "centrally", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0001427", "radially", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000094", "membrane organization", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("UBERON:0000160", "intestinal", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("HP:0030212", "collecting", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0005047", "sterile", map);
+
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0051179", "local", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0008152", "metabolic", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0060073", "urine", map);
+		CollectionsUtil.addToOne2ManyUniqueMap("GO:0007349", "cellular", map);
+
+		return map;
 	}
 
 }
