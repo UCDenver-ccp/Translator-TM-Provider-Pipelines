@@ -403,28 +403,32 @@ public class CraftDatastoreRetriever {
 			String id = annot.getClassMention().getMentionName();
 			String prefix = id.split(":")[0];
 			Ont ont = null;
-			// TODO: starts with a number check is temporary because the SNOMED prefix was
-			// left off by accident
-			if (id.startsWith("DRUGBANK") || id.startsWith("HP") || id.startsWith("SNOMEDCT")
-					|| StringUtil.startsWithRegex(id, "\\d")) {
-				continue;
-			}
+//			// TODO: starts with a number check is temporary because the SNOMED prefix was
+//			// left off by accident
+//			if (id.startsWith("DRUGBANK") || id.startsWith("HP") || id.startsWith("SNOMEDCT")
+//					|| StringUtil.startsWithRegex(id, "\\d")) {
+//				continue;
+//			}
 
 			if (prefix.equals("GO")) {
 				ont = go2ontMap.get(id);
 			} else {
-				ont = Ont.valueOf(prefix);
+				try {
+					ont = Ont.valueOf(prefix);
+				} catch (IllegalArgumentException e) {
+					ont = null;
+				}
 			}
-			if (ont == null) {
+			if (ont == null & !prefix.equals("TMKPUTIL")) {
 				throw new IllegalArgumentException("Null Ont for " + id);
-			}
-
-			if (ontToDocMap.containsKey(ont)) {
-				ontToDocMap.get(ont).addAnnotation(annot);
-			} else {
-				TextDocument ontTd = new TextDocument(docId, "craft", td.getText());
-				ontTd.addAnnotation(annot);
-				ontToDocMap.put(ont, ontTd);
+			} else if (!prefix.equals("TMKPUTIL")) {
+				if (ontToDocMap.containsKey(ont)) {
+					ontToDocMap.get(ont).addAnnotation(annot);
+				} else {
+					TextDocument ontTd = new TextDocument(docId, "craft", td.getText());
+					ontTd.addAnnotation(annot);
+					ontToDocMap.put(ont, ontTd);
+				}
 			}
 		}
 
