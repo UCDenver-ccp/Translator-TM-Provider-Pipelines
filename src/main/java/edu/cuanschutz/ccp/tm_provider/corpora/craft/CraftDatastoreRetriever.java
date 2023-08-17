@@ -238,9 +238,9 @@ public class CraftDatastoreRetriever {
 				throw new IllegalArgumentException("should not be here");
 			}
 
-			Map<Ont, TextDocument> ontToDocMap = initOntToDocMap(docId, txtFile);
+			Map<Ont, TextDocument> ontToDocMap = initOntToDocMap(docId, txtFile, target);
 			for (File file : annotFiles) {
-				populateOntToDocMap(docId, file, txtFile, ontToDocMap, goCurieToOntMap);
+				populateOntToDocMap(docId, file, txtFile, ontToDocMap, goCurieToOntMap, target);
 			}
 
 			serializeBionlpFiles(docId, ontToDocMap, dir);
@@ -286,12 +286,20 @@ public class CraftDatastoreRetriever {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private static Map<Ont, TextDocument> initOntToDocMap(String docId, File txtFile)
+	private static Map<Ont, TextDocument> initOntToDocMap(String docId, File txtFile, Target target)
 			throws FileNotFoundException, IOException {
 		Map<Ont, TextDocument> ontToDocMap = new HashMap<Ont, TextDocument>();
 
 		String docText = IOUtils.toString(new FileInputStream(txtFile), ENCODING.getCharacterSetName());
 		for (Ont ont : Ont.values()) {
+			if (target == Target.PP || target == Target.PP_CRF) {
+				if (ont == Ont.DRUGBANK || ont == Ont.SNOMEDCT || ont == Ont.HP) {
+					// the eval platform balks when there are non CRAFT ontology directories, so
+					// when we download the PP files, we skip these ontologies. When we download the
+					// OGER files, we won't skip so that we can view all annotations.
+					continue;
+				}
+			}
 			TextDocument td = new TextDocument(docId, "craft", docText);
 			td.setAnnotations(new ArrayList<TextAnnotation>());
 			ontToDocMap.put(ont, td);
@@ -394,7 +402,7 @@ public class CraftDatastoreRetriever {
 	}
 
 	private static void populateOntToDocMap(String docId, File annotFile, File txtFile,
-			Map<Ont, TextDocument> ontToDocMap, Map<String, Ont> go2ontMap) throws IOException {
+			Map<Ont, TextDocument> ontToDocMap, Map<String, Ont> go2ontMap, Target target) throws IOException {
 		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
 
 		TextDocument td = bionlpReader.readDocument(docId, "craft", annotFile, txtFile, ENCODING);
@@ -419,6 +427,16 @@ public class CraftDatastoreRetriever {
 					ont = null;
 				}
 			}
+
+			if (target == Target.PP || target == Target.PP_CRF) {
+				if (ont == Ont.DRUGBANK || ont == Ont.SNOMEDCT || ont == Ont.HP) {
+					// the eval platform balks when there are non CRAFT ontology directories, so
+					// when we download the PP files, we skip these ontologies. When we download the
+					// OGER files, we won't skip so that we can view all annotations.
+					continue;
+				}
+			}
+
 			if (ont == null & !prefix.equals("TMKPUTIL")) {
 				throw new IllegalArgumentException("Null Ont for " + id);
 			} else if (!prefix.equals("TMKPUTIL")) {
