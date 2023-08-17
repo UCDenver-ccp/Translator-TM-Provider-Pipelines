@@ -10,6 +10,7 @@ import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
 import edu.ucdenver.ccp.common.file.FileWriterUtil;
+import edu.ucdenver.ccp.common.string.StringUtil;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugBankDrugRecord.Synonym;
 import edu.ucdenver.ccp.datasource.fileparsers.drugbank.DrugbankXmlFileRecordReader;
@@ -30,6 +31,8 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 	private static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList("DRUGBANK:DB10415", // Rabbit
 			"DRUGBANK:DB10633", // Fig
 			"DRUGBANK:DB14245", // Snail
+			"DRUGBANK:DB14244", // Snail
+			"DRUGBANK:DB10509", // Beef
 			"DRUGBANK:DB10551", // Pea
 			"DRUGBANK:DB09393", // amino acids
 			"DRUGBANK:DB09145", // Water
@@ -40,7 +43,9 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 			"DRUGBANK:DB10519", // Chicken
 			"DRUGBANK:DB02891", // Beam
 			"DRUGBANK:DB11577", // blue, x
-			"DRUGBANK:DB10549" // orange extract
+			"DRUGBANK:DB10549", // orange extract
+			"DRUGBANK:DB10537", // Lamb
+			"DRUGBANK:DB10561" // Pork
 
 	));
 
@@ -54,6 +59,14 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 				BufferedWriter caseInsensWriter = FileWriterUtil.initBufferedWriter(caseInsensitiveDictFile)) {
 			for (DrugbankXmlFileRecordReader rr = new DrugbankXmlFileRecordReader(drugbankXmlFile); rr.hasNext();) {
 				DrugBankDrugRecord record = rr.next();
+
+				// remove things used to test for allergies
+				String description = record.getDescription();
+
+				if (description != null
+						&& (description.contains("allergenic") || description.contains("animal extract"))) {
+					continue;
+				}
 
 				String drugbankId = "DRUGBANK:" + record.getDrugBankId().getId();
 				String drugName = record.getDrugName();
@@ -99,6 +112,23 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
 			toReturn = Collections.emptySet();
 		}
+
+//		remove all extracts
+//		remove all livers
+//		remove all dander
+//		remove all venom but not antivenom
+		// I think these should mostly, if not all, be removed by the "allergenic" test
+		// above
+		for (String syn : syns) {
+			if (StringUtil.containsRegex(syn, "\\b[Ee]xtracts?\\b") || StringUtil.containsRegex(syn, "\\b[Vv]enom\\b")
+					|| StringUtil.containsRegex(syn, "\\b[Dd]ander\\b")
+					|| StringUtil.containsRegex(syn, "\\b[Aa]llergenic\\b")
+					|| StringUtil.containsRegex(syn, "\\b[Ss]tomach\\b")
+					|| StringUtil.containsRegex(syn, "\\b[Ll]iver\\b")) {
+				toReturn = Collections.emptySet();
+			}
+		}
+
 		return toReturn;
 	}
 
