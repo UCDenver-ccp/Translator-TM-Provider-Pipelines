@@ -28,6 +28,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import com.google.common.annotations.VisibleForTesting;
 
 import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts;
+import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts.ExcludeExactOverlaps;
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
@@ -294,7 +295,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		Set<TextAnnotation> outputAnnots = new HashSet<TextAnnotation>(inputAnnots);
 
 		Set<TextAnnotation> nestedAnnotations = ExcludeCraftNestedConcepts
-				.identifyNestedAnnotations(new ArrayList<TextAnnotation>(inputAnnots), null);
+				.identifyNestedAnnotations(new ArrayList<TextAnnotation>(inputAnnots), null, ExcludeExactOverlaps.NO);
 
 //		craft-11597317.
 //		T7	GO:0000725 428 450	recombinational repair

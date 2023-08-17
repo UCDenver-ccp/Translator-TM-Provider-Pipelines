@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,11 +55,12 @@ public class ExcludeCraftNestedConcepts {
 	 * @param craftBaseDir
 	 * @param outputBionlpBaseDir
 	 * @param inputBionlpBaseDir
+	 * @param excludeOverlaps
 	 * @param docText
 	 * @throws IOException
 	 */
-	public static void excludeNestedAnnotations(File craftBaseDir, File inputBionlpBaseDir, File outputBionlpBaseDir)
-			throws IOException {
+	public static void excludeNestedAnnotations(File craftBaseDir, File inputBionlpBaseDir, File outputBionlpBaseDir,
+			ExcludeExactOverlaps excludeOverlaps) throws IOException {
 		List<String> docIds = loadCraftDocumentIds(craftBaseDir);
 
 		File exclusionLogDir = new File(outputBionlpBaseDir.getParentFile(), "nested-exclusions");
@@ -73,8 +75,8 @@ public class ExcludeCraftNestedConcepts {
 				WithExtensionClasses ext = WithExtensionClasses.NO;
 				Map<Ont, TextDocument> ontToDocMap = loadOntToDocMap(docId, craftBaseDir, inputBionlpBaseDir, ext);
 
-				filterNestedConceptAnnotations(ontToDocMap, ontToDocMap.values().iterator().next().getText(),
-						logWriter);
+				filterNestedConceptAnnotations(ontToDocMap, ontToDocMap.values().iterator().next().getText(), logWriter,
+						excludeOverlaps);
 				serializeAnnotationFiles(docId, ontToDocMap, outputBionlpBaseDir, ext);
 //				}
 			}
@@ -91,7 +93,7 @@ public class ExcludeCraftNestedConcepts {
 	 * @throws FileNotFoundException
 	 */
 	protected static void filterNestedConceptAnnotations(Map<Ont, TextDocument> ontToDocMap, String docText,
-			BufferedWriter logWriter) throws FileNotFoundException, IOException {
+			BufferedWriter logWriter, ExcludeExactOverlaps excludeOverlaps) throws FileNotFoundException, IOException {
 		// aggregate all annotations into a single document so that we can then
 		// determine which are nested
 		TextDocument aggTd = new TextDocument("agg", "agg", docText);
@@ -103,8 +105,40 @@ public class ExcludeCraftNestedConcepts {
 			aggTd.addAnnotations(entry.getValue().getAnnotations());
 		}
 
-		Set<TextAnnotation> nestedAnnotations = identifyNestedAnnotations(aggTd.getAnnotations(), logWriter);
+		Set<TextAnnotation> nestedAnnotations = identifyNestedAnnotations(aggTd.getAnnotations(), logWriter,
+				excludeOverlaps);
 		removeAnnotations(nestedAnnotations, ontToDocMap);
+		verifyNoNested(ontToDocMap, excludeOverlaps);
+
+	}
+
+	/**
+	 * Verify that there are no nested annotations. If ExcludeExactOverlaps = NO,
+	 * then we allow exact overlaps to remain.
+	 * 
+	 * @param ontToDocMap
+	 * @param excludeOverlaps
+	 */
+	private static void verifyNoNested(Map<Ont, TextDocument> ontToDocMap, ExcludeExactOverlaps excludeExactOverlaps) {
+		Set<TextAnnotation> allAnnots = new HashSet<TextAnnotation>();
+
+		for (TextDocument td : ontToDocMap.values()) {
+			allAnnots.addAll(td.getAnnotations());
+		}
+
+		for (TextAnnotation annot1 : allAnnots) {
+			for (TextAnnotation annot2 : allAnnots) {
+				if (!annot1.equals(annot2)) {
+					if (annot1.overlaps(annot2)
+							&& (excludeExactOverlaps == ExcludeExactOverlaps.CHOOSE_ONE_SEMI_RANDOMLY
+									|| (excludeExactOverlaps == ExcludeExactOverlaps.NO
+											&& !annot1.getSpans().equals(annot2.getSpans())))) {
+						throw new IllegalArgumentException(String.format("Detected unexpected overlap between:\n%s\n%s",
+								annot1.getSingleLineRepresentation(), annot2.getSingleLineRepresentation()));
+					}
+				}
+			}
+		}
 
 	}
 
@@ -117,11 +151,11 @@ public class ExcludeCraftNestedConcepts {
 	 * @throws FileNotFoundException
 	 */
 	public static Set<TextAnnotation> identifyNestedAnnotations(List<TextAnnotation> annotations,
-			BufferedWriter logWriter) throws FileNotFoundException, IOException {
+			BufferedWriter logWriter, ExcludeExactOverlaps excludeOverlaps) throws FileNotFoundException, IOException {
 		List<Set<TextAnnotation>> overlappingAnnotSets = getOverlappingAnnotSets(annotations);
 		Set<TextAnnotation> nestedAnnotations = new HashSet<TextAnnotation>();
 		for (Set<TextAnnotation> overlappingSet : overlappingAnnotSets) {
-			Set<TextAnnotation> nested = identifyNestedAnnotations(overlappingSet, logWriter);
+			Set<TextAnnotation> nested = identifyNestedAnnotations(overlappingSet, logWriter, excludeOverlaps);
 			nestedAnnotations.addAll(nested);
 		}
 		return nestedAnnotations;
@@ -188,6 +222,10 @@ public class ExcludeCraftNestedConcepts {
 		return overlappingSets;
 	}
 
+	public enum ExcludeExactOverlaps {
+		CHOOSE_ONE_SEMI_RANDOMLY, NO
+	}
+
 	/**
 	 * Given a set of overlapping annotations, identify those that should be
 	 * declared "nested" and eventually excluded.
@@ -198,7 +236,7 @@ public class ExcludeCraftNestedConcepts {
 	 * @throws FileNotFoundException
 	 */
 	protected static Set<TextAnnotation> identifyNestedAnnotations(Set<TextAnnotation> overlappingSet,
-			BufferedWriter logWriter) throws FileNotFoundException, IOException {
+			BufferedWriter logWriter, ExcludeExactOverlaps excludeOverlaps) throws FileNotFoundException, IOException {
 		// if one or more annotations are encompassed by another, e.g. "blood" is
 		// encompassed by "red blood cell" then we keep the encompassing annotation
 		Set<TextAnnotation> nested = new HashSet<TextAnnotation>();
@@ -215,14 +253,16 @@ public class ExcludeCraftNestedConcepts {
 //						// it deterministic we will select the one with the concept id that is
 //						// alphabetically last -- this is to get PR instead of GO_CC. The ontology is
 //						// the first part of the annotation ID, so we can used that as a proxy here.
-//						Map<String, TextAnnotation> map = new HashMap<String, TextAnnotation>();
-//						String id1 = annot1.getClassMention().getMentionName();
-//						String id2 = annot2.getClassMention().getMentionName();
-//						map.put(id1, annot1);
-//						map.put(id2, annot2);
-//						List<String> ids = Arrays.asList(id1, id2);
-//						Collections.sort(ids);
-//						nested.add(map.get(ids.get(1)));
+						if (excludeOverlaps == ExcludeExactOverlaps.CHOOSE_ONE_SEMI_RANDOMLY) {
+							Map<String, TextAnnotation> map = new HashMap<String, TextAnnotation>();
+							String id1 = annot1.getClassMention().getMentionName();
+							String id2 = annot2.getClassMention().getMentionName();
+							map.put(id1, annot1);
+							map.put(id2, annot2);
+							List<String> ids = Arrays.asList(id1, id2);
+							Collections.sort(ids);
+							nested.add(map.get(ids.get(1)));
+						}
 					} else if (encompasses(annot1, annot2)) {
 						nested.add(annot2);
 					} else if (encompasses(annot2, annot1)) {
@@ -234,11 +274,9 @@ public class ExcludeCraftNestedConcepts {
 						TextAnnotation discard = null;
 
 						if (annot1.getAnnotationSpanStart() < annot2.getAnnotationSpanStart()) {
-							nested.add(annot2);
 							keep = annot1;
 							discard = annot2;
 						} else {
-							nested.add(annot1);
 							keep = annot2;
 							discard = annot1;
 						}
@@ -255,28 +293,28 @@ public class ExcludeCraftNestedConcepts {
 			}
 		}
 
-		// if there is overlap, but not complete encompassing, then what?
-		if (nested.size() + 1 != overlappingSet.size()) {
-			StringBuilder errorMsg = new StringBuilder();
-			for (TextAnnotation annot : nested) {
-//				errorMsg.append(String.format("NESTED: %s [%d..%d] %s\n", annot.getCoveredText(),
-//						annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd(), annot.getClassMention().getMentionName()));
-				errorMsg.append(String.format("NESTED: %s\n", annot.getSingleLineRepresentation()));
-			}
-			for (TextAnnotation annot : overlappingSet) {
-//				errorMsg.append(String.format("OVER: %s [%d..%d] %s\n", annot.getCoveredText(),
-//						annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd(), annot.getClassMention().getMentionName()));
-				errorMsg.append(String.format("OVER:   %s\n", annot.getSingleLineRepresentation()));
-			}
-
-//			throw new IllegalStateException(
-//					"Not sure how to handle non-encompassing overlap...\n" + errorMsg.toString());
-		}
-
-		overlappingSet.removeAll(nested);
-		if (logWriter != null) {
-			logNestedFiltering(logWriter, overlappingSet.iterator().next(), nested);
-		}
+//		// if there is overlap, but not complete encompassing, then what?
+//		if (nested.size() + 1 != overlappingSet.size()) {
+//			StringBuilder errorMsg = new StringBuilder();
+//			for (TextAnnotation annot : nested) {
+////				errorMsg.append(String.format("NESTED: %s [%d..%d] %s\n", annot.getCoveredText(),
+////						annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd(), annot.getClassMention().getMentionName()));
+//				errorMsg.append(String.format("NESTED: %s\n", annot.getSingleLineRepresentation()));
+//			}
+//			for (TextAnnotation annot : overlappingSet) {
+////				errorMsg.append(String.format("OVER: %s [%d..%d] %s\n", annot.getCoveredText(),
+////						annot.getAnnotationSpanStart(), annot.getAnnotationSpanEnd(), annot.getClassMention().getMentionName()));
+//				errorMsg.append(String.format("OVER:   %s\n", annot.getSingleLineRepresentation()));
+//			}
+//
+////			throw new IllegalStateException(
+////					"Not sure how to handle non-encompassing overlap...\n" + errorMsg.toString());
+//		}
+//
+//		overlappingSet.removeAll(nested);
+//		if (logWriter != null) {
+//			logNestedFiltering(logWriter, overlappingSet.iterator().next(), nested);
+//		}
 
 		return nested;
 	}
@@ -386,7 +424,8 @@ public class ExcludeCraftNestedConcepts {
 		BioNLPDocumentReader reader = new BioNLPDocumentReader();
 		Map<Ont, TextDocument> map = new HashMap<Ont, TextDocument>();
 		File txtFile = getTextFile(docId, craftBaseDir);
-		for (Ont ont : Ont.values()) {
+		for (Ont ont : EnumSet.of(Ont.CHEBI, Ont.CL, Ont.GO_BP, Ont.GO_CC, Ont.GO_MF, Ont.MONDO, Ont.NCBITaxon, Ont.PR,
+				Ont.SO, Ont.UBERON)) {
 			File annotFile = getAnnotFile(ont, docId, originalBionlpBaseDir, ext);
 			TextDocument td = reader.readDocument(docId, "craft", annotFile, txtFile, ENCODING);
 			map.put(ont, td);
@@ -437,15 +476,19 @@ public class ExcludeCraftNestedConcepts {
 		File craftBaseDir = new File("/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft.git");
 		File inputBionlpBaseDir = new File(
 				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-exclude-specific");
+
+//		ExcludeOverlaps excludeOverlaps = ExcludeOverlaps.NO;
+//		File outputBionlpBaseDir = new File(
+//				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested");
+
+		ExcludeExactOverlaps excludeOverlaps = ExcludeExactOverlaps.CHOOSE_ONE_SEMI_RANDOMLY;
 		File outputBionlpBaseDir = new File(
-				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested");
+				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested-for-crf");
 
 		outputBionlpBaseDir.mkdirs();
-		
-		
 
 		try {
-			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir);
+			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir, excludeOverlaps);
 			ExcludeCraftConceptsByOntologyId.validateExcudedClasses(outputBionlpBaseDir, craftBaseDir);
 		} catch (IOException e) {
 			e.printStackTrace();

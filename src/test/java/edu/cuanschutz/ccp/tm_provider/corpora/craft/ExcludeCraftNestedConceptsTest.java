@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts.ExcludeExactOverlaps;
 import edu.cuanschutz.ccp.tm_provider.corpora.craft.ExcludeCraftNestedConcepts.Ont;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
@@ -42,7 +43,7 @@ public class ExcludeCraftNestedConceptsTest {
 		TextAnnotation annot2 = factory.createAnnotation(9, 16, "", "UBERON:12345");
 
 		assertFalse(ExcludeCraftNestedConcepts.encompasses(annot1, annot2));
-		
+
 		TextAnnotation redAnnot = factory.createAnnotation(0, 4, "red", "COLOR:red");
 		assertTrue(ExcludeCraftNestedConcepts.encompasses(rbcAnnot, redAnnot));
 		assertFalse(ExcludeCraftNestedConcepts.encompasses(redAnnot, rbcAnnot));
@@ -237,7 +238,7 @@ public class ExcludeCraftNestedConceptsTest {
 		overlappingSet.add(getAnnot7());
 
 		Set<TextAnnotation> nestedAnnotations = ExcludeCraftNestedConcepts.identifyNestedAnnotations(overlappingSet,
-				logWriter);
+				logWriter, ExcludeExactOverlaps.NO);
 
 		Set<TextAnnotation> expectedNestedAnnotations = new HashSet<TextAnnotation>();
 		expectedNestedAnnotations.add(getAnnot6());
@@ -264,7 +265,7 @@ public class ExcludeCraftNestedConceptsTest {
 		annotations.add(getAnnot10());
 
 		Set<TextAnnotation> nestedAnnotations = ExcludeCraftNestedConcepts.identifyNestedAnnotations(annotations,
-				logWriter);
+				logWriter, ExcludeExactOverlaps.NO);
 
 		Set<TextAnnotation> expectedNestedAnnotations = new HashSet<TextAnnotation>();
 		expectedNestedAnnotations.add(getAnnot2());
@@ -280,7 +281,8 @@ public class ExcludeCraftNestedConceptsTest {
 		BufferedWriter logWriter = null;
 
 		Map<Ont, TextDocument> ontToDocMap = getOntToDocMap();
-		ExcludeCraftNestedConcepts.filterNestedConceptAnnotations(ontToDocMap, getDocText(), logWriter);
+		ExcludeCraftNestedConcepts.filterNestedConceptAnnotations(ontToDocMap, getDocText(), logWriter,
+				ExcludeExactOverlaps.NO);
 
 		TextDocument updatedUberonDoc = new TextDocument(DOC_ID, "unknown", getDocText());
 		updatedUberonDoc.addAnnotation(getAnnot4());
