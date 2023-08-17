@@ -33,7 +33,7 @@ public class SoOgerDictFileFactory extends OgerDictFileFactory {
 			Arrays.asList(OBO_PURL + "SO_0000695", // reagent
 					OBO_PURL + "SO_0000340", // chromosome
 					OBO_PURL + "SO_0002072", // Sequence comparisons
-					OBO_PURL + "SO:0000699" // boundary
+					OBO_PURL + "SO_0000699" // boundary
 			));
 
 	protected static Set<String> filterSpecificSynonyms(String iri, Set<String> syns) {
