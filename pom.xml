@@ -380,12 +380,12 @@
 			<artifactId>beam-sdks-java-io-xml</artifactId>
 			<version>${beam.version}</version>
 			<!-- this exclusion was required in order to parse the drugbank xml file -->
-			 <exclusions>
+			<!-- <exclusions>
 				<exclusion>
 					<groupId>org.codehaus.woodstox</groupId>
 					<artifactId>woodstox-core-asl</artifactId>
 				</exclusion>
-			</exclusions> 
+			</exclusions> --> 
 		</dependency>
 
 
@@ -634,12 +634,12 @@
 			<artifactId>pengyifan-bioc</artifactId>
 			<version>1.0.3</version>
 			<!-- this exclusion was required in order to parse the drugbank xml file -->
-			 <exclusions>
+			<!-- <exclusions>
 				<exclusion>
 					<groupId>org.codehaus.woodstox</groupId>
 					<artifactId>woodstox-core-asl</artifactId>
 				</exclusion>
-			</exclusions>
+			</exclusions> -->
 		</dependency>
 
 		<dependency>
