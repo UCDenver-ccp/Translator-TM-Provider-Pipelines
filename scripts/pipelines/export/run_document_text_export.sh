@@ -22,7 +22,7 @@ echo "OVERWRITE_FLAG: $OVERWRITE_FLAG"
 echo "OUTPUT_BUCKET: $OUTPUT_BUCKET"
 echo "JOB_NAME: $JOB_NAME"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar TEXT_EXPORT \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" TEXT_EXPORT \
 --jobName="$JOB_NAME" \
 --inputTextPipelineKey="$TEXT_PIPELINE_KEY" \
 --inputTextPipelineVersion="$TEXT_PIPELINE_VERSION" \

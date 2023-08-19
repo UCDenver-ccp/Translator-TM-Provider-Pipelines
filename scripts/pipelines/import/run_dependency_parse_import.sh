@@ -19,7 +19,7 @@ echo "BASE_DP_FILE_PATH: $BASE_DP_FILE_PATH"
 echo "OVERWRITE_FLAG: $OVERWRITE_FLAG"
 echo "JOB_NAME: $JOB_NAME"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar DEPENDENCY_PARSE_IMPORT \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" DEPENDENCY_PARSE_IMPORT \
 --jobName="$JOB_NAME" \
 --baseDependencyParseFilePath="$BASE_DP_FILE_PATH" \
 --collection="$COLLECTION" \

@@ -18,7 +18,7 @@ OUTPUT_BUCKET=$4
 mkdir /home/turku/txt
 pushd /home/turku/txt
 gsutil cp "$TXT_FILE_BUCKET/*.txt.gz" .
-cat *.txt.gz > /home/turku/all.txt.gz
+cat ./*.txt.gz > /home/turku/all.txt.gz
 popd
 
 # call the Turku dependency parser here
