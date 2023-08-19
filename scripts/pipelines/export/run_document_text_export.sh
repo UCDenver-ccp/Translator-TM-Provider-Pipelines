@@ -3,11 +3,12 @@
 PROJECT=$1
 COLLECTION=$2
 TEXT_PIPELINE_KEY=$3
-OVERWRITE_FLAG=$4
-OUTPUT_BUCKET=$5
-STAGE_LOCATION=$6
-TMP_LOCATION=$7
-JAR_VERSION=$8
+TEXT_PIPELINE_VERSION=$4
+OVERWRITE_FLAG=$5
+OUTPUT_BUCKET=$6
+STAGE_LOCATION=$7
+TMP_LOCATION=$8
+JAR_VERSION=$9
 
 ZONE='us-central1-c'
 REGION='us-central1'
@@ -24,7 +25,7 @@ echo "JOB_NAME: $JOB_NAME"
 java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar TEXT_EXPORT \
 --jobName="$JOB_NAME" \
 --inputTextPipelineKey="$TEXT_PIPELINE_KEY" \
---inputTextPipelineVersion="0.1.0" \
+--inputTextPipelineVersion="$TEXT_PIPELINE_VERSION" \
 --collection="$COLLECTION" \
 --outputBucket="$OUTPUT_BUCKET" \
 --overwrite="$OVERWRITE_FLAG" \

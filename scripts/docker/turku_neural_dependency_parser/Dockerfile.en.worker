@@ -1,0 +1,51 @@
+FROM turkunlp/turku-neural-parser:latest-fi-en-sv-gpu
+
+RUN apt-get update && apt-get install -y \
+    vim \
+    less \
+    wget
+    
+WORKDIR /root
+
+# Installs google cloud sdk, this allows use of gsutil
+# from: https://cloud.google.com/ai-platform/training/docs/custom-containers-training
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+    mkdir /root/tools && \
+    tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
+    rm google-cloud-sdk.tar.gz && \
+    /root/tools/google-cloud-sdk/install.sh --usage-reporting=false \
+        --path-update=false --bash-completion=false \
+        --disable-installation-options && \
+    rm -rf /root/.config/* && \
+    ln -s /root/.config /config && \
+    # Remove the backup directory that gcloud creates
+    rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
+# Path configuration
+ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
+
+WORKDIR /app
+RUN sed -i 's/import re/import re\nimport torch\ntorch.backends.cudnn.enabled=False/' full_pipeline_stream.py
+
+COPY entrypoint.en.worker.sh /home/turku/entrypoint.sh
+
+RUN chmod 755 /home/turku/entrypoint.sh
+
+ENTRYPOINT /home/turku/entrypoint.sh "$@" 
+
+# To build:
+# see cloudbuild.yml
+
+# To run:
+# docker run --rm [IMAGE_NAME]:[IMAGE_VERSION] [TXT_BUCKET] [COLLECTION] [BATCH] [OUTPUT_BUCKET]
+#
+# where: 
+#  [IMAGE_NAME] = the name of the Docker image - which will be the same as the TASK_NAME
+#  [IMAGE_VERSION] = the version of the Docker image - which will be the same as the TUNED_MODEL_VERSION
+#  [TXT_BUCKET] = the full GCP path to where the text files to-be-processed are located, e.g. gs://xyz/txt/PUBMED_SUB_31/
+#  [COLLECTION] = the name of the collection being processed, e.g. PUBMED_SUB_31, 2021_06_08
+#  [BATCH] = a unique identifier for the batch (subset of the collection) that is being processed
+#  [OUTPUT_BUCKET] = the output bucket where classified sentences will be placed, e.g. gs://xyz
+
+

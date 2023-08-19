@@ -47,7 +47,7 @@ public class TextExtractionPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXPORT;
 
-	public static final String COMMENT_INDICATOR = "###C: ";
+	public static final String COMMENT_INDICATOR = "# ";
 	public static final String DOCUMENT_ID_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_ID\t";
 	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_COLLECTIONS\t";
 	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
