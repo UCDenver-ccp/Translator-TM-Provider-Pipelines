@@ -1,5 +1,5 @@
 setuptools==59.5.0
-torch>=1.9
+torch==1.9
 requests
 flask
 numpy

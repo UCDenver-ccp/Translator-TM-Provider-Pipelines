@@ -1,15 +1,27 @@
 steps:
 
-- id: 'build turku-dp'
+# - id: 'build turku-dp-server'
+#   name: 'gcr.io/cloud-builders/docker'
+#   args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/turku_dp_server:${_TURKU_VERSION}', '-f', 'Dockerfile.server', '.' ]
+#   timeout: 1500s
+#   waitFor: ['-'] # start immediately
+
+# - id: 'push turku-dp server'
+#   name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'gcr.io/$PROJECT_ID/turku_dp_server:${_TURKU_VERSION}']
+#   waitFor: ['build turku-dp-server']
+
+- id: 'build turku-dp-worker'
   name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/turku_dp:${_TURKU_VERSION}', '-f', 'Dockerfile', '.' ]
+  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/turku_dp_worker:${_TURKU_VERSION}', '-f', 'Dockerfile.en.worker', '.' ]
   timeout: 1500s
   waitFor: ['-'] # start immediately
 
-- id: 'push turku-dp'
+- id: 'push turku-dp worker'
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/turku_dp:${_TURKU_VERSION}']
-  waitFor: ['build turku-dp']
+  args: ['push', 'gcr.io/$PROJECT_ID/turku_dp_worker:${_TURKU_VERSION}']
+  waitFor: ['build turku-dp-worker']
+
 
 substitutions:
-    _TURKU_VERSION: craft_0.1
+    _TURKU_VERSION: en_ewt_0.1

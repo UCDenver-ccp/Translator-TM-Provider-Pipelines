@@ -14,21 +14,17 @@ TXT_FILE_BUCKET=$3
 OUTPUT_BUCKET=$4
 
 # download the txt files to process
-# cat the txt files into a single file called test.tsv in the $DATASET_DIR
-mkdir /home/dev/txt
-pushd /home/dev/txt
-gsutil cp "$TXT_FILE_BUCKET/*.txt" .
-cat *.txt > $DATASET_DIR/all.txt
+# cat the txt files into a single file called all.tsv in /home/turku
+mkdir /home/turku/txt
+pushd /home/turku/txt
+gsutil cp "$TXT_FILE_BUCKET/*.txt.gz" .
+cat ./*.txt.gz > /home/turku/all.txt.gz
 popd
 
 # call the Turku dependency parser here
-cat $DATASET_DIR/all.txt | python3 tnpp_parse.py --conf models_craft_dia/pipelines.yaml parse_plaintext > $DATASET_DIR/all.conllu
+gunzip -c /home/turku/all.txt.gz | python3 full_pipeline_stream.py --conf-yaml models_en_ewt/pipelines.yaml parse_plaintext | gzip > /home/turku/all.conllu.gz
 [ $? -eq 0 ] || exit 1
 
-# compress the conllu file
-gzip $DATASET_DIR/all.conllu
-[ $? -eq 0 ] || exit 1
-
-# export the all.conllu file to a GCP bucket
-gsutil cp $DATASET_DIR/all.conllu.gz "${OUTPUT_BUCKET}/output/dependency_parses/${COLLECTION}.${BATCH}.dependency_parses.conllu.gz"
+# export the all.conllu.gz file to a GCP bucket
+gsutil cp /home/turku/all.conllu.gz "${OUTPUT_BUCKET}/${COLLECTION}.${BATCH}.dependency_parses.conllu.gz"
 [ $? -eq 0 ] || exit 1

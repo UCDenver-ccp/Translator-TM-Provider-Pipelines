@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.cuanschutz.edu</groupId>
 	<artifactId>tm-pipelines</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 	<description>Pipelines used by the Translator Text Mining Provider</description>
 
 

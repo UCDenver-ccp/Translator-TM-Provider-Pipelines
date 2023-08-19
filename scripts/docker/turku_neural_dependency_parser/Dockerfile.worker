@@ -1,0 +1,94 @@
+FROM gcr.io/deeplearning-platform-release/base-gpu.py37
+
+RUN apt-get update && apt-get install -y \
+    git \
+    less \
+    wget \
+    curl \
+    python3-venv && \
+    rm -rf /var/lib/apt/lists/*
+    
+WORKDIR /root
+
+# Installs google cloud sdk, this allows use of gsutil
+# from: https://cloud.google.com/ai-platform/training/docs/custom-containers-training
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+    mkdir /root/tools && \
+    tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
+    rm google-cloud-sdk.tar.gz && \
+    /root/tools/google-cloud-sdk/install.sh --usage-reporting=false \
+        --path-update=false --bash-completion=false \
+        --disable-installation-options && \
+    rm -rf /root/.config/* && \
+    ln -s /root/.config /config && \
+    # Remove the backup directory that gcloud creates
+    rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
+# Path configuration
+ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
+
+# RUN groupadd -r turku && useradd -m -r -g turku turku
+# USER turku
+# WORKDIR /home/turku
+
+## Install the parser
+WORKDIR /home/turku
+RUN git clone https://github.com/TurkuNLP/Turku-neural-parser-pipeline.git ./Turku-neural-parser-pipeline.git
+
+RUN apt-get update && apt-get install -y \
+libsndfile-dev
+
+WORKDIR /home/turku/Turku-neural-parser-pipeline.git
+
+ENV VIRTUAL_ENV=/home/turku/venv-tnpp
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+ARG MODEL=craft_dia
+ARG PIPELINE=parse_plaintext
+ARG PORT=7689
+ARG MAX_CHARS=0
+
+ENV TNPP_MODEL models_${MODEL}/pipelines.yaml
+ENV TNPP_PIPELINE ${PIPELINE}
+ENV TNPP_PORT ${PORT}
+ENV TNPP_MAX_CHARS ${MAX_CHARS}
+
+RUN python3 -m pip install --no-cache-dir requests
+RUN python3 fetch_models.py $MODEL
+
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install --upgrade setuptools
+
+RUN python3 -m pip install --no-cache-dir torch==1.10.0
+COPY requirements.fixed.txt /home/turku/
+RUN python3 -m pip install --no-cache-dir -r /home/turku/requirements.fixed.txt
+
+# fix compatibility bug
+# See https://stackoverflow.com/questions/70193443/colab-notebook-cannot-import-name-container-abcs-from-torch-six
+RUN perl -0777 -i.original -pe 's/if TORCH_MAJOR == 0:\n    import collections.abc as container_abcs\nelse:\n    from torch._six import container_abcs/if TORCH_MAJOR == 1 and TORCH_MINOR < 8:\n    from torch._six import container_abcs,int_classes\nelse:\n    import collections.abc as container_abcs\n    int_classes = int\n/igs' /home/turku/venv-tnpp/lib/python3.7/site-packages/apex/amp/_amp_state.py
+
+# USER root
+COPY entrypoint.worker.sh /home/turku/entrypoint.sh
+
+# USER turku
+RUN chmod 755 /home/turku/entrypoint.sh
+
+ENTRYPOINT /home/turku/entrypoint.sh "$@" 
+
+# To build:
+# see cloudbuild.yml
+
+# To run:
+# docker run --rm [IMAGE_NAME]:[IMAGE_VERSION] [TXT_BUCKET] [COLLECTION] [BATCH] [OUTPUT_BUCKET]
+#
+# where: 
+#  [IMAGE_NAME] = the name of the Docker image - which will be the same as the TASK_NAME
+#  [IMAGE_VERSION] = the version of the Docker image - which will be the same as the TUNED_MODEL_VERSION
+#  [TXT_BUCKET] = the full GCP path to where the text files to-be-processed are located, e.g. gs://xyz/txt/PUBMED_SUB_31/
+#  [COLLECTION] = the name of the collection being processed, e.g. PUBMED_SUB_31, 2021_06_08
+#  [BATCH] = a unique identifier for the batch (subset of the collection) that is being processed
+#  [OUTPUT_BUCKET] = the output bucket where classified sentences will be placed, e.g. gs://xyz
+
+
