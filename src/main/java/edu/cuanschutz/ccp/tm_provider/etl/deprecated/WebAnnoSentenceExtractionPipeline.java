@@ -1,4 +1,4 @@
-package edu.cuanschutz.ccp.tm_provider.etl;
+package edu.cuanschutz.ccp.tm_provider.etl.deprecated;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -25,6 +25,9 @@ import org.apache.beam.sdk.values.PCollectionView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionWebAnnoFn;
@@ -38,6 +41,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 /**
+ * Note: this pipeline is not actively used
+ * 
  * Useful for extracting sentences for creating corpora for manual annotation
  */
 public class WebAnnoSentenceExtractionPipeline {

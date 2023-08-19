@@ -1,4 +1,4 @@
-package edu.cuanschutz.ccp.tm_provider.etl;
+package edu.cuanschutz.ccp.tm_provider.etl.deprecated;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -20,6 +20,9 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.TurkuDepParserFn;
@@ -33,6 +36,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
+ * NOTE: this is not in active use.
+ * 
  * This Apache Beam pipeline processes documents with a dependency parser
  * reached via HTTP POST. Input is plain text; Output is CoNLL-U format.
  */

@@ -59,6 +59,8 @@ import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
+import edu.cuanschutz.ccp.tm_provider.etl.deprecated.BigQueryExportPipeline;
+import edu.cuanschutz.ccp.tm_provider.etl.deprecated.WebAnnoSentenceExtractionPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.update.UpdateMedlineEntitiesPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
@@ -157,9 +159,10 @@ public class PipelineMain {
 			case CONCEPT_IDF:
 				ConceptIdfPipeline.main(pipelineArgs);
 				break;
-			case DEPENDENCY_PARSE:
-				DependencyParsePipeline.main(pipelineArgs);
-				break;
+			// This pipeline is not actively used.
+//			case DEPENDENCY_PARSE:
+//				DependencyParsePipeline.main(pipelineArgs);
+//				break;
 			case FILE_LOAD:
 				LoadFilesPipeline.main(pipelineArgs);
 				break;
