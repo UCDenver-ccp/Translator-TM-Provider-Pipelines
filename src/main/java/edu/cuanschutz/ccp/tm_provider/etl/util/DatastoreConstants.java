@@ -132,7 +132,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_TEXT_AUG_DONE = "text_aug";
 	
 	public static final String STATUS_PROPERTY_SECTIONS_DONE = "sections";
-	
+
 	public static final String STATUS_PROPERTY_ABBREVIATIONS_DONE = "abbrev";
 	/**
 	 * true if dependency parsing is complete
@@ -140,6 +140,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_DEPENDENCY_PARSE_DONE = "dep";
 
 	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE = "sent";
+	public static final String STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE = "sent_by_dp";
 
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE = "concept_pp";
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
@@ -151,7 +152,6 @@ public interface DatastoreConstants {
 //	public static final String STATUS_PROPERTY_CONCEPT_COOCCURRENCE_METRICS_DONE = "concept_cooccur_metrics";
 
 	public static final String STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE = "elasticsearch";
-	
 
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
@@ -282,6 +282,8 @@ public interface DatastoreConstants {
 	 * the given document belongs, e.g. CORD-19
 	 */
 	public static final String STATUS_PROPERTY_COLLECTIONS = "collections";
+
+	public static final String STATUS_PROPERTY_TEXT_EXTRACTION_DONE = "text_extract";
 
 //	public static final String STATUS_PROPERTY_IN_CORD19_COLLECTION = "in_cord19";
 //	public static final String STATUS_PROPERTY_IN_PMCOA_COLLECTION = "in_pmcoa";
