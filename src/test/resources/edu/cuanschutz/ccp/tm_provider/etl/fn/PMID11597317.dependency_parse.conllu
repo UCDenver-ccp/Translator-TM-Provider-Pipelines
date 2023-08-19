@@ -1,0 +1,2960 @@
+# DOCUMENT_ID	craft-11597317.
+# DOCUMENT_COLLECTIONS	CRAFT
+# newdoc
+# newpar
+# sent_id = 1
+# text = BRCA2 and homologous recombination
+1	BRCA2	brca2	NOUN	NN	Number=Sing	0	root	_	_
+2	and	and	CCONJ	CC	_	4	cc	_	_
+3	homologous	homologous	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	recombination	recombination	NOUN	NN	Number=Sing	1	conj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 2
+# text = Abstract
+1	Abstract	abstract	NOUN	NN	Number=Sing	0	root	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 3
+# text = Two recent papers provide new evidence relevant to the role of the breast cancer susceptibility gene BRCA2 in DNA repair.
+1	Two	two	NUM	CD	NumType=Card	3	nummod	_	_
+2	recent	recent	ADJ	JJ	Degree=Pos	3	amod	_	_
+3	papers	papers	NOUN	NNS	Number=Plur	4	nsubj	_	_
+4	provide	provide	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+5	new	new	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	evidence	evidence	NOUN	NN	Number=Sing	4	obj	_	_
+7	relevant	relevant	ADJ	JJ	Degree=Pos	6	amod	_	_
+8	to	to	ADP	IN	_	10	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+10	role	role	NOUN	NN	Number=Sing	7	obl	_	_
+11	of	of	ADP	IN	_	17	case	_	_
+12	the	the	DET	DT	Definite=Def|PronType=Art	17	det	_	_
+13	breast	breast	NOUN	NN	Number=Sing	15	compound	_	_
+14	cancer	cancer	NOUN	NN	Number=Sing	15	compound	_	_
+15	susceptibility	susceptibility	NOUN	NN	Number=Sing	16	compound	_	_
+16	gene	gene	NOUN	NN	Number=Sing	17	compound	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	10	nmod	_	_
+18	in	in	ADP	IN	_	20	case	_	_
+19	DNA	dna	NOUN	NN	Number=Sing	20	compound	_	_
+20	repair	repair	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+21	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 4
+# text = Moynahan et al provide genetic data indicating a requirement for BRCA2 in homology-dependent (recombinational) repair of DNA double-strand breaks.
+1	Moynahan	Moynahan	PROPN	NNP	Number=Sing	4	nsubj	_	_
+2	et	et	NOUN	NN	Number=Sing	1	flat	_	_
+3	al	al	PROPN	NNP	Number=Sing	4	nsubj	_	_
+4	provide	provide	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+5	genetic	genetic	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	data	data	NOUN	NN	Number=Sing	4	obj	_	_
+7	indicating	indicate	VERB	VBG	VerbForm=Ger	6	acl	_	_
+8	a	a	DET	DT	Definite=Ind|PronType=Art	9	det	_	_
+9	requirement	requirement	NOUN	NN	Number=Sing	7	obj	_	_
+10	for	for	ADP	IN	_	11	case	_	_
+11	BRCA2	brca2	NOUN	NN	Number=Sing	9	nmod	_	_
+12	in	in	ADP	IN	_	19	case	_	_
+13	homology	homology	NOUN	NN	Number=Sing	15	obl:npmod	_	SpaceAfter=No
+14	-	-	PUNCT	HYPH	_	15	punct	_	SpaceAfter=No
+15	dependent	dependent	ADJ	JJ	Degree=Pos	19	amod	_	_
+16	(	(	PUNCT	-LRB-	_	19	punct	_	SpaceAfter=No
+17	recombinational	recombinational	NOUN	JJ	Degree=Pos	19	compound	_	SpaceAfter=No
+18	)	)	PUNCT	-RRB-	_	19	punct	_	_
+19	repair	repair	NOUN	NN	Number=Sing	11	nmod	_	_
+20	of	of	ADP	IN	_	25	case	_	_
+21	DNA	dna	NOUN	NN	Number=Sing	25	compound	_	_
+22	double	double	ADJ	JJ	Degree=Pos	24	amod	_	SpaceAfter=No
+23	-	-	PUNCT	HYPH	_	24	punct	_	SpaceAfter=No
+24	strand	strand	NOUN	NN	Number=Sing	25	compound	_	_
+25	breaks	break	NOUN	NNS	Number=Plur	19	nmod	_	SpaceAfter=No
+26	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 5
+# text = The second paper, by Davies et al, begins to address the mechanism through which BRCA2 makes its contribution to recombinational repair.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	second	second	ADJ	JJ	Degree=Pos|NumType=Ord	3	amod	_	_
+3	paper	paper	NOUN	NN	Number=Sing	10	nsubj	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	3	punct	_	_
+5	by	by	ADP	IN	_	6	case	_	_
+6	Davies	Davies	PROPN	NNP	Number=Sing	3	nmod	_	_
+7	et	et	X	FW	_	6	flat	_	_
+8	al	al	PROPN	NNP	Number=Sing	6	flat	_	SpaceAfter=No
+9	,	,	PUNCT	,	_	10	punct	_	_
+10	begins	begin	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+11	to	to	PART	TO	_	12	mark	_	_
+12	address	address	VERB	VB	VerbForm=Inf	10	xcomp	_	_
+13	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+14	mechanism	mechanism	NOUN	NN	Number=Sing	12	obj	_	_
+15	through	through	ADP	IN	_	16	case	_	_
+16	which	which	PRON	WDT	PronType=Rel	18	obl	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	18	nsubj	_	_
+18	makes	make	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	14	acl:relcl	_	_
+19	its	its	PRON	PRP$	Gender=Neut|Number=Sing|Person=3|Poss=Yes|PronType=Prs	20	nmod:poss	_	_
+20	contribution	contribution	NOUN	NN	Number=Sing	18	obj	_	_
+21	to	to	ADP	IN	_	23	case	_	_
+22	recombinational	recombinational	NOUN	NN	Number=Sing	23	compound	_	_
+23	repair	repair	NOUN	NN	Number=Sing	20	nmod	_	SpaceAfter=No
+24	.	.	PUNCT	.	_	10	punct	_	_
+
+# sent_id = 6
+# text = BRCA2 appears to function in recombination via interactions with the major eukaryotic recombinase RAD51 [1,2,3].
+1	BRCA2	brca2	NOUN	NN	Number=Sing	2	nsubj	_	_
+2	appears	appear	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	to	to	PART	TO	_	4	mark	_	_
+4	function	function	VERB	VB	VerbForm=Inf	2	xcomp	_	_
+5	in	in	ADP	IN	_	6	case	_	_
+6	recombination	recombination	NOUN	NN	Number=Sing	4	obl	_	_
+7	via	via	ADP	IN	_	8	case	_	_
+8	interactions	interaction	NOUN	NNS	Number=Plur	4	obl	_	_
+9	with	with	ADP	IN	_	14	case	_	_
+10	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+11	major	major	ADJ	JJ	Degree=Pos	14	amod	_	_
+12	eukaryotic	eukaryotic	ADJ	JJ	Degree=Pos	13	amod	_	_
+13	recombinase	recombinase	NOUN	NN	Number=Sing	14	compound	_	_
+14	RAD	rad	NOUN	NN	Number=Sing	8	nmod	_	SpaceAfter=No
+15	51	51	NUM	CD	NumType=Card	14	nummod	_	_
+16	[	[	PUNCT	-LRB-	_	18	punct	_	SpaceAfter=No
+17	1,2	1,2	NUM	CD	NumType=Card	18	nummod	_	SpaceAfter=No
+18	,3	,3	NOUN	NN	Number=Sing	14	appos	_	SpaceAfter=No
+19	]	]	PUNCT	-RRB-	_	18	punct	_	SpaceAfter=No
+20	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 7
+# text = We briefly review the context in which the two studies were carried out, we comment on the results presented, and we discuss models designed to account for the role of BRCA2 in RAD51–mediated repair.
+1	We	we	PRON	PRP	Case=Nom|Number=Plur|Person=1|PronType=Prs	3	nsubj	_	_
+2	briefly	briefly	ADV	RB	_	3	advmod	_	_
+3	review	review	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	context	context	NOUN	NN	Number=Sing	3	obj	_	_
+6	in	in	ADP	IN	_	7	case	_	_
+7	which	which	PRON	WDT	PronType=Rel	12	obl	_	_
+8	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+9	two	two	NUM	CD	NumType=Card	10	nummod	_	_
+10	studies	study	NOUN	NNS	Number=Plur	12	nsubj:pass	_	_
+11	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	12	aux:pass	_	_
+12	carried	carry	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	5	acl:relcl	_	_
+13	out	out	ADP	RP	_	12	compound:prt	_	SpaceAfter=No
+14	,	,	PUNCT	,	_	3	punct	_	_
+15	we	we	PRON	PRP	Case=Nom|Number=Plur|Person=1|PronType=Prs	16	nsubj	_	_
+16	comment	comment	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	3	parataxis	_	_
+17	on	on	ADP	IN	_	19	case	_	_
+18	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+19	results	result	NOUN	NNS	Number=Plur	16	obl	_	_
+20	presented	present	VERB	VBN	Tense=Past|VerbForm=Part	19	acl	_	SpaceAfter=No
+21	,	,	PUNCT	,	_	24	punct	_	_
+22	and	and	CCONJ	CC	_	24	cc	_	_
+23	we	we	PRON	PRP	Case=Nom|Number=Plur|Person=1|PronType=Prs	24	nsubj	_	_
+24	discuss	discuss	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	3	conj	_	_
+25	models	model	NOUN	NNS	Number=Plur	24	obj	_	_
+26	designed	design	VERB	VBN	Tense=Past|VerbForm=Part	25	acl	_	_
+27	to	to	PART	TO	_	28	mark	_	_
+28	account	account	VERB	VB	VerbForm=Inf	26	advcl	_	_
+29	for	for	ADP	IN	_	31	case	_	_
+30	the	the	DET	DT	Definite=Def|PronType=Art	31	det	_	_
+31	role	role	NOUN	NN	Number=Sing	28	obl	_	_
+32	of	of	ADP	IN	_	33	case	_	_
+33	BRCA2	brca2	NOUN	NN	Number=Sing	31	nmod	_	_
+34	in	in	ADP	IN	_	37	case	_	_
+35	RAD51–	RAD51-	PROPN	NNP	Number=Sing	37	compound	_	SpaceAfter=No
+36	mediated	mediate	VERB	VBN	Tense=Past|VerbForm=Part	37	amod	_	_
+37	repair	repair	NOUN	NN	Number=Sing	33	nmod	_	SpaceAfter=No
+38	.	.	PUNCT	.	_	3	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 8
+# text = Keywords: breast cancer, homologous recombination
+1	Keywords	keyword	NOUN	NNS	Number=Plur	0	root	_	SpaceAfter=No
+2	:	:	PUNCT	:	_	1	punct	_	_
+3	breast	breast	NOUN	NN	Number=Sing	4	compound	_	_
+4	cancer	cancer	NOUN	NN	Number=Sing	1	appos	_	SpaceAfter=No
+5	,	,	PUNCT	,	_	7	punct	_	_
+6	homologous	homologous	ADJ	JJ	Degree=Pos	7	amod	_	_
+7	recombination	recombination	NOUN	NN	Number=Sing	4	conj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 9
+# text = BRCA2
+1	BRCA2	brca2	NOUN	NN	Number=Sing	0	root	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 10
+# text = BRCA2 was the second breast cancer susceptibility gene to be discovered, and was isolated through positional cloning using data from families with inherited breast cancer [4].
+1	BRCA2	brca2	NOUN	NN	Number=Sing	8	nsubj	_	_
+2	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	8	cop	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	8	det	_	_
+4	second	second	ADJ	JJ	Degree=Pos|NumType=Ord	5	amod	_	_
+5	breast	breast	NOUN	NN	Number=Sing	7	compound	_	_
+6	cancer	cancer	NOUN	NN	Number=Sing	7	compound	_	_
+7	susceptibility	susceptibility	NOUN	NN	Number=Sing	8	compound	_	_
+8	gene	gene	NOUN	NN	Number=Sing	0	root	_	_
+9	to	to	PART	TO	_	11	mark	_	_
+10	be	be	AUX	VB	VerbForm=Inf	11	aux:pass	_	_
+11	discovered	discover	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	8	acl	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	15	punct	_	_
+13	and	and	CCONJ	CC	_	15	cc	_	_
+14	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	15	aux:pass	_	_
+15	isolated	isolate	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	8	conj	_	_
+16	through	through	ADP	IN	_	18	case	_	_
+17	positional	positional	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	cloning	cloning	NOUN	NN	Number=Sing	15	obl	_	_
+19	using	use	VERB	VBG	VerbForm=Ger	18	acl	_	_
+20	data	data	NOUN	NN	Number=Sing	19	obj	_	_
+21	from	from	ADP	IN	_	22	case	_	_
+22	families	family	NOUN	NNS	Number=Plur	19	obl	_	_
+23	with	with	ADP	IN	_	26	case	_	_
+24	inherited	inherit	VERB	VBN	Tense=Past|VerbForm=Part	26	amod	_	_
+25	breast	breast	NOUN	NN	Number=Sing	26	compound	_	_
+26	cancer	cancer	NOUN	NN	Number=Sing	22	nmod	_	_
+27	[	[	PUNCT	-LRB-	_	28	punct	_	SpaceAfter=No
+28	4	4	NUM	CD	NumType=Card	26	appos	_	SpaceAfter=No
+29	]	]	PUNCT	-RRB-	_	28	punct	_	SpaceAfter=No
+30	.	.	PUNCT	.	_	8	punct	_	_
+
+# sent_id = 11
+# text = Cells with mutant BRCA2 protein are, like many cancer cells, genetically unstable and accumulate gross chromosomal rearrangements [5,6].
+1	Cells	cell	NOUN	NNS	Number=Plur	6	nsubj	_	_
+2	with	with	ADP	IN	_	5	case	_	_
+3	mutant	mutant	ADJ	JJ	Degree=Pos	5	amod	_	_
+4	BRCA2	brca2	NOUN	NN	Number=Sing	5	compound	_	_
+5	protein	protein	NOUN	NN	Number=Sing	1	nmod	_	_
+6	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	SpaceAfter=No
+7	,	,	PUNCT	,	_	11	punct	_	_
+8	like	like	ADP	IN	_	11	case	_	_
+9	many	many	ADJ	JJ	Degree=Pos	11	amod	_	_
+10	cancer	cancer	NOUN	NN	Number=Sing	11	compound	_	_
+11	cells	cell	NOUN	NNS	Number=Plur	1	nmod	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	11	punct	_	_
+13	genetically	genetically	ADV	RB	_	14	advmod	_	_
+14	unstable	unstable	ADJ	JJ	Degree=Pos	11	amod	_	_
+15	and	and	CCONJ	CC	_	16	cc	_	_
+16	accumulate	accumulate	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	14	conj	_	_
+17	gross	gross	ADJ	JJ	Degree=Pos	19	amod	_	_
+18	chromosomal	chromosomal	ADJ	JJ	Degree=Pos	19	amod	_	_
+19	rearrangements	rearrangement	NOUN	NNS	Number=Plur	16	obj	_	_
+20	[	[	PUNCT	-LRB-	_	22	punct	_	SpaceAfter=No
+21	5	5	NUM	CD	NumType=Card	22	nummod	_	SpaceAfter=No
+22	,6	,6	NUM	CD	NumType=Card	19	appos	_	SpaceAfter=No
+23	]	]	PUNCT	-RRB-	_	22	punct	_	SpaceAfter=No
+24	.	.	PUNCT	.	_	11	punct	_	_
+
+# sent_id = 12
+# text = The sequence of this large protein (3418 amino acids) offers very little clue to its function, although there are eight repeated segments (termed BRC repeats) in the middle of the protein that are highly conserved among mammalian orthologs [7,8].
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	sequence	sequence	NOUN	NN	Number=Sing	12	nsubj	_	_
+3	of	of	ADP	IN	_	6	case	_	_
+4	this	this	DET	DT	Number=Sing|PronType=Dem	6	det	_	_
+5	large	large	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	protein	protein	NOUN	NN	Number=Sing	2	nmod	_	_
+7	(	(	PUNCT	-LRB-	_	10	punct	_	SpaceAfter=No
+8	3418	3418	NUM	CD	NumType=Card	10	nummod	_	_
+9	amino	amino	NOUN	NN	Number=Sing	10	compound	_	_
+10	acids	acid	NOUN	NNS	Number=Plur	6	appos	_	SpaceAfter=No
+11	)	)	PUNCT	-RRB-	_	10	punct	_	_
+12	offers	offer	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+13	very	very	ADV	RB	_	14	advmod	_	_
+14	little	little	ADJ	JJ	Degree=Pos	15	amod	_	_
+15	clue	clue	NOUN	NN	Number=Sing	12	obj	_	_
+16	to	to	ADP	IN	_	18	case	_	_
+17	its	its	PRON	PRP$	Gender=Neut|Number=Sing|Person=3|Poss=Yes|PronType=Prs	18	nmod:poss	_	_
+18	function	function	NOUN	NN	Number=Sing	12	obl	_	SpaceAfter=No
+19	,	,	PUNCT	,	_	12	punct	_	_
+20	although	although	SCONJ	IN	_	22	mark	_	_
+21	there	there	PRON	EX	_	22	expl	_	_
+22	are	be	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	12	advcl	_	_
+23	eight	eight	NUM	CD	NumType=Card	25	nummod	_	_
+24	repeated	repeat	VERB	VBN	Tense=Past|VerbForm=Part	25	amod	_	_
+25	segments	segment	NOUN	NNS	Number=Plur	22	nsubj	_	_
+26	(	(	PUNCT	-LRB-	_	29	punct	_	SpaceAfter=No
+27	termed	term	VERB	VBN	Tense=Past|VerbForm=Part	25	acl	_	_
+28	BRC	brc	NOUN	NN	Number=Sing	29	compound	_	_
+29	repeats	repeat	NOUN	NNS	Number=Plur	25	appos	_	SpaceAfter=No
+30	)	)	PUNCT	-RRB-	_	29	punct	_	_
+31	in	in	ADP	IN	_	33	case	_	_
+32	the	the	DET	DT	Definite=Def|PronType=Art	33	det	_	_
+33	middle	middle	NOUN	NN	Number=Sing	25	nmod	_	_
+34	of	of	ADP	IN	_	36	case	_	_
+35	the	the	DET	DT	Definite=Def|PronType=Art	36	det	_	_
+36	protein	protein	NOUN	NN	Number=Sing	33	nmod	_	_
+37	that	that	PRON	WDT	PronType=Rel	40	nsubj:pass	_	_
+38	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	40	aux:pass	_	_
+39	highly	highly	ADV	RB	_	40	advmod	_	_
+40	conserved	conserve	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	25	acl:relcl	_	_
+41	among	among	ADP	IN	_	43	case	_	_
+42	mammalian	mammalian	ADJ	JJ	Degree=Pos	43	amod	_	_
+43	orthologs	ortholog	NOUN	NNS	Number=Plur	40	obl	_	_
+44	[	[	PUNCT	-LRB-	_	46	punct	_	SpaceAfter=No
+45	7	7	NUM	CD	NumType=Card	46	nummod	_	SpaceAfter=No
+46	,8	,8	NUM	CD	NumType=Card	43	appos	_	SpaceAfter=No
+47	]	]	PUNCT	-RRB-	_	46	punct	_	SpaceAfter=No
+48	.	.	PUNCT	.	_	12	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 13
+# text = Breast cancer susceptibility genes and DNA repair
+1	Breast	breast	NOUN	NN	Number=Sing	2	compound	_	_
+2	cancer	cancer	NOUN	NN	Number=Sing	3	compound	_	_
+3	susceptibility	susceptibility	NOUN	NN	Number=Sing	4	compound	_	_
+4	genes	gene	NOUN	NNS	Number=Plur	0	root	_	_
+5	and	and	CCONJ	CC	_	7	cc	_	_
+6	DNA	dna	NOUN	NN	Number=Sing	7	compound	_	_
+7	repair	repair	NOUN	NN	Number=Sing	4	conj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 14
+# text = Following the landmark discovery by Scully et al that the homologous recombinase RAD51 colocalizes at subnuclear sites with BRCA1
+1	Following	follow	VERB	VBG	VerbForm=Ger	4	case	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+3	landmark	landmark	NOUN	NNP	Number=Sing	4	compound	_	_
+4	discovery	discovery	NOUN	NN	Number=Sing	0	root	_	_
+5	by	by	ADP	IN	_	6	case	_	_
+6	Scully	Scully	PROPN	NNP	Number=Sing	4	nmod	_	_
+7	et	et	PROPN	NNP	Number=Sing	6	flat	_	_
+8	al	al	PROPN	NNP	Number=Sing	6	flat	_	_
+9	that	that	SCONJ	IN	_	14	mark	_	_
+10	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+11	homologous	homologous	ADJ	JJ	Degree=Pos	14	amod	_	_
+12	recombinase	recombinase	NOUN	NN	Number=Sing	13	compound	_	_
+13	RAD51	rad51	NOUN	NN	Number=Sing	14	compound	_	_
+14	colocalizes	colocalize	NOUN	NNS	Number=Plur	4	acl	_	_
+15	at	at	ADP	IN	_	17	case	_	_
+16	subnuclear	subnuclear	ADJ	JJ	Degree=Pos	17	amod	_	_
+17	sites	site	NOUN	NNS	Number=Plur	14	nmod	_	_
+18	with	with	ADP	IN	_	19	case	_	_
+19	BRCA1	brca1	NOUN	NN	Number=Sing	14	nmod	_	_
+
+# sent_id = 15
+# text = [9], a number of additional results have provided evidence that both BRCA1 and BRCA2 are involved in recombinational repair of DNA damage.
+1	[	[	PUNCT	-LRB-	_	2	punct	_	SpaceAfter=No
+2	9	9	X	LS	_	11	nummod	_	SpaceAfter=No
+3	]	]	PUNCT	-RRB-	_	2	punct	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	11	punct	_	_
+5	a	a	DET	DT	Definite=Ind|PronType=Art	6	det	_	_
+6	number	number	NOUN	NN	Number=Sing	11	nsubj	_	_
+7	of	of	ADP	IN	_	9	case	_	_
+8	additional	additional	ADJ	JJ	Degree=Pos	9	amod	_	_
+9	results	result	NOUN	NNS	Number=Plur	6	nmod	_	_
+10	have	have	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	11	aux	_	_
+11	provided	provide	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+12	evidence	evidence	NOUN	NN	Number=Sing	11	obj	_	_
+13	that	that	SCONJ	IN	_	19	mark	_	_
+14	both	both	CCONJ	CC	_	15	cc:preconj	_	_
+15	BRCA1	brca1	NOUN	NN	Number=Sing	19	nsubj	_	_
+16	and	and	CCONJ	CC	_	17	cc	_	_
+17	BRCA2	brca2	NOUN	NNS	Number=Plur	15	conj	_	_
+18	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	19	cop	_	_
+19	involved	involved	ADJ	JJ	Degree=Pos	12	acl	_	_
+20	in	in	ADP	IN	_	22	case	_	_
+21	recombinational	recombinational	ADJ	JJ	Degree=Pos	22	amod	_	_
+22	repair	repair	NOUN	NN	Number=Sing	19	obl	_	_
+23	of	of	ADP	IN	_	25	case	_	_
+24	DNA	dna	NOUN	NN	Number=Sing	25	compound	_	_
+25	damage	damage	NOUN	NN	Number=Sing	22	nmod	_	SpaceAfter=No
+26	.	.	PUNCT	.	_	11	punct	_	_
+
+# sent_id = 16
+# text = BRCA1 and BRCA2 form discrete nuclear foci during the S phase and after exposure to DNA damaging agents [9,10,11].
+1	BRCA1	brca1	NOUN	NN	Number=Sing	7	compound	_	_
+2	and	and	CCONJ	CC	_	4	cc	_	_
+3	BRCA2	brca2	NOUN	NN	Number=Sing	4	compound	_	_
+4	form	form	NOUN	NN	Number=Sing	1	conj	_	_
+5	discrete	discrete	ADJ	JJ	Degree=Pos	7	amod	_	_
+6	nuclear	nuclear	ADJ	JJ	Degree=Pos	7	amod	_	_
+7	foci	foci	NOUN	NNS	Number=Plur	0	root	_	_
+8	during	during	ADP	IN	_	11	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	11	det	_	_
+10	S	's	PART	POS	_	9	case	_	_
+11	phase	phase	NOUN	NN	Number=Sing	7	nmod	_	_
+12	and	and	CCONJ	CC	_	14	cc	_	_
+13	after	after	ADP	IN	_	14	case	_	_
+14	exposure	exposure	NOUN	NN	Number=Sing	11	conj	_	_
+15	to	to	ADP	IN	_	18	case	_	_
+16	DNA	dna	NOUN	NN	Number=Sing	18	compound	_	_
+17	damaging	damaging	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	agents	agent	NOUN	NNS	Number=Plur	14	nmod	_	_
+19	[	[	PUNCT	-LRB-	_	20	punct	_	SpaceAfter=No
+20	9,10,11	9,10,11	NUM	CD	NumType=Card	18	appos	_	SpaceAfter=No
+21	]	]	PUNCT	-RRB-	_	20	punct	_	SpaceAfter=No
+22	.	.	PUNCT	.	_	1	punct	_	_
+
+# sent_id = 17
+# text = These foci are probably sites of repair of spontaneous and induced DNA damage [12,13,14].
+1	These	these	DET	DT	Number=Plur|PronType=Dem	2	det	_	_
+2	foci	foci	NOUN	NNS	Number=Plur	5	nsubj	_	_
+3	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	5	cop	_	_
+4	probably	probably	ADV	RB	_	5	advmod	_	_
+5	sites	site	NOUN	NNS	Number=Plur	0	root	_	_
+6	of	of	ADP	IN	_	7	case	_	_
+7	repair	repair	NOUN	NN	Number=Sing	5	nmod	_	_
+8	of	of	ADP	IN	_	13	case	_	_
+9	spontaneous	spontaneous	ADJ	JJ	Degree=Pos	13	amod	_	_
+10	and	and	CCONJ	CC	_	11	cc	_	_
+11	induced	induce	VERB	VBN	Tense=Past|VerbForm=Part	9	conj	_	_
+12	DNA	dna	NOUN	NN	Number=Sing	13	compound	_	_
+13	damage	damage	NOUN	NN	Number=Sing	7	nmod	_	_
+14	[	[	PUNCT	-LRB-	_	15	punct	_	SpaceAfter=No
+15	12,13,14	12,13,14	NUM	CD	NumType=Card	13	appos	_	SpaceAfter=No
+16	]	]	PUNCT	-RRB-	_	15	punct	_	SpaceAfter=No
+17	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 18
+# text = Cell lines defective in either BRCA1 or BRCA2 are sensitive to damaging agents that form double-strand breaks (DSBs), as are other cell lines defective in recombinational repair (reviewed in [15]).
+1	Cell	cell	NOUN	NN	Number=Sing	2	compound	_	_
+2	lines	line	NOUN	NNS	Number=Plur	10	nsubj	_	_
+3	defective	defective	ADJ	JJ	Degree=Pos	2	amod	_	_
+4	in	in	ADP	IN	_	6	case	_	_
+5	either	either	CCONJ	CC	_	6	cc:preconj	_	_
+6	BRCA1	brca1	NOUN	NN	Number=Sing	3	obl	_	_
+7	or	or	CCONJ	CC	_	8	cc	_	_
+8	BRCA2	brca2	NOUN	NNS	Number=Plur	6	conj	_	_
+9	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	10	cop	_	_
+10	sensitive	sensitive	ADJ	JJ	Degree=Pos	0	root	_	_
+11	to	to	ADP	IN	_	13	case	_	_
+12	damaging	damaging	ADJ	JJ	Degree=Pos	13	amod	_	_
+13	agents	agent	NOUN	NNS	Number=Plur	10	obl	_	_
+14	that	that	PRON	WDT	PronType=Rel	15	nsubj	_	_
+15	form	form	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	13	acl:relcl	_	_
+16	double	double	ADJ	JJ	Degree=Pos	18	amod	_	SpaceAfter=No
+17	-	-	PUNCT	HYPH	_	18	punct	_	SpaceAfter=No
+18	strand	strand	NOUN	NN	Number=Sing	19	compound	_	_
+19	breaks	break	NOUN	NNS	Number=Plur	15	obj	_	_
+20	(	(	PUNCT	-LRB-	_	21	punct	_	SpaceAfter=No
+21	DSBs	dsbs	NOUN	NN	Number=Sing	19	appos	_	SpaceAfter=No
+22	)	)	PUNCT	-RRB-	_	21	punct	_	SpaceAfter=No
+23	,	,	PUNCT	,	_	15	punct	_	_
+24	as	as	SCONJ	IN	_	28	mark	_	_
+25	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	28	cop	_	_
+26	other	other	ADJ	JJ	Degree=Pos	28	amod	_	_
+27	cell	cell	NOUN	NN	Number=Sing	28	compound	_	_
+28	lines	line	NOUN	NNS	Number=Plur	15	nsubj	_	_
+29	defective	defective	ADJ	JJ	Degree=Pos	28	amod	_	_
+30	in	in	ADP	IN	_	32	case	_	_
+31	recombinational	recombinational	NOUN	NN	Number=Sing	32	compound	_	_
+32	repair	repair	NOUN	NN	Number=Sing	29	obl	_	_
+33	(	(	PUNCT	-LRB-	_	34	punct	_	SpaceAfter=No
+34	reviewed	review	VERB	VBN	Tense=Past|VerbForm=Part	28	acl	_	_
+35	in	in	ADP	IN	_	37	case	_	_
+36	[	[	PUNCT	-LRB-	_	37	punct	_	SpaceAfter=No
+37	15	15	NUM	CD	NumType=Card	34	obl	_	SpaceAfter=No
+38	]	]	PUNCT	-RRB-	_	34	punct	_	SpaceAfter=No
+39	)	)	PUNCT	-RRB-	_	34	punct	_	SpaceAfter=No
+40	.	.	PUNCT	.	_	10	punct	_	_
+
+# sent_id = 19
+# text = BRCA2 interacts with the RAD51 recombinase via direct protein-protein contacts [16,17,18,19].
+1	BRCA2	brca2	NOUN	NN	Number=Sing	2	nsubj	_	_
+2	interacts	interact	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	with	with	ADP	IN	_	6	case	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+5	RAD51	rad51	NOUN	NN	Number=Sing	6	compound	_	_
+6	recombinase	recombinase	NOUN	NN	Number=Sing	2	obl	_	_
+7	via	via	ADP	IN	_	11	case	_	_
+8	direct	direct	ADJ	JJ	Degree=Pos	11	amod	_	_
+9	protein-	protein-	X	NN	Number=Sing	10	compound	_	SpaceAfter=No
+10	protein	protein	NOUN	NN	Number=Sing	11	compound	_	_
+11	contacts	contact	NOUN	NNS	Number=Plur	6	nmod	_	_
+12	[	[	PUNCT	-LRB-	_	13	punct	_	SpaceAfter=No
+13	16,17,18,19	16,17,18,19	NUM	CD	NumType=Card	11	appos	_	SpaceAfter=No
+14	]	]	PUNCT	-RRB-	_	13	punct	_	SpaceAfter=No
+15	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 20
+# text = Biochemical analysis also showed interaction between BRCA1 and RAD51, although these detected interactions may have been indirect [9].
+1	Biochemical	biochemical	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	analysis	analysis	NOUN	NN	Number=Sing	4	nsubj	_	_
+3	also	also	ADV	RB	_	4	advmod	_	_
+4	showed	show	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	_
+5	interaction	interaction	NOUN	NN	Number=Sing	4	obj	_	_
+6	between	between	ADP	IN	_	7	case	_	_
+7	BRCA1	brca1	NOUN	NN	Number=Sing	5	nmod	_	_
+8	and	and	CCONJ	CC	_	9	cc	_	_
+9	RAD51	rad51	NOUN	NN	Number=Sing	7	conj	_	SpaceAfter=No
+10	,	,	PUNCT	,	_	4	punct	_	_
+11	although	although	SCONJ	IN	_	18	mark	_	_
+12	these	these	DET	DT	Number=Plur|PronType=Dem	14	det	_	_
+13	detected	detect	VERB	VBN	Tense=Past|VerbForm=Part	14	amod	_	_
+14	interactions	interaction	NOUN	NNS	Number=Plur	18	nsubj	_	_
+15	may	may	AUX	MD	VerbForm=Fin	18	aux	_	_
+16	have	have	AUX	VB	VerbForm=Inf	18	aux	_	_
+17	been	be	AUX	VBN	Tense=Past|VerbForm=Part	18	cop	_	_
+18	indirect	indirect	ADJ	JJ	Degree=Pos	4	advcl	_	_
+19	[	[	PUNCT	-LRB-	_	20	punct	_	SpaceAfter=No
+20	9	9	NUM	CD	NumType=Card	18	nummod	_	SpaceAfter=No
+21	]	]	PUNCT	-RRB-	_	20	punct	_	SpaceAfter=No
+22	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 21
+# text = The BRC repeats of BRCA2 are responsible for direct RAD51 interaction.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	BRC	brc	NOUN	NN	Number=Sing	3	nsubj	_	_
+3	repeats	repeat	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	7	nsubj	_	_
+4	of	of	ADP	IN	_	5	case	_	_
+5	BRCA2	brca2	NOUN	NNS	Number=Plur	3	obl	_	_
+6	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	7	cop	_	_
+7	responsible	responsible	ADJ	JJ	Degree=Pos	0	root	_	_
+8	for	for	ADP	IN	_	11	case	_	_
+9	direct	direct	ADJ	JJ	Degree=Pos	11	amod	_	_
+10	RAD51	rad51	NOUN	NN	Number=Sing	11	compound	_	_
+11	interaction	interaction	NOUN	NN	Number=Sing	7	obl	_	SpaceAfter=No
+12	.	.	PUNCT	.	_	7	punct	_	_
+
+# sent_id = 22
+# text = Cells lacking BRCA1/2 fail to form damage-induced subnuclear RAD51 foci with normal efficiency, suggesting that these proteins are required for the formation of recombinase complexes at the sites of DNA damage [20,21].
+1	Cells	cell	NOUN	NNS	Number=Plur	6	nsubj	_	_
+2	lacking	lack	VERB	VBG	VerbForm=Ger	1	acl	_	_
+3	BRCA1	brca1	NOUN	NN	Number=Sing	2	obj	_	SpaceAfter=No
+4	/	/	PUNCT	,	_	5	cc	_	SpaceAfter=No
+5	2	2	NUM	CD	NumType=Card	3	conj	_	_
+6	fail	fail	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+7	to	to	PART	TO	_	8	mark	_	_
+8	form	form	VERB	VB	VerbForm=Inf	6	xcomp	_	_
+9	damage	damage	NOUN	NN	Number=Sing	11	obl:npmod	_	SpaceAfter=No
+10	-	-	PUNCT	HYPH	_	11	punct	_	SpaceAfter=No
+11	induced	induce	VERB	VBN	Tense=Past|VerbForm=Part	14	amod	_	_
+12	subnuclear	subnuclear	NOUN	NN	Number=Sing	14	compound	_	_
+13	RAD51	rad51	NOUN	NN	Number=Sing	14	compound	_	_
+14	foci	foci	NOUN	NNS	Number=Plur	8	obj	_	_
+15	with	with	ADP	IN	_	17	case	_	_
+16	normal	normal	ADJ	JJ	Degree=Pos	17	amod	_	_
+17	efficiency	efficiency	NOUN	NN	Number=Sing	8	obl	_	SpaceAfter=No
+18	,	,	PUNCT	,	_	8	punct	_	_
+19	suggesting	suggest	VERB	VBG	VerbForm=Ger	8	advcl	_	_
+20	that	that	SCONJ	IN	_	24	mark	_	_
+21	these	these	DET	DT	Number=Plur|PronType=Dem	22	det	_	_
+22	proteins	protein	NOUN	NNS	Number=Plur	24	nsubj:pass	_	_
+23	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	24	aux:pass	_	_
+24	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	19	ccomp	_	_
+25	for	for	ADP	IN	_	27	case	_	_
+26	the	the	DET	DT	Definite=Def|PronType=Art	27	det	_	_
+27	formation	formation	NOUN	NN	Number=Sing	24	obl	_	_
+28	of	of	ADP	IN	_	30	case	_	_
+29	recombinase	recombinase	NOUN	NN	Number=Sing	30	compound	_	_
+30	complexes	complex	NOUN	NNS	Number=Plur	27	nmod	_	_
+31	at	at	ADP	IN	_	33	case	_	_
+32	the	the	DET	DT	Definite=Def|PronType=Art	33	det	_	_
+33	sites	site	NOUN	NNS	Number=Plur	30	nmod	_	_
+34	of	of	ADP	IN	_	36	case	_	_
+35	DNA	dna	NOUN	NN	Number=Sing	36	compound	_	_
+36	damage	damage	NOUN	NN	Number=Sing	33	nmod	_	_
+37	[	[	PUNCT	-LRB-	_	38	punct	_	SpaceAfter=No
+38	20,21	20,21	NUM	CD	NumType=Card	36	appos	_	SpaceAfter=No
+39	]	]	PUNCT	-RRB-	_	38	punct	_	SpaceAfter=No
+40	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 23
+# text = Finally, genetic measurements of recombination frequency have shown that Brca1-/- embryonic stem (ES) cells are deficient in recombinational DSB repair [22,23].
+1	Finally	finally	ADV	RB	_	9	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	9	punct	_	_
+3	genetic	genetic	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	measurements	measurement	NOUN	NNS	Number=Plur	9	nsubj	_	_
+5	of	of	ADP	IN	_	7	case	_	_
+6	recombination	recombination	NOUN	NN	Number=Sing	7	compound	_	_
+7	frequency	frequency	NOUN	NN	Number=Sing	4	nmod	_	_
+8	have	have	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	9	aux	_	_
+9	shown	show	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+10	that	that	SCONJ	IN	_	21	mark	_	_
+11	Brca	brca	NOUN	NN	Number=Sing	19	compound	_	SpaceAfter=No
+12	1	1	NUM	CD	NumType=Card	14	nummod	_	SpaceAfter=No
+13	-/-	-/-	PUNCT	HYPH	_	14	punct	_	_
+14	embryonic	embryonic	ADJ	JJ	Degree=Pos	15	amod	_	_
+15	stem	stem	NOUN	NN	Number=Sing	21	nsubj	_	_
+16	(	(	PUNCT	-LRB-	_	17	punct	_	SpaceAfter=No
+17	ES	es	X	LS	_	15	nummod	_	SpaceAfter=No
+18	)	)	PUNCT	-RRB-	_	17	punct	_	_
+19	cells	cell	NOUN	NNS	Number=Plur	21	nsubj	_	_
+20	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	21	cop	_	_
+21	deficient	deficient	ADJ	JJ	Degree=Pos	9	ccomp	_	_
+22	in	in	ADP	IN	_	25	case	_	_
+23	recombinational	recombinational	NOUN	NN	Number=Sing	24	compound	_	_
+24	DSB	dsb	NOUN	NN	Number=Sing	25	compound	_	_
+25	repair	repair	NOUN	NN	Number=Sing	21	obl	_	_
+26	[	[	PUNCT	-LRB-	_	27	punct	_	SpaceAfter=No
+27	22,23	22,23	NOUN	CD	NumType=Card	25	appos	_	SpaceAfter=No
+28	]	]	PUNCT	-RRB-	_	27	punct	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	9	punct	_	_
+
+# sent_id = 24
+# text = The similarity between phenotypes associated with BRCA1 and BRCA2 deficiency, together with data showing a similar effect of DNA damage on distribution of BRCA1 and BRCA2 in repair-proficient cells, led to the hypothesis that BRCA2, like BRCA1, is required for efficient recombinational repair.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	similarity	similarity	NOUN	NN	Number=Sing	33	nsubj	_	_
+3	between	between	ADP	IN	_	4	case	_	_
+4	phenotypes	phenotype	NOUN	NNS	Number=Plur	2	nmod	_	_
+5	associated	associate	VERB	VBN	Tense=Past|VerbForm=Part	4	acl	_	_
+6	with	with	ADP	IN	_	7	case	_	_
+7	BRCA1	brca1	NOUN	NN	Number=Sing	5	obl	_	_
+8	and	and	CCONJ	CC	_	10	cc	_	_
+9	BRCA2	brca2	NOUN	NN	Number=Sing	10	compound	_	_
+10	deficiency	deficiency	NOUN	NN	Number=Sing	7	conj	_	SpaceAfter=No
+11	,	,	PUNCT	,	_	4	punct	_	_
+12	together	together	ADV	RB	_	4	advmod	_	_
+13	with	with	ADP	IN	_	14	case	_	_
+14	data	data	NOUN	NN	Number=Sing	5	obl	_	_
+15	showing	show	VERB	VBG	VerbForm=Ger	4	acl	_	_
+16	a	a	DET	DT	Definite=Ind|PronType=Art	18	det	_	_
+17	similar	similar	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	effect	effect	NOUN	NN	Number=Sing	15	obj	_	_
+19	of	of	ADP	IN	_	21	case	_	_
+20	DNA	dna	NOUN	NN	Number=Sing	21	compound	_	_
+21	damage	damage	NOUN	NN	Number=Sing	18	nmod	_	_
+22	on	on	ADP	IN	_	23	case	_	_
+23	distribution	distribution	NOUN	NN	Number=Sing	21	nmod	_	_
+24	of	of	ADP	IN	_	25	case	_	_
+25	BRCA1	brca1	NOUN	NN	Number=Sing	23	nmod	_	_
+26	and	and	CCONJ	CC	_	27	cc	_	_
+27	BRCA2	brca2	NOUN	NN	Number=Sing	25	conj	_	_
+28	in	in	ADP	IN	_	31	case	_	_
+29	repair-	repair-	X	AFX	_	30	advmod	_	SpaceAfter=No
+30	proficient	proficient	ADJ	JJ	Degree=Pos	31	amod	_	_
+31	cells	cell	NOUN	NNS	Number=Plur	21	nmod	_	SpaceAfter=No
+32	,	,	PUNCT	,	_	2	punct	_	_
+33	led	lead	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+34	to	to	ADP	IN	_	36	case	_	_
+35	the	the	DET	DT	Definite=Def|PronType=Art	36	det	_	_
+36	hypothesis	hypothesis	NOUN	NN	Number=Sing	33	obl	_	_
+37	that	that	PRON	WDT	PronType=Rel	44	obj	_	_
+38	BRCA2	brca2	NOUN	NN	Number=Sing	44	nsubj:pass	_	SpaceAfter=No
+39	,	,	PUNCT	,	_	41	punct	_	_
+40	like	like	ADP	IN	_	41	case	_	_
+41	BRCA1	brca1	NOUN	NN	Number=Sing	38	nmod	_	SpaceAfter=No
+42	,	,	PUNCT	,	_	44	punct	_	_
+43	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	44	aux:pass	_	_
+44	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	36	acl:relcl	_	_
+45	for	for	ADP	IN	_	48	case	_	_
+46	efficient	efficient	ADJ	JJ	Degree=Pos	48	amod	_	_
+47	recombinational	recombinational	NOUN	NN	Number=Sing	48	compound	_	_
+48	repair	repair	NOUN	NN	Number=Sing	44	obl	_	SpaceAfter=No
+49	.	.	PUNCT	.	_	33	punct	_	_
+
+# sent_id = 25
+# text = The paper by Moynahan et al [24] provides important support for this hypothesis.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	paper	paper	NOUN	NN	Number=Sing	10	nsubj	_	_
+3	by	by	ADP	IN	_	4	case	_	_
+4	Moynahan	Moynahan	PROPN	NNP	Number=Sing	2	nmod	_	_
+5	et	et	PROPN	NNP	Number=Sing	4	flat	_	_
+6	al	al	PROPN	NNP	Number=Sing	2	nmod	_	_
+7	[	[	PUNCT	-LRB-	_	8	punct	_	SpaceAfter=No
+8	24	24	NUM	CD	NumType=Card	6	appos	_	SpaceAfter=No
+9	]	]	PUNCT	-RRB-	_	8	punct	_	_
+10	provides	provide	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+11	important	important	ADJ	JJ	Degree=Pos	12	amod	_	_
+12	support	support	NOUN	NN	Number=Sing	10	obj	_	_
+13	for	for	ADP	IN	_	15	case	_	_
+14	this	this	DET	DT	Number=Sing|PronType=Dem	15	det	_	_
+15	hypothesis	hypothesis	NOUN	NN	Number=Sing	12	nmod	_	SpaceAfter=No
+16	.	.	PUNCT	.	_	10	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 26
+# text = Measuring DSB-induced recombination frequency in BRCA2-defective cells
+1	Measuring	measure	VERB	VBG	VerbForm=Ger	0	root	_	_
+2	DSB	DSB	PROPN	NNP	Number=Sing	4	compound	_	SpaceAfter=No
+3	-	-	PUNCT	HYPH	_	4	punct	_	SpaceAfter=No
+4	induced	induce	VERB	VBN	Tense=Past|VerbForm=Part	6	amod	_	_
+5	recombination	recombination	NOUN	NN	Number=Sing	6	compound	_	_
+6	frequency	frequency	NOUN	NN	Number=Sing	1	obj	_	_
+7	in	in	ADP	IN	_	8	case	_	_
+8	BRCA2	brca2	NOUN	NN	Number=Sing	6	nmod	_	SpaceAfter=No
+9	-	-	PUNCT	,	_	11	punct	_	SpaceAfter=No
+10	defective	defective	ADJ	JJ	Degree=Pos	11	amod	_	_
+11	cells	cell	NOUN	NNS	Number=Plur	6	conj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 27
+# text = Pierce et al have designed a set of recombination substrates for measuring the level of homologous recombination in vivo (Fig.
+1	Pierce	Pierce	PROPN	NNP	Number=Sing	5	nsubj	_	_
+2	et	et	PROPN	NNP	Number=Sing	1	flat	_	_
+3	al	al	PROPN	NNP	Number=Sing	5	nsubj	_	_
+4	have	have	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	5	aux	_	_
+5	designed	design	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+6	a	a	DET	DT	Definite=Ind|PronType=Art	7	det	_	_
+7	set	set	NOUN	NN	Number=Sing	5	obj	_	_
+8	of	of	ADP	IN	_	10	case	_	_
+9	recombination	recombination	NOUN	NN	Number=Sing	10	compound	_	_
+10	substrates	substrate	NOUN	NNS	Number=Plur	7	nmod	_	_
+11	for	for	SCONJ	IN	_	12	mark	_	_
+12	measuring	measure	VERB	VBG	VerbForm=Ger	5	advcl	_	_
+13	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+14	level	level	NOUN	NN	Number=Sing	12	obj	_	_
+15	of	of	ADP	IN	_	17	case	_	_
+16	homologous	homologous	ADJ	JJ	Degree=Pos	17	amod	_	_
+17	recombination	recombination	NOUN	NN	Number=Sing	14	nmod	_	_
+18	in	in	ADP	IN	_	19	case	_	_
+19	vivo	vivo	NOUN	NN	Number=Sing	17	nmod	_	_
+20	(	(	PUNCT	-LRB-	_	21	punct	_	SpaceAfter=No
+21	Fig	fig	NOUN	NN	Number=Sing	19	appos	_	SpaceAfter=No
+22	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 28
+# text = 1) [25].
+1	1	1	X	LS	_	0	root	_	SpaceAfter=No
+2	)	)	PUNCT	-RRB-	_	1	punct	_	_
+3	[	[	PUNCT	-LRB-	_	4	punct	_	SpaceAfter=No
+4	25	25	NUM	LS	_	2	nummod	_	SpaceAfter=No
+5	]	]	PUNCT	-RRB-	_	4	punct	_	SpaceAfter=No
+6	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 29
+# text = The DNA substrate contains a pair of mutated GFP genes (GFP encodes the easily detected green fluorescent protein), one of which contains a restriction site for I-SceI, a yeast intron encoded endonuclease with an 18 base pair recognition site.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	DNA	dna	NOUN	NN	Number=Sing	3	compound	_	_
+3	substrate	substrate	NOUN	NN	Number=Sing	4	nsubj	_	_
+4	contains	contain	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+5	a	a	DET	DT	Definite=Ind|PronType=Art	6	det	_	_
+6	pair	pair	NOUN	NN	Number=Sing	4	obj	_	_
+7	of	of	ADP	IN	_	10	case	_	_
+8	mutated	mutate	VERB	VBN	Tense=Past|VerbForm=Part	10	amod	_	_
+9	GFP	gfp	NOUN	NN	Number=Sing	10	compound	_	_
+10	genes	gene	NOUN	NNS	Number=Plur	6	nmod	_	_
+11	(	(	PUNCT	-LRB-	_	13	punct	_	SpaceAfter=No
+12	GFP	gfp	NOUN	NN	Number=Sing	13	nsubj	_	_
+13	encodes	encode	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	10	parataxis	_	_
+14	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+15	easily	easily	ADV	RB	_	16	advmod	_	_
+16	detected	detect	VERB	VBN	Tense=Past|VerbForm=Part	19	amod	_	_
+17	green	green	ADJ	JJ	Degree=Pos	19	amod	_	_
+18	fluorescent	fluorescent	NOUN	NN	Number=Sing	19	compound	_	_
+19	protein	protein	NOUN	NN	Number=Sing	13	obj	_	SpaceAfter=No
+20	)	)	PUNCT	-RRB-	_	13	punct	_	SpaceAfter=No
+21	,	,	PUNCT	,	_	4	punct	_	_
+22	one	one	NUM	CD	NumType=Card	25	nsubj	_	_
+23	of	of	ADP	IN	_	24	case	_	_
+24	which	which	PRON	WDT	PronType=Rel	22	nmod	_	_
+25	contains	contain	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	10	acl:relcl	_	_
+26	a	a	DET	DT	Definite=Ind|PronType=Art	28	det	_	_
+27	restriction	restriction	NOUN	NN	Number=Sing	28	compound	_	_
+28	site	site	NOUN	NN	Number=Sing	25	obj	_	_
+29	for	for	ADP	IN	_	32	case	_	_
+30	I	I	PROPN	NNP	Number=Sing	28	nmod	_	SpaceAfter=No
+31	-	-	PUNCT	HYPH	_	32	punct	_	SpaceAfter=No
+32	SceI	SceI	PROPN	NNP	Number=Sing	28	nmod	_	SpaceAfter=No
+33	,	,	PUNCT	,	_	36	punct	_	_
+34	a	a	DET	DT	Definite=Ind|PronType=Art	36	det	_	_
+35	yeast	yeast	NOUN	NN	Number=Sing	36	compound	_	_
+36	intron	intron	NOUN	NN	Number=Sing	30	appos	_	_
+37	encoded	encode	VERB	VBN	Tense=Past|VerbForm=Part	36	acl	_	_
+38	endonuclease	endonuclease	NOUN	NN	Number=Sing	37	obj	_	_
+39	with	with	ADP	IN	_	45	case	_	_
+40	an	a	DET	DT	Definite=Ind|PronType=Art	45	det	_	_
+41	18	18	NUM	CD	NumType=Card	43	nummod	_	_
+42	base	base	NOUN	NN	Number=Sing	43	compound	_	_
+43	pair	pair	NOUN	NN	Number=Sing	45	compound	_	_
+44	recognition	recognition	NOUN	NN	Number=Sing	45	compound	_	_
+45	site	site	NOUN	NN	Number=Sing	37	obl	_	SpaceAfter=No
+46	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 30
+# text = Transient transfection of an I-SceI expression vector results in the production of a DSB in the first mutated copy of GFP.
+1	Transient	transient	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	transfection	transfection	NOUN	NN	Number=Sing	0	root	_	_
+3	of	of	ADP	IN	_	10	case	_	_
+4	an	a	DET	DT	Definite=Ind|PronType=Art	10	det	_	_
+5	I	I	PROPN	NNP	Number=Sing	7	compound	_	SpaceAfter=No
+6	-	-	PUNCT	HYPH	_	7	punct	_	SpaceAfter=No
+7	SceI	SceI	PROPN	NNP	Number=Sing	8	compound	_	_
+8	expression	expression	NOUN	NN	Number=Sing	10	compound	_	_
+9	vector	vector	NOUN	NN	Number=Sing	10	compound	_	_
+10	results	result	NOUN	NNS	Number=Plur	2	nmod	_	_
+11	in	in	ADP	IN	_	13	case	_	_
+12	the	the	DET	DT	Definite=Def|PronType=Art	13	det	_	_
+13	production	production	NOUN	NN	Number=Sing	10	nmod	_	_
+14	of	of	ADP	IN	_	16	case	_	_
+15	a	a	DET	DT	Definite=Ind|PronType=Art	16	det	_	_
+16	DSB	dsb	NOUN	NN	Number=Sing	13	nmod	_	_
+17	in	in	ADP	IN	_	21	case	_	_
+18	the	the	DET	DT	Definite=Def|PronType=Art	21	det	_	_
+19	first	first	ADV	JJ	Degree=Pos|NumType=Ord	21	amod	_	_
+20	mutated	mutate	VERB	VBN	Tense=Past|VerbForm=Part	21	amod	_	_
+21	copy	copy	NOUN	NN	Number=Sing	10	nmod	_	_
+22	of	of	ADP	IN	_	23	case	_	_
+23	GFP	gfp	NOUN	NN	Number=Sing	21	nmod	_	SpaceAfter=No
+24	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 31
+# text = One or both DNA ends formed by the break invade(s) the homologous sequence in the second mutant GFP copy, resulting in repair of the DSB via a homology-mediated gene conversion event.
+1	One	one	NUM	CD	NumType=Card	5	nummod	_	_
+2	or	or	CCONJ	CC	_	3	cc	_	_
+3	both	both	DET	DT	_	1	conj	_	_
+4	DNA	dna	NOUN	NN	Number=Sing	5	compound	_	_
+5	ends	end	NOUN	NNS	Number=Plur	0	root	_	_
+6	formed	form	VERB	VBN	Tense=Past|VerbForm=Part	5	acl	_	_
+7	by	by	ADP	IN	_	10	case	_	_
+8	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+9	break	break	NOUN	NN	Number=Sing	10	compound	_	_
+10	invade	invade	NOUN	NN	Number=Sing	6	obl	_	SpaceAfter=No
+11	(	(	PUNCT	-LRB-	_	10	punct	_	SpaceAfter=No
+12	s	s	X	AFX	_	10	advmod	_	SpaceAfter=No
+13	)	)	PUNCT	-RRB-	_	10	punct	_	_
+14	the	the	DET	DT	Definite=Def|PronType=Art	16	det	_	_
+15	homologous	homologous	ADJ	JJ	Degree=Pos	16	amod	_	_
+16	sequence	sequence	NOUN	NN	Number=Sing	10	appos	_	_
+17	in	in	ADP	IN	_	22	case	_	_
+18	the	the	DET	DT	Definite=Def|PronType=Art	22	det	_	_
+19	second	second	ADJ	JJ	Degree=Pos|NumType=Ord	22	amod	_	_
+20	mutant	mutant	NOUN	NN	Number=Sing	21	compound	_	_
+21	GFP	gfp	NOUN	NN	Number=Sing	22	compound	_	_
+22	copy	copy	NOUN	NN	Number=Sing	16	nmod	_	SpaceAfter=No
+23	,	,	PUNCT	,	_	5	punct	_	_
+24	resulting	result	VERB	VBG	VerbForm=Ger	5	acl	_	_
+25	in	in	ADP	IN	_	26	case	_	_
+26	repair	repair	NOUN	NN	Number=Sing	24	obl	_	_
+27	of	of	ADP	IN	_	29	case	_	_
+28	the	the	DET	DT	Definite=Def|PronType=Art	29	det	_	_
+29	DSB	DSB	PROPN	NNP	Number=Sing	26	nmod	_	_
+30	via	via	ADP	IN	_	37	case	_	_
+31	a	a	DET	DT	Definite=Ind|PronType=Art	37	det	_	_
+32	homology	homology	NOUN	NN	Number=Sing	34	obl:npmod	_	SpaceAfter=No
+33	-	-	PUNCT	HYPH	_	34	punct	_	SpaceAfter=No
+34	mediated	mediate	VERB	VBN	Tense=Past|VerbForm=Part	37	amod	_	_
+35	gene	gene	NOUN	NN	Number=Sing	36	compound	_	_
+36	conversion	conversion	NOUN	NN	Number=Sing	37	compound	_	_
+37	event	event	NOUN	NN	Number=Sing	24	obl	_	SpaceAfter=No
+38	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 32
+# text = The configuration of the GFP construct is such that homology-mediated repair often results in the formation of a functional copy of GFP.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	configuration	configuration	NOUN	NN	Number=Sing	8	nsubj	_	_
+3	of	of	ADP	IN	_	6	case	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+5	GFP	gfp	NOUN	NN	Number=Sing	6	compound	_	_
+6	construct	construct	NOUN	NN	Number=Sing	2	nmod	_	_
+7	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	8	cop	_	_
+8	such	such	ADJ	JJ	Degree=Pos	0	root	_	_
+9	that	that	SCONJ	IN	_	15	mark	_	_
+10	homology	homology	NOUN	NN	Number=Sing	12	obl:npmod	_	SpaceAfter=No
+11	-	-	PUNCT	HYPH	_	12	punct	_	SpaceAfter=No
+12	mediated	mediate	VERB	VBN	Tense=Past|VerbForm=Part	13	amod	_	_
+13	repair	repair	NOUN	NN	Number=Sing	15	nsubj	_	_
+14	often	often	ADV	RB	_	15	advmod	_	_
+15	results	result	NOUN	NNS	Number=Plur	8	ccomp	_	_
+16	in	in	ADP	IN	_	18	case	_	_
+17	the	the	DET	DT	Definite=Def|PronType=Art	18	det	_	_
+18	formation	formation	NOUN	NN	Number=Sing	15	nmod	_	_
+19	of	of	ADP	IN	_	22	case	_	_
+20	a	a	DET	DT	Definite=Ind|PronType=Art	22	det	_	_
+21	functional	functional	ADJ	JJ	Degree=Pos	22	amod	_	_
+22	copy	copy	NOUN	NN	Number=Sing	18	nmod	_	_
+23	of	of	ADP	IN	_	24	case	_	_
+24	GFP	gfp	NOUN	NN	Number=Sing	22	nmod	_	SpaceAfter=No
+25	.	.	PUNCT	.	_	8	punct	_	_
+
+# sent_id = 33
+# text = Such events can be detected by fluorescence-activated cell sorting analysis by virtue of their expression of GFP.
+1	Such	such	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	events	event	NOUN	NNS	Number=Plur	5	nsubj:pass	_	_
+3	can	can	AUX	MD	VerbForm=Fin	5	aux	_	_
+4	be	be	AUX	VB	VerbForm=Inf	5	aux:pass	_	_
+5	detected	detect	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+6	by	by	ADP	IN	_	12	case	_	_
+7	fluorescence	fluorescence	NOUN	NN	Number=Sing	9	obl:npmod	_	SpaceAfter=No
+8	-	-	PUNCT	HYPH	_	9	punct	_	SpaceAfter=No
+9	activated	activate	VERB	VBN	Tense=Past|VerbForm=Part	12	amod	_	_
+10	cell	cell	NOUN	NN	Number=Sing	11	compound	_	_
+11	sorting	sorting	NOUN	NN	Number=Sing	12	compound	_	_
+12	analysis	analysis	NOUN	NN	Number=Sing	5	obl	_	_
+13	by	by	ADP	IN	_	14	case	_	_
+14	virtue	virtue	NOUN	NN	Number=Sing	12	nmod	_	_
+15	of	of	ADP	IN	_	17	case	_	_
+16	their	they	PRON	PRP$	Number=Plur|Person=3|Poss=Yes|PronType=Prs	17	nmod:poss	_	_
+17	expression	expression	NOUN	NN	Number=Sing	14	nmod	_	_
+18	of	of	ADP	IN	_	19	case	_	_
+19	GFP	gfp	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+20	.	.	PUNCT	.	_	5	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 34
+# text = Moynahan et al [24] have used such a GFP recombination substrate to demonstrate that cells with defective BRCA2 protein are deficient in their ability to repair the I-SceI-induced DSB through homologous recombination.
+1	Moynahan	Moynahan	PROPN	NNP	Number=Sing	8	nsubj	_	_
+2	et	et	PROPN	NNP	Number=Sing	1	flat	_	_
+3	al	al	PROPN	NNP	Number=Sing	1	flat	_	_
+4	[	[	PUNCT	-LRB-	_	5	punct	_	SpaceAfter=No
+5	24	24	NUM	CD	NumType=Card	1	appos	_	SpaceAfter=No
+6	]	]	PUNCT	-RRB-	_	5	punct	_	_
+7	have	have	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	8	aux	_	_
+8	used	use	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+9	such	such	DET	PDT	_	13	det:predet	_	_
+10	a	a	DET	DT	Definite=Ind|PronType=Art	13	det	_	_
+11	GFP	gfp	NOUN	NN	Number=Sing	12	compound	_	_
+12	recombination	recombination	NOUN	NN	Number=Sing	13	compound	_	_
+13	substrate	substrate	NOUN	NN	Number=Sing	8	obj	_	_
+14	to	to	PART	TO	_	15	mark	_	_
+15	demonstrate	demonstrate	VERB	VB	VerbForm=Inf	8	advcl	_	_
+16	that	that	SCONJ	IN	_	23	mark	_	_
+17	cells	cell	NOUN	NNS	Number=Plur	23	nsubj	_	_
+18	with	with	ADP	IN	_	21	case	_	_
+19	defective	defective	ADJ	JJ	Degree=Pos	21	amod	_	_
+20	BRCA2	brca2	NOUN	NN	Number=Sing	21	compound	_	_
+21	protein	protein	NOUN	NN	Number=Sing	17	nmod	_	_
+22	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	23	cop	_	_
+23	deficient	deficient	ADJ	JJ	Degree=Pos	15	ccomp	_	_
+24	in	in	ADP	IN	_	26	case	_	_
+25	their	they	PRON	PRP$	Number=Plur|Person=3|Poss=Yes|PronType=Prs	26	nmod:poss	_	_
+26	ability	ability	NOUN	NN	Number=Sing	23	obl	_	_
+27	to	to	PART	TO	_	28	mark	_	_
+28	repair	repair	VERB	VB	VerbForm=Inf	26	acl	_	_
+29	the	the	DET	DT	Definite=Def|PronType=Art	33	det	_	_
+30	I	I	PROPN	NNP	Number=Sing	32	obl:npmod	_	SpaceAfter=No
+31	-	-	PUNCT	HYPH	_	32	punct	_	SpaceAfter=No
+32	SceI-induced	scei-induce	VERB	VBN	Tense=Past|VerbForm=Part	33	amod	_	_
+33	DSB	dsb	NOUN	NN	Number=Sing	28	obj	_	_
+34	through	through	ADP	IN	_	36	case	_	_
+35	homologous	homologous	ADJ	JJ	Degree=Pos	36	amod	_	_
+36	recombination	recombination	NOUN	NN	Number=Sing	28	obl	_	SpaceAfter=No
+37	.	.	PUNCT	.	_	8	punct	_	_
+
+# sent_id = 35
+# text = Expression of I-SceI resulted in 1 out of 1400 cells producing GFP via homologous recombination in the human pancreatic tumor cell line CAPAN-1.
+1	Expression	expression	NOUN	NN	Number=Sing	6	nsubj	_	_
+2	of	of	ADP	IN	_	5	case	_	_
+3	I	I	PRON	NNP	Number=Sing	1	nmod	_	SpaceAfter=No
+4	-	-	PUNCT	HYPH	_	5	punct	_	SpaceAfter=No
+5	SceI	SceI	PROPN	NNP	Number=Sing	1	nmod	_	_
+6	resulted	result	VERB	VBN	Tense=Past|VerbForm=Part	0	root	_	_
+7	in	in	ADP	IN	_	12	case	_	_
+8	1	1	NUM	CD	NumType=Card	12	nummod	_	_
+9	out	out	ADP	IN	_	11	case	_	_
+10	of	of	ADP	IN	_	11	case	_	_
+11	1400	1400	NUM	CD	NumType=Card	8	nmod	_	_
+12	cells	cell	NOUN	NNS	Number=Plur	6	obl	_	_
+13	producing	produce	VERB	VBG	VerbForm=Ger	12	acl	_	_
+14	GFP	gfp	NOUN	NN	Number=Sing	13	obj	_	_
+15	via	via	ADP	IN	_	17	case	_	_
+16	homologous	homologous	ADJ	JJ	Degree=Pos	17	amod	_	_
+17	recombination	recombination	NOUN	NN	Number=Sing	13	obl	_	_
+18	in	in	ADP	IN	_	25	case	_	_
+19	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+20	human	human	ADJ	JJ	Degree=Pos	24	amod	_	_
+21	pancreatic	pancreatic	ADJ	JJ	Degree=Pos	22	amod	_	_
+22	tumor	tumor	NOUN	NN	Number=Sing	23	compound	_	_
+23	cell	cell	NOUN	NN	Number=Sing	24	compound	_	_
+24	line	line	NOUN	NN	Number=Sing	25	compound	_	_
+25	CAPAN	capan	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+26	-	-	SYM	SYM	_	27	case	_	SpaceAfter=No
+27	1	1	NUM	CD	NumType=Card	25	nmod	_	SpaceAfter=No
+28	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 36
+# text = CAPAN-1 cells carry a deletion of BRCA2 on one homolog and codes for a protein truncated at amino acid 1981 on the other homolog.
+1	CAPAN	capan	NOUN	NN	Number=Sing	4	compound	_	SpaceAfter=No
+2	-	-	PUNCT	HYPH	_	1	punct	_	SpaceAfter=No
+3	1	1	NUM	CD	NumType=Card	1	nummod	_	_
+4	cells	cell	NOUN	NNS	Number=Plur	5	nsubj	_	_
+5	carry	carry	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+6	a	a	DET	DT	Definite=Ind|PronType=Art	7	det	_	_
+7	deletion	deletion	NOUN	NN	Number=Sing	5	obj	_	_
+8	of	of	ADP	IN	_	9	case	_	_
+9	BRCA2	brca2	NOUN	NN	Number=Sing	7	nmod	_	_
+10	on	on	ADP	IN	_	12	case	_	_
+11	one	one	NUM	CD	NumType=Card	12	nummod	_	_
+12	homolog	homolog	NOUN	NN	Number=Sing	7	nmod	_	_
+13	and	and	CCONJ	CC	_	14	cc	_	_
+14	codes	code	NOUN	NNS	Number=Plur	12	conj	_	_
+15	for	for	ADP	IN	_	17	case	_	_
+16	a	a	DET	DT	Definite=Ind|PronType=Art	17	det	_	_
+17	protein	protein	NOUN	NN	Number=Sing	12	nmod	_	_
+18	truncated	truncate	VERB	VBN	Tense=Past|VerbForm=Part	17	acl	_	_
+19	at	at	ADP	IN	_	21	case	_	_
+20	amino	amino	NOUN	NN	Number=Sing	21	compound	_	_
+21	acid	acid	NOUN	NN	Number=Sing	18	obl	_	_
+22	1981	1981	NUM	CD	NumType=Card	21	nummod	_	_
+23	on	on	ADP	IN	_	26	case	_	_
+24	the	the	DET	DT	Definite=Def|PronType=Art	26	det	_	_
+25	other	other	ADJ	JJ	Degree=Pos	26	amod	_	_
+26	homolog	homolog	NOUN	NN	Number=Sing	18	obl	_	SpaceAfter=No
+27	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 37
+# text = The authors indicate that the level of I-SceI-induced recombination in CAPAN-1 is over 100-fold less than that seen using other (BRCA2+) human tumor cell lines.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	authors	author	NOUN	NNS	Number=Plur	3	nsubj	_	_
+3	indicate	indicate	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+4	that	that	SCONJ	IN	_	22	mark	_	_
+5	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+6	level	level	NOUN	NN	Number=Sing	22	nsubj	_	_
+7	of	of	ADP	IN	_	12	case	_	_
+8	I	I	PRON	NNP	Number=Sing	11	compound	_	SpaceAfter=No
+9	-	-	PUNCT	HYPH	_	10	punct	_	SpaceAfter=No
+10	SceI	SceI	PROPN	NNP	Number=Sing	11	obl:npmod	_	SpaceAfter=No
+11	-induced	-induce	VERB	VBN	Tense=Past|VerbForm=Part	12	amod	_	_
+12	recombination	recombination	NOUN	NN	Number=Sing	6	nmod	_	_
+13	in	in	ADP	IN	_	14	case	_	_
+14	CAPAN	capan	NOUN	NN	Number=Sing	12	nmod	_	SpaceAfter=No
+15	-	-	PUNCT	HYPH	_	14	punct	_	SpaceAfter=No
+16	1	1	NUM	CD	NumType=Card	14	nummod	_	_
+17	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	22	cop	_	_
+18	over	over	ADV	RB	_	21	advmod	_	_
+19	100	100	NUM	CD	NumType=Card	21	nummod	_	SpaceAfter=No
+20	-	-	SYM	HYPH	_	21	punct	_	SpaceAfter=No
+21	fold	fold	NOUN	NN	Number=Sing	22	obl:npmod	_	_
+22	less	less	ADJ	JJR	Degree=Cmp	3	ccomp	_	_
+23	than	than	ADP	IN	_	24	case	_	_
+24	that	that	PRON	DT	Number=Sing|PronType=Dem	22	obl	_	_
+25	seen	see	VERB	VBN	Tense=Past|VerbForm=Part	24	acl	_	_
+26	using	use	VERB	VBG	VerbForm=Ger	25	advcl	_	_
+27	other	other	ADJ	JJ	Degree=Pos	35	amod	_	_
+28	(	(	PUNCT	-LRB-	_	29	punct	_	SpaceAfter=No
+29	BRCA2	brca2	NOUN	NN	Number=Sing	35	compound	_	SpaceAfter=No
+30	+	+	SYM	SYM	_	29	punct	_	SpaceAfter=No
+31	)	)	PUNCT	-RRB-	_	29	punct	_	_
+32	human	human	ADJ	JJ	Degree=Pos	33	amod	_	_
+33	tumor	tumor	NOUN	NN	Number=Sing	34	compound	_	_
+34	cell	cell	NOUN	NN	Number=Sing	35	compound	_	_
+35	lines	line	NOUN	NNS	Number=Plur	26	obj	_	SpaceAfter=No
+36	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 38
+# text = The different lines examined, however, are very likely to differ genetically from CAPAN-1 cells not only at the BRCA2 locus, but also at a very large number of additional loci.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	different	different	ADJ	JJ	Degree=Pos	3	amod	_	_
+3	lines	line	NOUN	NNS	Number=Plur	10	nsubj	_	_
+4	examined	examine	VERB	VBN	Tense=Past|VerbForm=Part	3	acl	_	SpaceAfter=No
+5	,	,	PUNCT	,	_	10	punct	_	_
+6	however	however	ADV	RB	_	10	advmod	_	SpaceAfter=No
+7	,	,	PUNCT	,	_	10	punct	_	_
+8	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	10	cop	_	_
+9	very	very	ADV	RB	_	10	advmod	_	_
+10	likely	likely	ADJ	JJ	Degree=Pos	0	root	_	_
+11	to	to	PART	TO	_	12	mark	_	_
+12	differ	differ	VERB	VB	VerbForm=Inf	10	xcomp	_	_
+13	genetically	genetically	ADV	RB	_	12	advmod	_	_
+14	from	from	ADP	IN	_	18	case	_	_
+15	CAPAN	capan	NOUN	NN	Number=Sing	18	compound	_	SpaceAfter=No
+16	-	-	PUNCT	HYPH	_	15	punct	_	SpaceAfter=No
+17	1	1	NUM	CD	NumType=Card	15	nummod	_	_
+18	cells	cell	NOUN	NNS	Number=Plur	12	obl	_	_
+19	not	not	ADV	RB	_	20	advmod	_	_
+20	only	only	ADV	RB	_	24	cc:preconj	_	_
+21	at	at	ADP	IN	_	24	case	_	_
+22	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+23	BRCA2	BRCA2	PROPN	NNP	Number=Sing	24	compound	_	_
+24	locus	locus	NOUN	NN	Number=Sing	18	nmod	_	SpaceAfter=No
+25	,	,	PUNCT	,	_	32	punct	_	_
+26	but	but	CCONJ	CC	_	32	cc	_	_
+27	also	also	ADV	RB	_	32	advmod	_	_
+28	at	at	ADP	IN	_	32	case	_	_
+29	a	a	DET	DT	Definite=Ind|PronType=Art	32	det	_	_
+30	very	very	ADV	RB	_	31	advmod	_	_
+31	large	large	ADJ	JJ	Degree=Pos	32	amod	_	_
+32	number	number	NOUN	NN	Number=Sing	24	conj	_	_
+33	of	of	ADP	IN	_	35	case	_	_
+34	additional	additional	ADJ	JJ	Degree=Pos	35	amod	_	_
+35	loci	loci	NOUN	NNS	Number=Plur	32	nmod	_	SpaceAfter=No
+36	.	.	PUNCT	.	_	10	punct	_	_
+
+# sent_id = 39
+# text = This raises the possibility that some or even all of the recombinational repair defect seen in CAPAN-1 could be due to mutations at non-BRCA2 loci.
+1	This	this	PRON	DT	Number=Sing|PronType=Dem	2	nsubj	_	_
+2	raises	raise	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	possibility	possibility	NOUN	NN	Number=Sing	2	obj	_	_
+5	that	that	SCONJ	IN	_	24	mark	_	_
+6	some	some	DET	DT	_	24	nsubj	_	_
+7	or	or	CCONJ	CC	_	9	cc	_	_
+8	even	even	ADV	RB	_	9	advmod	_	_
+9	all	all	DET	DT	_	6	conj	_	_
+10	of	of	ADP	IN	_	14	case	_	_
+11	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+12	recombinational	recombinational	NOUN	NN	Number=Sing	13	compound	_	_
+13	repair	repair	NOUN	NN	Number=Sing	14	compound	_	_
+14	defect	defect	NOUN	NN	Number=Sing	9	nmod	_	_
+15	seen	see	VERB	VBN	Tense=Past|VerbForm=Part	14	acl	_	_
+16	in	in	ADP	IN	_	17	case	_	_
+17	CAPAN	capan	NOUN	NN	Number=Sing	15	obl	_	SpaceAfter=No
+18	-	-	PUNCT	HYPH	_	17	punct	_	SpaceAfter=No
+19	1	1	NUM	CD	NumType=Card	17	nummod	_	_
+20	could	could	AUX	MD	VerbForm=Fin	24	aux	_	_
+21	be	be	AUX	VB	VerbForm=Inf	24	cop	_	_
+22	due	due	ADP	IN	_	24	case	_	_
+23	to	to	ADP	IN	_	22	fixed	_	_
+24	mutations	mutation	NOUN	NNS	Number=Plur	4	acl	_	_
+25	at	at	ADP	IN	_	27	case	_	_
+26	non-BRCA2	non-brca2	NOUN	NN	Number=Sing	27	compound	_	_
+27	loci	loci	NOUN	NNS	Number=Plur	24	nmod	_	SpaceAfter=No
+28	.	.	PUNCT	.	_	2	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 40
+# text = While Moynahan et al were careful to point out this problem, two sets of results argue against the possibility that the recombinational repair deficiency of CAPAN-1 cells is completely independent of its defect in BRCA2.
+1	While	while	SCONJ	IN	_	6	mark	_	_
+2	Moynahan	Moynahan	PROPN	NNP	Number=Sing	6	nsubj	_	_
+3	et	et	PROPN	NNP	Number=Sing	2	flat	_	_
+4	al	al	PROPN	NNP	Number=Sing	6	nsubj	_	_
+5	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	6	cop	_	_
+6	careful	careful	ADJ	JJ	Degree=Pos	17	advcl	_	_
+7	to	to	PART	TO	_	8	mark	_	_
+8	point	point	VERB	VB	VerbForm=Inf	6	xcomp	_	_
+9	out	out	ADP	RP	_	8	compound:prt	_	_
+10	this	this	DET	DT	Number=Sing|PronType=Dem	11	det	_	_
+11	problem	problem	NOUN	NN	Number=Sing	8	obj	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	17	punct	_	_
+13	two	two	NUM	CD	NumType=Card	14	nummod	_	_
+14	sets	set	NOUN	NNS	Number=Plur	17	nsubj	_	_
+15	of	of	ADP	IN	_	16	case	_	_
+16	results	result	NOUN	NNS	Number=Plur	14	nmod	_	_
+17	argue	argue	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+18	against	against	ADP	IN	_	20	case	_	_
+19	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+20	possibility	possibility	NOUN	NN	Number=Sing	17	obl	_	_
+21	that	that	SCONJ	IN	_	33	mark	_	_
+22	the	the	DET	DT	Definite=Def|PronType=Art	25	det	_	_
+23	recombinational	recombinational	NOUN	JJ	Degree=Pos	24	compound	_	_
+24	repair	repair	NOUN	NN	Number=Sing	25	compound	_	_
+25	deficiency	deficiency	NOUN	NN	Number=Sing	33	nsubj	_	_
+26	of	of	ADP	IN	_	30	case	_	_
+27	CAPAN	capan	NOUN	NN	Number=Sing	30	compound	_	SpaceAfter=No
+28	-	-	PUNCT	HYPH	_	27	punct	_	SpaceAfter=No
+29	1	1	NUM	CD	NumType=Card	27	nummod	_	_
+30	cells	cell	NOUN	NNS	Number=Plur	25	nmod	_	_
+31	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	33	cop	_	_
+32	completely	completely	ADV	RB	_	33	advmod	_	_
+33	independent	independent	ADJ	JJ	Degree=Pos	20	acl	_	_
+34	of	of	ADP	IN	_	36	case	_	_
+35	its	its	PRON	PRP$	Gender=Neut|Number=Sing|Person=3|Poss=Yes|PronType=Prs	36	nmod:poss	_	_
+36	defect	defect	NOUN	NN	Number=Sing	33	obl	_	_
+37	in	in	ADP	IN	_	38	case	_	_
+38	BRCA2	brca2	NOUN	NN	Number=Sing	36	nmod	_	SpaceAfter=No
+39	.	.	PUNCT	.	_	17	punct	_	_
+
+# sent_id = 41
+# text = First, in the same study [24], recombination in a mouse ES cell line that expresses only truncated BRCA2 protein was measured.
+1	First	first	ADV	RB	_	25	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	25	punct	_	_
+3	in	in	ADP	IN	_	6	case	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+5	same	same	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	study	study	NOUN	NN	Number=Sing	25	obl	_	_
+7	[	[	PUNCT	-LRB-	_	8	punct	_	SpaceAfter=No
+8	24	24	NUM	CD	NumType=Card	6	appos	_	SpaceAfter=No
+9	]	]	PUNCT	-RRB-	_	8	punct	_	SpaceAfter=No
+10	,	,	PUNCT	,	_	11	punct	_	_
+11	recombination	recombination	NOUN	NN	Number=Sing	25	nsubj:pass	_	_
+12	in	in	ADP	IN	_	14	case	_	_
+13	a	a	DET	DT	Definite=Ind|PronType=Art	14	det	_	_
+14	mouse	mouse	NOUN	NN	Number=Sing	11	nmod	_	_
+15	ES	es	ADP	IN	Abbr=Yes	17	case	_	_
+16	cell	cell	NOUN	NN	Number=Sing	17	compound	_	_
+17	line	line	NOUN	NN	Number=Sing	14	nmod	_	_
+18	that	that	PRON	WDT	PronType=Rel	19	nsubj	_	_
+19	expresses	express	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	17	acl:relcl	_	_
+20	only	only	ADV	RB	_	23	advmod	_	_
+21	truncated	truncate	VERB	VBN	Tense=Past|VerbForm=Part	23	amod	_	_
+22	BRCA2	brca2	NOUN	NN	Number=Sing	23	compound	_	_
+23	protein	protein	NOUN	NN	Number=Sing	19	obj	_	_
+24	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	25	aux:pass	_	_
+25	measured	measure	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	SpaceAfter=No
+26	.	.	PUNCT	.	_	25	punct	_	_
+
+# sent_id = 42
+# text = This line was found to have lower recombination efficiency than isogenic cells expressing full-length BRCA2 (the defect observed was about fivefold to sixfold).
+1	This	this	DET	DT	Number=Sing|PronType=Dem	2	det	_	_
+2	line	line	NOUN	NN	Number=Sing	4	nsubj:pass	_	_
+3	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	4	aux:pass	_	_
+4	found	find	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+5	to	to	PART	TO	_	6	mark	_	_
+6	have	have	VERB	VB	VerbForm=Inf	4	xcomp	_	_
+7	lower	lower	ADJ	JJR	Degree=Cmp	9	amod	_	_
+8	recombination	recombination	NOUN	NN	Number=Sing	9	compound	_	_
+9	efficiency	efficiency	NOUN	NN	Number=Sing	6	obj	_	_
+10	than	than	ADP	IN	_	12	case	_	_
+11	isogenic	isogenic	ADJ	JJ	Degree=Pos	12	amod	_	_
+12	cells	cell	NOUN	NNS	Number=Plur	9	nmod	_	_
+13	expressing	express	VERB	VBG	VerbForm=Ger	12	acl	_	_
+14	full	full	ADJ	JJ	Degree=Pos	16	amod	_	SpaceAfter=No
+15	-	-	PUNCT	HYPH	_	16	punct	_	SpaceAfter=No
+16	length	length	NOUN	NN	Number=Sing	17	compound	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	13	obj	_	_
+18	(	(	PUNCT	-LRB-	_	24	punct	_	SpaceAfter=No
+19	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+20	defect	defect	NOUN	NN	Number=Sing	17	appos	_	_
+21	observed	observe	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	20	acl:relcl	_	_
+22	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	24	aux:pass	_	_
+23	about	about	ADV	RB	_	24	advmod	_	_
+24	fivefold	fivefol	VERB	VBN	Tense=Past|VerbForm=Part	21	ccomp	_	_
+25	to	to	ADP	IN	_	26	case	_	_
+26	sixfold	sixfold	NOUN	NN	Number=Sing	24	obl	_	SpaceAfter=No
+27	)	)	PUNCT	-RRB-	_	24	punct	_	SpaceAfter=No
+28	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 43
+# text = Second, in an independent study, Powell was able to compare derivatives of CAPAN-1 that differed only in their ability to express full-length BRCA2 protein (S.
+1	Second	second	ADV	RB	_	10	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	10	punct	_	_
+3	in	in	ADP	IN	_	6	case	_	_
+4	an	a	DET	DT	Definite=Ind|PronType=Art	6	det	_	_
+5	independent	independent	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	study	study	NOUN	NN	Number=Sing	10	obl	_	SpaceAfter=No
+7	,	,	PUNCT	,	_	10	punct	_	_
+8	Powell	Powell	PROPN	NNP	Number=Sing	10	nsubj	_	_
+9	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	10	cop	_	_
+10	able	able	ADJ	JJ	Degree=Pos	0	root	_	_
+11	to	to	PART	TO	_	12	mark	_	_
+12	compare	compare	VERB	VB	VerbForm=Inf	10	xcomp	_	_
+13	derivatives	derivative	NOUN	NNS	Number=Plur	12	obj	_	_
+14	of	of	ADP	IN	_	15	case	_	_
+15	CAPAN	CAPAN	PROPN	NNP	Number=Sing	13	nmod	_	SpaceAfter=No
+16	-	-	PUNCT	HYPH	_	15	punct	_	SpaceAfter=No
+17	1	1	NUM	CD	NumType=Card	15	nummod	_	_
+18	that	that	PRON	WDT	PronType=Rel	19	nsubj	_	_
+19	differed	differ	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	15	acl:relcl	_	_
+20	only	only	ADV	RB	_	23	advmod	_	_
+21	in	in	ADP	IN	_	23	case	_	_
+22	their	they	PRON	PRP$	Number=Plur|Person=3|Poss=Yes|PronType=Prs	23	nmod:poss	_	_
+23	ability	ability	NOUN	NN	Number=Sing	19	obl	_	_
+24	to	to	PART	TO	_	25	mark	_	_
+25	express	express	VERB	VB	VerbForm=Inf	23	acl	_	_
+26	full	full	ADJ	JJ	Degree=Pos	28	amod	_	SpaceAfter=No
+27	-	-	PUNCT	HYPH	_	28	punct	_	SpaceAfter=No
+28	length	length	NOUN	NN	Number=Sing	30	compound	_	_
+29	BRCA2	brca2	NOUN	NN	Number=Sing	30	compound	_	_
+30	protein	protein	NOUN	NN	Number=Sing	25	obj	_	_
+31	(	(	PUNCT	-LRB-	_	30	punct	_	SpaceAfter=No
+32	S	s	X	AFX	_	30	advmod	_	SpaceAfter=No
+33	.	.	PUNCT	.	_	10	punct	_	_
+
+# sent_id = 44
+# text = Powell, personal communication, 2001).
+1	Powell	Powell	PROPN	NNP	Number=Sing	0	root	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	1	punct	_	_
+3	personal	personal	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	communication	communication	NOUN	NN	Number=Sing	1	list	_	SpaceAfter=No
+5	,	,	PUNCT	,	_	1	punct	_	_
+6	2001	2001	NUM	CD	NumType=Card	4	appos	_	SpaceAfter=No
+7	)	)	PUNCT	-RRB-	_	4	punct	_	SpaceAfter=No
+8	.	.	PUNCT	.	_	1	punct	_	_
+
+# sent_id = 45
+# text = In these experiments, the derivative expressing full-length BRCA2 yielded 10-fold more recombinants than controls expressing only truncated BRCA2 (S.
+1	In	in	ADP	IN	_	3	case	_	_
+2	these	these	DET	DT	Number=Plur|PronType=Dem	3	det	_	_
+3	experiments	experiment	NOUN	NNS	Number=Plur	12	obl	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	12	punct	_	_
+5	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+6	derivative	derivative	NOUN	NN	Number=Sing	12	nsubj	_	_
+7	expressing	express	VERB	VBG	VerbForm=Ger	6	acl	_	_
+8	full	full	ADJ	JJ	Degree=Pos	10	amod	_	SpaceAfter=No
+9	-	-	PUNCT	HYPH	_	10	punct	_	SpaceAfter=No
+10	length	length	NOUN	NN	Number=Sing	11	compound	_	_
+11	BRCA2	brca2	NOUN	NN	Number=Sing	7	obj	_	_
+12	yielded	yield	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	_
+13	10	10	NUM	CD	NumType=Card	15	nummod	_	SpaceAfter=No
+14	-	-	PUNCT	HYPH	_	15	punct	_	SpaceAfter=No
+15	fold	fold	VERB	NN	Number=Sing	16	obl:npmod	_	_
+16	more	more	ADJ	JJR	Degree=Cmp	17	amod	_	_
+17	recombinants	recombinant	NOUN	NNS	Number=Plur	12	obj	_	_
+18	than	than	ADP	IN	_	19	case	_	_
+19	controls	control	NOUN	NNS	Number=Plur	17	nmod	_	_
+20	expressing	express	VERB	VBG	VerbForm=Ger	19	acl	_	_
+21	only	only	ADV	RB	_	22	advmod	_	_
+22	truncated	truncate	VERB	VBN	Tense=Past|VerbForm=Part	23	amod	_	_
+23	BRCA2	brca2	NOUN	NN	Number=Sing	20	obj	_	_
+24	(	(	PUNCT	-LRB-	_	23	punct	_	SpaceAfter=No
+25	S	s	X	AFX	_	23	advmod	_	SpaceAfter=No
+26	.	.	PUNCT	.	_	12	punct	_	_
+
+# sent_id = 46
+# text = Powell, personal communication, 2001).
+1	Powell	Powell	PROPN	NNP	Number=Sing	0	root	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	1	punct	_	_
+3	personal	personal	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	communication	communication	NOUN	NN	Number=Sing	1	list	_	SpaceAfter=No
+5	,	,	PUNCT	,	_	1	punct	_	_
+6	2001	2001	NUM	CD	NumType=Card	4	appos	_	SpaceAfter=No
+7	)	)	PUNCT	-RRB-	_	4	punct	_	SpaceAfter=No
+8	.	.	PUNCT	.	_	1	punct	_	_
+
+# sent_id = 47
+# text = While the experimental design of these experiments was somewhat different from that of Moyna-han et al [24], the results raise the possibility that CAPAN-1 cells have more than one mutation that lowers the efficiency of recombinational repair relative to that observed in other human cell lines.
+1	While	while	SCONJ	IN	_	10	mark	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+3	experimental	experimental	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	design	design	NOUN	NN	Number=Sing	10	nsubj	_	_
+5	of	of	ADP	IN	_	7	case	_	_
+6	these	these	DET	DT	Number=Plur|PronType=Dem	7	det	_	_
+7	experiments	experiment	NOUN	NNS	Number=Plur	4	nmod	_	_
+8	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	10	cop	_	_
+9	somewhat	somewhat	ADV	RB	_	10	advmod	_	_
+10	different	different	ADJ	JJ	Degree=Pos	25	advcl	_	_
+11	from	from	ADP	IN	_	12	case	_	_
+12	that	that	PRON	DT	Number=Sing|PronType=Dem	10	obl	_	_
+13	of	of	ADP	IN	_	14	case	_	_
+14	Moyna	Moyna	PROPN	NNP	Number=Sing	12	nmod	_	SpaceAfter=No
+15	-	-	PUNCT	HYPH	_	14	punct	_	SpaceAfter=No
+16	han	han	PROPN	NNP	Number=Sing	14	flat	_	_
+17	et	et	PROPN	NNP	Number=Sing	14	flat	_	_
+18	al	al	PROPN	NNP	Number=Sing	14	flat	_	_
+19	[	[	PUNCT	-LRB-	_	20	punct	_	SpaceAfter=No
+20	24	24	NUM	CD	NumType=Card	14	appos	_	SpaceAfter=No
+21	]	]	PUNCT	-RRB-	_	20	punct	_	SpaceAfter=No
+22	,	,	PUNCT	,	_	25	punct	_	_
+23	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+24	results	result	NOUN	NNS	Number=Plur	25	nsubj	_	_
+25	raise	raise	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+26	the	the	DET	DT	Definite=Def|PronType=Art	27	det	_	_
+27	possibility	possibility	NOUN	NN	Number=Sing	25	obj	_	_
+28	that	that	SCONJ	IN	_	33	mark	_	_
+29	CAPAN	capan	NOUN	NN	Number=Sing	32	compound	_	SpaceAfter=No
+30	-	-	PUNCT	HYPH	_	29	punct	_	SpaceAfter=No
+31	1	1	NUM	CD	NumType=Card	29	nummod	_	_
+32	cells	cell	NOUN	NNS	Number=Plur	33	nsubj	_	_
+33	have	have	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	27	acl	_	_
+34	more	more	ADJ	JJR	Degree=Cmp	36	advmod	_	_
+35	than	than	ADP	IN	_	34	fixed	_	_
+36	one	one	NUM	CD	NumType=Card	37	nummod	_	_
+37	mutation	mutation	NOUN	NN	Number=Sing	33	obj	_	_
+38	that	that	PRON	WDT	PronType=Rel	39	nsubj	_	_
+39	lowers	lower	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	37	acl:relcl	_	_
+40	the	the	DET	DT	Definite=Def|PronType=Art	41	det	_	_
+41	efficiency	efficiency	NOUN	NN	Number=Sing	39	obj	_	_
+42	of	of	ADP	IN	_	45	case	_	_
+43	recombinational	recombinational	NOUN	JJ	Degree=Pos	44	compound	_	_
+44	repair	repair	NOUN	NN	Number=Sing	45	compound	_	_
+45	relative	relative	NOUN	NN	Number=Sing	41	nmod	_	_
+46	to	to	ADP	IN	_	47	case	_	_
+47	that	that	PRON	DT	Number=Sing|PronType=Dem	45	nmod	_	_
+48	observed	observe	VERB	VBN	Tense=Past|VerbForm=Part	47	acl	_	_
+49	in	in	ADP	IN	_	53	case	_	_
+50	other	other	ADJ	JJ	Degree=Pos	53	amod	_	_
+51	human	human	ADJ	JJ	Degree=Pos	52	amod	_	_
+52	cell	cell	NOUN	NN	Number=Sing	53	compound	_	_
+53	lines	line	NOUN	NNS	Number=Plur	48	obl	_	SpaceAfter=No
+54	.	.	PUNCT	.	_	25	punct	_	_
+
+# sent_id = 48
+# text = Conversely, the BRCA2 defect in CAPAN-1 could be fully responsible for the 100-fold defect in recombination if the level of BRCA2 complementation observed by Powell was incomplete.
+1	Conversely	conversely	ADV	RB	_	13	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	13	punct	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+4	BRCA2	brca2	NOUN	NN	Number=Sing	5	compound	_	_
+5	defect	defect	NOUN	NN	Number=Sing	13	nsubj	_	_
+6	in	in	ADP	IN	_	7	case	_	_
+7	CAPAN	CAPAN	PROPN	NNP	Number=Sing	5	nmod	_	SpaceAfter=No
+8	-	-	PUNCT	HYPH	_	7	punct	_	SpaceAfter=No
+9	1	1	NUM	CD	NumType=Card	7	nummod	_	_
+10	could	could	AUX	MD	VerbForm=Fin	13	aux	_	_
+11	be	be	AUX	VB	VerbForm=Inf	13	cop	_	_
+12	fully	fully	ADV	RB	_	13	advmod	_	_
+13	responsible	responsible	ADJ	JJ	Degree=Pos	0	root	_	_
+14	for	for	ADP	IN	_	19	case	_	_
+15	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+16	100	100	NUM	CD	NumType=Card	18	nummod	_	SpaceAfter=No
+17	-	-	PUNCT	HYPH	_	18	punct	_	SpaceAfter=No
+18	fold	fold	NOUN	NN	Number=Sing	19	compound	_	_
+19	defect	defect	NOUN	NN	Number=Sing	13	obl	_	_
+20	in	in	ADP	IN	_	21	case	_	_
+21	recombination	recombination	NOUN	NN	Number=Sing	19	nmod	_	_
+22	if	if	SCONJ	IN	_	31	mark	_	_
+23	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+24	level	level	NOUN	NN	Number=Sing	31	nsubj	_	_
+25	of	of	ADP	IN	_	27	case	_	_
+26	BRCA2	brca2	NOUN	NN	Number=Sing	27	compound	_	_
+27	complementation	complementation	NOUN	NN	Number=Sing	24	nmod	_	_
+28	observed	observe	VERB	VBN	Tense=Past|VerbForm=Part	27	acl	_	_
+29	by	by	ADP	IN	_	30	case	_	_
+30	Powell	Powell	PROPN	NNP	Number=Sing	28	obl	_	_
+31	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	13	advcl	_	_
+32	incomplete	incomplete	ADV	RB	_	31	advmod	_	SpaceAfter=No
+33	.	.	PUNCT	.	_	13	punct	_	_
+
+# sent_id = 49
+# text = Furthermore, the discrepancy between the 100-fold difference between CAPAN-1 and the other human lines as compared with the fivefold to sixfold difference between the Brca2lex1/lex2cells and Brca2+/+
+1	Furthermore	furthermore	ADV	RB	_	21	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	21	punct	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	discrepancy	discrepancy	NOUN	NN	Number=Sing	0	root	_	_
+5	between	between	ADP	IN	_	10	case	_	_
+6	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+7	100	100	NUM	CD	NumType=Card	9	nummod	_	SpaceAfter=No
+8	-	-	PUNCT	HYPH	_	9	punct	_	SpaceAfter=No
+9	fold	fold	NOUN	NN	Number=Sing	10	compound	_	_
+10	difference	difference	NOUN	NN	Number=Sing	4	nmod	_	_
+11	between	between	ADP	IN	_	12	case	_	_
+12	CAPAN	capan	NOUN	NN	Number=Sing	10	nmod	_	SpaceAfter=No
+13	-	-	PUNCT	HYPH	_	12	punct	_	SpaceAfter=No
+14	1	1	NUM	CD	NumType=Card	12	nummod	_	_
+15	and	and	CCONJ	CC	_	19	cc	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+17	other	other	ADJ	JJ	Degree=Pos	19	amod	_	_
+18	human	human	ADJ	JJ	Degree=Pos	19	amod	_	_
+19	lines	line	NOUN	NNS	Number=Plur	12	conj	_	_
+20	as	as	SCONJ	IN	_	21	mark	_	_
+21	compared	compare	VERB	VBN	Tense=Past|VerbForm=Part	4	acl	_	_
+22	with	with	ADP	IN	_	24	case	_	_
+23	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+24	fivefold	fivefold	NOUN	NN	Number=Sing	21	obl	_	_
+25	to	to	ADP	IN	_	27	case	_	_
+26	sixfold	sixfold	VERB	JJ	Degree=Pos	27	amod	_	_
+27	difference	difference	NOUN	NN	Number=Sing	24	nmod	_	_
+28	between	between	ADP	IN	_	33	case	_	_
+29	the	the	DET	DT	Definite=Def|PronType=Art	33	det	_	_
+30	Brca2lex1	brca2lex1	NOUN	NN	Number=Sing	33	compound	_	SpaceAfter=No
+31	/	/	PUNCT	,	_	32	punct	_	SpaceAfter=No
+32	lex2	lex2	NOUN	NN	Number=Sing	30	conj	_	SpaceAfter=No
+33	cells	cell	NOUN	NNS	Number=Plur	27	nmod	_	_
+34	and	and	CCONJ	CC	_	35	cc	_	_
+35	Brca	brca	NOUN	NN	Number=Sing	33	conj	_	SpaceAfter=No
+36	2	2	NUM	CD	NumType=Card	37	compound	_	SpaceAfter=No
+37	+/	+/	SYM	SYM	_	33	conj	_	SpaceAfter=No
+38	+	+	SYM	SYM	_	37	compound	_	_
+
+# sent_id = 50
+# text = ES cells might simply be accounted for by the fact that Brca2lex1/lex2 is not a null allele.
+1	ES	es	NOUN	NN	Number=Sing	2	compound	_	_
+2	cells	cell	NOUN	NNS	Number=Plur	6	nsubj:pass	_	_
+3	might	might	AUX	MD	VerbForm=Fin	6	aux	_	_
+4	simply	simply	ADV	RB	_	6	advmod	_	_
+5	be	be	AUX	VB	VerbForm=Inf	6	aux:pass	_	_
+6	accounted	account	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+7	for	for	ADP	IN	_	6	obl	_	_
+8	by	by	ADP	IN	_	10	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+10	fact	fact	NOUN	NN	Number=Sing	6	obl	_	_
+11	that	that	SCONJ	IN	_	20	mark	_	_
+12	Brca2	brca2	NOUN	NN	Number=Sing	15	compound	_	SpaceAfter=No
+13	lex1	lex1	NOUN	NN	Number=Sing	20	nsubj	_	SpaceAfter=No
+14	/	/	PUNCT	,	_	15	cc	_	SpaceAfter=No
+15	lex2	lex2	NOUN	NN	Number=Sing	13	conj	_	_
+16	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	20	cop	_	_
+17	not	not	PART	RB	_	20	advmod	_	_
+18	a	a	DET	DT	Definite=Ind|PronType=Art	20	det	_	_
+19	null	null	ADJ	JJ	Degree=Pos	20	amod	_	_
+20	allele	allele	NOUN	NN	Number=Sing	10	acl	_	SpaceAfter=No
+21	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 51
+# text = Additional studies are likely to shed light on the efficiency of BRCA2-independent recombination pathways.
+1	Additional	additional	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	studies	study	NOUN	NNS	Number=Plur	4	nsubj	_	_
+3	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	4	cop	_	_
+4	likely	likely	ADJ	JJ	Degree=Pos	0	root	_	_
+5	to	to	PART	TO	_	6	mark	_	_
+6	shed	shed	VERB	VB	VerbForm=Inf	4	xcomp	_	_
+7	light	light	NOUN	NN	Number=Sing	6	obj	_	_
+8	on	on	ADP	IN	_	10	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+10	efficiency	efficiency	NOUN	NN	Number=Sing	6	obl	_	_
+11	of	of	ADP	IN	_	16	case	_	_
+12	BRCA2	brca2	NOUN	NN	Number=Sing	14	obl:npmod	_	SpaceAfter=No
+13	-	-	PUNCT	HYPH	_	14	punct	_	SpaceAfter=No
+14	independent	independent	ADJ	JJ	Degree=Pos	16	amod	_	_
+15	recombination	recombination	NOUN	NN	Number=Sing	16	compound	_	_
+16	pathways	pathway	NOUN	NNS	Number=Plur	10	nmod	_	SpaceAfter=No
+17	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 52
+# text = Taken together, the results indicate that BRCA2 is indeed required for high levels of recombinational repair in both human and mouse.
+1	Taken	take	VERB	VBN	Tense=Past|VerbForm=Part	6	advcl	_	_
+2	together	together	ADV	RB	_	1	advmod	_	SpaceAfter=No
+3	,	,	PUNCT	,	_	6	punct	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	results	result	NOUN	NNS	Number=Plur	6	nsubj	_	_
+6	indicate	indicate	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+7	that	that	SCONJ	IN	_	11	mark	_	_
+8	BRCA2	brca2	NOUN	NN	Number=Sing	11	nsubj:pass	_	_
+9	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	11	aux:pass	_	_
+10	indeed	indeed	ADV	RB	_	11	advmod	_	_
+11	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	6	ccomp	_	_
+12	for	for	ADP	IN	_	14	case	_	_
+13	high	high	ADJ	JJ	Degree=Pos	14	amod	_	_
+14	levels	level	NOUN	NNS	Number=Plur	11	obl	_	_
+15	of	of	ADP	IN	_	17	case	_	_
+16	recombinational	recombinational	NOUN	NN	Number=Sing	17	compound	_	_
+17	repair	repair	NOUN	NN	Number=Sing	14	nmod	_	_
+18	in	in	ADP	IN	_	20	case	_	_
+19	both	both	CCONJ	CC	_	20	cc:preconj	_	_
+20	human	human	NOUN	NN	Number=Sing	14	nmod	_	_
+21	and	and	CCONJ	CC	_	22	cc	_	_
+22	mouse	mouse	NOUN	NN	Number=Sing	20	conj	_	SpaceAfter=No
+23	.	.	PUNCT	.	_	6	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 53
+# text = The function of BRCA2-RAD51 interaction
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	function	function	NOUN	NN	Number=Sing	0	root	_	_
+3	of	of	ADP	IN	_	7	case	_	_
+4	BRCA2	brca2	NOUN	NN	Number=Sing	6	compound	_	SpaceAfter=No
+5	-	-	PUNCT	HYPH	_	6	punct	_	SpaceAfter=No
+6	RAD51	rad51	NOUN	NN	Number=Sing	7	compound	_	_
+7	interaction	interaction	NOUN	NN	Number=Sing	2	nmod	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 54
+# text = The second paper providing evidence, by Davies et al [26], is a biochemical study of the interaction between the homologous recombinase RAD51 and a peptide consisting of one of the eight BRC repeats from human BRCA2.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	second	second	ADJ	JJ	Degree=Pos|NumType=Ord	3	amod	_	_
+3	paper	paper	NOUN	NN	Number=Sing	18	nsubj	_	_
+4	providing	provide	VERB	VBG	VerbForm=Ger	3	acl	_	_
+5	evidence	evidence	NOUN	NN	Number=Sing	4	obj	_	SpaceAfter=No
+6	,	,	PUNCT	,	_	18	punct	_	_
+7	by	by	ADP	IN	_	8	case	_	_
+8	Davies	Davies	PROPN	NNP	Number=Sing	4	obl	_	_
+9	et	et	PROPN	NNP	Number=Sing	8	flat	_	_
+10	al	al	PROPN	NNP	Number=Sing	8	flat	_	_
+11	[	[	PUNCT	-LRB-	_	12	punct	_	SpaceAfter=No
+12	26	26	NUM	CD	NumType=Card	8	appos	_	SpaceAfter=No
+13	]	]	PUNCT	-RRB-	_	12	punct	_	SpaceAfter=No
+14	,	,	PUNCT	,	_	18	punct	_	_
+15	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	18	cop	_	_
+16	a	a	DET	DT	Definite=Ind|PronType=Art	18	det	_	_
+17	biochemical	biochemical	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	study	study	NOUN	NN	Number=Sing	0	root	_	_
+19	of	of	ADP	IN	_	21	case	_	_
+20	the	the	DET	DT	Definite=Def|PronType=Art	21	det	_	_
+21	interaction	interaction	NOUN	NN	Number=Sing	18	nmod	_	_
+22	between	between	ADP	IN	_	26	case	_	_
+23	the	the	DET	DT	Definite=Def|PronType=Art	26	det	_	_
+24	homologous	homologous	ADJ	JJ	Degree=Pos	26	amod	_	_
+25	recombinase	recombinase	NOUN	NN	Number=Sing	26	compound	_	_
+26	RAD51	rad51	NOUN	NN	Number=Sing	21	nmod	_	_
+27	and	and	CCONJ	CC	_	29	cc	_	_
+28	a	a	DET	DT	Definite=Ind|PronType=Art	29	det	_	_
+29	peptide	peptide	NOUN	NN	Number=Sing	26	conj	_	_
+30	consisting	consist	VERB	VBG	VerbForm=Ger	29	acl	_	_
+31	of	of	ADP	IN	_	32	case	_	_
+32	one	one	NUM	CD	NumType=Card	30	obl	_	_
+33	of	of	ADP	IN	_	37	case	_	_
+34	the	the	DET	DT	Definite=Def|PronType=Art	37	det	_	_
+35	eight	eight	NUM	CD	NumType=Card	36	nummod	_	_
+36	BRC	brc	NOUN	NN	Number=Sing	37	compound	_	_
+37	repeats	repeat	NOUN	NNS	Number=Plur	32	nmod	_	_
+38	from	from	ADP	IN	_	40	case	_	_
+39	human	human	ADJ	JJ	Degree=Pos	40	amod	_	_
+40	BRCA2	brca2	NOUN	NN	Number=Sing	37	nmod	_	SpaceAfter=No
+41	.	.	PUNCT	.	_	18	punct	_	_
+
+# sent_id = 55
+# text = Expression of a single BRC repeat (BRC4) had previously been reported to act as an inhibitor of DNA repair by Chen et al [27].
+1	Expression	expression	NOUN	NN	Number=Sing	13	nsubj:pass	_	_
+2	of	of	ADP	IN	_	5	case	_	_
+3	a	a	DET	DT	Definite=Ind|PronType=Art	5	det	_	_
+4	single	single	ADJ	JJ	Degree=Pos	5	amod	_	_
+5	BRC	brc	NOUN	NN	Number=Sing	1	nmod	_	_
+6	repeat	repeat	ADJ	JJ	Degree=Pos	1	nmod	_	_
+7	(	(	PUNCT	-LRB-	_	8	punct	_	SpaceAfter=No
+8	BRC4	brc4	PROPN	NN	Number=Sing	6	appos	_	SpaceAfter=No
+9	)	)	PUNCT	-RRB-	_	8	punct	_	_
+10	had	have	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	13	aux	_	_
+11	previously	previously	ADV	RB	_	13	advmod	_	_
+12	been	be	AUX	VBN	Tense=Past|VerbForm=Part	13	aux:pass	_	_
+13	reported	report	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+14	to	to	PART	TO	_	15	mark	_	_
+15	act	act	VERB	VB	VerbForm=Inf	13	xcomp	_	_
+16	as	as	ADP	IN	_	18	case	_	_
+17	an	a	DET	DT	Definite=Ind|PronType=Art	18	det	_	_
+18	inhibitor	inhibitor	NOUN	NN	Number=Sing	15	obl	_	_
+19	of	of	ADP	IN	_	21	case	_	_
+20	DNA	dna	NOUN	NN	Number=Sing	21	compound	_	_
+21	repair	repair	NOUN	NN	Number=Sing	18	nmod	_	_
+22	by	by	ADP	IN	_	23	case	_	_
+23	Chen	Chen	PROPN	NNP	Number=Sing	21	nmod	_	_
+24	et	et	PROPN	NNP	Number=Sing	23	flat	_	_
+25	al	al	PROPN	NNP	Number=Sing	23	flat	_	_
+26	[	[	PUNCT	-LRB-	_	27	punct	_	SpaceAfter=No
+27	27	27	NUM	CD	NumType=Card	25	nummod	_	SpaceAfter=No
+28	]	]	PUNCT	-RRB-	_	27	punct	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	13	punct	_	_
+
+# sent_id = 56
+# text = These investigators showed that expression of constructs containing the BRC4 repeat in MCF-7 cells enhances the radiosensitivity of cells and blocks both the G2/M delay associated with damage and the ability of the transfected cells to assembly subnuclear RAD51 foci.
+1	These	these	DET	DT	Number=Plur|PronType=Dem	2	det	_	_
+2	investigators	investigator	NOUN	NNS	Number=Plur	3	nsubj	_	_
+3	showed	show	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	_
+4	that	that	DET	DT	Number=Sing|PronType=Dem	5	det	_	_
+5	expression	expression	NOUN	NN	Number=Sing	3	obj	_	_
+6	of	of	ADP	IN	_	7	case	_	_
+7	constructs	construct	NOUN	NNS	Number=Plur	5	nmod	_	_
+8	containing	contain	VERB	VBG	VerbForm=Ger	7	acl	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+10	BRC4	brc4	NOUN	NN	Number=Sing	8	obj	_	_
+11	repeat	repeat	VERB	JJ	Degree=Pos	10	acl	_	_
+12	in	in	ADP	IN	_	16	case	_	_
+13	MCF	mcf	NOUN	NN	Number=Sing	16	compound	_	SpaceAfter=No
+14	-	-	PUNCT	HYPH	_	13	punct	_	SpaceAfter=No
+15	7	7	NUM	CD	NumType=Card	13	nummod	_	_
+16	cells	cell	NOUN	NNS	Number=Plur	17	nsubj	_	_
+17	enhances	enhance	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	7	acl:relcl	_	_
+18	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+19	radiosensitivity	radiosensitivity	NOUN	NN	Number=Sing	17	obj	_	_
+20	of	of	ADP	IN	_	21	case	_	_
+21	cells	cell	NOUN	NNS	Number=Plur	19	nmod	_	_
+22	and	and	CCONJ	CC	_	23	cc	_	_
+23	blocks	block	NOUN	NNS	Number=Plur	21	conj	_	_
+24	both	both	CCONJ	CC	_	28	cc:preconj	_	_
+25	the	the	DET	DT	Definite=Def|PronType=Art	28	det	_	_
+26	G2/	g2/	NUM	CD	NumType=Card	27	nummod	_	SpaceAfter=No
+27	M	m	NOUN	NN	Number=Sing	28	compound	_	_
+28	delay	delay	NOUN	NN	Number=Sing	21	appos	_	_
+29	associated	associate	VERB	VBN	Tense=Past|VerbForm=Part	28	acl	_	_
+30	with	with	ADP	IN	_	31	case	_	_
+31	damage	damage	NOUN	NN	Number=Sing	29	obl	_	_
+32	and	and	CCONJ	CC	_	34	cc	_	_
+33	the	the	DET	DT	Definite=Def|PronType=Art	34	det	_	_
+34	ability	ability	NOUN	NN	Number=Sing	21	conj	_	_
+35	of	of	ADP	IN	_	38	case	_	_
+36	the	the	DET	DT	Definite=Def|PronType=Art	38	det	_	_
+37	transfected	transfect	VERB	VBN	Tense=Past|VerbForm=Part	38	amod	_	_
+38	cells	cell	NOUN	NNS	Number=Plur	34	nmod	_	_
+39	to	to	PART	TO	_	40	mark	_	_
+40	assembly	assembly	VERB	VB	VerbForm=Inf	38	acl	_	_
+41	subnuclear	subnuclear	NOUN	NN	Number=Sing	43	compound	_	_
+42	RAD51	rad51	NOUN	NN	Number=Sing	43	compound	_	_
+43	foci	foci	NOUN	NNS	Number=Plur	40	obj	_	SpaceAfter=No
+44	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 57
+# text = In the paper by Davies et al, data provide evidence for a plausible mechanism of the dominant negative effect associated with expression of a single BRC repeat.
+1	In	in	ADP	IN	_	3	case	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+3	paper	paper	NOUN	NN	Number=Sing	10	obl	_	_
+4	by	by	ADP	IN	_	7	case	_	_
+5	Davies	Davies	PROPN	NNP	Number=Sing	7	compound	_	_
+6	et	et	PROPN	FW	_	5	flat	_	_
+7	al	al	PROPN	NNP	Number=Sing	3	nmod	_	SpaceAfter=No
+8	,	,	PUNCT	,	_	9	punct	_	_
+9	data	data	NOUN	NN	Number=Sing	10	nsubj	_	_
+10	provide	provide	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+11	evidence	evidence	NOUN	NN	Number=Sing	10	obj	_	_
+12	for	for	ADP	IN	_	15	case	_	_
+13	a	a	DET	DT	Definite=Ind|PronType=Art	15	det	_	_
+14	plausible	plausible	ADJ	JJ	Degree=Pos	15	amod	_	_
+15	mechanism	mechanism	NOUN	NN	Number=Sing	11	nmod	_	_
+16	of	of	ADP	IN	_	20	case	_	_
+17	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+18	dominant	dominant	ADJ	JJ	Degree=Pos	20	amod	_	_
+19	negative	negative	ADJ	JJ	Degree=Pos	20	amod	_	_
+20	effect	effect	NOUN	NN	Number=Sing	15	nmod	_	_
+21	associated	associate	VERB	VBN	Tense=Past|VerbForm=Part	20	acl	_	_
+22	with	with	ADP	IN	_	23	case	_	_
+23	expression	expression	NOUN	NN	Number=Sing	21	obl	_	_
+24	of	of	ADP	IN	_	27	case	_	_
+25	a	a	DET	DT	Definite=Ind|PronType=Art	27	det	_	_
+26	single	single	ADJ	JJ	Degree=Pos	27	amod	_	_
+27	BRC	brc	NOUN	NN	Number=Sing	23	nmod	_	_
+28	repeat	repeat	ADJ	JJ	Degree=Pos	27	amod	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	10	punct	_	_
+
+# sent_id = 58
+# text = DNA binding assays and electron microscopy methods were used to show that a BRC3 peptide interferes with the ability of RAD51 to assemble into oligomeric filaments on DNA.
+1	DNA	dna	NOUN	NN	Number=Sing	9	nsubj:pass	_	_
+2	binding	bind	VERB	VBG	VerbForm=Ger	1	acl	_	_
+3	assays	assay	NOUN	NNS	Number=Plur	2	obj	_	_
+4	and	and	CCONJ	CC	_	7	cc	_	_
+5	electron	electron	NOUN	NN	Number=Sing	6	compound	_	_
+6	microscopy	microscopy	NOUN	NN	Number=Sing	7	compound	_	_
+7	methods	method	NOUN	NNS	Number=Plur	3	conj	_	_
+8	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	9	aux:pass	_	_
+9	used	use	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+10	to	to	PART	TO	_	11	mark	_	_
+11	show	show	VERB	VB	VerbForm=Inf	9	xcomp	_	_
+12	that	that	SCONJ	IN	_	16	mark	_	_
+13	a	a	DET	DT	Definite=Ind|PronType=Art	15	det	_	_
+14	BRC3	brc3	NOUN	NN	Number=Sing	15	compound	_	_
+15	peptide	peptide	NOUN	NN	Number=Sing	16	nsubj	_	_
+16	interferes	interfere	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	11	ccomp	_	_
+17	with	with	ADP	IN	_	19	case	_	_
+18	the	the	DET	DT	Definite=Def|PronType=Art	19	det	_	_
+19	ability	ability	NOUN	NN	Number=Sing	16	obl	_	_
+20	of	of	ADP	IN	_	21	case	_	_
+21	RAD51	rad51	NOUN	NN	Number=Sing	19	nmod	_	_
+22	to	to	PART	TO	_	23	mark	_	_
+23	assemble	assemble	VERB	VB	VerbForm=Inf	19	acl	_	_
+24	into	into	ADP	IN	_	26	case	_	_
+25	oligomeric	oligomeric	ADJ	JJ	Degree=Pos	26	amod	_	_
+26	filaments	filament	NOUN	NNS	Number=Plur	23	obl	_	_
+27	on	on	ADP	IN	_	28	case	_	_
+28	DNA	dna	NOUN	NN	Number=Sing	26	nmod	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	9	punct	_	_
+
+# sent_id = 59
+# text = A BRC4 peptide was also reported to inhibit the RAD51–DNA interaction.
+1	A	a	DET	DT	Definite=Ind|PronType=Art	3	det	_	_
+2	BRC4	brc4	NOUN	NN	Number=Sing	3	compound	_	_
+3	peptide	peptide	NOUN	NN	Number=Sing	6	nsubj:pass	_	_
+4	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	6	aux:pass	_	_
+5	also	also	ADV	RB	_	6	advmod	_	_
+6	reported	report	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+7	to	to	PART	TO	_	8	mark	_	_
+8	inhibit	inhibit	VERB	VB	VerbForm=Inf	6	xcomp	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	12	det	_	_
+10	RAD51–	rad51-	NOUN	NN	Number=Sing	11	compound	_	SpaceAfter=No
+11	DNA	dna	NOUN	NN	Number=Sing	12	compound	_	_
+12	interaction	interaction	NOUN	NN	Number=Sing	8	obj	_	SpaceAfter=No
+13	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 60
+# text = These experiments raise the possibility that the full-length BRCA2 protein could act as a negative regulator of inappropriate RAD51–DNA interaction.
+1	These	these	DET	DT	Number=Plur|PronType=Dem	2	det	_	_
+2	experiments	experiment	NOUN	NNS	Number=Plur	3	nsubj	_	_
+3	raise	raise	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	0	root	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	possibility	possibility	NOUN	NN	Number=Sing	3	obj	_	_
+6	that	that	SCONJ	IN	_	14	mark	_	_
+7	the	the	DET	DT	Definite=Def|PronType=Art	12	det	_	_
+8	full	full	ADJ	JJ	Degree=Pos	10	amod	_	SpaceAfter=No
+9	-	-	PUNCT	HYPH	_	10	punct	_	SpaceAfter=No
+10	length	length	NOUN	NN	Number=Sing	12	compound	_	_
+11	BRCA2	brca2	NOUN	NN	Number=Sing	12	compound	_	_
+12	protein	protein	NOUN	NN	Number=Sing	14	nsubj	_	_
+13	could	could	AUX	MD	VerbForm=Fin	14	aux	_	_
+14	act	act	VERB	VB	VerbForm=Inf	5	acl	_	_
+15	as	as	ADP	IN	_	18	case	_	_
+16	a	a	DET	DT	Definite=Ind|PronType=Art	18	det	_	_
+17	negative	negative	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	regulator	regulator	NOUN	NN	Number=Sing	14	obl	_	_
+19	of	of	ADP	IN	_	22	case	_	_
+20	inappropriate	inappropriate	ADJ	JJ	Degree=Pos	22	amod	_	_
+21	RAD51–DNA	rad51-dna	ADJ	JJ	Degree=Pos	22	amod	_	_
+22	interaction	interaction	NOUN	NN	Number=Sing	18	nmod	_	SpaceAfter=No
+23	.	.	PUNCT	.	_	3	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 61
+# text = The final experiment reported by Davies et al [26] is particularly important with respect to understanding the mechanism(s) through which BRCA2 promotes RAD51-dependent recombination.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	final	final	ADJ	JJ	Degree=Pos	3	amod	_	_
+3	experiment	experiment	NOUN	NN	Number=Sing	14	nsubj	_	_
+4	reported	report	VERB	VBN	Tense=Past|VerbForm=Part	3	acl	_	_
+5	by	by	ADP	IN	_	6	case	_	_
+6	Davies	Davies	PROPN	NNP	Number=Sing	4	obl	_	_
+7	et	et	PROPN	NNP	Number=Sing	6	flat	_	_
+8	al	al	PROPN	NNP	Number=Sing	6	flat	_	_
+9	[	[	PUNCT	-LRB-	_	10	punct	_	SpaceAfter=No
+10	26	26	NUM	CD	NumType=Card	6	appos	_	SpaceAfter=No
+11	]	]	PUNCT	-RRB-	_	10	punct	_	_
+12	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	14	cop	_	_
+13	particularly	particularly	ADV	RB	_	14	advmod	_	_
+14	important	important	ADJ	JJ	Degree=Pos	0	root	_	_
+15	with	with	ADP	IN	_	16	case	_	_
+16	respect	respect	NOUN	NN	Number=Sing	14	obl	_	_
+17	to	to	PART	TO	_	18	mark	_	_
+18	understanding	understanding	VERB	VB	VerbForm=Inf	16	acl	_	_
+19	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+20	mechanism	mechanism	NOUN	NN	Number=Sing	18	obj	_	SpaceAfter=No
+21	(	(	PUNCT	-LRB-	_	20	punct	_	SpaceAfter=No
+22	s	s	X	AFX	_	20	advmod	_	SpaceAfter=No
+23	)	)	PUNCT	-RRB-	_	20	punct	_	_
+24	through	through	ADP	IN	_	25	case	_	_
+25	which	which	PRON	WDT	PronType=Rel	27	obl	_	_
+26	BRCA2	brca2	NOUN	NN	Number=Sing	27	nsubj	_	_
+27	promotes	promote	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	20	acl:relcl	_	_
+28	RAD51	rad51	NOUN	NN	Number=Sing	30	obl:npmod	_	SpaceAfter=No
+29	-	-	PUNCT	HYPH	_	30	punct	_	SpaceAfter=No
+30	dependent	dependent	ADJ	JJ	Degree=Pos	31	amod	_	_
+31	recombination	recombination	NOUN	NN	Number=Sing	27	obj	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	14	punct	_	_
+
+# sent_id = 62
+# text = The localization of RAD51 was examined in CAPAN-1 cells, the same human tumor line examined by Moynahan et al [24].
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	localization	localization	NOUN	NN	Number=Sing	6	nsubj:pass	_	_
+3	of	of	ADP	IN	_	4	case	_	_
+4	RAD51	rad51	NOUN	NN	Number=Sing	2	nmod	_	_
+5	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	6	aux:pass	_	_
+6	examined	examine	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+7	in	in	ADP	IN	_	11	case	_	_
+8	CAPAN	capan	NOUN	NN	Number=Sing	11	compound	_	SpaceAfter=No
+9	-	-	PUNCT	HYPH	_	10	punct	_	SpaceAfter=No
+10	1	1	NUM	CD	NumType=Card	8	nummod	_	_
+11	cells	cell	NOUN	NNS	Number=Plur	6	obl	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	11	punct	_	_
+13	the	the	DET	DT	Definite=Def|PronType=Art	17	det	_	_
+14	same	same	ADJ	JJ	Degree=Pos	17	amod	_	_
+15	human	human	ADJ	JJ	Degree=Pos	16	amod	_	_
+16	tumor	tumor	NOUN	NN	Number=Sing	17	compound	_	_
+17	line	line	NOUN	NN	Number=Sing	11	appos	_	_
+18	examined	examine	VERB	VBN	Tense=Past|VerbForm=Part	17	acl	_	_
+19	by	by	ADP	IN	_	20	case	_	_
+20	Moynahan	Moynahan	PROPN	NNP	Number=Sing	18	obl	_	_
+21	et	et	PROPN	NNP	Number=Sing	20	flat	_	_
+22	al	al	PROPN	NNP	Number=Sing	20	flat	_	_
+23	[	[	PUNCT	-LRB-	_	24	punct	_	SpaceAfter=No
+24	24	24	NUM	CD	NumType=Card	20	appos	_	SpaceAfter=No
+25	]	]	PUNCT	-RRB-	_	24	punct	_	SpaceAfter=No
+26	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 63
+# text = It had been shown previously that the small amount of truncated BRCA2 protein expressed by CAPAN-1 cells was mislocalized to the cytoplasm, consistent with the fact that the truncation protein lacks a nuclear localization signal [28].
+1	It	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	4	nsubj:pass	_	_
+2	had	have	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	4	aux	_	_
+3	been	be	AUX	VBN	Tense=Past|VerbForm=Part	4	aux:pass	_	_
+4	shown	show	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+5	previously	previously	ADV	RB	_	4	advmod	_	_
+6	that	that	SCONJ	IN	_	21	mark	_	_
+7	the	the	DET	DT	Definite=Def|PronType=Art	9	det	_	_
+8	small	small	ADJ	JJ	Degree=Pos	9	amod	_	_
+9	amount	amount	NOUN	NN	Number=Sing	21	nsubj:pass	_	_
+10	of	of	ADP	IN	_	13	case	_	_
+11	truncated	truncate	VERB	VBN	Tense=Past|VerbForm=Part	13	amod	_	_
+12	BRCA2	brca2	NOUN	NN	Number=Sing	13	compound	_	_
+13	protein	protein	NOUN	NN	Number=Sing	9	nmod	_	_
+14	expressed	express	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	9	acl	_	_
+15	by	by	ADP	IN	_	19	case	_	_
+16	CAPAN	capan	NOUN	NN	Number=Sing	19	compound	_	SpaceAfter=No
+17	-	-	PUNCT	HYPH	_	16	punct	_	SpaceAfter=No
+18	1	1	NUM	CD	NumType=Card	16	nummod	_	_
+19	cells	cell	NOUN	NNS	Number=Plur	14	obl	_	_
+20	was	be	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	21	aux:pass	_	_
+21	mislocalized	mislocalize	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	4	ccomp	_	_
+22	to	to	ADP	IN	_	24	case	_	_
+23	the	the	DET	DT	Definite=Def|PronType=Art	24	det	_	_
+24	cytoplasm	cytoplasm	NOUN	NN	Number=Sing	21	obl	_	SpaceAfter=No
+25	,	,	PUNCT	,	_	21	punct	_	_
+26	consistent	consistent	ADJ	JJ	Degree=Pos	21	parataxis	_	_
+27	with	with	ADP	IN	_	29	case	_	_
+28	the	the	DET	DT	Definite=Def|PronType=Art	29	det	_	_
+29	fact	fact	NOUN	NN	Number=Sing	26	obl	_	_
+30	that	that	SCONJ	IN	_	34	mark	_	_
+31	the	the	DET	DT	Definite=Def|PronType=Art	33	det	_	_
+32	truncation	truncation	NOUN	NN	Number=Sing	33	compound	_	_
+33	protein	protein	NOUN	NN	Number=Sing	34	nsubj	_	_
+34	lacks	lack	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	29	acl	_	_
+35	a	a	DET	DT	Definite=Ind|PronType=Art	38	det	_	_
+36	nuclear	nuclear	ADJ	JJ	Degree=Pos	37	amod	_	_
+37	localization	localization	NOUN	NN	Number=Sing	38	compound	_	_
+38	signal	signal	NOUN	NN	Number=Sing	34	obj	_	_
+39	[	[	PUNCT	-LRB-	_	40	punct	_	SpaceAfter=No
+40	28	28	NUM	CD	NumType=Card	34	obj	_	SpaceAfter=No
+41	]	]	PUNCT	-RRB-	_	40	punct	_	SpaceAfter=No
+42	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 64
+# text = Davies et al showed CAPAN-1 cells to be defective in nuclear localization of RAD51, raising the possibility that RAD51 is normally carried to the nucleus by binding BRCA2.
+1	Davies	Davies	PROPN	NNP	Number=Sing	4	nsubj	_	_
+2	et	et	PROPN	FW	_	1	flat	_	_
+3	al	al	PROPN	NNP	Number=Sing	1	flat	_	_
+4	showed	show	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	_
+5	CAPAN	capan	NOUN	NN	Number=Sing	8	compound	_	SpaceAfter=No
+6	-	-	PUNCT	HYPH	_	5	punct	_	SpaceAfter=No
+7	1	1	NUM	CD	NumType=Card	5	nummod	_	_
+8	cells	cell	NOUN	NNS	Number=Plur	4	obj	_	_
+9	to	to	PART	TO	_	11	mark	_	_
+10	be	be	AUX	VB	VerbForm=Inf	11	cop	_	_
+11	defective	defective	ADJ	JJ	Degree=Pos	4	xcomp	_	_
+12	in	in	ADP	IN	_	14	case	_	_
+13	nuclear	nuclear	ADJ	JJ	Degree=Pos	14	amod	_	_
+14	localization	localization	NOUN	NN	Number=Sing	11	obl	_	_
+15	of	of	ADP	IN	_	16	case	_	_
+16	RAD51	rad51	NOUN	NN	Number=Sing	14	nmod	_	SpaceAfter=No
+17	,	,	PUNCT	,	_	4	punct	_	_
+18	raising	raise	VERB	VBG	VerbForm=Ger	11	advcl	_	_
+19	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+20	possibility	possibility	NOUN	NN	Number=Sing	18	obj	_	_
+21	that	that	SCONJ	IN	_	25	mark	_	_
+22	RAD51	rad51	NOUN	NN	Number=Sing	25	nsubj:pass	_	_
+23	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	25	aux:pass	_	_
+24	normally	normally	ADV	RB	_	25	advmod	_	_
+25	carried	carry	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	20	acl	_	_
+26	to	to	ADP	IN	_	28	case	_	_
+27	the	the	DET	DT	Definite=Def|PronType=Art	28	det	_	_
+28	nucleus	nucleus	NOUN	NN	Number=Sing	25	obl	_	_
+29	by	by	SCONJ	IN	_	30	mark	_	_
+30	binding	bind	VERB	VBG	VerbForm=Ger	25	advcl	_	_
+31	BRCA2	brca2	NOUN	NN	Number=Sing	30	obj	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 65
+# text = It is possible that RAD51 may alternatively be capable of BRCA2-independent transport, but mislocalization of BRCA2 to the cytoplasm may sequester RAD51 and block its normal mode of transport.
+1	It	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	3	expl	_	_
+2	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	3	cop	_	_
+3	possible	possible	ADJ	JJ	Degree=Pos	0	root	_	_
+4	that	that	SCONJ	IN	_	9	mark	_	_
+5	RAD51	rad51	NOUN	NN	Number=Sing	9	nsubj	_	_
+6	may	may	AUX	MD	VerbForm=Fin	9	aux	_	_
+7	alternatively	alternatively	ADV	RB	_	9	advmod	_	_
+8	be	be	AUX	VB	VerbForm=Inf	9	cop	_	_
+9	capable	capable	ADJ	JJ	Degree=Pos	3	csubj	_	_
+10	of	of	ADP	IN	_	14	case	_	_
+11	BRCA2	brca2	NOUN	NN	Number=Sing	13	obl:npmod	_	SpaceAfter=No
+12	-	-	PUNCT	HYPH	_	13	punct	_	SpaceAfter=No
+13	independent	independent	ADJ	JJ	Degree=Pos	14	amod	_	_
+14	transport	transport	NOUN	NN	Number=Sing	9	obl	_	SpaceAfter=No
+15	,	,	PUNCT	,	_	24	punct	_	_
+16	but	but	CCONJ	CC	_	24	cc	_	_
+17	mislocalization	mislocalization	NOUN	NN	Number=Sing	24	nsubj	_	_
+18	of	of	ADP	IN	_	19	case	_	_
+19	BRCA2	brca2	NOUN	NN	Number=Sing	17	nmod	_	_
+20	to	to	ADP	IN	_	22	case	_	_
+21	the	the	DET	DT	Definite=Def|PronType=Art	22	det	_	_
+22	cytoplasm	cytoplasm	NOUN	NN	Number=Sing	19	nmod	_	_
+23	may	may	AUX	MD	VerbForm=Fin	24	aux	_	_
+24	sequester	sequester	VERB	VB	VerbForm=Inf	9	conj	_	_
+25	RAD51	rad51	NOUN	NN	Number=Sing	24	obj	_	_
+26	and	and	CCONJ	CC	_	27	cc	_	_
+27	block	block	VERB	VB	VerbForm=Inf	24	conj	_	_
+28	its	its	PRON	PRP$	Gender=Neut|Number=Sing|Person=3|Poss=Yes|PronType=Prs	30	nmod:poss	_	_
+29	normal	normal	ADJ	JJ	Degree=Pos	30	amod	_	_
+30	mode	mode	NOUN	NN	Number=Sing	27	obj	_	_
+31	of	of	ADP	IN	_	32	case	_	_
+32	transport	transport	NOUN	NN	Number=Sing	30	nmod	_	SpaceAfter=No
+33	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 66
+# text = Support for the hypothesis that the observed mislocalization of RAD51 is an indirect consequence of the BRCA2 defect requires reintroduction of functional BRCA2 into CAPAN-1.
+1	Support	support	NOUN	NN	Number=Sing	0	root	_	_
+2	for	for	ADP	IN	_	4	case	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	hypothesis	hypothesis	NOUN	NN	Number=Sing	1	nmod	_	_
+5	that	that	PRON	WDT	PronType=Rel	14	mark	_	_
+6	the	the	DET	DT	Definite=Def|PronType=Art	8	det	_	_
+7	observed	observe	VERB	VBN	Tense=Past|VerbForm=Part	8	amod	_	_
+8	mislocalization	mislocalization	NOUN	NN	Number=Sing	14	nsubj	_	_
+9	of	of	ADP	IN	_	10	case	_	_
+10	RAD51	RAD51	PROPN	NNP	Number=Sing	8	nmod	_	_
+11	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	14	cop	_	_
+12	an	a	DET	DT	Definite=Ind|PronType=Art	14	det	_	_
+13	indirect	indirect	ADJ	JJ	Degree=Pos	14	amod	_	_
+14	consequence	consequence	NOUN	NN	Number=Sing	4	acl:relcl	_	_
+15	of	of	ADP	IN	_	18	case	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	18	det	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	18	compound	_	_
+18	defect	defect	NOUN	NN	Number=Sing	14	nmod	_	_
+19	requires	require	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	4	acl:relcl	_	_
+20	reintroduction	reintroduction	NOUN	NN	Number=Sing	19	obj	_	_
+21	of	of	ADP	IN	_	23	case	_	_
+22	functional	functional	ADJ	JJ	Degree=Pos	23	amod	_	_
+23	BRCA2	brca2	NOUN	NN	Number=Sing	20	nmod	_	_
+24	into	into	ADP	IN	_	25	case	_	_
+25	CAPAN	capan	NOUN	NN	Number=Sing	23	nmod	_	SpaceAfter=No
+26	-	-	PUNCT	HYPH	_	25	punct	_	SpaceAfter=No
+27	1	1	NUM	CD	NumType=Card	25	nummod	_	SpaceAfter=No
+28	.	.	PUNCT	.	_	1	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 67
+# text = Given the elaborate nature of the RAD51–BRCA2 interaction, it seems somewhat unlikely that the only role of BRCA2 in promoting recombination is to serve as a specific nuclear transporter of RAD51.
+1	Given	give	VERB	VBN	Tense=Past|VerbForm=Part	4	case	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+3	elaborate	elaborate	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	nature	nature	NOUN	NN	Number=Sing	12	obl	_	_
+5	of	of	ADP	IN	_	9	case	_	_
+6	the	the	DET	DT	Definite=Def|PronType=Art	9	det	_	_
+7	RAD51–	RAD51-	NOUN	NNP	Number=Sing	8	compound	_	SpaceAfter=No
+8	BRCA2	brca2	NOUN	NN	Number=Sing	9	compound	_	_
+9	interaction	interaction	NOUN	NN	Number=Sing	4	nmod	_	SpaceAfter=No
+10	,	,	PUNCT	,	_	12	punct	_	_
+11	it	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	12	expl	_	_
+12	seems	seem	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+13	somewhat	somewhat	ADV	RB	_	14	advmod	_	_
+14	unlikely	unlikely	ADJ	JJ	Degree=Pos	12	xcomp	_	_
+15	that	that	SCONJ	IN	_	24	mark	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	18	det	_	_
+17	only	only	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	role	role	NOUN	NN	Number=Sing	24	nsubj	_	_
+19	of	of	ADP	IN	_	20	case	_	_
+20	BRCA2	brca2	NOUN	NN	Number=Sing	18	nmod	_	_
+21	in	in	SCONJ	IN	_	22	mark	_	_
+22	promoting	promote	VERB	VBG	VerbForm=Ger	18	acl	_	_
+23	recombination	recombination	NOUN	NN	Number=Sing	22	obj	_	_
+24	is	be	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	12	ccomp	_	_
+25	to	to	PART	TO	_	26	mark	_	_
+26	serve	serve	VERB	VB	VerbForm=Inf	24	ccomp	_	_
+27	as	as	ADP	IN	_	31	case	_	_
+28	a	a	DET	DT	Definite=Ind|PronType=Art	31	det	_	_
+29	specific	specific	ADJ	JJ	Degree=Pos	31	amod	_	_
+30	nuclear	nuclear	ADJ	JJ	Degree=Pos	31	amod	_	_
+31	transporter	transporter	NOUN	NN	Number=Sing	26	obl	_	_
+32	of	of	ADP	IN	_	33	case	_	_
+33	RAD	RAD	PROPN	NNP	Number=Sing	31	nmod	_	SpaceAfter=No
+34	51	51	NUM	CD	NumType=Card	33	nummod	_	SpaceAfter=No
+35	.	.	PUNCT	.	_	12	punct	_	_
+
+# sent_id = 68
+# text = An attractive alternative, favored by Davies et al [26], is that the association of RAD51–BRCA2 is required to maintain RAD51 in a form that is in a state of 'readiness' (Fig.
+1	An	a	DET	DT	Definite=Ind|PronType=Art	3	det	_	_
+2	attractive	attractive	ADJ	JJ	Degree=Pos	3	amod	_	_
+3	alternative	alternative	NOUN	NN	Number=Sing	14	nsubj	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	3	punct	_	_
+5	favored	favor	VERB	VBN	Tense=Past|VerbForm=Part	3	acl	_	_
+6	by	by	ADP	IN	_	7	case	_	_
+7	Davies	Davies	PROPN	NNP	Number=Sing	5	obl	_	_
+8	et	et	PROPN	NNP	Number=Sing	7	flat	_	_
+9	al	al	PROPN	NNP	Number=Sing	7	flat	_	_
+10	[	[	PUNCT	-LRB-	_	11	punct	_	SpaceAfter=No
+11	26	26	NUM	CD	NumType=Card	9	appos	_	SpaceAfter=No
+12	]	]	PUNCT	-RRB-	_	11	punct	_	SpaceAfter=No
+13	,	,	PUNCT	,	_	14	punct	_	_
+14	is	be	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+15	that	that	SCONJ	IN	_	22	mark	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	17	det	_	_
+17	association	association	PROPN	NNP	Number=Sing	22	nsubj:pass	_	_
+18	of	of	ADP	IN	_	19	case	_	_
+19	RAD51–	RAD51-	PROPN	NNP	Number=Sing	17	nmod	_	SpaceAfter=No
+20	BRCA2	BRCa2	NOUN	NNP	Number=Sing	17	nmod	_	_
+21	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	22	aux:pass	_	_
+22	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	14	ccomp	_	_
+23	to	to	PART	TO	_	24	mark	_	_
+24	maintain	maintain	VERB	VB	VerbForm=Inf	22	xcomp	_	_
+25	RAD51	rad51	NOUN	NN	Number=Sing	24	obj	_	_
+26	in	in	ADP	IN	_	28	case	_	_
+27	a	a	DET	DT	Definite=Ind|PronType=Art	28	det	_	_
+28	form	form	NOUN	NN	Number=Sing	24	obl	_	_
+29	that	that	PRON	WDT	PronType=Rel	33	nsubj	_	_
+30	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	33	cop	_	_
+31	in	in	ADP	IN	_	33	case	_	_
+32	a	a	DET	DT	Definite=Ind|PronType=Art	33	det	_	_
+33	state	state	NOUN	NN	Number=Sing	28	acl:relcl	_	_
+34	of	of	ADP	IN	_	36	case	_	_
+35	'	'	PUNCT	``	_	36	punct	_	SpaceAfter=No
+36	readiness	readiness	NOUN	NN	Number=Sing	33	nmod	_	SpaceAfter=No
+37	'	'	PUNCT	''	_	36	punct	_	_
+38	(	(	PUNCT	-LRB-	_	39	punct	_	SpaceAfter=No
+39	Fig	fig	NOUN	NN	Number=Sing	33	appos	_	SpaceAfter=No
+40	.	.	PUNCT	.	_	14	punct	_	_
+
+# sent_id = 69
+# text = 2a).
+1	2	2	X	LS	_	2	nummod	_	SpaceAfter=No
+2	a	a	X	LS	_	0	root	_	SpaceAfter=No
+3	)	)	PUNCT	-RRB-	_	2	punct	_	SpaceAfter=No
+4	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 70
+# text = In the absence of this interaction with BRCA2, RAD51 might exist in a form that is not capable of being recruited into a functional repair complex when damage occurs.
+1	In	in	ADP	IN	_	3	case	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+3	absence	absence	NOUN	NN	Number=Sing	12	obl	_	_
+4	of	of	ADP	IN	_	6	case	_	_
+5	this	this	DET	DT	Number=Sing|PronType=Dem	6	det	_	_
+6	interaction	interaction	NOUN	NN	Number=Sing	3	nmod	_	_
+7	with	with	ADP	IN	_	8	case	_	_
+8	BRCA2	brca2	NOUN	NN	Number=Sing	6	nmod	_	SpaceAfter=No
+9	,	,	PUNCT	,	_	12	punct	_	_
+10	RAD51	rad51	NOUN	NN	Number=Sing	12	nsubj	_	_
+11	might	might	AUX	MD	VerbForm=Fin	12	aux	_	_
+12	exist	exist	VERB	VB	VerbForm=Inf	0	root	_	_
+13	in	in	ADP	IN	_	15	case	_	_
+14	a	a	DET	DT	Definite=Ind|PronType=Art	15	det	_	_
+15	form	form	NOUN	NN	Number=Sing	12	obl	_	_
+16	that	that	PRON	WDT	PronType=Rel	19	nsubj	_	_
+17	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	19	cop	_	_
+18	not	not	PART	RB	_	19	advmod	_	_
+19	capable	capable	ADJ	JJ	Degree=Pos	15	acl:relcl	_	_
+20	of	of	SCONJ	IN	_	22	mark	_	_
+21	being	be	AUX	VBG	VerbForm=Ger	22	aux:pass	_	_
+22	recruited	recruit	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	19	advcl	_	_
+23	into	into	ADP	IN	_	27	case	_	_
+24	a	a	DET	DT	Definite=Ind|PronType=Art	27	det	_	_
+25	functional	functional	ADJ	JJ	Degree=Pos	27	amod	_	_
+26	repair	repair	NOUN	NN	Number=Sing	27	compound	_	_
+27	complex	complex	NOUN	NN	Number=Sing	22	obl	_	_
+28	when	when	ADV	WRB	PronType=Int	30	mark	_	_
+29	damage	damage	NOUN	NN	Number=Sing	30	nsubj	_	_
+30	occurs	occur	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	22	advcl	_	SpaceAfter=No
+31	.	.	PUNCT	.	_	12	punct	_	_
+
+# sent_id = 71
+# text = For example, previous studies indicated that RAD51 shows little binding preference for single-strand DNA (ssDNA) over double-strand DNA (dsDNA) [3,29].
+1	For	for	ADP	IN	_	2	case	_	_
+2	example	example	NOUN	NN	Number=Sing	6	obl	_	SpaceAfter=No
+3	,	,	PUNCT	,	_	6	punct	_	_
+4	previous	previous	ADJ	JJ	Degree=Pos	5	amod	_	_
+5	studies	study	NOUN	NNS	Number=Plur	6	nsubj	_	_
+6	indicated	indicate	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	_	_
+7	that	that	SCONJ	IN	_	9	mark	_	_
+8	RAD51	rad51	NOUN	NN	Number=Sing	9	nsubj	_	_
+9	shows	show	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	6	ccomp	_	_
+10	little	little	ADJ	JJ	Degree=Pos	12	amod	_	_
+11	binding	binding	VERB	NN	Number=Sing	12	compound	_	_
+12	preference	preference	NOUN	NN	Number=Sing	9	obj	_	_
+13	for	for	ADP	IN	_	17	case	_	_
+14	single	single	ADJ	JJ	Degree=Pos	16	amod	_	SpaceAfter=No
+15	-	-	PUNCT	HYPH	_	16	punct	_	SpaceAfter=No
+16	strand	strand	NOUN	NN	Number=Sing	17	compound	_	_
+17	DNA	dna	NOUN	NN	Number=Sing	12	nmod	_	_
+18	(	(	PUNCT	-LRB-	_	19	punct	_	SpaceAfter=No
+19	ssDNA	ssdna	NOUN	NN	Number=Sing	17	appos	_	SpaceAfter=No
+20	)	)	PUNCT	-RRB-	_	19	punct	_	_
+21	over	over	ADP	IN	_	25	case	_	_
+22	double	double	ADJ	JJ	Degree=Pos	24	amod	_	SpaceAfter=No
+23	-	-	PUNCT	HYPH	_	24	punct	_	SpaceAfter=No
+24	strand	strand	NOUN	NN	Number=Sing	25	compound	_	_
+25	DNA	dna	NOUN	NN	Number=Sing	17	nmod	_	_
+26	(	(	PUNCT	-LRB-	_	27	punct	_	SpaceAfter=No
+27	dsDNA	dsdna	NOUN	NN	Number=Sing	25	appos	_	SpaceAfter=No
+28	)	)	PUNCT	-RRB-	_	27	punct	_	_
+29	[	[	PUNCT	-LRB-	_	30	punct	_	SpaceAfter=No
+30	3,29	3,29	NUM	CD	NumType=Card	25	appos	_	SpaceAfter=No
+31	]	]	PUNCT	-RRB-	_	30	punct	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 72
+# text = This result could mean that regulatory factors, such as BRCA2, are required to suppress RAD51–dsDNA interactions to prevent sequestration of RAD51 in a nonfunctional form.
+1	This	this	DET	DT	Number=Sing|PronType=Dem	2	det	_	_
+2	result	result	NOUN	NN	Number=Sing	4	nsubj	_	_
+3	could	could	AUX	MD	VerbForm=Fin	4	aux	_	_
+4	mean	mean	VERB	VB	VerbForm=Inf	0	root	_	_
+5	that	that	SCONJ	IN	_	14	mark	_	_
+6	regulatory	regulatory	ADJ	JJ	Degree=Pos	7	amod	_	_
+7	factors	factor	NOUN	NNS	Number=Plur	14	nsubj:pass	_	SpaceAfter=No
+8	,	,	PUNCT	,	_	7	punct	_	_
+9	such	such	ADJ	JJ	Degree=Pos	11	case	_	_
+10	as	as	ADP	IN	_	9	fixed	_	_
+11	BRCA2	brca2	NOUN	NN	Number=Sing	7	nmod	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	14	punct	_	_
+13	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	14	aux:pass	_	_
+14	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	4	ccomp	_	_
+15	to	to	PART	TO	_	16	mark	_	_
+16	suppress	suppress	VERB	VB	VerbForm=Inf	14	xcomp	_	_
+17	RAD51–	rad51-	VERB	NN	Number=Sing	19	amod	_	SpaceAfter=No
+18	dsDNA	dsdna	NOUN	NN	Number=Sing	19	compound	_	_
+19	interactions	interaction	NOUN	NNS	Number=Plur	16	obj	_	_
+20	to	to	PART	TO	_	21	mark	_	_
+21	prevent	prevent	VERB	VB	VerbForm=Inf	16	advcl	_	_
+22	sequestration	sequestration	NOUN	NN	Number=Sing	21	obj	_	_
+23	of	of	ADP	IN	_	24	case	_	_
+24	RAD51	rad51	NOUN	NN	Number=Sing	22	nmod	_	_
+25	in	in	ADP	IN	_	28	case	_	_
+26	a	a	DET	DT	Definite=Ind|PronType=Art	28	det	_	_
+27	nonfunctional	nonfunctional	ADJ	JJ	Degree=Pos	28	amod	_	_
+28	form	form	NOUN	NN	Number=Sing	21	obl	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 73
+# text = Alternatively, or in addition, suppression of RAD51–ssDNA interaction might be important for preventing RAD51 from binding to the regions of ssDNA that form during normal DNA replication.
+1	Alternatively	alternatively	ADV	RB	_	14	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	14	punct	_	_
+3	or	or	CCONJ	CC	_	14	cc	_	_
+4	in	in	ADP	IN	_	5	case	_	_
+5	addition	addition	NOUN	NN	Number=Sing	14	obl	_	SpaceAfter=No
+6	,	,	PUNCT	,	_	14	punct	_	_
+7	suppression	suppression	NOUN	NN	Number=Sing	14	nsubj	_	_
+8	of	of	ADP	IN	_	11	case	_	_
+9	RAD51–	rad51-	NOUN	NN	Number=Sing	10	compound	_	SpaceAfter=No
+10	ssDNA	ssdna	NOUN	NN	Number=Sing	11	compound	_	_
+11	interaction	interaction	NOUN	NN	Number=Sing	7	nmod	_	_
+12	might	might	AUX	MD	VerbForm=Fin	14	aux	_	_
+13	be	be	AUX	VB	VerbForm=Inf	14	cop	_	_
+14	important	important	ADJ	JJ	Degree=Pos	0	root	_	_
+15	for	for	SCONJ	IN	_	16	mark	_	_
+16	preventing	prevent	VERB	VBG	VerbForm=Ger	14	advcl	_	_
+17	RAD51	rad51	NOUN	NN	Number=Sing	16	obj	_	_
+18	from	from	SCONJ	IN	_	19	mark	_	_
+19	binding	bind	VERB	VBG	VerbForm=Ger	16	advcl	_	_
+20	to	to	ADP	IN	_	22	case	_	_
+21	the	the	DET	DT	Definite=Def|PronType=Art	22	det	_	_
+22	regions	region	NOUN	NNS	Number=Plur	19	obl	_	_
+23	of	of	ADP	IN	_	24	case	_	_
+24	ssDNA	ssdna	NOUN	NN	Number=Sing	22	nmod	_	_
+25	that	that	PRON	WDT	PronType=Rel	26	nsubj	_	_
+26	form	form	VERB	NN	Number=Sing	22	acl:relcl	_	_
+27	during	during	ADP	IN	_	30	case	_	_
+28	normal	normal	ADJ	JJ	Degree=Pos	30	amod	_	_
+29	DNA	dna	NOUN	NN	Number=Sing	30	compound	_	_
+30	replication	replication	NOUN	NN	Number=Sing	26	obl	_	SpaceAfter=No
+31	.	.	PUNCT	.	_	14	punct	_	_
+
+# sent_id = 74
+# text = BRCA2 may thus promote RAD51 assembly into recombinational repair complexes via a negative regulatory mechanism (i.e. by blocking RAD51–BRCA2 interaction until damage has occurred and factors required for 'productive' assembly of RAD51 at damaged sites are in place).
+1	BRCA2	brca2	NOUN	NN	Number=Sing	4	nsubj	_	_
+2	may	may	AUX	MD	VerbForm=Fin	4	aux	_	_
+3	thus	thus	ADV	RB	_	4	advmod	_	_
+4	promote	promote	VERB	VB	VerbForm=Inf	0	root	_	_
+5	RAD51	rad51	NOUN	NN	Number=Sing	6	compound	_	_
+6	assembly	assembly	NOUN	NN	Number=Sing	4	obj	_	_
+7	into	into	ADP	IN	_	10	case	_	_
+8	recombinational	recombinational	NOUN	NN	Number=Sing	9	compound	_	_
+9	repair	repair	NOUN	NN	Number=Sing	10	compound	_	_
+10	complexes	complex	NOUN	NNS	Number=Plur	6	nmod	_	_
+11	via	via	ADP	IN	_	15	case	_	_
+12	a	a	DET	DT	Definite=Ind|PronType=Art	15	det	_	_
+13	negative	negative	ADJ	JJ	Degree=Pos	15	amod	_	_
+14	regulatory	regulatory	ADJ	JJ	Degree=Pos	15	amod	_	_
+15	mechanism	mechanism	NOUN	NN	Number=Sing	6	nmod	_	_
+16	(	(	PUNCT	-LRB-	_	19	punct	_	SpaceAfter=No
+17	i.e.	i.e.	X	FW	_	19	advmod	_	_
+18	by	by	SCONJ	IN	_	19	mark	_	_
+19	blocking	block	VERB	VBG	VerbForm=Ger	4	advcl	_	_
+20	RAD51–	rad51-	NUM	CD	NumType=Card	22	amod	_	SpaceAfter=No
+21	BRCA2	brca2	NOUN	NN	Number=Sing	22	compound	_	_
+22	interaction	interaction	NOUN	NN	Number=Sing	19	obj	_	_
+23	until	until	SCONJ	IN	_	26	mark	_	_
+24	damage	damage	NOUN	NN	Number=Sing	26	nsubj	_	_
+25	has	have	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	26	aux	_	_
+26	occurred	occur	VERB	VBN	Tense=Past|VerbForm=Part	19	advcl	_	_
+27	and	and	CCONJ	CC	_	42	cc	_	_
+28	factors	factor	NOUN	NNS	Number=Plur	42	nsubj	_	_
+29	required	require	VERB	VBN	Tense=Past|VerbForm=Part	28	acl	_	_
+30	for	for	ADP	IN	_	34	case	_	_
+31	'	'	PUNCT	``	_	34	punct	_	SpaceAfter=No
+32	productive	productive	ADJ	JJ	Degree=Pos	34	amod	_	SpaceAfter=No
+33	'	'	PUNCT	''	_	34	punct	_	_
+34	assembly	assembly	NOUN	NN	Number=Sing	29	obl	_	_
+35	of	of	ADP	IN	_	36	case	_	_
+36	RAD51	rad51	NOUN	NN	Number=Sing	34	nmod	_	_
+37	at	at	ADP	IN	_	39	case	_	_
+38	damaged	damage	VERB	VBN	Tense=Past|VerbForm=Part	39	amod	_	_
+39	sites	site	NOUN	NNS	Number=Plur	36	nmod	_	_
+40	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	42	cop	_	_
+41	in	in	ADP	IN	_	42	case	_	_
+42	place	place	NOUN	NN	Number=Sing	26	conj	_	SpaceAfter=No
+43	)	)	PUNCT	-RRB-	_	42	punct	_	SpaceAfter=No
+44	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 75
+# text = As mentioned previously, the ability of a BRC peptide to repress the RAD51–BRCA2 interaction could reflect a role of full-length protein in suppressing unwanted RAD51–BRCA2 interactions.
+1	As	as	SCONJ	IN	_	2	mark	_	_
+2	mentioned	mention	VERB	VBN	Tense=Past|VerbForm=Part	18	advcl	_	_
+3	previously	previously	ADV	RB	_	2	advmod	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	18	punct	_	_
+5	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+6	ability	ability	NOUN	NN	Number=Sing	18	nsubj	_	_
+7	of	of	ADP	IN	_	10	case	_	_
+8	a	a	DET	DT	Definite=Ind|PronType=Art	10	det	_	_
+9	BRC	brc	NOUN	NN	Number=Sing	10	compound	_	_
+10	peptide	peptide	NOUN	NN	Number=Sing	6	nmod	_	_
+11	to	to	PART	TO	_	12	mark	_	_
+12	repress	repress	VERB	VB	VerbForm=Inf	10	acl	_	_
+13	the	the	DET	DT	Definite=Def|PronType=Art	16	det	_	_
+14	RAD51–	rad51-	NOUN	NN	Number=Sing	15	compound	_	SpaceAfter=No
+15	BRCA2	brca2	NOUN	NN	Number=Sing	16	compound	_	_
+16	interaction	interaction	NOUN	NN	Number=Sing	12	obj	_	_
+17	could	could	AUX	MD	VerbForm=Fin	18	aux	_	_
+18	reflect	reflect	VERB	VB	VerbForm=Inf	0	root	_	_
+19	a	a	DET	DT	Definite=Ind|PronType=Art	20	det	_	_
+20	role	role	NOUN	NN	Number=Sing	18	obj	_	_
+21	of	of	ADP	IN	_	25	case	_	_
+22	full	full	ADJ	JJ	Degree=Pos	24	amod	_	SpaceAfter=No
+23	-	-	PUNCT	HYPH	_	24	punct	_	SpaceAfter=No
+24	length	length	NOUN	NN	Number=Sing	25	compound	_	_
+25	protein	protein	NOUN	NN	Number=Sing	20	nmod	_	_
+26	in	in	SCONJ	IN	_	27	mark	_	_
+27	suppressing	suppress	VERB	VBG	VerbForm=Ger	25	acl	_	_
+28	unwanted	unwanted	ADJ	JJ	Degree=Pos	31	amod	_	_
+29	RAD51–	rad51-	NOUN	NNS	Number=Plur	31	amod	_	SpaceAfter=No
+30	BRCA2	brca2	NOUN	NN	Number=Sing	31	compound	_	_
+31	interactions	interaction	NOUN	NNS	Number=Plur	27	obj	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	18	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 76
+# text = Yet another potential role for BRCA2 in promoting RAD51-dependent recombinational repair is a positive role in assembly of RAD51 at damaged sites (Fig.
+1	Yet	yet	CCONJ	CC	_	17	cc	_	_
+2	another	another	DET	DT	_	4	det	_	_
+3	potential	potential	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	role	role	NOUN	NN	Number=Sing	17	nsubj	_	_
+5	for	for	ADP	IN	_	6	case	_	_
+6	BRCA2	brca2	NOUN	NN	Number=Sing	4	nmod	_	_
+7	in	in	SCONJ	IN	_	8	mark	_	_
+8	promoting	promote	VERB	VBG	VerbForm=Ger	4	acl	_	_
+9	RAD51	rad51	NOUN	NN	Number=Sing	11	compound	_	SpaceAfter=No
+10	-	-	PUNCT	HYPH	_	11	punct	_	SpaceAfter=No
+11	dependent	dependent	ADJ	JJ	Degree=Pos	13	amod	_	_
+12	recombinational	recombinational	NOUN	NN	Number=Sing	13	compound	_	_
+13	repair	repair	NOUN	NN	Number=Sing	8	obj	_	_
+14	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	17	cop	_	_
+15	a	a	DET	DT	Definite=Ind|PronType=Art	17	det	_	_
+16	positive	positive	ADJ	JJ	Degree=Pos	17	amod	_	_
+17	role	role	NOUN	NN	Number=Sing	0	root	_	_
+18	in	in	ADP	IN	_	19	case	_	_
+19	assembly	assembly	NOUN	NN	Number=Sing	17	nmod	_	_
+20	of	of	ADP	IN	_	21	case	_	_
+21	RAD51	rad51	NOUN	NN	Number=Sing	19	nmod	_	_
+22	at	at	ADP	IN	_	24	case	_	_
+23	damaged	damage	VERB	VBN	Tense=Past|VerbForm=Part	24	amod	_	_
+24	sites	site	NOUN	NNS	Number=Plur	21	nmod	_	_
+25	(	(	PUNCT	-LRB-	_	17	punct	_	SpaceAfter=No
+26	Fig	fig	ADV	RB	_	17	advmod	_	SpaceAfter=No
+27	.	.	PUNCT	.	_	17	punct	_	_
+
+# sent_id = 77
+# text = 2b). Several proteins that interact with RAD51 are thought to 'mediate' assembly of RAD51 at sites of DNA damage (reviewed in [30]).
+1	2	2	X	LS	_	2	nummod	_	SpaceAfter=No
+2	b	b	X	LS	_	12	nummod	_	SpaceAfter=No
+3	)	)	PUNCT	-RRB-	_	2	punct	_	SpaceAfter=No
+4	.	.	PUNCT	.	_	12	punct	_	_
+5	Several	several	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	proteins	protein	NOUN	NNS	Number=Plur	12	nsubj:pass	_	_
+7	that	that	PRON	WDT	PronType=Rel	8	nsubj	_	_
+8	interact	interact	VERB	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	6	acl:relcl	_	_
+9	with	with	ADP	IN	_	10	case	_	_
+10	RAD51	rad51	NOUN	NN	Number=Sing	8	obl	_	_
+11	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	12	aux:pass	_	_
+12	thought	think	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+13	to	to	PART	TO	_	15	mark	_	_
+14	'	'	PUNCT	``	_	15	punct	_	SpaceAfter=No
+15	mediate	mediate	VERB	VB	VerbForm=Inf	12	xcomp	_	SpaceAfter=No
+16	'	'	PUNCT	''	_	15	punct	_	_
+17	assembly	assembly	NOUN	NN	Number=Sing	15	obj	_	_
+18	of	of	ADP	IN	_	19	case	_	_
+19	RAD51	rad51	NOUN	NN	Number=Sing	17	nmod	_	_
+20	at	at	ADP	IN	_	21	case	_	_
+21	sites	site	NOUN	NNS	Number=Plur	17	nmod	_	_
+22	of	of	ADP	IN	_	24	case	_	_
+23	DNA	dna	NOUN	NN	Number=Sing	24	compound	_	_
+24	damage	damage	NOUN	NN	Number=Sing	21	nmod	_	_
+25	(	(	PUNCT	-LRB-	_	26	punct	_	SpaceAfter=No
+26	reviewed	review	VERB	VBN	Tense=Past|VerbForm=Part	17	acl	_	_
+27	in	in	ADP	IN	_	29	case	_	_
+28	[	[	PUNCT	-LRB-	_	29	punct	_	SpaceAfter=No
+29	30	30	NUM	CD	NumType=Card	26	obl	_	SpaceAfter=No
+30	]	]	PUNCT	-RRB-	_	26	punct	_	SpaceAfter=No
+31	)	)	PUNCT	-RRB-	_	26	punct	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	12	punct	_	_
+
+# sent_id = 78
+# text = RAD51 paralogs in particular, including XRCC2, XRCC3, RAD51B, RAD51C and RAD51D, may function as a complex that actively promotes RAD51 assembly [31].
+1	RAD51	rad51	NOUN	NN	Number=Sing	2	compound	_	_
+2	paralogs	paralog	NOUN	NNS	Number=Plur	18	nsubj	_	_
+3	in	in	ADP	IN	_	4	case	_	_
+4	particular	particular	ADJ	JJ	Degree=Pos	2	nmod	_	SpaceAfter=No
+5	,	,	PUNCT	,	_	2	punct	_	_
+6	including	include	VERB	VBG	VerbForm=Ger	7	case	_	_
+7	XRCC2	xrcc2	NOUN	NN	Number=Sing	2	nmod	_	SpaceAfter=No
+8	,	,	PUNCT	,	_	9	punct	_	_
+9	XRCC3	xrcc3	NOUN	NN	Number=Sing	7	conj	_	SpaceAfter=No
+10	,	,	PUNCT	,	_	11	punct	_	_
+11	RAD51B	rad51b	NOUN	NN	Number=Sing	7	conj	_	SpaceAfter=No
+12	,	,	PUNCT	,	_	13	punct	_	_
+13	RAD51C	rad51c	NOUN	NN	Number=Sing	7	conj	_	_
+14	and	and	CCONJ	CC	_	15	cc	_	_
+15	RAD51D	rad51d	NOUN	NN	Number=Sing	7	conj	_	SpaceAfter=No
+16	,	,	PUNCT	,	_	18	punct	_	_
+17	may	may	AUX	MD	VerbForm=Fin	18	aux	_	_
+18	function	function	VERB	VB	VerbForm=Inf	0	root	_	_
+19	as	as	ADP	IN	_	21	case	_	_
+20	a	a	DET	DT	Definite=Ind|PronType=Art	21	det	_	_
+21	complex	complex	NOUN	NN	Number=Sing	18	obl	_	_
+22	that	that	PRON	WDT	PronType=Rel	24	nsubj	_	_
+23	actively	actively	ADV	RB	_	24	advmod	_	_
+24	promotes	promote	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	21	acl:relcl	_	_
+25	RAD51	RAD51	PROPN	NNP	Number=Sing	26	compound	_	_
+26	assembly	assembly	NOUN	NN	Number=Sing	24	obj	_	_
+27	[	[	PUNCT	-LRB-	_	26	punct	_	SpaceAfter=No
+28	31	31	NUM	CD	NumType=Card	26	nummod	_	SpaceAfter=No
+29	]	]	PUNCT	-RRB-	_	28	punct	_	SpaceAfter=No
+30	.	.	PUNCT	.	_	18	punct	_	_
+
+# sent_id = 79
+# text = BRCA2 could cooperate with RAD51 paralogs in promoting RAD51 assembly, or even provide an alternative assembly pathway.
+1	BRCA2	brca2	NOUN	NN	Number=Sing	3	nsubj	_	_
+2	could	could	AUX	MD	VerbForm=Fin	3	aux	_	_
+3	cooperate	cooperate	VERB	VB	VerbForm=Inf	0	root	_	_
+4	with	with	ADP	IN	_	6	case	_	_
+5	RAD51	rad51	NOUN	NN	Number=Sing	6	compound	_	_
+6	paralogs	paralog	NOUN	NNS	Number=Plur	3	obl	_	_
+7	in	in	SCONJ	IN	_	8	mark	_	_
+8	promoting	promote	VERB	VBG	VerbForm=Ger	6	acl	_	_
+9	RAD51	rad51	NOUN	NN	Number=Sing	10	compound	_	_
+10	assembly	assembly	NOUN	NN	Number=Sing	8	obj	_	SpaceAfter=No
+11	,	,	PUNCT	,	_	14	punct	_	_
+12	or	or	CCONJ	CC	_	14	cc	_	_
+13	even	even	ADV	RB	_	14	advmod	_	_
+14	provide	provide	VERB	VB	VerbForm=Inf	8	conj	_	_
+15	an	a	DET	DT	Definite=Ind|PronType=Art	18	det	_	_
+16	alternative	alternative	ADJ	JJ	Degree=Pos	18	amod	_	_
+17	assembly	assembly	NOUN	NN	Number=Sing	18	compound	_	_
+18	pathway	pathway	NOUN	NN	Number=Sing	14	obj	_	SpaceAfter=No
+19	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 80
+# text = The observation that BRCA2 localizes to damage-induced subnuclear foci with RAD51 seems consistent with the possibility that BRCA2 plays a positive role in assembly of the recombination complex [11].
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	observation	observation	NOUN	NN	Number=Sing	14	nsubj	_	_
+3	that	that	SCONJ	IN	_	5	mark	_	_
+4	BRCA2	brca2	NOUN	NN	Number=Sing	5	nsubj	_	_
+5	localizes	localize	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	2	acl	_	_
+6	to	to	ADP	IN	_	11	case	_	_
+7	damage	damage	NOUN	NN	Number=Sing	9	obl:npmod	_	SpaceAfter=No
+8	-	-	PUNCT	HYPH	_	9	punct	_	SpaceAfter=No
+9	induced	induce	VERB	VBN	Tense=Past|VerbForm=Part	11	amod	_	_
+10	subnuclear	subnuclear	NOUN	NN	Number=Sing	11	compound	_	_
+11	foci	foci	NOUN	NNS	Number=Plur	5	obl	_	_
+12	with	with	ADP	IN	_	13	case	_	_
+13	RAD51	rad51	NOUN	NN	Number=Sing	11	nmod	_	_
+14	seems	seem	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+15	consistent	consistent	ADJ	JJ	Degree=Pos	14	xcomp	_	_
+16	with	with	ADP	IN	_	18	case	_	_
+17	the	the	DET	DT	Definite=Def|PronType=Art	18	det	_	_
+18	possibility	possibility	NOUN	NN	Number=Sing	15	obl	_	_
+19	that	that	SCONJ	WRB	PronType=Rel	21	advmod	_	_
+20	BRCA2	brca2	NOUN	NN	Number=Sing	21	nsubj	_	_
+21	plays	play	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	18	acl	_	_
+22	a	a	DET	DT	Definite=Ind|PronType=Art	24	det	_	_
+23	positive	positive	ADJ	JJ	Degree=Pos	24	amod	_	_
+24	role	role	NOUN	NN	Number=Sing	21	obj	_	_
+25	in	in	ADP	IN	_	26	case	_	_
+26	assembly	assembly	NOUN	NN	Number=Sing	24	nmod	_	_
+27	of	of	ADP	IN	_	30	case	_	_
+28	the	the	DET	DT	Definite=Def|PronType=Art	30	det	_	_
+29	recombination	recombination	NOUN	NN	Number=Sing	30	compound	_	_
+30	complex	complex	NOUN	NN	Number=Sing	26	nmod	_	_
+31	[	[	PUNCT	-LRB-	_	30	punct	_	SpaceAfter=No
+32	11	11	NUM	CD	NumType=Card	30	appos	_	SpaceAfter=No
+33	]	]	PUNCT	-RRB-	_	30	punct	_	SpaceAfter=No
+34	.	.	PUNCT	.	_	14	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 81
+# text = Finally, it is important to note that the two models for the function of the BRCA2–RAD51 interaction shown in Figure 2 are not mutually exclusive.
+1	Finally	finally	ADV	RB	_	5	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	5	punct	_	_
+3	it	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	5	expl	_	_
+4	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	5	cop	_	_
+5	important	important	ADJ	JJ	Degree=Pos	0	root	_	_
+6	to	to	PART	TO	_	7	mark	_	_
+7	note	note	VERB	VB	VerbForm=Inf	5	csubj	_	_
+8	that	that	SCONJ	IN	_	28	mark	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	11	det	_	_
+10	two	two	NUM	CD	NumType=Card	11	nummod	_	_
+11	models	model	NOUN	NNS	Number=Plur	28	nsubj	_	_
+12	for	for	ADP	IN	_	14	case	_	_
+13	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+14	function	function	NOUN	NN	Number=Sing	11	nmod	_	_
+15	of	of	ADP	IN	_	20	case	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	19	compound	_	SpaceAfter=No
+18	–	-	PUNCT	HYPH	_	19	punct	_	SpaceAfter=No
+19	RAD51	rad51	NOUN	NN	Number=Sing	20	compound	_	_
+20	interaction	interaction	NOUN	NN	Number=Sing	14	nmod	_	_
+21	shown	show	VERB	VBN	Tense=Past|VerbForm=Part	20	acl	_	_
+22	in	in	ADP	IN	_	23	case	_	_
+23	Figure	figure	NOUN	NN	Number=Sing	21	obl	_	_
+24	2	2	NUM	CD	NumType=Card	23	nummod	_	_
+25	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	28	cop	_	_
+26	not	not	PART	RB	_	28	advmod	_	_
+27	mutually	mutually	ADV	RB	_	28	advmod	_	_
+28	exclusive	exclusive	ADJ	JJ	Degree=Pos	7	ccomp	_	SpaceAfter=No
+29	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 82
+# text = BRCA2 could prevent inappropriate RAD51 assembly in the absence of damage and promote functional RAD51 assembly at DNA lesions during the damage response.
+1	BRCA2	brca2	NOUN	NN	Number=Sing	3	nsubj	_	_
+2	could	could	AUX	MD	VerbForm=Fin	3	aux	_	_
+3	prevent	prevent	VERB	VB	VerbForm=Inf	0	root	_	_
+4	inappropriate	inappropriate	ADJ	JJ	Degree=Pos	6	amod	_	_
+5	RAD51	rad51	NOUN	NN	Number=Sing	6	compound	_	_
+6	assembly	assembly	NOUN	NN	Number=Sing	3	obj	_	_
+7	in	in	ADP	IN	_	9	case	_	_
+8	the	the	DET	DT	Definite=Def|PronType=Art	9	det	_	_
+9	absence	absence	NOUN	NN	Number=Sing	3	obl	_	_
+10	of	of	ADP	IN	_	11	case	_	_
+11	damage	damage	NOUN	NN	Number=Sing	9	nmod	_	_
+12	and	and	CCONJ	CC	_	13	cc	_	_
+13	promote	promote	VERB	VB	VerbForm=Inf	3	conj	_	_
+14	functional	functional	ADJ	JJ	Degree=Pos	16	amod	_	_
+15	RAD51	rad51	NOUN	NN	Number=Sing	16	compound	_	_
+16	assembly	assembly	NOUN	NN	Number=Sing	13	obj	_	_
+17	at	at	ADP	IN	_	19	case	_	_
+18	DNA	dna	NOUN	NN	Number=Sing	19	compound	_	_
+19	lesions	lesion	NOUN	NNS	Number=Plur	16	nmod	_	_
+20	during	during	ADP	IN	_	23	case	_	_
+21	the	the	DET	DT	Definite=Def|PronType=Art	23	det	_	_
+22	damage	damage	NOUN	NN	Number=Sing	23	compound	_	_
+23	response	response	NOUN	NN	Number=Sing	13	obl	_	SpaceAfter=No
+24	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 83
+# text = Further experiments are clearly required to clarify the functional interactions between BRCA2 and RAD51 during recombinational repair.
+1	Further	further	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	experiments	experiment	NOUN	NNS	Number=Plur	5	nsubj:pass	_	_
+3	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	5	aux:pass	_	_
+4	clearly	clearly	ADV	RB	_	5	advmod	_	_
+5	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+6	to	to	PART	TO	_	7	mark	_	_
+7	clarify	clarify	VERB	VB	VerbForm=Inf	5	xcomp	_	_
+8	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+9	functional	functional	ADJ	JJ	Degree=Pos	10	amod	_	_
+10	interactions	interaction	NOUN	NNS	Number=Plur	7	obj	_	_
+11	between	between	ADP	IN	_	12	case	_	_
+12	BRCA2	brca2	NOUN	NN	Number=Sing	10	nmod	_	_
+13	and	and	CCONJ	CC	_	14	cc	_	_
+14	RAD51	rad51	NOUN	NN	Number=Sing	12	conj	_	_
+15	during	during	ADP	IN	_	17	case	_	_
+16	recombinational	recombinational	NOUN	NN	Number=Sing	17	compound	_	_
+17	repair	repair	NOUN	NN	Number=Sing	12	nmod	_	SpaceAfter=No
+18	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 84
+# text = It should be relatively straightforward to determine whether the role of BRCA2 is limited to transporting RAD51 to the nucleus.
+1	It	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	5	expl	_	_
+2	should	should	AUX	MD	VerbForm=Fin	5	aux	_	_
+3	be	be	AUX	VB	VerbForm=Inf	5	cop	_	_
+4	relatively	relatively	ADV	RB	_	5	advmod	_	_
+5	straightforward	straightforward	ADJ	JJ	Degree=Pos	0	root	_	_
+6	to	to	PART	TO	_	7	mark	_	_
+7	determine	determine	VERB	VB	VerbForm=Inf	5	csubj	_	_
+8	whether	whether	SCONJ	IN	_	14	mark	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+10	role	role	NOUN	NN	Number=Sing	14	nsubj:pass	_	_
+11	of	of	ADP	IN	_	12	case	_	_
+12	BRCA2	brca2	NOUN	NN	Number=Sing	10	nmod	_	_
+13	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	14	aux:pass	_	_
+14	limited	limit	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	7	ccomp	_	_
+15	to	to	SCONJ	IN	_	16	mark	_	_
+16	transporting	transport	VERB	VBG	VerbForm=Ger	14	advcl	_	_
+17	RAD51	rad51	NOUN	NN	Number=Sing	16	obj	_	_
+18	to	to	ADP	IN	_	20	case	_	_
+19	the	the	DET	DT	Definite=Def|PronType=Art	20	det	_	_
+20	nucleus	nucleus	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+21	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 85
+# text = If this were the case, addition of a nuclear localization signal to RAD51 should suppress the RAD51-mediated phenotypes associated with a BRCA2 mutation.
+1	If	if	SCONJ	IN	_	5	mark	_	_
+2	this	this	PRON	DT	Number=Sing|PronType=Dem	5	nsubj	_	_
+3	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	5	cop	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	case	case	NOUN	NN	Number=Sing	16	advcl	_	SpaceAfter=No
+6	,	,	PUNCT	,	_	16	punct	_	_
+7	addition	addition	NOUN	NN	Number=Sing	16	nsubj	_	_
+8	of	of	ADP	IN	_	12	case	_	_
+9	a	a	DET	DT	Definite=Ind|PronType=Art	12	det	_	_
+10	nuclear	nuclear	ADJ	JJ	Degree=Pos	11	amod	_	_
+11	localization	localization	NOUN	NN	Number=Sing	12	compound	_	_
+12	signal	signal	NOUN	NN	Number=Sing	7	nmod	_	_
+13	to	to	ADP	IN	_	14	case	_	_
+14	RAD51	rad51	NOUN	NN	Number=Sing	12	nmod	_	_
+15	should	should	AUX	MD	VerbForm=Fin	16	aux	_	_
+16	suppress	suppress	VERB	VB	VerbForm=Inf	0	root	_	_
+17	the	the	DET	DT	Definite=Def|PronType=Art	21	det	_	_
+18	RAD51	rad51	NOUN	NN	Number=Sing	20	obl:npmod	_	SpaceAfter=No
+19	-	-	PUNCT	HYPH	_	20	punct	_	SpaceAfter=No
+20	mediated	mediate	VERB	VBN	Tense=Past|VerbForm=Part	21	amod	_	_
+21	phenotypes	phenotype	NOUN	NNS	Number=Plur	16	obj	_	_
+22	associated	associate	VERB	VBN	Tense=Past|VerbForm=Part	21	acl	_	_
+23	with	with	ADP	IN	_	26	case	_	_
+24	a	a	DET	DT	Definite=Ind|PronType=Art	26	det	_	_
+25	BRCA2	brca2	NOUN	NN	Number=Sing	26	compound	_	_
+26	mutation	mutation	NOUN	NN	Number=Sing	22	obl	_	SpaceAfter=No
+27	.	.	PUNCT	.	_	16	punct	_	_
+
+# sent_id = 86
+# text = However, biochemical experiments are needed to determine whether full-length BRCA2 blocks or promotes RAD51–BRCA2 interaction.
+1	However	however	ADV	RB	_	6	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	6	punct	_	_
+3	biochemical	biochemical	ADJ	JJ	Degree=Pos	4	amod	_	_
+4	experiments	experiment	NOUN	NNS	Number=Plur	6	nsubj:pass	_	_
+5	are	be	AUX	VBP	Mood=Ind|Tense=Pres|VerbForm=Fin	6	aux:pass	_	_
+6	needed	need	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+7	to	to	PART	TO	_	8	mark	_	_
+8	determine	determine	VERB	VB	VerbForm=Inf	6	advcl	_	_
+9	whether	whether	SCONJ	IN	_	16	mark	_	_
+10	full	full	ADJ	JJ	Degree=Pos	12	amod	_	SpaceAfter=No
+11	-	-	PUNCT	HYPH	_	12	punct	_	SpaceAfter=No
+12	length	length	NOUN	NN	Number=Sing	14	compound	_	_
+13	BRCA2	brca2	NOUN	NN	Number=Sing	14	compound	_	_
+14	blocks	block	NOUN	NNS	Number=Plur	8	obj	_	_
+15	or	or	CCONJ	CC	_	19	cc	_	_
+16	promotes	promote	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	8	ccomp	_	_
+17	RAD51–	rad51-	NOUN	NN	Number=Sing	19	amod	_	SpaceAfter=No
+18	BRCA2	brca2	NOUN	NN	Number=Sing	19	compound	_	_
+19	interaction	interaction	NOUN	NN	Number=Sing	16	obj	_	SpaceAfter=No
+20	.	.	PUNCT	.	_	6	punct	_	_
+
+# sent_id = 87
+# text = Such experiments could also reveal additional roles for BRCA2 in recombinational repair.
+1	Such	such	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	experiments	experiment	NOUN	NNS	Number=Plur	5	nsubj	_	_
+3	could	could	AUX	MD	VerbForm=Fin	5	aux	_	_
+4	also	also	ADV	RB	_	5	advmod	_	_
+5	reveal	reveal	VERB	VB	VerbForm=Inf	0	root	_	_
+6	additional	additional	ADJ	JJ	Degree=Pos	7	amod	_	_
+7	roles	role	NOUN	NNS	Number=Plur	5	obj	_	_
+8	for	for	ADP	IN	_	9	case	_	_
+9	BRCA2	brca2	NOUN	NN	Number=Sing	7	nmod	_	_
+10	in	in	ADP	IN	_	12	case	_	_
+11	recombinational	recombinational	NOUN	NN	Number=Sing	12	compound	_	_
+12	repair	repair	NOUN	NN	Number=Sing	9	nmod	_	SpaceAfter=No
+13	.	.	PUNCT	.	_	5	punct	_	_
+
+# sent_id = 88
+# text = However, several technical obstacles, including the large size of BRCA2, promise to make biochemical characterization of BRCA2 function difficult.
+1	However	however	ADV	RB	_	14	advmod	_	SpaceAfter=No
+2	,	,	PUNCT	,	_	14	punct	_	_
+3	several	several	ADJ	JJ	Degree=Pos	5	amod	_	_
+4	technical	technical	ADJ	JJ	Degree=Pos	5	amod	_	_
+5	obstacles	obstacle	NOUN	NNS	Number=Plur	14	nsubj	_	SpaceAfter=No
+6	,	,	PUNCT	,	_	5	punct	_	_
+7	including	include	VERB	VBG	VerbForm=Ger	10	case	_	_
+8	the	the	DET	DT	Definite=Def|PronType=Art	10	det	_	_
+9	large	large	ADJ	JJ	Degree=Pos	10	amod	_	_
+10	size	size	NOUN	NN	Number=Sing	5	nmod	_	_
+11	of	of	ADP	IN	_	12	case	_	_
+12	BRCA2	brca2	NOUN	NN	Number=Sing	10	nmod	_	SpaceAfter=No
+13	,	,	PUNCT	,	_	14	punct	_	_
+14	promise	promise	NOUN	NN	Number=Sing	0	root	_	_
+15	to	to	PART	TO	_	16	mark	_	_
+16	make	make	VERB	VB	VerbForm=Inf	14	acl	_	_
+17	biochemical	biochemical	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	characterization	characterization	NOUN	NN	Number=Sing	16	obj	_	_
+19	of	of	ADP	IN	_	21	case	_	_
+20	BRCA2	brca2	NOUN	NN	Number=Sing	21	compound	_	_
+21	function	function	NOUN	NN	Number=Sing	18	nmod	_	_
+22	difficult	difficult	ADJ	JJ	Degree=Pos	16	xcomp	_	SpaceAfter=No
+23	.	.	PUNCT	.	_	14	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 89
+# text = Abbreviations
+1	Abbreviations	abbreviation	NOUN	NNS	Number=Plur	0	root	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 90
+# text = DSB = double-strand break; dsDNA = double-strand DNA; ES = embryonic stem; GFP = green fluorescent protein; ssDNA = single-strand DNA.
+1	DSB	DSB	PROPN	NNP	Number=Sing	0	root	_	_
+2	=	=	PUNCT	,	_	1	punct	_	_
+3	double	double	ADJ	JJ	Degree=Pos	5	amod	_	SpaceAfter=No
+4	-	-	PUNCT	HYPH	_	5	punct	_	SpaceAfter=No
+5	strand	strand	NOUN	NN	Number=Sing	6	compound	_	_
+6	break	break	NOUN	NN	Number=Sing	1	appos	_	SpaceAfter=No
+7	;	;	PUNCT	,	_	6	punct	_	_
+8	dsDNA	dsdna	NOUN	NN	Number=Sing	6	appos	_	_
+9	=	=	PUNCT	,	_	6	punct	_	_
+10	double	double	ADJ	JJ	Degree=Pos	12	amod	_	SpaceAfter=No
+11	-	-	PUNCT	HYPH	_	12	punct	_	SpaceAfter=No
+12	strand	strand	NOUN	NN	Number=Sing	13	compound	_	_
+13	DNA	dna	NOUN	NN	Number=Sing	6	list	_	SpaceAfter=No
+14	;	;	PUNCT	,	_	6	punct	_	_
+15	ES	es	NOUN	NN	Number=Sing	13	appos	_	_
+16	=	=	PUNCT	,	_	13	punct	_	_
+17	embryonic	embryonic	ADJ	JJ	Degree=Pos	18	amod	_	_
+18	stem	stem	NOUN	NN	Number=Sing	13	conj	_	SpaceAfter=No
+19	;	;	PUNCT	,	_	18	punct	_	_
+20	GFP	gfp	NOUN	NN	Number=Sing	13	appos	_	_
+21	=	=	PUNCT	,	_	6	punct	_	_
+22	green	green	ADJ	JJ	Degree=Pos	24	amod	_	_
+23	fluorescent	fluorescent	NOUN	NN	Number=Sing	24	compound	_	_
+24	protein	protein	NOUN	NN	Number=Sing	6	list	_	SpaceAfter=No
+25	;	;	PUNCT	,	_	24	punct	_	_
+26	ssDNA	ssdna	NOUN	NN	Number=Sing	24	appos	_	_
+27	=	=	PUNCT	,	_	6	punct	_	_
+28	single	single	ADJ	JJ	Degree=Pos	30	amod	_	SpaceAfter=No
+29	-	-	PUNCT	HYPH	_	30	punct	_	SpaceAfter=No
+30	strand	strand	NOUN	NN	Number=Sing	31	compound	_	_
+31	DNA	dna	NOUN	NN	Number=Sing	6	list	_	SpaceAfter=No
+32	.	.	PUNCT	.	_	6	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 91
+# text = Figures and Tables
+1	Figures	figure	NOUN	NNS	Number=Plur	0	root	_	_
+2	and	and	CCONJ	CC	_	3	cc	_	_
+3	Tables	table	NOUN	NNS	Number=Plur	1	conj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 92
+# text = Figure 1
+1	Figure	figure	VERB	VB	Mood=Imp|VerbForm=Fin	0	root	_	_
+2	1	1	NUM	CD	NumType=Card	1	obj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 93
+# text = Recombination substrates used for assaying homology-directed repair.
+1	Recombination	recombination	NOUN	NN	Number=Sing	2	compound	_	_
+2	substrates	substrate	NOUN	NNS	Number=Plur	0	root	_	_
+3	used	use	VERB	VBN	Tense=Past|VerbForm=Part	2	acl	_	_
+4	for	for	ADP	IN	_	9	case	_	_
+5	assaying	assaying	VERB	NN	Number=Sing	9	amod	_	_
+6	homology	homology	NOUN	NN	Number=Sing	8	obl:npmod	_	SpaceAfter=No
+7	-	-	PUNCT	HYPH	_	8	punct	_	SpaceAfter=No
+8	directed	direct	VERB	VBN	Tense=Past|VerbForm=Part	9	amod	_	_
+9	repair	repair	NOUN	NN	Number=Sing	3	obl	_	SpaceAfter=No
+10	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 94
+# text = Cutting at the I-SceI site within the mutant GFP (SceGFP) results in a double-strand break that can be repaired through homologous gene conversion using a 3'-truncated copy of GFP as sequence donor.
+1	Cutting	cut	VERB	VBG	VerbForm=Ger	0	root	_	_
+2	at	at	ADP	IN	_	7	case	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	7	det	_	_
+4	I	I	PROPN	NNP	Number=Sing	6	compound	_	SpaceAfter=No
+5	-	-	PUNCT	HYPH	_	6	punct	_	SpaceAfter=No
+6	SceI	SceI	PROPN	NNP	Number=Sing	7	compound	_	_
+7	site	site	NOUN	NN	Number=Sing	1	obl	_	_
+8	within	within	ADP	IN	_	11	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	15	det	_	_
+10	mutant	mutant	NOUN	NN	Number=Sing	11	compound	_	_
+11	GFP	gfp	NOUN	NN	Number=Sing	15	compound	_	_
+12	(	(	PUNCT	-LRB-	_	13	punct	_	SpaceAfter=No
+13	SceGFP	scegfp	NOUN	NN	Number=Sing	11	appos	_	SpaceAfter=No
+14	)	)	PUNCT	-RRB-	_	13	punct	_	_
+15	results	result	NOUN	NNS	Number=Plur	1	obl	_	_
+16	in	in	ADP	IN	_	21	case	_	_
+17	a	a	DET	DT	Definite=Ind|PronType=Art	21	det	_	_
+18	double	double	ADJ	JJ	Degree=Pos	20	amod	_	SpaceAfter=No
+19	-	-	PUNCT	HYPH	_	20	punct	_	SpaceAfter=No
+20	strand	strand	NOUN	NN	Number=Sing	21	compound	_	_
+21	break	break	NOUN	NN	Number=Sing	15	nmod	_	_
+22	that	that	PRON	WDT	PronType=Rel	25	nsubj:pass	_	_
+23	can	can	AUX	MD	VerbForm=Fin	25	aux	_	_
+24	be	be	AUX	VB	VerbForm=Inf	25	aux:pass	_	_
+25	repaired	repair	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	21	acl:relcl	_	_
+26	through	through	ADP	IN	_	29	case	_	_
+27	homologous	homologous	ADJ	JJ	Degree=Pos	29	amod	_	_
+28	gene	gene	NOUN	NN	Number=Sing	29	compound	_	_
+29	conversion	conversion	NOUN	NN	Number=Sing	25	obl	_	_
+30	using	use	VERB	VBG	VerbForm=Ger	25	advcl	_	_
+31	a	a	DET	DT	Definite=Ind|PronType=Art	36	det	_	_
+32	3	3	NUM	CD	NumType=Card	35	compound	_	SpaceAfter=No
+33	'	'	PUNCT	HYPH	_	35	punct	_	SpaceAfter=No
+34	-	-	PUNCT	HYPH	_	35	punct	_	SpaceAfter=No
+35	truncated	truncate	VERB	VBN	Tense=Past|VerbForm=Part	36	amod	_	_
+36	copy	copy	NOUN	NN	Number=Sing	30	obj	_	_
+37	of	of	ADP	IN	_	38	case	_	_
+38	GFP	gfp	NOUN	NN	Number=Sing	36	nmod	_	_
+39	as	as	ADP	IN	_	41	case	_	_
+40	sequence	sequence	ADJ	JJ	Degree=Pos	41	amod	_	_
+41	donor	donor	NOUN	NN	Number=Sing	36	nmod	_	SpaceAfter=No
+42	.	.	PUNCT	.	_	1	punct	_	_
+
+# sent_id = 95
+# text = The mechanism results in the formation of a functional copy of the GFP gene.
+1	The	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+2	mechanism	mechanism	NOUN	NN	Number=Sing	3	compound	_	_
+3	results	result	NOUN	NNS	Number=Plur	0	root	_	_
+4	in	in	ADP	IN	_	6	case	_	_
+5	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+6	formation	formation	NOUN	NN	Number=Sing	3	nmod	_	_
+7	of	of	ADP	IN	_	10	case	_	_
+8	a	a	DET	DT	Definite=Ind|PronType=Art	10	det	_	_
+9	functional	functional	ADJ	JJ	Degree=Pos	10	amod	_	_
+10	copy	copy	NOUN	NN	Number=Sing	6	nmod	_	_
+11	of	of	ADP	IN	_	14	case	_	_
+12	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+13	GFP	gfp	NOUN	NN	Number=Sing	14	compound	_	_
+14	gene	gene	NOUN	NN	Number=Sing	10	nmod	_	SpaceAfter=No
+15	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 96
+# text = The model shown assumes gene conversion occurs via the synthesis-dependent annealing mechanism.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	model	model	NOUN	NN	Number=Sing	7	nsubj	_	_
+3	shown	show	VERB	VBN	Tense=Past|VerbForm=Part	2	acl	_	_
+4	assumes	assume	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+5	gene	gene	NOUN	NN	Number=Sing	6	compound	_	_
+6	conversion	conversion	NOUN	NN	Number=Sing	7	nsubj	_	_
+7	occurs	occur	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	4	ccomp	_	_
+8	via	via	ADP	IN	_	14	case	_	_
+9	the	the	DET	DT	Definite=Def|PronType=Art	14	det	_	_
+10	synthesis	synthesis	NOUN	NN	Number=Sing	12	obl:npmod	_	SpaceAfter=No
+11	-	-	PUNCT	HYPH	_	12	punct	_	SpaceAfter=No
+12	dependent	dependent	ADJ	JJ	Degree=Pos	14	amod	_	_
+13	annealing	annealing	NOUN	NN	Number=Sing	14	compound	_	_
+14	mechanism	mechanism	NOUN	NN	Number=Sing	7	obl	_	SpaceAfter=No
+15	.	.	PUNCT	.	_	7	punct	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 97
+# text = Figure 2
+1	Figure	figure	VERB	VB	Mood=Imp|VerbForm=Fin	0	root	_	_
+2	2	2	NUM	CD	NumType=Card	1	obj	_	SpacesAfter=\n\n
+
+# newpar
+# sent_id = 98
+# text = Potential roles of BRCA2 in promoting assembly of Rad51 at sites of DNA damage.
+1	Potential	potential	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	roles	role	NOUN	NNS	Number=Plur	0	root	_	_
+3	of	of	ADP	IN	_	4	case	_	_
+4	BRCA2	brca2	NOUN	NN	Number=Sing	2	nmod	_	_
+5	in	in	SCONJ	IN	_	6	mark	_	_
+6	promoting	promote	VERB	VBG	VerbForm=Ger	2	acl	_	_
+7	assembly	assembly	NOUN	NN	Number=Sing	6	obj	_	_
+8	of	of	ADP	IN	_	9	case	_	_
+9	Rad51	rad51	NOUN	NN	Number=Sing	7	nmod	_	_
+10	at	at	ADP	IN	_	11	case	_	_
+11	sites	site	NOUN	NNS	Number=Plur	9	nmod	_	_
+12	of	of	ADP	IN	_	14	case	_	_
+13	DNA	dna	NOUN	NN	Number=Sing	14	compound	_	_
+14	damage	damage	NOUN	NN	Number=Sing	11	nmod	_	SpaceAfter=No
+15	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 99
+# text = Chromosomal DNA is shown as pairs of straight lines, Rad51 as open circles, and BRCA2 as grey bars.
+1	Chromosomal	chromosomal	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	DNA	dna	NOUN	NN	Number=Sing	4	nsubj:pass	_	_
+3	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	4	aux:pass	_	_
+4	shown	show	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+5	as	as	ADP	IN	_	6	case	_	_
+6	pairs	pair	NOUN	NNS	Number=Plur	4	obl	_	_
+7	of	of	ADP	IN	_	9	case	_	_
+8	straight	straight	ADJ	JJ	Degree=Pos	9	amod	_	_
+9	lines	line	NOUN	NNS	Number=Plur	6	nmod	_	SpaceAfter=No
+10	,	,	PUNCT	,	_	11	punct	_	_
+11	Rad51	rad51	NOUN	NN	Number=Sing	9	conj	_	_
+12	as	as	ADP	IN	_	14	case	_	_
+13	open	open	ADJ	JJ	Degree=Pos	14	amod	_	_
+14	circles	circle	NOUN	NNS	Number=Plur	11	nmod	_	SpaceAfter=No
+15	,	,	PUNCT	,	_	17	punct	_	_
+16	and	and	CCONJ	CC	_	17	cc	_	_
+17	BRCA2	brca2	NOUN	NN	Number=Sing	9	conj	_	_
+18	as	as	ADP	IN	_	20	case	_	_
+19	grey	grey	NOUN	JJ	Degree=Pos	20	compound	_	_
+20	bars	bar	NOUN	NNS	Number=Plur	17	nmod	_	SpaceAfter=No
+21	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 100
+# text = (a) Prevention of nonproductive DNA interactions.
+1	(	(	PUNCT	-LRB-	_	2	punct	_	SpaceAfter=No
+2	a	a	X	LS	_	4	nummod	_	SpaceAfter=No
+3	)	)	PUNCT	-RRB-	_	2	punct	_	_
+4	Prevention	prevention	NOUN	NN	Number=Sing	0	root	_	_
+5	of	of	ADP	IN	_	8	case	_	_
+6	nonproductive	nonproductive	ADJ	JJ	Degree=Pos	8	amod	_	_
+7	DNA	dna	NOUN	NN	Number=Sing	8	compound	_	_
+8	interactions	interaction	NOUN	NNS	Number=Plur	4	nmod	_	SpaceAfter=No
+9	.	.	PUNCT	.	_	4	punct	_	_
+
+# sent_id = 101
+# text = BRCA2–Rad51 interaction is proposed to suppress RAD51–BRCA2 interactions until DNA damage is present.
+1	BRCA2	brca2	NOUN	NN	Number=Sing	0	root	_	SpaceAfter=No
+2	–	-	PUNCT	:	_	1	punct	_	SpaceAfter=No
+3	Rad51	rad51	NOUN	NN	Number=Sing	4	compound	_	_
+4	interaction	interaction	NOUN	NN	Number=Sing	6	nsubj:pass	_	_
+5	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	6	aux:pass	_	_
+6	proposed	propose	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	1	appos	_	_
+7	to	to	PART	TO	_	8	mark	_	_
+8	suppress	suppress	VERB	VB	VerbForm=Inf	6	xcomp	_	_
+9	RAD51–	rad51-	NOUN	NN	Number=Sing	11	amod	_	SpaceAfter=No
+10	BRCA2	brca2	NOUN	NN	Number=Sing	11	compound	_	_
+11	interactions	interaction	NOUN	NNS	Number=Plur	8	obj	_	_
+12	until	until	SCONJ	IN	_	16	mark	_	_
+13	DNA	dna	NOUN	NN	Number=Sing	14	compound	_	_
+14	damage	damage	NOUN	NN	Number=Sing	16	nsubj	_	_
+15	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	16	cop	_	_
+16	present	present	ADJ	JJ	Degree=Pos	8	advcl	_	SpaceAfter=No
+17	.	.	PUNCT	.	_	1	punct	_	_
+
+# sent_id = 102
+# text = When damage occurs, Rad51 is recruited to damaged sites where is polymerizes into nucleoprotein filaments.
+1	When	when	ADV	WRB	PronType=Int	3	mark	_	_
+2	damage	damage	NOUN	NN	Number=Sing	3	nsubj	_	_
+3	occurs	occur	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	7	advcl	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	7	punct	_	_
+5	Rad51	rad51	NOUN	NN	Number=Sing	7	nsubj:pass	_	_
+6	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	7	aux:pass	_	_
+7	recruited	recruit	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+8	to	to	ADP	TO	_	10	case	_	_
+9	damaged	damage	VERB	VBN	Tense=Past|VerbForm=Part	10	amod	_	_
+10	sites	site	NOUN	NNS	Number=Plur	7	obl	_	_
+11	where	where	ADV	WRB	PronType=Rel	13	advmod	_	_
+12	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	13	aux:pass	_	_
+13	polymerizes	polymerize	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	10	acl:relcl	_	_
+14	into	into	ADP	IN	_	16	case	_	_
+15	nucleoprotein	nucleoprotein	NOUN	NN	Number=Sing	16	compound	_	_
+16	filaments	filament	NOUN	NNS	Number=Plur	13	obl	_	SpaceAfter=No
+17	.	.	PUNCT	.	_	7	punct	_	_
+
+# sent_id = 103
+# text = In this model, BRCA2 is not required for assembly of functional complexes at damaged sites, only to prevent a substantial fraction of Rad51 from being sequestered in a nonfunctional form.
+1	In	in	ADP	IN	_	3	case	_	_
+2	this	this	DET	DT	Number=Sing|PronType=Dem	3	det	_	_
+3	model	model	NOUN	NN	Number=Sing	8	obl	_	SpaceAfter=No
+4	,	,	PUNCT	,	_	8	punct	_	_
+5	BRCA2	brca2	NOUN	NN	Number=Sing	8	nsubj:pass	_	_
+6	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	8	aux:pass	_	_
+7	not	not	PART	RB	_	8	advmod	_	_
+8	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+9	for	for	ADP	IN	_	10	case	_	_
+10	assembly	assembly	NOUN	NN	Number=Sing	8	obl	_	_
+11	of	of	ADP	IN	_	13	case	_	_
+12	functional	functional	ADJ	JJ	Degree=Pos	13	amod	_	_
+13	complexes	complex	NOUN	NNS	Number=Plur	10	nmod	_	_
+14	at	at	ADP	IN	_	16	case	_	_
+15	damaged	damage	VERB	VBN	Tense=Past|VerbForm=Part	16	amod	_	_
+16	sites	site	NOUN	NNS	Number=Plur	13	nmod	_	SpaceAfter=No
+17	,	,	PUNCT	,	_	8	punct	_	_
+18	only	only	ADV	RB	_	20	advmod	_	_
+19	to	to	PART	TO	_	20	mark	_	_
+20	prevent	prevent	VERB	VB	VerbForm=Inf	8	advcl	_	_
+21	a	a	DET	DT	Definite=Ind|PronType=Art	23	det	_	_
+22	substantial	substantial	ADJ	JJ	Degree=Pos	23	amod	_	_
+23	fraction	fraction	NOUN	NN	Number=Sing	20	obj	_	_
+24	of	of	ADP	IN	_	25	case	_	_
+25	Rad51	rad51	NOUN	NN	Number=Sing	23	nmod	_	_
+26	from	from	SCONJ	IN	_	28	mark	_	_
+27	being	be	AUX	VBG	VerbForm=Ger	28	aux:pass	_	_
+28	sequestered	sequester	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	20	advcl	_	_
+29	in	in	ADP	IN	_	32	case	_	_
+30	a	a	DET	DT	Definite=Ind|PronType=Art	32	det	_	_
+31	nonfunctional	nonfunctional	ADJ	JJ	Degree=Pos	32	amod	_	_
+32	form	form	NOUN	NN	Number=Sing	28	obl	_	SpaceAfter=No
+33	.	.	PUNCT	.	_	8	punct	_	_
+
+# sent_id = 104
+# text = In a BRCA2-defective cell, mutant Rad51 becomes associated with DNA at random sites and is therefore not readily recruited to sites of damage.
+1	In	in	ADP	IN	_	6	case	_	_
+2	a	a	DET	DT	Definite=Ind|PronType=Art	6	det	_	_
+3	BRCA2	brca2	NOUN	NN	Number=Sing	5	obl:npmod	_	SpaceAfter=No
+4	-	-	PUNCT	HYPH	_	5	punct	_	SpaceAfter=No
+5	defective	defective	ADJ	JJ	Degree=Pos	6	amod	_	_
+6	cell	cell	NOUN	NN	Number=Sing	11	obl	_	SpaceAfter=No
+7	,	,	PUNCT	,	_	10	punct	_	_
+8	mutant	mutant	NOUN	NN	Number=Sing	9	compound	_	_
+9	Rad51	rad51	NOUN	NN	Number=Sing	10	nsubj	_	_
+10	becomes	become	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+11	associated	associate	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	10	xcomp	_	_
+12	with	with	ADP	IN	_	13	case	_	_
+13	DNA	dna	NOUN	NN	Number=Sing	11	obl	_	_
+14	at	at	ADP	IN	_	16	case	_	_
+15	random	random	ADJ	JJ	Degree=Pos	16	amod	_	_
+16	sites	site	NOUN	NNS	Number=Plur	13	nmod	_	_
+17	and	and	CCONJ	CC	_	22	cc	_	_
+18	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	22	aux:pass	_	_
+19	therefore	therefore	ADV	RB	_	22	advmod	_	_
+20	not	not	PART	RB	_	22	advmod	_	_
+21	readily	readily	ADV	RB	_	22	advmod	_	_
+22	recruited	recruit	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	11	conj	_	_
+23	to	to	ADP	IN	_	24	case	_	_
+24	sites	site	NOUN	NNS	Number=Plur	22	obl	_	_
+25	of	of	ADP	IN	_	26	case	_	_
+26	damage	damage	NOUN	NN	Number=Sing	24	nmod	_	SpaceAfter=No
+27	.	.	PUNCT	.	_	11	punct	_	_
+
+# sent_id = 105
+# text = (b)
+1	(	(	PUNCT	-LRB-	_	2	punct	_	SpaceAfter=No
+2	b	b	X	LS	_	0	root	_	SpaceAfter=No
+3	)	)	PUNCT	-RRB-	_	2	punct	_	_
+
+# sent_id = 106
+# text = Positive regulation.
+1	Positive	positive	ADJ	JJ	Degree=Pos	2	amod	_	_
+2	regulation	regulation	NOUN	NN	Number=Sing	0	root	_	SpaceAfter=No
+3	.	.	PUNCT	.	_	2	punct	_	_
+
+# sent_id = 107
+# text = BRCA2 is proposed to be required for Rad51 to assemble into functional recombinational repair complexes at sites of damage.
+1	BRCA2	brca2	NOUN	NN	Number=Sing	3	nsubj:pass	_	_
+2	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	3	aux:pass	_	_
+3	proposed	propose	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	_
+4	to	to	PART	TO	_	6	mark	_	_
+5	be	be	AUX	VB	VerbForm=Inf	6	aux:pass	_	_
+6	required	require	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	3	xcomp	_	_
+7	for	for	ADP	IN	_	8	case	_	_
+8	Rad51	rad51	NOUN	NN	Number=Sing	6	obl	_	_
+9	to	to	PART	TO	_	10	mark	_	_
+10	assemble	assemble	VERB	VB	VerbForm=Inf	6	advcl	_	_
+11	into	into	ADP	IN	_	15	case	_	_
+12	functional	functional	ADJ	JJ	Degree=Pos	15	amod	_	_
+13	recombinational	recombinational	NOUN	NN	Number=Sing	14	compound	_	_
+14	repair	repair	NOUN	NN	Number=Sing	15	compound	_	_
+15	complexes	complex	NOUN	NNS	Number=Plur	10	obl	_	_
+16	at	at	ADP	IN	_	17	case	_	_
+17	sites	site	NOUN	NNS	Number=Plur	15	nmod	_	_
+18	of	of	ADP	IN	_	19	case	_	_
+19	damage	damage	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+20	.	.	PUNCT	.	_	3	punct	_	_
+
+# sent_id = 108
+# text = In BRCA-defective cells, Rad51 fails to associate with sites of damage due to lack of an assembly factor.
+1	In	in	ADP	IN	_	5	case	_	_
+2	BRCA	brca	NOUN	NN	Number=Sing	4	obl:npmod	_	SpaceAfter=No
+3	-	-	PUNCT	HYPH	_	4	punct	_	SpaceAfter=No
+4	defective	defective	ADJ	JJ	Degree=Pos	5	amod	_	_
+5	cells	cell	NOUN	NNS	Number=Plur	8	obl	_	SpaceAfter=No
+6	,	,	PUNCT	,	_	8	punct	_	_
+7	Rad51	rad51	NOUN	NN	Number=Sing	8	nsubj	_	_
+8	fails	fail	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+9	to	to	PART	TO	_	10	mark	_	_
+10	associate	associate	VERB	VB	VerbForm=Inf	8	xcomp	_	_
+11	with	with	ADP	IN	_	12	case	_	_
+12	sites	site	NOUN	NNS	Number=Plur	10	obl	_	_
+13	of	of	ADP	IN	_	14	case	_	_
+14	damage	damage	NOUN	NN	Number=Sing	12	nmod	_	_
+15	due	due	ADP	IN	_	17	case	_	_
+16	to	to	ADP	IN	_	15	fixed	_	_
+17	lack	lack	NOUN	NN	Number=Sing	10	obl	_	_
+18	of	of	ADP	IN	_	21	case	_	_
+19	an	a	DET	DT	Definite=Ind|PronType=Art	21	det	_	_
+20	assembly	assembly	NOUN	NN	Number=Sing	21	compound	_	_
+21	factor	factor	NOUN	NN	Number=Sing	17	nmod	_	SpaceAfter=No
+22	.	.	PUNCT	.	_	8	punct	_	SpacesAfter=\n
+

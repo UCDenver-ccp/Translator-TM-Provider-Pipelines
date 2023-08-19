@@ -175,6 +175,9 @@ public class PipelineMain {
 			case SENTENCE_EXTRACTION:
 				SentenceExtractionPipeline.main(pipelineArgs);
 				break;
+			case DEPENDENCY_PARSE_TO_SENTENCE:
+				DependencyParseToSentencePipeline.main(pipelineArgs);
+				break;
 			case SENTENCE_SEGMENTATION:
 				SentenceSegmentationPipeline.main(pipelineArgs);
 				break;
@@ -889,13 +892,23 @@ public class PipelineMain {
 	 * @return
 	 */
 	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
+		return getDocumentByType(inputDocuments, DocumentType.TEXT);
+	}
+	
+	/**
+	 * cycle through the input documents and return the specified DocumentType
+	 * 
+	 * @param inputDocuments
+	 * @return
+	 */
+	public static String getDocumentByType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType) {
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentCriteria documentCriteria = entry.getKey();
-			if (documentCriteria.getDocumentType() == DocumentType.TEXT) {
+			if (documentCriteria.getDocumentType() == docType) {
 				return entry.getValue();
 			}
 		}
-		throw new IllegalArgumentException("Unable to find document text in input documents.");
+		throw new IllegalArgumentException(String.format("Unable to find document type (%s) in input documents.", docType.name()));
 	}
 
 	private static Collection<TextAnnotation> deserializeAnnotations(String documentId, String content,
