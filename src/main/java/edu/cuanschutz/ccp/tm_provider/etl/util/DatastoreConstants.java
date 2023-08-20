@@ -284,6 +284,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_COLLECTIONS = "collections";
 
 	public static final String STATUS_PROPERTY_TEXT_EXTRACTION_DONE = "text_extract";
+	public static final String STATUS_PROPERTY_CONLL03_DONE = "conll03";
 
 //	public static final String STATUS_PROPERTY_IN_CORD19_COLLECTION = "in_cord19";
 //	public static final String STATUS_PROPERTY_IN_PMCOA_COLLECTION = "in_pmcoa";

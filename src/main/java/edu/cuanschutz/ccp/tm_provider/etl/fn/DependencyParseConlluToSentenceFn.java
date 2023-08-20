@@ -88,7 +88,7 @@ public class DependencyParseConlluToSentenceFn extends DoFn<KV<String, String>, 
 							List<String> chunkedConllu = PipelineMain.chunkContent(bionlp);
 							out.get(SENTENCE_ANNOT_TAG).output(KV.of(statusEntity, chunkedConllu));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(dc, "Failure during sentence segmentation.",
+							EtlFailureData failure = new EtlFailureData(dc, "Failure during dp-to-sentence.",
 									docId, t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}

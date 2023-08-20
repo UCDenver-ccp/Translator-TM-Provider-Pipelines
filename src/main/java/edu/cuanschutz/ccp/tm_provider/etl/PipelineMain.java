@@ -178,6 +178,9 @@ public class PipelineMain {
 			case DEPENDENCY_PARSE_TO_SENTENCE:
 				DependencyParseToSentencePipeline.main(pipelineArgs);
 				break;
+			case DEPENDENCY_PARSE_TO_CONLL03:
+				DependencyParseToConll03Pipeline.main(pipelineArgs);
+				break;
 			case SENTENCE_SEGMENTATION:
 				SentenceSegmentationPipeline.main(pipelineArgs);
 				break;
@@ -894,7 +897,7 @@ public class PipelineMain {
 	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
 		return getDocumentByType(inputDocuments, DocumentType.TEXT);
 	}
-	
+
 	/**
 	 * cycle through the input documents and return the specified DocumentType
 	 * 
@@ -908,7 +911,8 @@ public class PipelineMain {
 				return entry.getValue();
 			}
 		}
-		throw new IllegalArgumentException(String.format("Unable to find document type (%s) in input documents.", docType.name()));
+		throw new IllegalArgumentException(
+				String.format("Unable to find document type (%s) in input documents.", docType.name()));
 	}
 
 	private static Collection<TextAnnotation> deserializeAnnotations(String documentId, String content,

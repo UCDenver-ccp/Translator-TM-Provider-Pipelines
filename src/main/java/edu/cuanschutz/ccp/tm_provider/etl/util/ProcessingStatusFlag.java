@@ -1,11 +1,11 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ABBREVIATIONS_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_BIGQUERY_LOAD_FILE_EXPORT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_COOCCURRENCE_COUNTS_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONLL03_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CHEBI_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CL_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
@@ -50,6 +50,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_EXPRESSION_SITE_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_EXPORT_BL_GENE_TO_GO_TERM_ASSOCIATION_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_AUG_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_TEXT_EXTRACTION_DONE;
@@ -61,7 +62,7 @@ public enum ProcessingStatusFlag {
 	 * 
 	 */
 	TEXT_DONE(STATUS_PROPERTY_TEXT_DONE),
-	
+
 	TEXT_AUG_DONE(STATUS_PROPERTY_TEXT_AUG_DONE),
 
 	SECTIONS_DONE(STATUS_PROPERTY_SECTIONS_DONE),
@@ -73,7 +74,7 @@ public enum ProcessingStatusFlag {
 	DP_DONE(STATUS_PROPERTY_DEPENDENCY_PARSE_DONE),
 
 	SENTENCE_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_DONE),
-	
+
 	/* sentences mined from dependency parse output */
 	SENTENCE_VIA_DP_DONE(STATUS_PROPERTY_SENTENCE_SEGMENTATION_VIA_DEP_PARSE_DONE),
 
@@ -282,7 +283,7 @@ public enum ProcessingStatusFlag {
 	PUBANNOTATION_FILE_EXPORT_DONE(STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE),
 
 	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE),
-	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE);
+	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE), CONLL03(STATUS_PROPERTY_CONLL03_DONE);
 
 	@Getter
 	private final String datastoreFlagPropertyName;
