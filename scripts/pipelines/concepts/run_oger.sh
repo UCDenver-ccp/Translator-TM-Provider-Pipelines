@@ -10,6 +10,7 @@ TEXT_PIPELINE_KEY=$7
 TEXT_PIPELINE_VERSION=$8
 OUTPUT_PIPELINE_VERSION=$9
 OVERWRITE=${10}
+JAR_VERSION=${11}
 
 
 TPSF="OGER_${ONT}_DONE"
@@ -29,7 +30,7 @@ echo "TEXT PIPELINE VERSION: $TEXT_PIPELINE_VERSION"
 echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
 echo "OVERWRITE KEY: $OVERWRITE"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.2.0.jar OGER \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" OGER \
 --jobName="$JOB_NAME" \
 --ogerServiceUri="$SERVICE_URL" \
 --ogerOutputType=TSV \

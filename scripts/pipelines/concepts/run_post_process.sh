@@ -11,6 +11,7 @@ OGER_PIPELINE_VERSION=$8
 CRF_PIPELINE_VERSION=$9
 ABBREV_PIPELINE_VERSION=${10}
 FILTER_FLAG=${11}
+JAR_VERSION=${12}
 
 
 JOB_NAME=$(echo "CONCEPT-POST-PROCESS-${COLLECTION}" | tr '_' '-')
@@ -43,7 +44,7 @@ EXTENSION_MAP_FILE_PATH="${BUCKET}/ontology-resources/craft-mapping-files/*.txt.
 
 
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.2.0.jar CONCEPT_POST_PROCESS \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" CONCEPT_POST_PROCESS \
 --jobName="$JOB_NAME" \
 --inputDocumentCriteria="$INPUT_DOC_CRITERIA" \
 --requiredProcessingStatusFlags="$REQUIRED_FLAGS" \
