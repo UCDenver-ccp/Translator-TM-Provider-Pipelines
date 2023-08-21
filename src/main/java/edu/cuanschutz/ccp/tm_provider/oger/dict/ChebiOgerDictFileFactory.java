@@ -105,7 +105,6 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 			if (formula.endsWith("\"")) {
 				formula = StringUtil.removeSuffix(formula, "\"");
 			}
-			System.out.println("FORMULA: " + formula);
 			toReturn.add(formula);
 		}
 	}
