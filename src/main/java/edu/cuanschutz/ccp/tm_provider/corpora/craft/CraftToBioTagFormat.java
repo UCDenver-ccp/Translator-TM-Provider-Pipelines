@@ -294,6 +294,13 @@ public class CraftToBioTagFormat {
 		if (goToLabelMap.containsKey(conceptId)) {
 			conceptIdPrefix = goToLabelMap.get(conceptId);
 		}
+
+		// there is one HP annotation in CRAFT - we label it as MONDO for the purposes
+		// of BIO labeling
+		if (conceptIdPrefix.equals("HP")) {
+			conceptIdPrefix = "MONDO";
+		}
+
 		return String.format("%s-%s", labelType.name(), conceptIdPrefix);
 	}
 
@@ -315,22 +322,26 @@ public class CraftToBioTagFormat {
 			File bionlpFile = fileIter.next();
 			String docId = bionlpFile.getName().split("\\.")[0];
 			File txtFile = ExcludeCraftNestedConcepts.getTextFile(docId, craftBaseDir);
-			TextDocument td = bionlpReader.readDocument(docId, "craft", bionlpFile, txtFile, ENCODING);
 
 			String parentDirName = bionlpFile.getParentFile().getName();
-			if (parentDirName.equals("go_bp") || parentDirName.equals("go_cc") || parentDirName.equals("go_mf")) {
-				for (TextAnnotation annot : td.getAnnotations()) {
-					String id = annot.getClassMention().getMentionName();
-					if (id.contains("GO:")) {
-						goToLabelMap.put(id, parentDirName.toUpperCase());
+			/* SKIP GO_MF */
+			if (!parentDirName.equals("go_mf")) {
+				TextDocument td = bionlpReader.readDocument(docId, "craft", bionlpFile, txtFile, ENCODING);
+
+				if (parentDirName.equals("go_bp") || parentDirName.equals("go_cc") || parentDirName.equals("go_mf")) {
+					for (TextAnnotation annot : td.getAnnotations()) {
+						String id = annot.getClassMention().getMentionName();
+						if (id.contains("GO:")) {
+							goToLabelMap.put(id, parentDirName.toUpperCase());
+						}
 					}
 				}
-			}
 
-			if (!map.containsKey(docId)) {
-				map.put(docId, td);
-			} else {
-				map.get(docId).addAnnotations(td.getAnnotations());
+				if (!map.containsKey(docId)) {
+					map.put(docId, td);
+				} else {
+					map.get(docId).addAnnotations(td.getAnnotations());
+				}
 			}
 		}
 
