@@ -205,6 +205,17 @@ public abstract class OgerDictFileFactory {
 			return true;
 		}
 
+		// if there are multiple tokens and one of the tokens meets the above criteria
+		// for case sentitivity, then consider the entire label to be case sensitive.
+		String[] tokens = s.split(" ");
+		if (tokens.length > 1) {
+			for (String token : tokens) {
+				if (isCaseSensitive(token)) {
+					return true;
+				}
+			}
+		}
+
 		return false;
 
 	}

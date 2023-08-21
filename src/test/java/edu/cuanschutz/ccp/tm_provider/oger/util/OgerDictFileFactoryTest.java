@@ -19,8 +19,13 @@ public class OgerDictFileFactoryTest {
 		assertTrue(OgerDictFileFactory.isCaseSensitive("SD3"));
 		assertTrue(OgerDictFileFactory.isCaseSensitive("SD2a"));
 		assertFalse(OgerDictFileFactory.isCaseSensitive("Wiskott-Aldrich syndrome"));
-		
+		assertFalse(OgerDictFileFactory.isCaseSensitive("triglyceride lipase activity"));
+
 		assertTrue(OgerDictFileFactory.isCaseSensitive("casE"));
+
+		assertTrue(OgerDictFileFactory.isCaseSensitive("TAG activity"));
+		assertTrue(OgerDictFileFactory.isCaseSensitive("NO binding"));
+		assertTrue(OgerDictFileFactory.isCaseSensitive("NOS binding"));
 	}
 
 	@Test
