@@ -2,7 +2,9 @@ package edu.cuanschutz.ccp.tm_provider.oger.dict;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import edu.cuanschutz.ccp.tm_provider.oger.util.OgerDictFileFactory;
@@ -22,22 +24,24 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
 			Arrays.asList(OBO_PURL + "GO_0141047", // tag
-					OBO_PURL + "GO_0004806", // tag
 					OBO_PURL + "GO_0015267", // channel
 					OBO_PURL + "GO_0048018", // signaling molecules
-					OBO_PURL + "GO_0008158", // patched
 					OBO_PURL + "GO_0022804", // pump
 					OBO_PURL + "GO_0022804", // carriers
 					OBO_PURL + "GO_0022836", // gated channel
-					OBO_PURL + "GO_0070026", // no binding
-					OBO_PURL + "GO_0050998", // no binding
-					OBO_PURL + "GO_0031386" // protein -tagged
+					OBO_PURL + "GO_0031386", // protein -tagged
+					OBO_PURL + "GO:0005488" // binding
+
 			));
 
 	@Override
 	protected Set<String> augmentSynonyms(String iri, Set<String> syns, OntologyUtil ontUtil) {
 		Set<String> toReturn = removeStopWords(syns);
 		toReturn = removeWordsLessThenLength(toReturn, 3);
+		toReturn = filterSpecificSynonyms(iri, toReturn);
+
+//		dont remove activity from: GO:0003824      enzyme
+
 		augmentActivitySynonyms(toReturn);
 
 		if (EXCLUDED_INDIVIDUAL_CLASSES.contains(iri)) {
@@ -63,6 +67,21 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 			}
 		}
 		toReturn.addAll(toAdd);
+	}
+
+	protected static Set<String> filterSpecificSynonyms(String iri, Set<String> syns) {
+
+		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+
+		map.put(OBO_PURL + "GO_0008158", new HashSet<String>(Arrays.asList("patched activity")));
+
+		Set<String> updatedSyns = new HashSet<String>(syns);
+
+		if (map.containsKey(iri)) {
+			updatedSyns.removeAll(map.get(iri));
+		}
+
+		return updatedSyns;
 	}
 
 }

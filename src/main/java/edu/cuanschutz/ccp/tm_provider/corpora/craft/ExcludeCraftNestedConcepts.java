@@ -424,8 +424,9 @@ public class ExcludeCraftNestedConcepts {
 		BioNLPDocumentReader reader = new BioNLPDocumentReader();
 		Map<Ont, TextDocument> map = new HashMap<Ont, TextDocument>();
 		File txtFile = getTextFile(docId, craftBaseDir);
-		for (Ont ont : EnumSet.of(Ont.CHEBI, Ont.CL, Ont.GO_BP, Ont.GO_CC, Ont.GO_MF, Ont.MONDO, Ont.NCBITaxon, Ont.PR,
-				Ont.SO, Ont.UBERON)) {
+		for (Ont ont : EnumSet.of(Ont.CHEBI, Ont.CL, Ont.GO_BP, Ont.GO_CC, // Ont.GO_MF, Excluding GO_MF as it overlaps
+																			// with PR too muchs
+				Ont.MONDO, Ont.NCBITaxon, Ont.PR, Ont.SO, Ont.UBERON)) {
 			File annotFile = getAnnotFile(ont, docId, originalBionlpBaseDir, ext);
 			TextDocument td = reader.readDocument(docId, "craft", annotFile, txtFile, ENCODING);
 			map.put(ont, td);
@@ -477,19 +478,27 @@ public class ExcludeCraftNestedConcepts {
 		File inputBionlpBaseDir = new File(
 				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-exclude-specific");
 
-//		ExcludeOverlaps excludeOverlaps = ExcludeOverlaps.NO;
-//		File outputBionlpBaseDir = new File(
-//				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested");
-
-		ExcludeExactOverlaps excludeOverlaps = ExcludeExactOverlaps.CHOOSE_ONE_SEMI_RANDOMLY;
-		File outputBionlpBaseDir = new File(
-				"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested-for-crf");
-
-		outputBionlpBaseDir.mkdirs();
-
 		try {
+			// use this for the eval pipeline b/c it includes overlaps that match spans
+			// exactly
+			System.out.println("Processing for bionlp-no-nested");
+			ExcludeExactOverlaps excludeOverlaps = ExcludeExactOverlaps.NO;
+			File outputBionlpBaseDir = new File(
+					"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested");
+
+			outputBionlpBaseDir.mkdirs();
 			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir, excludeOverlaps);
-			ExcludeCraftConceptsByOntologyId.validateExcudedClasses(outputBionlpBaseDir, craftBaseDir);
+			ExcludeCraftConceptsByOntologyId.validateExcludedClasses(outputBionlpBaseDir, craftBaseDir);
+
+			// use this for the CRF/Transformer training b/c it does not permit any overlaps
+			System.out.println("Processing for bionlp-no-nested-for-crf");
+			excludeOverlaps = ExcludeExactOverlaps.CHOOSE_ONE_SEMI_RANDOMLY;
+			outputBionlpBaseDir = new File(
+					"/Users/bill/projects/craft-shared-task/exclude-nested-concepts/craft-shared-tasks.git/bionlp-no-nested-for-crf");
+
+			outputBionlpBaseDir.mkdirs();
+			excludeNestedAnnotations(craftBaseDir, inputBionlpBaseDir, outputBionlpBaseDir, excludeOverlaps);
+			ExcludeCraftConceptsByOntologyId.validateExcludedClasses(outputBionlpBaseDir, craftBaseDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

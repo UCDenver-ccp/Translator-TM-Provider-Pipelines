@@ -134,7 +134,7 @@ public class ExcludeCraftConceptsByOntologyId {
 		return cls;
 	}
 
-	public static void validateExcudedClasses(File baseBionlpDirectory, File craftBaseDir) throws IOException {
+	public static void validateExcludedClasses(File baseBionlpDirectory, File craftBaseDir) throws IOException {
 
 		List<Collection<String>> excludedClassSets = Arrays.asList(ChebiOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
 				ChebiOgerDictFileFactory.EXCLUDED_ROOT_CLASSES, MondoOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
@@ -232,9 +232,10 @@ public class ExcludeCraftConceptsByOntologyId {
 			excludeClasses(goOwlFile, Collections.emptyList(), GoCcOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
 					outputBionlpBaseDir, craftBaseDir);
 
-			System.out.println("GO_MF...");
-			excludeClasses(goOwlFile, Collections.emptyList(), GoMfOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
-					outputBionlpBaseDir, craftBaseDir);
+			// GO_MF has too much overlap with PR -- excluding it for now
+//			System.out.println("GO_MF...");
+//			excludeClasses(goOwlFile, Collections.emptyList(), GoMfOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
+//					outputBionlpBaseDir, craftBaseDir);
 
 			System.out.println("PR...");
 			excludeClasses(prOwlFile, Collections.emptyList(), PrOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES,
@@ -248,7 +249,7 @@ public class ExcludeCraftConceptsByOntologyId {
 			excludeClasses(uberonOwlFile, UberonOgerDictFileFactory.EXCLUDED_ROOT_CLASSES,
 					UberonOgerDictFileFactory.EXCLUDED_INDIVIDUAL_CLASSES, outputBionlpBaseDir, craftBaseDir);
 
-			validateExcudedClasses(outputBionlpBaseDir, craftBaseDir);
+			validateExcludedClasses(outputBionlpBaseDir, craftBaseDir);
 		} catch (OWLOntologyCreationException | IOException e) {
 			e.printStackTrace();
 		}
