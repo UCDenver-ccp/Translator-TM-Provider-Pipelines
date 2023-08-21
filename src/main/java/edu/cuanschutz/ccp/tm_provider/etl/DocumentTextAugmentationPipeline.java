@@ -119,8 +119,8 @@ public class DocumentTextAugmentationPipeline {
 				.getStatusEntity2Content(requiredDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
-				options.getOutputPipelineVersion());
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT, DocumentFormat.TEXT,
+				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		PCollectionTuple output = DocumentTextAugmentationFn.process(statusEntity2Content, outputDocCriteria,
 				requiredDocCriteria, timestamp);

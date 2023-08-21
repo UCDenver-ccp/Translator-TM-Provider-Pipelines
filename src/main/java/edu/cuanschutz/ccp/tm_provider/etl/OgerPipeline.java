@@ -129,7 +129,7 @@ public class OgerPipeline {
 		 * specifying different pipeline keys and pipeline versions. These are set in
 		 * the options for this pipeline.
 		 */
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,

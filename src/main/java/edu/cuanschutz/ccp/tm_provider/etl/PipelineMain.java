@@ -201,6 +201,7 @@ public class PipelineMain {
 				break;
 			case DOC_TEXT_AUGMENTATION:
 				DocumentTextAugmentationPipeline.main(pipelineArgs);
+				break;
 			case TEXT_EXPORT:
 				TextExtractionPipeline.main(pipelineArgs);
 				break;
