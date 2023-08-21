@@ -84,7 +84,7 @@ public class MondoOgerDictFileFactory extends OgerDictFileFactory {
 		if (iri.equals(OBO_PURL + "MONDO_0005129")) { // cataract
 			toReturn.add("cataracts");
 		}
-		if (iri.equals(OBO_PURL + "MONDO_0005044")) { // cataract
+		if (iri.equals(OBO_PURL + "MONDO_0005044")) {
 			toReturn.add("hypertension");
 		}
 
