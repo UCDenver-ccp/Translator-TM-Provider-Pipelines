@@ -130,7 +130,9 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_TEXT_DONE = "text";
 
 	public static final String STATUS_PROPERTY_TEXT_AUG_DONE = "text_aug";
-	
+
+	public static final String STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE = "filt_unact";
+
 	public static final String STATUS_PROPERTY_SECTIONS_DONE = "sections";
 
 	public static final String STATUS_PROPERTY_ABBREVIATIONS_DONE = "abbrev";
@@ -157,14 +159,10 @@ public interface DatastoreConstants {
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
 
-	
-	
 	public static final String STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE = "oger_cs";
 	public static final String STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE = "oger_cimax";
 	public static final String STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MIN_NORM_DONE = "oger_cimin";
-	
-	
-	
+
 	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
 	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
 	public static final String STATUS_PROPERTY_OGER_DRUGBANK_DONE = "oger_drugbank";

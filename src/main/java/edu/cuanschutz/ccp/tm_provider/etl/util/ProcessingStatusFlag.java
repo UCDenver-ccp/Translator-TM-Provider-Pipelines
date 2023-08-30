@@ -21,6 +21,7 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MIN_NORM_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE;
@@ -283,7 +284,8 @@ public enum ProcessingStatusFlag {
 	PUBANNOTATION_FILE_EXPORT_DONE(STATUS_PROPERTY_PUBANNOTATION_FILE_EXPORT_DONE),
 
 	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE),
-	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE), CONLL03(STATUS_PROPERTY_CONLL03_DONE);
+	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE), CONLL03(STATUS_PROPERTY_CONLL03_DONE),
+	FILTER_UNACTIONABLE_DONE(STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE);
 
 	@Getter
 	private final String datastoreFlagPropertyName;

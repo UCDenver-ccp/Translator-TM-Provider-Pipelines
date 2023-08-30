@@ -202,6 +202,9 @@ public class PipelineMain {
 			case DOC_TEXT_AUGMENTATION:
 				DocumentTextAugmentationPipeline.main(pipelineArgs);
 				break;
+			case FILTER_UNACTIONABLE_TEXT:
+				FilterUnactionableTextPipeline.main(pipelineArgs);
+				break;
 			case TEXT_EXPORT:
 				TextExtractionPipeline.main(pipelineArgs);
 				break;
