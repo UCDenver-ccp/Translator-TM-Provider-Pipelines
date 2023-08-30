@@ -22,12 +22,12 @@ RUN source env/bin/activate
 RUN python3 -m pip install --user flair
 
 
-COPY entrypoint.sh /home/flair
+COPY entrypoint.train.sh /home/flair
 COPY train.py /home/flair
-RUN chmod 755 entrypoint.sh
+RUN chmod 755 entrypoint.train.sh
 
-ENV GPU_NUM_DEVICES=2
+ENV GPU_NUM_DEVICES=1
 ENV XRT_TPU_CONFIG=
 
-ENTRYPOINT [ "/home/flair/entrypoint.sh" ]
+ENTRYPOINT [ "/home/flair/entrypoint.train.sh" ]
 
