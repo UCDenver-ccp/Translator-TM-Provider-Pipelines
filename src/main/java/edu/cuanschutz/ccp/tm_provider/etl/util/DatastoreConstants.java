@@ -182,19 +182,22 @@ public interface DatastoreConstants {
 	/////////////////// CRF CONCEPT PROCESSING /////////////////////
 	////////////////////////////////////////////////////////////////
 
-	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
+//	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
 	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
-	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
-	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
-	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
-	public static final String STATUS_PROPERTY_CRF_GO_MF_DONE = "crf_gomf";
+//	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
+//	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
+//	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
+//	public static final String STATUS_PROPERTY_CRF_GO_MF_DONE = "crf_gomf";
 	public static final String STATUS_PROPERTY_CRF_HP_DONE = "crf_hp";
-	public static final String STATUS_PROPERTY_CRF_MONDO_DONE = "crf_mondo";
-	public static final String STATUS_PROPERTY_CRF_MOP_DONE = "crf_mop";
-	public static final String STATUS_PROPERTY_CRF_NCBITAXON_DONE = "crf_ncbitaxon";
-	public static final String STATUS_PROPERTY_CRF_SO_DONE = "crf_so";
-	public static final String STATUS_PROPERTY_CRF_PR_DONE = "crf_pr";
-	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
+//	public static final String STATUS_PROPERTY_CRF_MONDO_DONE = "crf_mondo";
+//	public static final String STATUS_PROPERTY_CRF_MOP_DONE = "crf_mop";
+//	public static final String STATUS_PROPERTY_CRF_NCBITAXON_DONE = "crf_ncbitaxon";
+//	public static final String STATUS_PROPERTY_CRF_SO_DONE = "crf_so";
+//	public static final String STATUS_PROPERTY_CRF_PR_DONE = "crf_pr";
+//	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
+	public static final String STATUS_PROPERTY_CRF_CRAFT_DONE = "crf_craft";
+	public static final String STATUS_PROPERTY_CRF_NLMDISEASE_DONE = "crf_nlm_disease";
+	
 
 	////////////////////////////////////////////////////////////////
 	///////////////////// SENTENCE EXPORT //////////////////////////

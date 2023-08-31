@@ -6,19 +6,10 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CONLL03_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CHEBI_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CL_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_BP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_CC_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_GO_MF_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_CRAFT_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_HP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MONDO_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_MOP_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NCBITAXON_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NLMCHEM_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_PR_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_SO_DONE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_UBERON_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_CRF_NLMDISEASE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DEPENDENCY_PARSE_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_ELASTICSEARCH_INDEX_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE;
@@ -151,47 +142,50 @@ public enum ProcessingStatusFlag {
 	/**
 	* 
 	*/
-	CRF_CHEBI_DONE(STATUS_PROPERTY_CRF_CHEBI_DONE), CRF_NLMCHEM_DONE(STATUS_PROPERTY_CRF_NLMCHEM_DONE),
+//	CRF_CHEBI_DONE(STATUS_PROPERTY_CRF_CHEBI_DONE), 
+	CRF_NLMCHEM_DONE(STATUS_PROPERTY_CRF_NLMCHEM_DONE),
 	/**
 	* 
 	*/
-	CRF_CL_DONE(STATUS_PROPERTY_CRF_CL_DONE),
+//	CRF_CL_DONE(STATUS_PROPERTY_CRF_CL_DONE),
 	/**
 	* 
 	*/
-	CRF_GO_BP_DONE(STATUS_PROPERTY_CRF_GO_BP_DONE),
+//	CRF_GO_BP_DONE(STATUS_PROPERTY_CRF_GO_BP_DONE),
 	/**
 	* 
 	*/
-	CRF_GO_CC_DONE(STATUS_PROPERTY_CRF_GO_CC_DONE),
+//	CRF_GO_CC_DONE(STATUS_PROPERTY_CRF_GO_CC_DONE),
 	/**
 	* 
 	*/
-	CRF_GO_MF_DONE(STATUS_PROPERTY_CRF_GO_MF_DONE),
+//	CRF_GO_MF_DONE(STATUS_PROPERTY_CRF_GO_MF_DONE),
 
 	CRF_HP_DONE(STATUS_PROPERTY_CRF_HP_DONE),
 
-	CRF_MONDO_DONE(STATUS_PROPERTY_CRF_MONDO_DONE),
+//	CRF_MONDO_DONE(STATUS_PROPERTY_CRF_MONDO_DONE),
 	/**
 	* 
 	*/
-	CRF_MOP_DONE(STATUS_PROPERTY_CRF_MOP_DONE),
+//	CRF_MOP_DONE(STATUS_PROPERTY_CRF_MOP_DONE),
 	/**
 	* 
 	*/
-	CRF_NCBITAXON_DONE(STATUS_PROPERTY_CRF_NCBITAXON_DONE),
+//	CRF_NCBITAXON_DONE(STATUS_PROPERTY_CRF_NCBITAXON_DONE),
 	/**
 	* 
 	*/
-	CRF_SO_DONE(STATUS_PROPERTY_CRF_SO_DONE),
+//	CRF_SO_DONE(STATUS_PROPERTY_CRF_SO_DONE),
 	/**
 	* 
 	*/
-	CRF_PR_DONE(STATUS_PROPERTY_CRF_PR_DONE),
+//	CRF_PR_DONE(STATUS_PROPERTY_CRF_PR_DONE),
 	/**
 	* 
 	*/
-	CRF_UBERON_DONE(STATUS_PROPERTY_CRF_UBERON_DONE),
+//	CRF_UBERON_DONE(STATUS_PROPERTY_CRF_UBERON_DONE),
+
+	CRF_CRAFT_DONE(STATUS_PROPERTY_CRF_CRAFT_DONE), CRF_NLMDISEASE_DONE(STATUS_PROPERTY_CRF_NLMDISEASE_DONE),
 
 	////////////////////////////////////////////////////////////////
 	////////////////// BERT CONCEPT PROCESSING /////////////////////

@@ -81,10 +81,15 @@ public class CrfNerPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("Version that will be assigned to the Datastore documents created by this pipeline")
+		String getOutputPipelineVersion();
+
+		void setOutputPipelineVersion(String value);
+
 	}
 
 	public static void main(String[] args) {
-		String pipelineVersion = Version.getProjectVersion();
+//		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
@@ -118,7 +123,7 @@ public class CrfNerPipeline {
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
-				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
+				DocumentFormat.BIONLP, PIPELINE_KEY, options.getOutputPipelineVersion());
 		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCrfServiceUri(), outputDocCriteria,
 				timestamp);
 

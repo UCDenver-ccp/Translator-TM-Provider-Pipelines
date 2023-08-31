@@ -2,10 +2,15 @@
 
 SERVICE_URL=$1
 ONT=$2
-PROJECT=$3
-COLLECTION=$4
-STAGE_LOCATION=$5
-TMP_LOCATION=$6
+SENTENCE_PIPELINE_KEY=$3
+SENTENCE_PIPELINE_VERSION=$4
+PROJECT=$5
+COLLECTION=$6
+OVERWRITE=$7  
+STAGE_LOCATION=$8
+TMP_LOCATION=$9
+OUTPUT_PIPELINE_VERSION=${10}
+JAR_VERSION=${11}
 
 
 TPSF="CRF_${ONT}_DONE"
@@ -21,15 +26,16 @@ echo "TPSF: $TPSF"
 echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CRF \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" CRF \
 --jobName="$JOB_NAME" \
 --crfServiceUri="$SERVICE_URL" \
 --targetProcessingStatusFlag="$TPSF" \
 --targetDocumentType="$TDT" \
---inputSentencePipelineKey='SENTENCE_SEGMENTATION' \
---inputSentencePipelineVersion='0.1.0' \
+--inputSentencePipelineKey="$SENTENCE_PIPELINE_KEY" \
+--inputSentencePipelineVersion="$SENTENCE_PIPELINE_VERSION" \
+--outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
 --collection="$COLLECTION" \
---overwrite='NO' \
+--overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \

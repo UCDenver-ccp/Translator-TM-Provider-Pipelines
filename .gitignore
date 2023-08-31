@@ -28,3 +28,4 @@ src/main/java/edu/cuanschutz/ccp/tm_provider/trapi/PrToUniProtMapFileCreatorMain
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/BratAssertionAnnotationFileCreatorMain.java
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/ElasticsearchToBratExporterMain.java
 prime-oger-stage.sh
+prime-crf-stage.sh
