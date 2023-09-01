@@ -109,13 +109,17 @@ public class CraftDatastoreRetriever {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public void getOgerDocuments(File outputDirectory) throws FileNotFoundException, IOException {
+	public void getOgerDocuments(File outputDirectory, String ogerPipelineVersion)
+			throws FileNotFoundException, IOException {
 
 		Filter craftCollectionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, "CRAFT");
 		Filter ogerPipelineFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE,
 				PipelineKey.OGER.name());
+		Filter ogerPipelineVersionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION,
+				ogerPipelineVersion);
 
-		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, ogerPipelineFilter);
+		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, ogerPipelineFilter,
+				ogerPipelineVersionFilter);
 
 		runDatastoreQuery(outputDirectory, filter);
 
@@ -153,7 +157,7 @@ public class CraftDatastoreRetriever {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public void getPostProcessedDocuments(File outputDirectory, Target target)
+	public void getPostProcessedDocuments(File outputDirectory, Target target, String postProcessPipelineVersion)
 			throws FileNotFoundException, IOException {
 
 		FilterByCrf filterByCrf = (target == Target.PP_CRF) ? FilterByCrf.YES : FilterByCrf.NO;
@@ -169,7 +173,10 @@ public class CraftDatastoreRetriever {
 					DocumentType.CONCEPT_ALL_UNFILTERED.name());
 		}
 
-		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, pipelineFilter, crfFilter);
+		Filter versionFilter = PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE_VERSION,
+				postProcessPipelineVersion);
+
+		CompositeFilter filter = CompositeFilter.and(craftCollectionFilter, pipelineFilter, crfFilter, versionFilter);
 
 		runDatastoreQuery(outputDirectory, filter);
 
@@ -208,10 +215,10 @@ public class CraftDatastoreRetriever {
 	 * @param outputDir
 	 * @throws IOException
 	 */
-	private static void createOgerFiles(File datastoreDir, File go2namespaceFile, File outputDir, File craftBaseDir,
-			Target target) throws IOException {
-		System.out.println("Loading go2ontmap...");
-		Map<String, Ont> goCurieToOntMap = loadMapFile(go2namespaceFile);
+	private static void createOgerFiles(File datastoreDir, // File go2namespaceFile,
+			File outputDir, File craftBaseDir, Target target) throws IOException {
+//		System.out.println("Loading go2ontmap...");
+//		Map<String, Ont> goCurieToOntMap = loadMapFile(go2namespaceFile);
 
 		Map<String, File> docIdToDirMap = createDocIdToTrainDevTestDirMap(outputDir, craftBaseDir);
 
@@ -240,7 +247,9 @@ public class CraftDatastoreRetriever {
 
 			Map<Ont, TextDocument> ontToDocMap = initOntToDocMap(docId, txtFile, target);
 			for (File file : annotFiles) {
-				populateOntToDocMap(docId, file, txtFile, ontToDocMap, goCurieToOntMap, target);
+				populateOntToDocMap(docId, file, txtFile, ontToDocMap,
+//						goCurieToOntMap, 
+						target);
 			}
 
 			serializeBionlpFiles(docId, ontToDocMap, dir);
@@ -402,7 +411,8 @@ public class CraftDatastoreRetriever {
 	}
 
 	private static void populateOntToDocMap(String docId, File annotFile, File txtFile,
-			Map<Ont, TextDocument> ontToDocMap, Map<String, Ont> go2ontMap, Target target) throws IOException {
+			Map<Ont, TextDocument> ontToDocMap // , Map<String, Ont> go2ontMap
+			, Target target) throws IOException {
 		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
 
 		TextDocument td = bionlpReader.readDocument(docId, "craft", annotFile, txtFile, ENCODING);
@@ -411,15 +421,18 @@ public class CraftDatastoreRetriever {
 			String id = annot.getClassMention().getMentionName();
 			String prefix = id.split(":")[0];
 			Ont ont = null;
-//			// TODO: starts with a number check is temporary because the SNOMED prefix was
-//			// left off by accident
-//			if (id.startsWith("DRUGBANK") || id.startsWith("HP") || id.startsWith("SNOMEDCT")
-//					|| StringUtil.startsWithRegex(id, "\\d")) {
-//				continue;
-//			}
 
-			if (prefix.equals("GO")) {
-				ont = go2ontMap.get(id);
+			if (prefix.contains("GO_")) {
+				if (prefix.equals("GO_BP")) {
+					ont = Ont.GO_BP;
+				} else if (prefix.equals("GO_CC")) {
+					ont = Ont.GO_CC;
+				} else if (prefix.equals("GO_MF")) {
+					ont = Ont.GO_MF;
+				}
+				id = String.format("GO:%s", id.split(":")[1]);
+				annot.getClassMention().setMentionName(id);
+//				ont = go2ontMap.get(id);
 			} else {
 				try {
 					ont = Ont.valueOf(prefix);
@@ -512,6 +525,7 @@ public class CraftDatastoreRetriever {
 
 		String version = args[0];
 		Target target = Target.valueOf(args[1]);
+		String pipelineVersion = args[2];
 
 		File intermediateOutputDir = new File(String.format(
 				"/Users/bill/projects/ncats-translator/concept-recognition/july2023/craft-output-files/%s/%s",
@@ -540,18 +554,19 @@ public class CraftDatastoreRetriever {
 			cdr.getTextDocuments(intermediateOutputDir);
 			switch (target) {
 			case OGER:
-				cdr.getOgerDocuments(intermediateOutputDir);
+				cdr.getOgerDocuments(intermediateOutputDir, pipelineVersion);
 				break;
 			case PP:
-				cdr.getPostProcessedDocuments(intermediateOutputDir, target);
+				cdr.getPostProcessedDocuments(intermediateOutputDir, target, pipelineVersion);
 				break;
 			case PP_CRF:
-				cdr.getPostProcessedDocuments(intermediateOutputDir, target);
+				cdr.getPostProcessedDocuments(intermediateOutputDir, target, pipelineVersion);
 				break;
 			default:
 				throw new IllegalArgumentException("should not be here");
 			}
-			createOgerFiles(intermediateOutputDir, go2namespaceFile, finalOutputDir, craftBaseDir, target);
+			createOgerFiles(intermediateOutputDir, // go2namespaceFile,
+					finalOutputDir, craftBaseDir, target);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
