@@ -92,13 +92,13 @@ public class DrugbankOgerDictFileFactory extends OgerDictFileFactory {
 
 				for (String synonym : caseSensitiveSyns) {
 					String dictLine = OgerDictFileFactory.getDictLine("DrugBank", drugbankId, synonym, drugName, "drug",
-							false);
+							false, null);
 					OgerDictFileFactory.writeDictLine(alreadyWritten, caseSensWriter, dictLine);
 				}
 
 				for (String synonym : syns) {
 					String dictLine = OgerDictFileFactory.getDictLine("DrugBank", drugbankId, synonym, drugName, "drug",
-							false);
+							false, null);
 					OgerDictFileFactory.writeDictLine(alreadyWritten, caseInsensWriter, dictLine);
 				}
 			}

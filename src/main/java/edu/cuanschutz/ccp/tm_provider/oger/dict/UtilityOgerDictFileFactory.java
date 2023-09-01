@@ -39,7 +39,7 @@ public class UtilityOgerDictFileFactory extends OgerDictFileFactory {
 		try (BufferedWriter caseSensWriter = FileWriterUtil.initBufferedWriter(caseSensitiveDictFile)) {
 
 			String dictLine = OgerDictFileFactory.getDictLine("Utility", DOCUMENT_END_MARKER_ID, DOCUMENT_END_MARKER,
-					DOCUMENT_END_MARKER, "util", false);
+					DOCUMENT_END_MARKER, "util", false, null);
 			OgerDictFileFactory.writeDictLine(new HashSet<String>(), caseSensWriter, dictLine);
 		}
 	}

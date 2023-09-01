@@ -20,6 +20,15 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 				Arrays.asList(MOLECULAR_FUNCTION, CELLULAR_COMPONENT));
 	}
 
+	/**
+	 * This will add _BP to the GO identifiers in the generated dictionary so that
+	 * they don't need to be disambiguated with CC and MF classes later on, e.g., GO_BP:0001234
+	 */
+	@Override
+	protected String getIdAddOn() {
+		return "_BP";
+	}
+
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
 			Arrays.asList(OBO_PURL + "GO_0003002", // region
 					OBO_PURL + "GO_0023052", // signal

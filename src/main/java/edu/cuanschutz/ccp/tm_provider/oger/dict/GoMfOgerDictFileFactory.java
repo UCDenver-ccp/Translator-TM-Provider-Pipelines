@@ -21,6 +21,16 @@ public class GoMfOgerDictFileFactory extends OgerDictFileFactory {
 		super("molecular_function", "GO_MF", SynonymSelection.EXACT_ONLY,
 				Arrays.asList(CELLULAR_COMPONENT, BIOLOGICAL_PROCESS));
 	}
+	
+	/**
+	 * This will add _MF to the GO identifiers in the generated dictionary so that
+	 * they don't need to be disambiguated with CC and BP classes later on, e.g.,
+	 * GO_MF:0001234
+	 */
+	@Override
+	protected String getIdAddOn() {
+		return "_MF";
+	}
 
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(
 			Arrays.asList(OBO_PURL + "GO_0141047", // tag

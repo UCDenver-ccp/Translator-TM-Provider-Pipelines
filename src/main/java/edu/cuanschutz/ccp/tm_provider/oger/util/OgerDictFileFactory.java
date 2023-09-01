@@ -95,12 +95,12 @@ public abstract class OgerDictFileFactory {
 						synonyms.removeAll(caseSensitiveSyns);
 
 						for (String syn : caseSensitiveSyns) {
-							caseSensWriter.write(
-									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
+							caseSensWriter.write(getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label,
+									mainType, true, getIdAddOn()));
 						}
 						for (String syn : synonyms) {
-							caseInsensWriter.write(
-									getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label, mainType, true));
+							caseInsensWriter.write(getDictLine(ontologyPrefix, cls.getIRI().toString(), syn, label,
+									mainType, true, getIdAddOn()));
 						}
 					} else {
 						System.out.println("null label id: " + cls.getIRI().toString());
@@ -110,6 +110,10 @@ public abstract class OgerDictFileFactory {
 		} catch (OWLOntologyCreationException e) {
 			throw new IOException(e);
 		}
+	}
+
+	protected String getIdAddOn() {
+		return null;
 	}
 
 	/**
@@ -452,19 +456,19 @@ public abstract class OgerDictFileFactory {
 					aliasSymbol = cols[5];
 				}
 
-				String dictLine = getDictLine("HGNC", hgncId, approvedSymbol, approvedSymbol, "gene", false);
+				String dictLine = getDictLine("HGNC", hgncId, approvedSymbol, approvedSymbol, "gene", false, null);
 				writeDictLine(alreadyWritten, writer, dictLine);
 
-				dictLine = getDictLine("HGNC", hgncId, approvedName, approvedSymbol, "gene", false);
+				dictLine = getDictLine("HGNC", hgncId, approvedName, approvedSymbol, "gene", false, null);
 				writeDictLine(alreadyWritten, writer, dictLine);
 
 				if (aliasName != null) {
-					dictLine = getDictLine("HGNC", hgncId, aliasName, approvedSymbol, "gene", false);
+					dictLine = getDictLine("HGNC", hgncId, aliasName, approvedSymbol, "gene", false, null);
 					writeDictLine(alreadyWritten, writer, dictLine);
 				}
 
 				if (aliasSymbol != null) {
-					dictLine = getDictLine("HGNC", hgncId, aliasSymbol, approvedSymbol, "gene", false);
+					dictLine = getDictLine("HGNC", hgncId, aliasSymbol, approvedSymbol, "gene", false, null);
 					writeDictLine(alreadyWritten, writer, dictLine);
 				}
 
@@ -499,7 +503,7 @@ public abstract class OgerDictFileFactory {
 						// we've reached a new pubchem ID so it's time to serialize the labels for the
 						// previous ID and then reset the id and set
 						for (String lbl : labels) {
-							String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
+							String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false, null);
 							writeDictLine(new HashSet<String>(), writer, dictLine);
 						}
 
@@ -512,7 +516,7 @@ public abstract class OgerDictFileFactory {
 
 			// write the final set of labels
 			for (String lbl : labels) {
-				String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false);
+				String dictLine = getDictLine("PUBCHEM", id, lbl, lbl, "chemical", false, null);
 				writeDictLine(new HashSet<String>(), writer, dictLine);
 			}
 		}
@@ -599,12 +603,28 @@ public abstract class OgerDictFileFactory {
 		}
 	}
 
+	/**
+	 * @param ontKey
+	 * @param iri
+	 * @param label
+	 * @param primaryLabel
+	 * @param ontMainType
+	 * @param processId
+	 * @param idAddOn      used to add _BP, _CC, _MF to GO concepts so we don't have
+	 *                     to disambiguatae them later
+	 * @return
+	 */
 	public static String getDictLine(String ontKey, String iri, String label, String primaryLabel, String ontMainType,
-			boolean processId) {
+			boolean processId, String idAddOn) {
 		String id = iri;
 		if (processId) {
 			id = StringUtil.removePrefix(iri, "http://purl.obolibrary.org/obo/");
 			id = id.replace("_", ":");
+			if (idAddOn != null) {
+				String idPrefix = id.split(":")[0];
+				String idSuffix = id.split(":")[1];
+				id = String.format("%s%s:%s", idPrefix, idAddOn, idSuffix);
+			}
 			label = fixLabel(label);
 			primaryLabel = fixLabel(primaryLabel);
 		}
