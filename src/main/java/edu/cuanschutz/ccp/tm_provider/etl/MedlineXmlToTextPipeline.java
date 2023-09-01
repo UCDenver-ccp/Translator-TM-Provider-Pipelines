@@ -105,7 +105,7 @@ public class MedlineXmlToTextPipeline {
 				XmlIO.<PubmedArticle>readFiles().withRootElement("PubmedArticleSet").withRecordElement("PubmedArticle")
 						.withRecordClass(PubmedArticle.class));
 
-		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria outputTextDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				PIPELINE_KEY, pipelineVersion);
 		DocumentCriteria outputAnnotationDocCriteria = new DocumentCriteria(DocumentType.SECTIONS,
 				DocumentFormat.BIONLP, PIPELINE_KEY, pipelineVersion);
