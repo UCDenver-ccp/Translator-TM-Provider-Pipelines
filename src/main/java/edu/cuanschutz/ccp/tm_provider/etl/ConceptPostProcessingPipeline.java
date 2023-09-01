@@ -32,7 +32,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 
 /**
  * This pipeline accomplishes a number of tasks:
@@ -120,6 +119,11 @@ public class ConceptPostProcessingPipeline {
 
 		void setCollection(String value);
 
+		@Description("The version that is assigned to the Datastore documents created by this pipeline")
+		String getOutputPipelineVersion();
+
+		void setOutputPipelineVersion(String value);
+
 		@Description("Overwrite any previous runs")
 		OverwriteOutput getOverwrite();
 
@@ -153,7 +157,7 @@ public class ConceptPostProcessingPipeline {
 	}
 
 	public static void main(String[] args) {
-		String pipelineVersion = Version.getProjectVersion();
+//		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
@@ -205,7 +209,7 @@ public class ConceptPostProcessingPipeline {
 		}
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(outputDocumentType, DocumentFormat.BIONLP,
-				PIPELINE_KEY, pipelineVersion);
+				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
 				inputDocCriteria, extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonPromotionMapView, // ancestorMapView,

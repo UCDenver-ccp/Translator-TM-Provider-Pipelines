@@ -1,0 +1,7 @@
+BRCA2 and homologous recombination
+
+Abstract
+
+Two recent papers provide new evidence relevant to the role of the breast cancer susceptibility gene BRCA2 in DNA repair. Moynahan et al provide genetic data indicating a requirement for BRCA2 in homology-dependent (recombinational) repair of DNA double-strand breaks. The second paper, by Davies et al, begins to address the mechanism through which BRCA2 makes its contribution to recombinational repair. BRCA2 appears to function in recombination via interactions with the major eukaryotic recombinase RAD51 [1,2,3]. We briefly review the context in which the two studies were carried out, we comment on the results presented, and we discuss models designed to account for the role of BRCA2 in RAD51–mediated repair.
+
+Keywords: breast cancer, homologous recombination

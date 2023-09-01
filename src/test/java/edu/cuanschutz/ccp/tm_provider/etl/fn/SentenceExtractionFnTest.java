@@ -233,11 +233,11 @@ public class SentenceExtractionFnTest {
 		crfAnnots.add(createX2Sentence1Annot());
 		crfAnnots.add(factory.createAnnotation(49, 55, "ConceptX1", X_000001));
 
-		List<TextAnnotation> expectedAnnots = new ArrayList<TextAnnotation>();
+		Set<TextAnnotation> expectedAnnots = new HashSet<TextAnnotation>();
 		expectedAnnots.add(createX2Sentence1Annot());
 		expectedAnnots.add(createX1Sentence2Annot());
 
-		List<TextAnnotation> filteredAnnots = PipelineMain.filterViaCrf(conceptXAnnots, crfAnnots);
+		Set<TextAnnotation> filteredAnnots = PipelineMain.filterViaCrf(conceptXAnnots, crfAnnots);
 
 		assertEquals(expectedAnnots.size(), filteredAnnots.size());
 		assertEquals(expectedAnnots, filteredAnnots);

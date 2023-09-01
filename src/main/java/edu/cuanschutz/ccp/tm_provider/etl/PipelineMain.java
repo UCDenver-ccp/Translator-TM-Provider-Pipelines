@@ -49,7 +49,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.tools.ant.util.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
@@ -885,7 +884,9 @@ public class PipelineMain {
 			Collection<TextAnnotation> annots = deserializeAnnotations(documentId, content, documentFormat,
 					documentText);
 
-			docTypeToAnnotMap.put(documentType, annots);
+			if (!annots.isEmpty()) {
+				docTypeToAnnotMap.put(documentType, annots);
+			}
 
 		}
 
@@ -941,39 +942,74 @@ public class PipelineMain {
 		NONE, BY_CRF
 	}
 
-	public static Map<DocumentType, Collection<TextAnnotation>> filterConceptAnnotations(
+	/**
+	 * This method returns a mapping from DocumentType (we use the concept document
+	 * type, e.g., CONCEPT_CHEBI, CONCEPT_CL, etc.) to filtered concept annotations.
+	 * 
+	 * If the FilterFlag is CRF, then if there are both concepts and CRF annotations
+	 * for a concept type, then only those concept annotations that overlap with a
+	 * CRF annotation are returned. If there is are concept annotations but no CRF
+	 * annotations, then the concept annotations are returned (no filtering is
+	 * applied).
+	 * 
+	 * If the FilterFlag is NONE, then all concept annotations are returned. No
+	 * filtering is applied.
+	 * 
+	 * @param docTypeToAnnotMap
+	 * @param filterFlag
+	 * @return
+	 */
+	public static Map<DocumentType, Set<TextAnnotation>> filterConceptAnnotations(
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap, FilterFlag filterFlag) {
-		Map<DocumentType, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
+		Map<DocumentType, Set<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Set<TextAnnotation>>();
 
-		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> map = pairConceptWithCrfAnnots(
-				docTypeToAnnotMap);
+		Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> map = pairConceptWithCrfAnnots(docTypeToAnnotMap);
 
-		for (Entry<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> entry : map.entrySet()) {
+		for (Entry<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> entry : map.entrySet()) {
 
 			DocumentType type = entry.getKey();
-			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
+			Set<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
+			if (conceptAnnots != null) {
 
-			// TODO: this needs to be revised with the newly grouped OGER output, e.g.
-			// CONCEPT_CS, CONCEPT_MIN, CONCEPT_CIMAX
-			// if there isn't a pair for the CONCEPT then output it without filtering
-			if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
-				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
-				Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
-				typeToAnnotMap.put(type, filteredAnnots);
-			} else if (filterFlag == FilterFlag.NONE || entry.getValue().get(CrfOrConcept.CRF) == null) {
-				typeToAnnotMap.put(type, conceptAnnots);
-			} else {
-				throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+				if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
+					Set<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
+					Set<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
+					if (filteredAnnots.size() > 0) {
+						typeToAnnotMap.put(type, filteredAnnots);
+					}
+				} else if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) == null) {
+					// if the concept type is DRUGBANK or SNOMEDCT we pass it through without
+					// filtering b/c we don't have a CRF for those concept types -- but if there are
+					// no CRF annotations for a concept type that we do have a CRF for, then we
+					// filter all concept annotations for that type.
+					if (entry.getKey() == DocumentType.CONCEPT_DRUGBANK
+							|| entry.getKey() == DocumentType.CONCEPT_SNOMEDCT) {
+						typeToAnnotMap.put(type, conceptAnnots);
+					}
+				} else if (filterFlag == FilterFlag.NONE) {
+					typeToAnnotMap.put(type, conceptAnnots);
+				} else {
+					throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+				}
 			}
 
 		}
 		return typeToAnnotMap;
 	}
 
-	public static List<TextAnnotation> filterViaCrf(Collection<TextAnnotation> conceptAnnots,
+	/**
+	 * Takes as input a collection of concept annotations and a collection of crf
+	 * annotations and returns a list of concept annotations that overlap with a crf
+	 * annotation.
+	 * 
+	 * @param conceptAnnots
+	 * @param crfAnnots
+	 * @return
+	 */
+	public static Set<TextAnnotation> filterViaCrf(Collection<TextAnnotation> conceptAnnots,
 			Collection<TextAnnotation> crfAnnots) {
 
-		List<TextAnnotation> toKeep = new ArrayList<TextAnnotation>();
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
 
 		// annotations must be sorted
 		List<TextAnnotation> conceptList = new ArrayList<TextAnnotation>(conceptAnnots);
@@ -983,6 +1019,12 @@ public class PipelineMain {
 
 		for (TextAnnotation conceptAnnot : conceptList) {
 			for (TextAnnotation crfAnnot : crfList) {
+				if (conceptAnnot.getAnnotationSpanEnd() < crfAnnot.getAnnotationSpanStart()) {
+					// if the concept annot ends before the crf annotation starts, then we don't
+					// need to look at any more crf annotations b/c none will overlap - we can make
+					// this assumption b/c the lists are sorted by span
+					break;
+				}
 				if (conceptAnnot.overlaps(crfAnnot)) {
 					toKeep.add(conceptAnnot);
 					break;
@@ -997,29 +1039,98 @@ public class PipelineMain {
 		CRF, CONCEPT
 	}
 
-	private static Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> pairConceptWithCrfAnnots(
+	@VisibleForTesting
+	protected static Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> pairConceptWithCrfAnnots(
 			Map<DocumentType, Collection<TextAnnotation>> inputMap) {
 
 		/*
 		 * outer map key is the concept type, e.g. CHEBI, CL, etc. inner map links keys:
 		 * CONCEPT & CRF to the associated bionlp formatted doc content
 		 */
-		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> docTypeToSplitAnnotMap = new HashMap<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>>();
+		Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> docTypeToSplitAnnotMap = new HashMap<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>>();
 
 		for (Entry<DocumentType, Collection<TextAnnotation>> entry : inputMap.entrySet()) {
 			DocumentType documentType = entry.getKey();
 			Collection<TextAnnotation> annots = entry.getValue();
 
+			CrfOrConcept crfOrConcept = CrfOrConcept.CONCEPT;
 			if (documentType.name().startsWith("CRF_")) {
-				String type = StringUtils.removePrefix(documentType.name(), "CRF_");
-				DocumentType indexType = DocumentType.valueOf("CONCEPT_" + type);
-				addToMap(docTypeToSplitAnnotMap, annots, indexType, CrfOrConcept.CRF);
-			} else if (documentType.name().startsWith("CONCEPT_")) {
-				addToMap(docTypeToSplitAnnotMap, annots, documentType, CrfOrConcept.CONCEPT);
+				crfOrConcept = CrfOrConcept.CRF;
+			}
+			// we will equate the NLMDISEASE CRF annotations with MONDO and to HP so it is
+			// easier to
+			// match them -- use of HashSet makes for easier testing b/c order doesn't
+			// matter
+			if (documentType == DocumentType.CRF_NLMDISEASE) {
+				addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(annots), DocumentType.CONCEPT_MONDO,
+						crfOrConcept);
+				addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(annots), DocumentType.CONCEPT_HP,
+						crfOrConcept);
+			} else if (documentType == DocumentType.CRF_CRAFT || documentType == DocumentType.CONCEPT_CIMAX
+					|| documentType == DocumentType.CONCEPT_CIMIN || documentType == DocumentType.CONCEPT_CS) {
+				// these documents have a mix of concept types, so we need to add them to the
+				// map individually
+				for (TextAnnotation annot : annots) {
+					DocumentType indexType = getDocumentType(annot);
+					if (indexType != null) {
+						addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(Arrays.asList(annot)), indexType,
+								crfOrConcept);
+						// add CRAFT MONDO CRF annotations to the CRF HP annotations too
+						if (crfOrConcept == CrfOrConcept.CRF && indexType == DocumentType.CONCEPT_MONDO) {
+							addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(Arrays.asList(annot)),
+									DocumentType.CONCEPT_HP, crfOrConcept);
+						}
+					}
+				}
+			} else if (documentType.name().startsWith("CRF_") || documentType.name().startsWith("CONCEPT_")) {
+				throw new IllegalArgumentException(
+						String.format("Unhandled CRF or CONCEPT type (%s). Code changes needed.", documentType.name()));
 			}
 		}
 
 		return docTypeToSplitAnnotMap;
+
+	}
+
+	private static DocumentType getDocumentType(TextAnnotation annot) {
+		String idPrefix = annot.getClassMention().getMentionName().split(":")[0];
+		if (idPrefix.startsWith("B-") || idPrefix.startsWith("I-")) {
+			idPrefix = idPrefix.substring(2);
+		}
+		switch (idPrefix) {
+		case "CHEBI":
+			return DocumentType.CONCEPT_CHEBI;
+		case "CL":
+			return DocumentType.CONCEPT_CL;
+		case "GO_BP":
+			return DocumentType.CONCEPT_GO_BP;
+		case "GO_CC":
+			return DocumentType.CONCEPT_GO_CC;
+		case "GO_MF":
+			return DocumentType.CONCEPT_GO_MF;
+		case "DRUGBANK":
+			return DocumentType.CONCEPT_DRUGBANK;
+		case "HP":
+			return DocumentType.CONCEPT_HP;
+		case "MONDO":
+			return DocumentType.CONCEPT_MONDO;
+		case "NCBITaxon":
+			return DocumentType.CONCEPT_NCBITAXON;
+		case "PR":
+			return DocumentType.CONCEPT_PR;
+		case "SNOMEDCT":
+			return DocumentType.CONCEPT_SNOMEDCT;
+		case "SO":
+			return DocumentType.CONCEPT_SO;
+		case "UBERON":
+			return DocumentType.CONCEPT_UBERON;
+		case "TMKPUTIL":
+			return null;
+
+		default:
+			throw new IllegalArgumentException(
+					String.format("Unhandled concept id prefix (%s). Cannot convert to DocumentType.", idPrefix));
+		}
 	}
 
 	/**
@@ -1031,13 +1142,16 @@ public class PipelineMain {
 	 * @param crfOrConcept
 	 */
 	@VisibleForTesting
-	protected static void addToMap(
-			Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> conceptTypeToContentMap,
-			Collection<TextAnnotation> annots, DocumentType type, CrfOrConcept crfOrConcept) {
+	protected static void addToMap(Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> conceptTypeToContentMap,
+			Set<TextAnnotation> annots, DocumentType type, CrfOrConcept crfOrConcept) {
 		if (conceptTypeToContentMap.containsKey(type)) {
-			conceptTypeToContentMap.get(type).put(crfOrConcept, annots);
+			if (conceptTypeToContentMap.get(type).containsKey(crfOrConcept)) {
+				conceptTypeToContentMap.get(type).get(crfOrConcept).addAll(annots);
+			} else {
+				conceptTypeToContentMap.get(type).put(crfOrConcept, annots);
+			}
 		} else {
-			Map<CrfOrConcept, Collection<TextAnnotation>> innerMap = new HashMap<CrfOrConcept, Collection<TextAnnotation>>();
+			Map<CrfOrConcept, Set<TextAnnotation>> innerMap = new HashMap<CrfOrConcept, Set<TextAnnotation>>();
 			innerMap.put(crfOrConcept, annots);
 			conceptTypeToContentMap.put(type, innerMap);
 		}
@@ -1061,7 +1175,7 @@ public class PipelineMain {
 		return set;
 	}
 
-	public static <T> Set<T> spliceValues(Collection<Collection<T>> collections) {
+	public static <T> Set<T> spliceValues(Collection<Set<T>> collections) {
 		Set<T> set = new HashSet<T>();
 		for (Collection<T> collection : collections) {
 			for (T t : collection) {

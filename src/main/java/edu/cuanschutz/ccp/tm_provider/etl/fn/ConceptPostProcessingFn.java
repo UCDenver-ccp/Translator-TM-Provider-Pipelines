@@ -116,7 +116,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 										.getDocTypeToContentMap(statusEntity.getDocumentId(), docs);
 
-								Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
+								Map<DocumentType, Set<TextAnnotation>> docTypeToAnnotsMap = PipelineMain
 										.filterConceptAnnotations(docTypeToContentMap, filterFlag);
 
 								Collection<TextAnnotation> abbrevAnnots = docTypeToContentMap
