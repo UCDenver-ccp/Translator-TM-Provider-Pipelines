@@ -10,6 +10,7 @@ COLLECTION=$7
 STAGE_LOCATION=$8
 TMP_LOCATION=$9
 JAR_VERSION=${10}
+OVERWRITE=${11}
 
 JOB_NAME=$(echo "ABBREVIATION-${COLLECTION}" | tr '_' '-')
 
@@ -33,7 +34,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar A
 --inputSentencePipelineKey='SENTENCE_SEGMENTATION' \
 --inputSentencePipelineVersion="${SENTENCE_PIPELINE_VERSION}" \
 --collection="$COLLECTION" \
---overwrite='YES' \
+--overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
