@@ -455,14 +455,17 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 */
 	public static Set<TextAnnotation> getLongFormAnnots(Collection<TextAnnotation> abbrevAnnots) {
 		Set<TextAnnotation> longFormAnnots = new HashSet<TextAnnotation>();
-		for (TextAnnotation abbrevAnnot : abbrevAnnots) {
-			String type = abbrevAnnot.getClassMention().getMentionName();
-			if (type.equals(LONG_FORM_ABBREV_CLASS)) {
-				ComplexSlotMention csm = abbrevAnnot.getClassMention().getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
-				if (csm != null) {
-					Collection<ClassMention> classMentions = csm.getClassMentions();
-					if (classMentions.size() == 1) {
-						longFormAnnots.add(abbrevAnnot);
+		if (abbrevAnnots != null) {
+			for (TextAnnotation abbrevAnnot : abbrevAnnots) {
+				String type = abbrevAnnot.getClassMention().getMentionName();
+				if (type.equals(LONG_FORM_ABBREV_CLASS)) {
+					ComplexSlotMention csm = abbrevAnnot.getClassMention()
+							.getComplexSlotMentionByName(HAS_SHORT_FORM_SLOT);
+					if (csm != null) {
+						Collection<ClassMention> classMentions = csm.getClassMentions();
+						if (classMentions.size() == 1) {
+							longFormAnnots.add(abbrevAnnot);
+						}
 					}
 				}
 			}
