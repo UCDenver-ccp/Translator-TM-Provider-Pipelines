@@ -62,6 +62,11 @@ public class DocumentTextAugmentationPipeline {
 
 		void setTextPipelineVersion(String value);
 
+		@Description("This pipeline key will be used to select the input sentence documents that will be processed")
+		PipelineKey getSentencePipelineKey();
+
+		void setSentencePipelineKey(PipelineKey value);
+		
 		@Description("This pipeline version will be used to select the input sentence documents that will be processed")
 		String getSentencePipelineVersion();
 
@@ -109,7 +114,7 @@ public class DocumentTextAugmentationPipeline {
 		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				options.getTextPipelineKey(), options.getTextPipelineVersion());
 		DocumentCriteria inputSentDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
-				PipelineKey.SENTENCE_SEGMENTATION, options.getSentencePipelineVersion());
+				options.getSentencePipelineKey(), options.getSentencePipelineVersion());
 		DocumentCriteria inputAbbrevDocCriteria = new DocumentCriteria(DocumentType.ABBREVIATIONS,
 				DocumentFormat.BIONLP, PipelineKey.ABBREVIATION, options.getAbbreviationPipelineVersion());
 
