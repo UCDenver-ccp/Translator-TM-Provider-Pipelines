@@ -174,6 +174,9 @@ public class PipelineMain {
 			case SENTENCE_EXTRACTION:
 				SentenceExtractionPipeline.main(pipelineArgs);
 				break;
+			case DEPENDENCY_PARSE_IMPORT:
+				DependencyParseStoragePipeline.main(pipelineArgs);
+				break;
 			case DEPENDENCY_PARSE_TO_SENTENCE:
 				DependencyParseToSentencePipeline.main(pipelineArgs);
 				break;
@@ -297,9 +300,9 @@ public class PipelineMain {
 			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
-		PCollection<KV<String, CoGbkResult>> result = tuple.apply(CoGroupByKey.create());
+		PCollection<KV<String, CoGbkResult>> result = tuple.apply("merge status entities with docs", CoGroupByKey.create());
 
-		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply(
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply("check for required docs",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<ProcessingStatus, Map<DocumentCriteria, String>>>() {
 					private static final long serialVersionUID = 1L;
 

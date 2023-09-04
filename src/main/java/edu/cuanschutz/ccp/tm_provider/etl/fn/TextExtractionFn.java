@@ -55,7 +55,7 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> inputDocCriteria) {
 
-		return statusEntityToText.apply("Identify concept annotations",
+		return statusEntityToText.apply("Exporting text",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, String>>() {
 					private static final long serialVersionUID = 1L;
 
