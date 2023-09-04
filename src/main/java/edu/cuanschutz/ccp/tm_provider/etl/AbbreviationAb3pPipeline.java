@@ -35,7 +35,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
@@ -102,6 +101,12 @@ public class AbbreviationAb3pPipeline {
 
 		void setCollection(String value);
 
+		@Description("The version that will be assigned to the datastore documents created by this pipeline")
+		@Required
+		String getOutputPipelineVersion();
+
+		void setOutputPipelineVersion(String value);
+
 		@Description("Overwrite any previous runs")
 		@Required
 		OverwriteOutput getOverwrite();
@@ -111,7 +116,7 @@ public class AbbreviationAb3pPipeline {
 	}
 
 	public static void main(String[] args) {
-		String pipelineVersion = Version.getProjectVersion();
+//		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.ABBREVIATIONS_DONE;
@@ -142,7 +147,7 @@ public class AbbreviationAb3pPipeline {
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
-				PIPELINE_KEY, pipelineVersion);
+				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		List<String> filesToDownloadToWorker = Arrays.asList(options.getBinaryFileAndDependencies().split("\\|"));
 		AbbreviationFn abbreviationFn = new AbbreviationFn(configuration, abbreviationsBinaryName,
