@@ -6,7 +6,8 @@ STAGE_LOCATION=$3
 TMP_LOCATION=$4
 TEXT_PIPELINE_KEY=$5
 TEXT_PIPELINE_VERSION=$6
-JAR_VERSION=$7
+OVERWRITE=$7
+JAR_VERSION=$8
 
 
 JOB_NAME=$(echo "SENTENCE-${COLLECTION}" | tr '_' '-')
@@ -21,7 +22,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar S
 --inputPipelineKey="$TEXT_PIPELINE_KEY" \
 --inputPipelineVersion="${TEXT_PIPELINE_VERSION}" \
 --collection="$COLLECTION" \
---overwrite='NO' \
+--overwrite="${OVERWRITE}" \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \
