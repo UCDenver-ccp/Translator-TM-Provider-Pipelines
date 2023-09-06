@@ -2,6 +2,8 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -9,11 +11,17 @@ import java.util.HashSet;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.io.ClassPathUtil;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentReader;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import edu.ucdenver.ccp.nlp.core.mention.impl.DefaultComplexSlotMention;
 
 public class DocumentTextAugmentationFnTest {
+
+	private static final CharacterEncoding ENCODING = CharacterEncoding.UTF_8;
 
 	@Test
 	public void testAugmentDocumentText() {
@@ -88,6 +96,27 @@ public class DocumentTextAugmentationFnTest {
 		System.out.println("AUGMENTED:\n" + augmentedDocumentText);
 
 		assertEquals(expectedAugDocText, augmentedDocumentText);
+	@Test
+	public void testGetAugmentedDocumentTextAndSentenceBionlp_debugStringOOBError() throws IOException {
+
+		String docText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMID14691534.txt", ENCODING);
+
+		String sentenceBionlp = ClassPathUtil.getContentsFromClasspathResource(getClass(),
+				"PMID14691534.sentences.bionlp", ENCODING);
+		String abbreviationBionlp = ClassPathUtil.getContentsFromClasspathResource(getClass(),
+				"PMID14691534.abbreviations.bionlp", ENCODING);
+
+		BioNLPDocumentReader bionlpReader = new BioNLPDocumentReader();
+		TextDocument sentenceDoc = bionlpReader.readDocument("14691534", "CRAFT",
+				new ByteArrayInputStream(sentenceBionlp.getBytes()), new ByteArrayInputStream(docText.getBytes()),
+				ENCODING);
+		TextDocument abbreviationDoc = bionlpReader.readDocument("14691534", "CRAFT",
+				new ByteArrayInputStream(abbreviationBionlp.getBytes()), new ByteArrayInputStream(docText.getBytes()),
+				ENCODING);
+
+		String[] augmentedDocTextSentBionlp = DocumentTextAugmentationFn.getAugmentedDocumentTextAndSentenceBionlp(
+				docText, abbreviationDoc.getAnnotations(), sentenceDoc.getAnnotations());
+
 	}
 
 }

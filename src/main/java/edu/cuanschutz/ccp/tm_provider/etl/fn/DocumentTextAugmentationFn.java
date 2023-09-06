@@ -138,6 +138,7 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 
 			TextAnnotation shortFormAnnot = ConceptPostProcessingFn.getShortAbbrevAnnot(longFormAnnot);
 			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, sortedSentenceAnnots);
+			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, shortFormAnnot, sortedSentenceAnnots);
 
 			if (sentenceAnnot != null) {
 
@@ -205,6 +206,11 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	 * the abbreviation spans multiple sentences then either the sentence
 	 * segmentation is faulty or the abbreviation is incorrect, so we will return
 	 * null
+	 * null.
+	 * 
+	 * If the abbreviation extends past the end of the sentence (likely sentence
+	 * parse error), then don't return a mapping from that abbreviation to the
+	 * sentence.
 	 * 
 	 * @param longFormAnnot
 	 * @param sentenceAnnots
@@ -212,10 +218,14 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	 */
 	private static TextAnnotation getOverlappingSentenceAnnot(TextAnnotation longFormAnnot,
 			List<TextAnnotation> sentenceAnnots) {
+			TextAnnotation shortFormAnnot, List<TextAnnotation> sentenceAnnots) {
 
 		for (int i = 0; i < sentenceAnnots.size(); i++) {
 			TextAnnotation sentenceAnnot = sentenceAnnots.get(i);
 			if (sentenceAnnot.overlaps(longFormAnnot)) {
+			if (sentenceAnnot.overlaps(longFormAnnot)
+					&& longFormAnnot.getAnnotationSpanEnd() <= sentenceAnnot.getAnnotationSpanEnd()
+					&& shortFormAnnot.getAnnotationSpanEnd() <= sentenceAnnot.getAnnotationSpanEnd()) {
 				// check to see if the next sentence also overlaps -- if it does return null,
 				// otherwise return the sentence
 				if (i < sentenceAnnots.size() - 1) {

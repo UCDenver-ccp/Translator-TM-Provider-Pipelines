@@ -129,7 +129,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								// contain abbreviation definitions where the short form part of the definition
 								// has been replaced by whitespace. The replacement by whitespace allows for
 								// concept recognition matches that may not otherwise occur.
-								String augmentedDocumentText = PipelineMain.getDocumentText(docs);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 
@@ -207,39 +206,27 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots)
 			throws FileNotFoundException, IOException {
 
-//		System.out.println(String.format("1 annot count: %d", inputAnnots.size()));
 		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
-//		System.out.println(String.format("2 annot count: %d", inputAnnots.size()));
 		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
-//		System.out.println(String.format("3 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeNcbiStopWords(inputAnnots);
-//		System.out.println(String.format("4 annot count: %d", inputAnnots.size()));		
 		inputAnnots = removeAnythingWithOddBracketCount(inputAnnots);
-//		System.out.println(String.format("4 annot count: %d", inputAnnots.size()));
 		inputAnnots = resolveHpMondoOverlaps(inputAnnots);
-//		System.out.println(String.format("5 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeIdToTextExclusionPairs(inputAnnots);
-//		System.out.println(String.format("6 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
-//		System.out.println(String.format("7 annot count: %d", inputAnnots.size()));
 		inputAnnots = removeMatchesLessThan(inputAnnots, 4);
-//		System.out.println(String.format("8 annot count: %d", inputAnnots.size()));
-		inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
-//		System.out.println(String.format("9 annot count: %d", inputAnnots.size()));
 
-		inputAnnots = propagateHybridAbbreviations(inputAnnots, abbrevAnnots, docId, augmentedDocumentText);
-//		System.out.println(String.format("10 annot count: %d", inputAnnots.size()));
+		if (abbrevAnnots != null) {
+			inputAnnots = removeAllAbbreviationShortFormAnnots(inputAnnots, abbrevAnnots);
+			inputAnnots = propagateHybridAbbreviations(inputAnnots, abbrevAnnots, docId, augmentedDocumentText);
+		}
 		inputAnnots = filterAnnotsInAugmentedDocSection(inputAnnots, augmentedDocumentText);
-//		System.out.println(String.format("11 annot count: %d", inputAnnots.size()));
 
-		String originalDocumentText = getOriginalDocText(augmentedDocumentText);
-		inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
-//		System.out.println(String.format("12 annot count: %d", inputAnnots.size()));
+		if (abbrevAnnots != null) {
+			String originalDocumentText = getOriginalDocText(augmentedDocumentText);
+			inputAnnots = propagateRegularAbbreviations(inputAnnots, abbrevAnnots, docId, originalDocumentText);
+		}
 
 		inputAnnots = removeNestedConceptAnnotations(inputAnnots);
-//		System.out.println(String.format("13 annot count: %d", inputAnnots.size()));
-
-//		inputAnnots = removeAnnotationsByDocumentZone(inputAnnots, zoneAnnots);
 
 		return inputAnnots;
 	}

@@ -1,0 +1,91 @@
+T1	long_form 153 186	cancer, including prostate cancer
+T2	short_form 188 191	CaP
+T3	long_form 598 632	Pten prostate conditional knockout
+T4	short_form 634 640	Ptenpc
+T5	long_form 3285 3306	Small interfering RNA
+T6	short_form 3308 3313	siRNA
+T7	long_form 3543 3559	RNA interference
+T8	short_form 3561 3565	RNAi
+T9	long_form 4501 4518	Pten heterozygous
+T10	short_form 4520 4527	Pten+/?
+T11	long_form 4611 4647	prostatic intraepithelial neoplasias
+T12	short_form 4649 4652	PIN
+T13	long_form 6059 6084	phosphoinositide 3-kinase
+T14	short_form 6086 6090	PI3K
+T15	long_form 8619 8627	neomycin
+T16	short_form 8629 8632	Neo
+T17	long_form 8729 8743	embryonic stem
+T18	short_form 8745 8747	ES
+T19	long_form 10630 10657	mouse embryonic fibroblasts
+T20	short_form 10659 10663	MEFs
+T21	long_form 10666 10700	peripheral blood mononuclear cells
+T22	short_form 10702 10707	PBMCs
+T23	long_form 11665 11691	magnetic resonance imaging
+T24	short_form 11693 11696	MRI
+T25	long_form 15941 15949	Probasin
+T26	short_form 15951 15953	PB
+T27	long_form 22199 22219	immunohistochemistry
+T28	short_form 22221 22224	IHC
+T29	long_form 22230 22242	Western blot
+T30	short_form 22244 22246	WB
+T31	long_form 26780 26807	benign prostate hyperplasia
+T32	short_form 26809 26812	BPH
+T33	long_form 38592 38613	hematoxylin and eosin
+T34	short_form 38615 38618	H&E
+T35	long_form 39834 39872	hypoxanthine phosphoribosyltransferase
+T36	short_form 39874 39878	HPRT
+T37	long_form 41502 41521	monoclonal antibody
+T38	short_form 41523 41526	mAb
+T39	long_form 45363 45388	National Cancer Institute
+T40	short_form 45390 45393	NCI
+T41	short_form 46434 46436	hy
+T42	long_form 46434 46445	hypomorphic
+T43	long_form 47973 47998	thymidine kinase cassette
+T44	short_form 48000 48002	TK
+T45	short_form 48503 48504	X
+T46	long_form 48503 48507	XbaI
+T47	short_form 48538 48539	E
+T48	long_form 48538 48543	EcoRI
+T49	long_form 48768 48782	wild-type band
+T50	short_form 48784 48786	WT
+T51	long_form 50120 50137	anterior prostate
+T52	short_form 50139 50141	AP
+T53	long_form 50465 50481	seminal vesicles
+T54	short_form 50483 50485	SV
+T55	long_form 50523 50530	bladder
+T56	short_form 50532 50534	Bl
+T57	short_form 53693 53695	Bl
+T58	long_form 53693 53700	Bladder
+T59	long_form 53710 53726	seminal vesicles
+T60	short_form 53728 53730	SV
+R1	has_short_form Arg1:T53 Arg2:T54
+R2	has_short_form Arg1:T29 Arg2:T30
+R3	has_short_form Arg1:T58 Arg2:T57
+R4	has_short_form Arg1:T35 Arg2:T36
+R5	has_short_form Arg1:T5 Arg2:T6
+R6	has_short_form Arg1:T51 Arg2:T52
+R7	has_short_form Arg1:T31 Arg2:T32
+R8	has_short_form Arg1:T11 Arg2:T12
+R9	has_short_form Arg1:T55 Arg2:T56
+R10	has_short_form Arg1:T9 Arg2:T10
+R11	has_short_form Arg1:T59 Arg2:T60
+R12	has_short_form Arg1:T49 Arg2:T50
+R13	has_short_form Arg1:T25 Arg2:T26
+R14	has_short_form Arg1:T1 Arg2:T2
+R15	has_short_form Arg1:T21 Arg2:T22
+R16	has_short_form Arg1:T43 Arg2:T44
+R17	has_short_form Arg1:T37 Arg2:T38
+R18	has_short_form Arg1:T3 Arg2:T4
+R19	has_short_form Arg1:T46 Arg2:T45
+R20	has_short_form Arg1:T27 Arg2:T28
+R21	has_short_form Arg1:T19 Arg2:T20
+R22	has_short_form Arg1:T48 Arg2:T47
+R23	has_short_form Arg1:T33 Arg2:T34
+R24	has_short_form Arg1:T15 Arg2:T16
+R25	has_short_form Arg1:T13 Arg2:T14
+R26	has_short_form Arg1:T23 Arg2:T24
+R27	has_short_form Arg1:T7 Arg2:T8
+R28	has_short_form Arg1:T17 Arg2:T18
+R29	has_short_form Arg1:T39 Arg2:T40
+R30	has_short_form Arg1:T42 Arg2:T41
+
