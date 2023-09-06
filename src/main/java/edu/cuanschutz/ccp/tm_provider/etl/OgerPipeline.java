@@ -33,7 +33,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
@@ -69,14 +68,24 @@ public class OgerPipeline {
 		void setTargetDocumentFormat(DocumentFormat type);
 
 		@Description("This pipeline key will be used to select the input text documents that will be processed")
-		PipelineKey getInputPipelineKey();
+		PipelineKey getTextPipelineKey();
 
-		void setInputPipelineKey(PipelineKey value);
+		void setTextPipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input text documents that will be processed")
-		String getInputPipelineVersion();
+		String getTextPipelineVersion();
 
-		void setInputPipelineVersion(String value);
+		void setTextPipelineVersion(String value);
+
+		@Description("This pipeline key will be used to select the input augmented text documents that will be processed")
+		PipelineKey getAugmentedTextPipelineKey();
+
+		void setAugmentedTextPipelineKey(PipelineKey value);
+
+		@Description("This pipeline version will be used to select the input augmented text documents that will be processed")
+		String getAugmentedTextPipelineVersion();
+
+		void setAugmentedTextPipelineVersion(String value);
 
 		@Description("This pipeline version will be used as part of the output document key/name")
 		String getOutputPipelineVersion();
@@ -129,12 +138,15 @@ public class OgerPipeline {
 		 * specifying different pipeline keys and pipeline versions. These are set in
 		 * the options for this pipeline.
 		 */
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT, DocumentFormat.TEXT,
-				options.getInputPipelineKey(), options.getInputPipelineVersion());
+		DocumentCriteria inputAugTextDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT,
+				DocumentFormat.TEXT, options.getAugmentedTextPipelineKey(), options.getAugmentedTextPipelineVersion());
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				options.getTextPipelineKey(), options.getTextPipelineVersion());
+
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
-				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
-						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite());
+				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria, inputAugTextDocCriteria),
+						options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
+						options.getCollection(), options.getOverwrite());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
 				options.getTargetDocumentFormat(), PIPELINE_KEY, options.getOutputPipelineVersion());

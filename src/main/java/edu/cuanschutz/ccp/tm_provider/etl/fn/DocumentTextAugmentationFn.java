@@ -1,5 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,15 +24,31 @@ import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.common.file.reader.Line;
+import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * Takes the original document text and augments it by adding text to the
- * bottom. In particular, it adds sentences with abbreviation definitions where
- * the short form part of the abbreviation has been removed from the sentence to
- * the bottom so that they can be processed by the concept recognition
+ * Produces a snippet of text that will be used to augment the original document
+ * text. The snippet will eventually be added to the bottom of the original
+ * document text so that it can be processed by different tools. In particular,
+ * the augmented portion will contain sentences with abbreviation definitions
+ * where the short form part of the abbreviation has been removed from the
+ * sentence to the bottom so that they can be processed by the concept
+ * recognition components.
+ * 
+ * We store the augmented portion separately to avoid duplicate storage of the
+ * original document text (again -- it is already duplicated in the sentence
+ * storage, and maybe the section annotations too).
+ * 
+ * This code also creates an similar augmented snippet for the sentence bionlp
+ * documents since the sentence documents are also processed by downstream
  * components.
  *
  */
@@ -41,8 +60,13 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 
 	public static final String AUGMENTED_SENTENCE_INDICATOR = "AUGSENT";
 
+	public static final String AUG_SENT_TYPE = "augmented_sentence";
+
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<ProcessingStatus, List<String>>> AUGMENTED_TEXT_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
+	};
+	@SuppressWarnings("serial")
+	public static TupleTag<KV<ProcessingStatus, List<String>>> AUGMENTED_SENTENCE_TAG = new TupleTag<KV<ProcessingStatus, List<String>>>() {
 	};
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
@@ -85,11 +109,13 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 
 								String documentText = PipelineMain.getDocumentText(docs);
 
-								String augmentedDocText = augmentDocumentText(documentText, abbrevAnnots,
-										sentenceAnnots);
+								String[] augmentedDocSent = getAugmentedDocumentTextAndSentenceBionlp(documentText,
+										abbrevAnnots, sentenceAnnots);
 
-								List<String> chunkedAugDocText = PipelineMain.chunkContent(augmentedDocText);
+								List<String> chunkedAugDocText = PipelineMain.chunkContent(augmentedDocSent[0]);
 								out.get(AUGMENTED_TEXT_TAG).output(KV.of(statusEntity, chunkedAugDocText));
+								List<String> chunkedAugSentText = PipelineMain.chunkContent(augmentedDocSent[1]);
+								out.get(AUGMENTED_SENTENCE_TAG).output(KV.of(statusEntity, chunkedAugSentText));
 							}
 						} catch (Throwable t) {
 							PipelineMain.logFailure(ETL_FAILURE_TAG, "Failure during document text augmentation. ",
@@ -97,12 +123,17 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 						}
 					}
 
-				}).withOutputTags(AUGMENTED_TEXT_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+				}).withOutputTags(AUGMENTED_TEXT_TAG, TupleTagList.of(ETL_FAILURE_TAG).and(AUGMENTED_SENTENCE_TAG)));
 	}
 
 	/**
 	 * 
 	 * Initially designed to add text to the bottom of the original text document.
+	 * 
+	 * This method was modified so that it returns the text to be added at the
+	 * bottom of the original document text as well as sentences in bionlp format
+	 * for the added sentences.
+	 * 
 	 * The added text is sentences that contain abbreviation definitions where the
 	 * short form of the definition has been removed. We do this so that these
 	 * sentences can be processed by the concept recognition machinery in hopes of
@@ -114,15 +145,19 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	 * @param abbrevAnnots
 	 * @param sentenceAnnots
 	 * @return
+	 * @throws IOException
 	 */
-	protected static String augmentDocumentText(String documentText, Collection<TextAnnotation> abbrevAnnots,
-			Collection<TextAnnotation> sentenceAnnots) {
+	protected static String[] getAugmentedDocumentTextAndSentenceBionlp(String documentText,
+			Collection<TextAnnotation> abbrevAnnots, Collection<TextAnnotation> sentenceAnnots) throws IOException {
 
-		StringBuilder sb = new StringBuilder();
-		sb.append(String.format("\n%s\n", UtilityOgerDictFileFactory.DOCUMENT_END_MARKER));
+		StringBuilder augTextBuilder = new StringBuilder();
+		List<TextAnnotation> augSentences = new ArrayList<TextAnnotation>();
+
+		augTextBuilder.append(String.format("\n%s\n", UtilityOgerDictFileFactory.DOCUMENT_END_MARKER));
 
 		List<TextAnnotation> sortedSentenceAnnots = new ArrayList<TextAnnotation>(sentenceAnnots);
 		Collections.sort(sortedSentenceAnnots, TextAnnotation.BY_SPAN());
+		int sentenceCount = sortedSentenceAnnots.size();
 
 		Set<TextAnnotation> longFormAnnots = ConceptPostProcessingFn.getLongFormAnnots(abbrevAnnots);
 		List<TextAnnotation> sortedLongFormAnnots = new ArrayList<TextAnnotation>(longFormAnnots);
@@ -137,7 +172,6 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 		for (TextAnnotation longFormAnnot : sortedLongFormAnnots) {
 
 			TextAnnotation shortFormAnnot = ConceptPostProcessingFn.getShortAbbrevAnnot(longFormAnnot);
-			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, sortedSentenceAnnots);
 			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, shortFormAnnot, sortedSentenceAnnots);
 
 			if (sentenceAnnot != null) {
@@ -157,6 +191,7 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 				String trailingChar = documentText.substring(sfEnd, sfEnd + 1);
 
 				if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
+						
 					String augmentedTextStart = sentenceText.substring(0, sfStart - 1 - sentOffset);
 					String augmentedTextEnd = sentenceText.substring(sfEnd + 1 - sentOffset);
 					String spaceStr = getEmptyStrOfLength(sfEnd + 1 - (sfStart - 1));
@@ -169,11 +204,23 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 					// column, and the abbreviation annotation start span in the 3rd column. The
 					// augmented sentence text will appear on the second line.
 
-					sb.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
+					augTextBuilder.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
 							sentenceAnnot.getAnnotationSpanStart(), longFormAnnot.getAnnotationSpanStart(),
 							shortFormAnnot.getAnnotationSpanEnd()));
-					sb.append(String.format("%s\n", augmentedSentenceText));
+					augTextBuilder.append(String.format("%s\n", augmentedSentenceText));
 
+					// create a sentence annotation for the augmented sentence that was added to the
+					// document text above. It should have the span of the sentence relative to
+					// where it is located in the augmented text, i.e., it should take into account
+					// the length of the original document text which will be appended above the
+					// augmented portion of the text.
+					TextAnnotationFactory annotFactory = TextAnnotationFactory.createFactoryWithDefaults();
+					// -1 to account for the trailing line break
+					int end = documentText.length() + augTextBuilder.toString().length() - 1;
+					int start = end - augmentedSentenceText.length();
+					TextAnnotation augSentAnnot = annotFactory.createAnnotation(start, end, augmentedSentenceText,
+							AUG_SENT_TYPE);
+					augSentences.add(augSentAnnot);
 				} else {
 					// one or both of the characters leading and trailing the short-form text does
 					// not match a punctuation character. Not sure what to do here, so for now we
@@ -183,8 +230,29 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 			}
 		}
 
-		String augDocText = documentText + sb.toString();
-		return augDocText;
+//		String augDocText = documentText + sb.toString();
+		String augDocText = augTextBuilder.toString();
+
+		TextDocument td = new TextDocument("12345", "", augDocText);
+		td.addAnnotations(augSentences);
+
+		BioNLPDocumentWriter bionlpWriter = new BioNLPDocumentWriter();
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		bionlpWriter.serialize(td, outStream, CharacterEncoding.UTF_8);
+		String augSentBionlp = outStream.toString(CharacterEncoding.UTF_8.getCharacterSetName());
+
+		// we need to adjust the T indexes so that they are indexed according to how
+		// many sentences are also in the original document
+		StringBuilder augBionlpBuilder = new StringBuilder();
+		for (StreamLineIterator lineIter = new StreamLineIterator(new ByteArrayInputStream(augSentBionlp.getBytes()),
+				CharacterEncoding.UTF_8, null); lineIter.hasNext();) {
+			Line line = lineIter.next();
+			String[] cols = line.getText().split("\\t");
+			String updatedLine = String.format("T%d\t%s\t%s\n", ++sentenceCount, cols[1], cols[2]);
+			augBionlpBuilder.append(updatedLine);
+		}
+
+		return new String[] { augDocText, augBionlpBuilder.toString() };
 
 	}
 
@@ -205,7 +273,6 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	 * return the sentence annotation that contains the abbreviation annotation. If
 	 * the abbreviation spans multiple sentences then either the sentence
 	 * segmentation is faulty or the abbreviation is incorrect, so we will return
-	 * null
 	 * null.
 	 * 
 	 * If the abbreviation extends past the end of the sentence (likely sentence
@@ -217,12 +284,10 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	 * @return
 	 */
 	private static TextAnnotation getOverlappingSentenceAnnot(TextAnnotation longFormAnnot,
-			List<TextAnnotation> sentenceAnnots) {
 			TextAnnotation shortFormAnnot, List<TextAnnotation> sentenceAnnots) {
 
 		for (int i = 0; i < sentenceAnnots.size(); i++) {
 			TextAnnotation sentenceAnnot = sentenceAnnots.get(i);
-			if (sentenceAnnot.overlaps(longFormAnnot)) {
 			if (sentenceAnnot.overlaps(longFormAnnot)
 					&& longFormAnnot.getAnnotationSpanEnd() <= sentenceAnnot.getAnnotationSpanEnd()
 					&& shortFormAnnot.getAnnotationSpanEnd() <= sentenceAnnot.getAnnotationSpanEnd()) {

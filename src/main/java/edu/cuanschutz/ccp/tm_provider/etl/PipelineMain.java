@@ -300,9 +300,11 @@ public class PipelineMain {
 			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
-		PCollection<KV<String, CoGbkResult>> result = tuple.apply("merge status entities with docs", CoGroupByKey.create());
+		PCollection<KV<String, CoGbkResult>> result = tuple.apply("merge status entities with docs",
+				CoGroupByKey.create());
 
-		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply("check for required docs",
+		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply(
+				"check for required docs",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<ProcessingStatus, Map<DocumentCriteria, String>>>() {
 					private static final long serialVersionUID = 1L;
 
@@ -904,6 +906,26 @@ public class PipelineMain {
 	 */
 	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
 		return getDocumentByType(inputDocuments, DocumentType.TEXT);
+	}
+
+	/**
+	 * The augmented document text consists of the original document text with the
+	 * addition of extra sentences that have abbreviation definitions.
+	 * 
+	 * @param inputDocuments
+	 * @return
+	 */
+	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments) {
+		String originalText =  getDocumentByType(inputDocuments, DocumentType.TEXT);
+		String augText =  getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT);
+		return originalText + augText;
+	}
+	
+	
+	public static String getAugmentedSentenceBionlp(Map<DocumentCriteria, String> inputDocuments) {
+		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE);
+		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE);
+		return originalSentBionlp + "\n" + augSentBionlp;
 	}
 
 	/**

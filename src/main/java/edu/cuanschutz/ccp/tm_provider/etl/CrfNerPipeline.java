@@ -31,7 +31,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
@@ -61,15 +60,25 @@ public class CrfNerPipeline {
 
 		void setTargetDocumentType(DocumentType type);
 
-		@Description("This pipeline key will be used to select the input text documents that will be processed")
+		@Description("This pipeline key will be used to select the input sentence bionlp documents that will be processed")
 		PipelineKey getInputSentencePipelineKey();
 
 		void setInputSentencePipelineKey(PipelineKey value);
 
-		@Description("This pipeline version will be used to select the input text documents that will be processed")
+		@Description("This pipeline version will be used to select the input sentence bionlp documents that will be processed")
 		String getInputSentencePipelineVersion();
 
 		void setInputSentencePipelineVersion(String value);
+
+		@Description("This pipeline key will be used to select the input augmented sentence bionlp documents that will be processed")
+		PipelineKey getAugmentedSentencePipelineKey();
+
+		void setAugmentedSentencePipelineKey(PipelineKey value);
+
+		@Description("This pipeline version will be used to select the input augmented sentence bionlp documents that will be processed")
+		String getAugmentedSentencePipelineVersion();
+
+		void setAugmentedSentencePipelineVersion(String value);
 
 		@Description("The document collection to process")
 		String getCollection();
@@ -115,9 +124,11 @@ public class CrfNerPipeline {
 		/*
 		 * The CRF pipeline requires sentences and the document text.
 		 */
-		Set<DocumentCriteria> inputDocCriteria = CollectionsUtil
-				.createSet(new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
-						options.getInputSentencePipelineKey(), options.getInputSentencePipelineVersion()));
+		Set<DocumentCriteria> inputDocCriteria = CollectionsUtil.createSet(
+				new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
+						options.getInputSentencePipelineKey(), options.getInputSentencePipelineVersion()),
+				new DocumentCriteria(DocumentType.AUGMENTED_SENTENCE, DocumentFormat.BIONLP,
+						options.getAugmentedSentencePipelineKey(), options.getAugmentedSentencePipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());

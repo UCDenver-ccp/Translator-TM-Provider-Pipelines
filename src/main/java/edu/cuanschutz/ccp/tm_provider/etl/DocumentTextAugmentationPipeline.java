@@ -66,7 +66,7 @@ public class DocumentTextAugmentationPipeline {
 		PipelineKey getSentencePipelineKey();
 
 		void setSentencePipelineKey(PipelineKey value);
-		
+
 		@Description("This pipeline version will be used to select the input sentence documents that will be processed")
 		String getSentencePipelineVersion();
 
@@ -124,14 +124,18 @@ public class DocumentTextAugmentationPipeline {
 				.getStatusEntity2Content(requiredDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT, DocumentFormat.TEXT,
-				PIPELINE_KEY, options.getOutputPipelineVersion());
+		DocumentCriteria augDocTextOutputDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT,
+				DocumentFormat.TEXT, PIPELINE_KEY, options.getOutputPipelineVersion());
+		DocumentCriteria augSentBionlpOutputDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_SENTENCE,
+				DocumentFormat.BIONLP, PIPELINE_KEY, options.getOutputPipelineVersion());
 
-		PCollectionTuple output = DocumentTextAugmentationFn.process(statusEntity2Content, outputDocCriteria,
+		PCollectionTuple output = DocumentTextAugmentationFn.process(statusEntity2Content, augDocTextOutputDocCriteria,
 				requiredDocCriteria, timestamp);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAugmentedText = output
 				.get(DocumentTextAugmentationFn.AUGMENTED_TEXT_TAG);
+		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAugmentedSentenceBionlp = output
+				.get(DocumentTextAugmentationFn.AUGMENTED_SENTENCE_TAG);
 		PCollection<EtlFailureData> failures = output.get(DocumentTextAugmentationFn.ETL_FAILURE_TAG);
 
 		/*
@@ -148,16 +152,29 @@ public class DocumentTextAugmentationPipeline {
 				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
 
 		/*
-		 * store the serialized annotation document content in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 * store the augmented document text (this does not include the original
+		 * document text in order to avoid duplicating storage)
 		 */
 		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
 				.deduplicateDocuments(statusEntityToAugmentedText);
 		nonredundantDocIdToAnnotations
 				.apply("annotations->annot_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+						ParDo.of(new DocumentToEntityFn(augDocTextOutputDocCriteria, options.getCollection(),
 								documentIdToCollections)).withSideInputs(documentIdToCollections))
 				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/*
+		 * store the augmented sentences in bionlp format -- these appended to the
+		 * original sentences prior to downstream processing
+		 */
+		PCollection<KV<String, List<String>>> nonredundantDocIdToAugSentAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToAugmentedSentenceBionlp);
+		nonredundantDocIdToAugSentAnnotations
+				.apply("aug sent annot->annot_entity",
+						ParDo.of(new DocumentToEntityFn(augSentBionlpOutputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
+				.apply("aug sent annot_entity->datastore",
+						DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is

@@ -73,13 +73,14 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 						String docId = statusEntity.getDocumentId();
 						// there is only one entry in the input map and it is the plain text of the
 						// input document
-						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
-
 						try {
-							String ogerOutput = annotate(plainText, ogerServiceUri, ogerOutputType);
+							String augmentedDocText = PipelineMain
+									.getAugmentedDocumentText(statusEntityToText.getValue());
+
+							String ogerOutput = annotate(augmentedDocText, ogerServiceUri, ogerOutputType);
 
 							if (outputDocCriteria.getDocumentFormat() == DocumentFormat.BIONLP) {
-								ogerOutput = convertToBioNLP(ogerOutput, docId, plainText, ogerOutputType);
+								ogerOutput = convertToBioNLP(ogerOutput, docId, augmentedDocText, ogerOutputType);
 							}
 
 							List<String> chunkedOgerOutput = PipelineMain.chunkContent(ogerOutput);

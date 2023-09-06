@@ -644,9 +644,9 @@ public class ConceptPostProcessingFnTest {
 		Collection<TextAnnotation> sentenceAnnots = new HashSet<TextAnnotation>(
 				Arrays.asList(getSentence1Annot(), getSentence2Annot()));
 
-		String augmentedDocumentText = DocumentTextAugmentationFn.augmentDocumentText(getDocumentText(),
-				getAbbreviationDoc().getAnnotations(), sentenceAnnots);
-		return augmentedDocumentText;
+		String augmentedDocumentText = DocumentTextAugmentationFn.getAugmentedDocumentTextAndSentenceBionlp(getDocumentText(),
+				getAbbreviationDoc().getAnnotations(), sentenceAnnots)[0];
+		return getDocumentText() + augmentedDocumentText;
 	}
 
 	private TextAnnotation getSentence1Annot() {

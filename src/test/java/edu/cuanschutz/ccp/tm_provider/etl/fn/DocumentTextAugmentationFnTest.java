@@ -24,7 +24,7 @@ public class DocumentTextAugmentationFnTest {
 	private static final CharacterEncoding ENCODING = CharacterEncoding.UTF_8;
 
 	@Test
-	public void testAugmentDocumentText() {
+	public void testGetAugmentedDocumentTextAndSentenceBionlp() throws IOException {
 
 		String docId = "craft-16110338";
 		String sentence1 = "This is the first sentence in the document.";
@@ -76,8 +76,10 @@ public class DocumentTextAugmentationFnTest {
 		Collection<TextAnnotation> sentenceAnnots = new HashSet<TextAnnotation>(
 				Arrays.asList(sentenceAnnot1, sentenceAnnot2, sentenceAnnot3));
 
-		String augmentedDocumentText = DocumentTextAugmentationFn.augmentDocumentText(documentText, abbrevAnnots,
-				sentenceAnnots);
+		String[] augmentedDocTextSentBionlp = DocumentTextAugmentationFn
+				.getAugmentedDocumentTextAndSentenceBionlp(documentText, abbrevAnnots, sentenceAnnots);
+
+		String augmentedDocumentText = augmentedDocTextSentBionlp[0];
 
 		String expectedAugSent2aMetadataLine = String.format("%s\t%d\t%d\t%d",
 				DocumentTextAugmentationFn.AUGMENTED_SENTENCE_INDICATOR, sentenceAnnot2.getAnnotationSpanStart(),
@@ -89,13 +91,33 @@ public class DocumentTextAugmentationFnTest {
 
 		String expectedAugSent2aText = "Enhanced S-cone syndrome        is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram (ERG) with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light.";
 		String expectedAugSent2bText = "Enhanced S-cone syndrome (ESCS) is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram       with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light.";
-		String expectedAugDocText = String.format("%s\n%s\n%s\n%s\n%s\n%s\n", documentText,
+		String expectedAugDocText = String.format("\n%s\n%s\n%s\n%s\n%s\n",
 				UtilityOgerDictFileFactory.DOCUMENT_END_MARKER, expectedAugSent2aMetadataLine, expectedAugSent2aText,
 				expectedAugSent2bMetadataLine, expectedAugSent2bText);
 
-		System.out.println("AUGMENTED:\n" + augmentedDocumentText);
+//		System.out.println("doc text length: " + documentText.length());
+//		System.out.println("AUGMENTED:" + augmentedDocumentText);
 
 		assertEquals(expectedAugDocText, augmentedDocumentText);
+
+		String augmentedSentBionlp = augmentedDocTextSentBionlp[1];
+
+		int augSent2aStart = documentText.length() + 1 + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER.length() + 1
+				+ expectedAugSent2aMetadataLine.length() + 1;
+		int augSent2aEnd = augSent2aStart + expectedAugSent2aText.length();
+
+		int augSent2bStart = augSent2aEnd + 1 + expectedAugSent2bMetadataLine.length() + 1;
+		int augSent2bEnd = augSent2bStart + expectedAugSent2bText.length();
+
+		String expectedAugSentBionlp = String.format("T4\taugmented_sentence %d %d\t%s\n", augSent2aStart, augSent2aEnd,
+				expectedAugSent2aText)
+				+ String.format("T5\taugmented_sentence %d %d\t%s\n", augSent2bStart, augSent2bEnd,
+						expectedAugSent2bText);
+
+		assertEquals(expectedAugSentBionlp, augmentedSentBionlp);
+
+	}
+
 	@Test
 	public void testGetAugmentedDocumentTextAndSentenceBionlp_debugStringOOBError() throws IOException {
 

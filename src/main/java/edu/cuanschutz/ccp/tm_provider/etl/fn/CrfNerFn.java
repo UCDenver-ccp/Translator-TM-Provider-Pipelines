@@ -50,29 +50,19 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 						ProcessingStatus processingStatus = statusEntityToText.getKey();
 						String docId = processingStatus.getDocumentId();
 
-						Entry<DocumentCriteria, String> entry = statusEntityToText.getValue().entrySet().iterator()
-								.next();
-
 						try {
-							// single entry should be sentences in bionlp format
-							if (entry.getKey().getDocumentType() == DocumentType.SENTENCE) {
+							String augmentedSentenceBionlp = PipelineMain
+									.getAugmentedSentenceBionlp(statusEntityToText.getValue());
 
-								String sentenceAnnotsInBioNLP = entry.getValue();
+							// format returned is annotations in bionlp with an extra column 0 that contains
+							// the document id. This is for future use in possibly batching RPCs.
+							String crfOutputInBionlpPlusDocId = annotate(augmentedSentenceBionlp, docId, crfServiceUri);
 
-								// format returned is annotations in bionlp with an extra column 0 that contains
-								// the document id. This is for future use in possibly batching RPCs.
-								String crfOutputInBionlpPlusDocId = annotate(sentenceAnnotsInBioNLP, docId,
-										crfServiceUri);
+							String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
 
-								String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
+							List<String> chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
+							out.get(ANNOTATIONS_TAG).output(KV.of(processingStatus, chunkedCrfOutput));
 
-								List<String> chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
-								out.get(ANNOTATIONS_TAG).output(KV.of(processingStatus, chunkedCrfOutput));
-
-							} else {
-								throw new IllegalArgumentException(
-										"Unable to process CRF NER as sentences are missing.");
-							}
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
 									"Failure during OGER annotation.", docId, t, timestamp);
@@ -135,7 +125,7 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 		// debugging index OOB exception
 		for (String line : withDocId.split("\\n")) {
 			try {
-				String[] cols = line.split("\\t",-1);
+				String[] cols = line.split("\\t", -1);
 				String documentId = cols[0];
 				String annotId = cols[1];
 				String coveredText = cols[3];
@@ -145,7 +135,8 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 				int spanStart = Integer.parseInt(typeSpan[1]);
 				int spanEnd = Integer.parseInt(typeSpan[2]);
 			} catch (IndexOutOfBoundsException e) {
-				throw new IllegalStateException("IOB Exception detected on sentence line: " + line.replaceAll("\\t", " [TAB] "), e);
+				throw new IllegalStateException(
+						"IOB Exception detected on sentence line: " + line.replaceAll("\\t", " [TAB] "), e);
 			}
 		}
 		// end debugging
