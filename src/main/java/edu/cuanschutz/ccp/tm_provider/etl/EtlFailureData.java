@@ -37,9 +37,14 @@ public class EtlFailureData extends DoFn {
 		this.documentId = documentId;
 		this.stackTrace = (thrown == null) ? "" : Arrays.toString(thrown.getStackTrace());
 		this.timestamp = timestamp;
+		if (thrown != null) {
 		Throwable cause = thrown.getCause();
 		this.causeMessage = (cause == null) ? "" : cause.getMessage();
 		this.causeStackTrace = (cause == null) ? "" : Arrays.toString(cause.getStackTrace());
+		} else {
+			this.causeMessage = "not sure -- null Throwable.";
+			this.causeStackTrace = "not sure -- null Throwable.";
+		}
 		
 		logger.warn("TMPLOG -- Logging failure: " + getMessage() + " -- " + getStackTrace());
 	}

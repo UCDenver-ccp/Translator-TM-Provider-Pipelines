@@ -2,8 +2,12 @@ package edu.cuanschutz.ccp.tm_provider.etl;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil.createEntity;
 import static edu.cuanschutz.ccp.tm_provider.etl.PipelineTestUtil.createProcessingStatus;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -356,7 +360,7 @@ public class PipelineMainTest {
 						buildAnnot("T1	ENTITY 776 789	breast cancer"), buildAnnot("T1	B-MONDO 113 119	breast"),
 						buildAnnot("T2	I-MONDO 120 126	cancer"), buildAnnot("T18	B-MONDO 776 782	breast"),
 						buildAnnot("T19	I-MONDO 783 789	cancer"))));
-		
+
 		hpMap.put(CrfOrConcept.CRF,
 				new HashSet<TextAnnotation>(Arrays.asList(buildAnnot("T0	ENTITY 113 126	breast cancer"),
 						buildAnnot("T1	ENTITY 776 789	breast cancer"), buildAnnot("T1	B-MONDO 113 119	breast"),
@@ -565,6 +569,93 @@ public class PipelineMainTest {
 
 		assertEquals(expectedFilteredConceptAnnots, filteredConceptAnnots);
 
+	}
+
+	@Test
+	public void testFilterForMostRecent() {
+		Map<DocumentCriteria, String> contentMap = new HashMap<DocumentCriteria, String>();
+		DocumentCriteria dc1 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.1.1");
+		DocumentCriteria dc2 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.1.2");
+		DocumentCriteria dc3 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.3.1");
+		DocumentCriteria dc4 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"1.1.1");
+
+		DocumentCriteria dc5 = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0");
+		DocumentCriteria dc6 = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.1");
+
+		DocumentCriteria dc7 = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
+				PipelineKey.ABBREVIATION, "0.3.0");
+
+		contentMap.put(dc1, "old");
+		contentMap.put(dc2, "old");
+		contentMap.put(dc3, "old");
+		contentMap.put(dc4, "recent");
+		contentMap.put(dc5, "old");
+		contentMap.put(dc6, "recent");
+		contentMap.put(dc7, "recent");
+
+		Map<DocumentCriteria, String> filteredContentMap = PipelineMain.filterForMostRecent(contentMap);
+
+		Map<DocumentCriteria, String> expectedFilteredContentMap = new HashMap<DocumentCriteria, String>();
+		expectedFilteredContentMap.put(dc4, "recent");
+		expectedFilteredContentMap.put(dc6, "recent");
+		expectedFilteredContentMap.put(dc7, "recent");
+
+		assertEquals(expectedFilteredContentMap, filteredContentMap);
+	}
+
+	@Test
+	public void testGetMostRecent() {
+		Map<DocumentCriteria, String> map = new HashMap<DocumentCriteria, String>();
+		DocumentCriteria dc1 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.1.1");
+		DocumentCriteria dc2 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.1.2");
+		DocumentCriteria dc3 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"0.3.1");
+		DocumentCriteria dc4 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"1.1.1");
+
+		map.put(dc1, "old");
+		map.put(dc2, "old");
+		map.put(dc3, "old");
+		map.put(dc4, "recent");
+
+		KV<DocumentCriteria, String> mostRecent = PipelineMain.getMostRecent(map);
+		KV<DocumentCriteria, String> expectedMostRecent = KV.of(dc4, "recent");
+		assertEquals(expectedMostRecent, mostRecent);
+	}
+
+	@Test
+	public void testIsMoreRecent() {
+		assertTrue(PipelineMain.isMoreRecent("1.3.4", "1.3.3"));
+		assertTrue(PipelineMain.isMoreRecent("1.2", "1.0.1"));
+		assertTrue(PipelineMain.isMoreRecent("5", "4.3.3"));
+		assertTrue(PipelineMain.isMoreRecent("1.1.1000", "1.1.999"));
+		assertFalse(PipelineMain.isMoreRecent("1.3.3", "1.3.4"));
+		assertFalse(PipelineMain.isMoreRecent("4", "10"));
+	}
+
+	@Test
+	public void testGetSemanticVersion() {
+		assertArrayEquals(new int[] { 1, 3, 4 }, PipelineMain.getSemanticVersion("1.3.4"));
+		assertArrayEquals(new int[] { 1, 3, 0 }, PipelineMain.getSemanticVersion("1.3"));
+		assertArrayEquals(new int[] { 1, 0, 0 }, PipelineMain.getSemanticVersion("1"));
+	}
+
+	@Test(expected = java.lang.NumberFormatException.class)
+	public void testGetSemanticVersion_e1() {
+		assertArrayEquals(new int[] { 1, 3, 4 }, PipelineMain.getSemanticVersion("recent"));
+	}
+
+	@Test(expected = java.lang.NumberFormatException.class)
+	public void testGetSemanticVersion_e2() {
+		assertArrayEquals(new int[] { 1, 3, 4 }, PipelineMain.getSemanticVersion(".3.4"));
 	}
 
 }

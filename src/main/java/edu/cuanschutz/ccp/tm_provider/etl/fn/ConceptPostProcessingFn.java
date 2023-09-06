@@ -55,6 +55,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String, String>> {
 
+	static final String PIPELINE_VERSION_RECENT = "recent";
+
 	private static final long serialVersionUID = 1L;
 
 	private static final String HAS_SHORT_FORM_SLOT = "has_short_form";
@@ -105,7 +107,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						try {
 							// check to see if all documents are present
 							Map<DocumentCriteria, String> docs = statusEntityToText.getValue();
-							if (!docs.keySet().equals(requiredDocumentCriteria)) {
+							if (!fulfillsRequiredDocumentCriteria(docs.keySet(), requiredDocumentCriteria)) {
+//							if (!docs.keySet().equals(requiredDocumentCriteria)) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to complete post-processing due to missing annotation documents for: "
 												+ docId + " -- contains (" + docs.size() + ") "
@@ -184,6 +187,42 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
+	}
+
+	/**
+	 * @param docCriteria
+	 * @param requiredDocumentCriteria
+	 * @return true if the input docCriteria fulfills the requiredDocumentCriteria.
+	 *         This doesn't need to be an exact match, b/c the required-doc-criteria
+	 *         may use "recent" as the pipeline version, where as the docCriteria
+	 *         has been extracted from Datastore and should have an explicit
+	 *         version. So we will check for an exact match if the pipeline version
+	 *         is specified as required, or a more loose match if the pipeline
+	 *         version is declared as 'recent'.
+	 */
+	@VisibleForTesting
+	protected static boolean fulfillsRequiredDocumentCriteria(Set<DocumentCriteria> docCriteria,
+			Set<DocumentCriteria> requiredDocumentCriteria) {
+
+		Set<String> pipelineVersionAgnosticDocCriteria = new HashSet<String>();
+		for (DocumentCriteria reqDc : docCriteria) {
+			pipelineVersionAgnosticDocCriteria.add(PipelineMain.createVersionAgnosticKey(reqDc));
+		}
+
+		for (DocumentCriteria reqDc : requiredDocumentCriteria) {
+			String pipelineVersion = reqDc.getPipelineVersion();
+			if (pipelineVersion.equalsIgnoreCase(PIPELINE_VERSION_RECENT)) {
+				String key = PipelineMain.createVersionAgnosticKey(reqDc);
+				if (!pipelineVersionAgnosticDocCriteria.contains(key)) {
+					return false;
+				}
+			} else {
+				if (!docCriteria.contains(reqDc)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/**

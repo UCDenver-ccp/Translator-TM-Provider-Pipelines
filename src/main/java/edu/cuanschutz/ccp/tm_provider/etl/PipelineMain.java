@@ -324,19 +324,30 @@ public class PipelineMain {
 								boolean hasAllDocuments = true;
 								// index starts with 1 here b/c the tagMap keys start with 1
 								for (int index = 1; index <= inputDocCriteria.size(); index++) {
-									ProcessedDocument doc = result.getOnly(tagMap.get(index));
-									if (doc != null) {
-										allDocuments.add(doc);
+									// we use result.getAll here b/c it is possible for multiple documents to be
+									// returned for a single DocumentCriteria if the pipeline version is set to
+									// "recent" instead of a specific semantic version, e.g. 0.1.2.
+									Iterable<ProcessedDocument> allDocs = result.getAll(tagMap.get(index));
+									if (allDocs != null) {
+										for (ProcessedDocument doc : result.getAll(tagMap.get(index))) {
+											allDocuments.add(doc);
+										}
 									} else {
 										hasAllDocuments = false;
 										break;
 									}
+
 								}
 
 								if (hasAllDocuments) {
 									// piece together documents that have been split for storage
 									Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
-									c.output(KV.of(processingStatus, contentMap));
+
+									// if there are documents with the same pipeline key, type, and format, but with
+									// different versions, then keep the most recent (highest) version
+									Map<DocumentCriteria, String> filteredContentMap = filterForMostRecent(contentMap);
+
+									c.output(KV.of(processingStatus, filteredContentMap));
 								} else {
 									LOGGER.log(Level.WARNING,
 											"Skipping processing due to missing documents for id: " + element.getKey());
@@ -353,6 +364,117 @@ public class PipelineMain {
 				}));
 
 		return outputPCollection;
+	}
+
+	@VisibleForTesting
+	protected static Map<DocumentCriteria, String> filterForMostRecent(Map<DocumentCriteria, String> contentMap) {
+		Map<String, Map<DocumentCriteria, String>> map = new HashMap<String, Map<DocumentCriteria, String>>();
+
+		// organize the documents by a key that does not include the pipeline version,
+		// but does include pipeline key, doc type, doc format
+		for (Entry<DocumentCriteria, String> entry : contentMap.entrySet()) {
+			String key = createVersionAgnosticKey(entry.getKey());
+			if (map.containsKey(key)) {
+				map.get(key).put(entry.getKey(), entry.getValue());
+			} else {
+				Map<DocumentCriteria, String> innerMap = new HashMap<DocumentCriteria, String>();
+				innerMap.put(entry.getKey(), entry.getValue());
+				map.put(key, innerMap);
+			}
+		}
+
+		// now keep only the most recent version of a given document
+		// NOTE: if we ever want to import multiple versions of the same document - this
+		// will prevent such an operation
+		Map<DocumentCriteria, String> filteredContentMap = new HashMap<DocumentCriteria, String>();
+		for (Entry<String, Map<DocumentCriteria, String>> entry : map.entrySet()) {
+			KV<DocumentCriteria, String> mostRecent = getMostRecent(entry.getValue());
+			filteredContentMap.put(mostRecent.getKey(), mostRecent.getValue());
+		}
+
+		return filteredContentMap;
+
+	}
+
+	/**
+	 * Given a mapping from DocumentCriteria to document content, return the
+	 * <DocumentCriteria,content> pair that is most recent, i.e., has the highest
+	 * semantic version
+	 * 
+	 * @param map
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static KV<DocumentCriteria, String> getMostRecent(Map<DocumentCriteria, String> map) {
+		String previousVersion = null;
+		KV<DocumentCriteria, String> mostRecent = null;
+		for (Entry<DocumentCriteria, String> entry : map.entrySet()) {
+			DocumentCriteria dc = entry.getKey();
+			if (previousVersion == null || isMoreRecent(dc.getPipelineVersion(), previousVersion)) {
+				mostRecent = KV.of(dc, entry.getValue());
+				previousVersion = dc.getPipelineVersion();
+			}
+		}
+
+		return mostRecent;
+	}
+
+	/**
+	 * @param version1
+	 * @param version2
+	 * @return true is version1 is more recent than version2
+	 */
+	@VisibleForTesting
+	protected static boolean isMoreRecent(String version1, String version2) {
+		int[] semanticVersion1 = getSemanticVersion(version1);
+		int[] semanticVersion2 = getSemanticVersion(version2);
+
+		// we assume that at a maximum the version has 3 numbers, e.g. 0.4.7
+		for (int i = 0; i < 3; i++) {
+			// starting with the left-most number we compare versions. If at any point
+			// version1 is > version2 then return true. If version1 is < version2 then
+			// return false. If version1==version2, then the loop will move on to the next
+			// number. If the versions happen to be identical, which should not happen, then
+			// false is returned.
+			if (semanticVersion1[i] > semanticVersion2[i]) {
+				return true;
+			} else if (semanticVersion1[i] < semanticVersion2[i]) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	@VisibleForTesting
+	protected static int[] getSemanticVersion(String version) {
+		String[] cols = version.split("\\.");
+		if (cols.length > 3) {
+			throw new IllegalArgumentException("Unable to handle semantic versions with > 3 numbers: " + version);
+		}
+		int[] semanticVersion = new int[3];
+		for (int i = 0; i < 3; i++) {
+			if (cols.length > i) {
+				semanticVersion[i] = Integer.parseInt(cols[i]);
+			} else {
+				// if a version has fewer than three numbers, then use zero as a placeholder,
+				// e.g., 1.2 == 1.2.0
+				semanticVersion[i] = 0;
+			}
+		}
+		return semanticVersion;
+	}
+
+	/**
+	 * Creates a key that does not include the pipeline version, but does include
+	 * pipeline key, doc type, doc format
+	 * 
+	 * @param dc
+	 * @return
+	 */
+	public static String createVersionAgnosticKey(DocumentCriteria dc) {
+		return String.format("%s_%s_%s", dc.getPipelineKey().name(), dc.getDocumentType().name(),
+				dc.getDocumentFormat().name());
 	}
 
 	@VisibleForTesting
@@ -516,7 +638,10 @@ public class PipelineMain {
 			filters.add(filter);
 		}
 
-		if (pipelineVersion != null) {
+		// if the pipeline version is set to "recent" then we will retrieve all versions
+		// of a given document and the most recent (highest semantic version number)
+		// will be selected at a later time
+		if (pipelineVersion != null && !pipelineVersion.equals("recent")) {
 			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE_VERSION, PropertyFilter.Operator.EQUAL,
 					makeValue(pipelineVersion)).build();
 			filters.add(filter);
@@ -916,12 +1041,11 @@ public class PipelineMain {
 	 * @return
 	 */
 	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments) {
-		String originalText =  getDocumentByType(inputDocuments, DocumentType.TEXT);
-		String augText =  getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT);
+		String originalText = getDocumentByType(inputDocuments, DocumentType.TEXT);
+		String augText = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT);
 		return originalText + augText;
 	}
-	
-	
+
 	public static String getAugmentedSentenceBionlp(Map<DocumentCriteria, String> inputDocuments) {
 		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE);
 		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE);

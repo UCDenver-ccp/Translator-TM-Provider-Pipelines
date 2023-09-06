@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -20,6 +21,10 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.Overlap;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.AugmentedSentence;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
@@ -644,8 +649,8 @@ public class ConceptPostProcessingFnTest {
 		Collection<TextAnnotation> sentenceAnnots = new HashSet<TextAnnotation>(
 				Arrays.asList(getSentence1Annot(), getSentence2Annot()));
 
-		String augmentedDocumentText = DocumentTextAugmentationFn.getAugmentedDocumentTextAndSentenceBionlp(getDocumentText(),
-				getAbbreviationDoc().getAnnotations(), sentenceAnnots)[0];
+		String augmentedDocumentText = DocumentTextAugmentationFn.getAugmentedDocumentTextAndSentenceBionlp(
+				getDocumentText(), getAbbreviationDoc().getAnnotations(), sentenceAnnots)[0];
 		return getDocumentText() + augmentedDocumentText;
 	}
 
@@ -1527,6 +1532,49 @@ public class ConceptPostProcessingFnTest {
 
 		assertEquals(expectedOutputAnnots.size(), outputAnnots.size());
 		assertEquals(expectedOutputAnnots, outputAnnots);
+	}
+
+	@Test
+	public void testFulfillsRequiredDocumentCriteria() {
+
+		Set<DocumentCriteria> requiredDocumentCriteria = new HashSet<DocumentCriteria>();
+
+		DocumentCriteria dc1 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				ConceptPostProcessingFn.PIPELINE_VERSION_RECENT);
+		DocumentCriteria dc2 = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.1");
+		DocumentCriteria dc3 = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
+				PipelineKey.ABBREVIATION, ConceptPostProcessingFn.PIPELINE_VERSION_RECENT);
+
+		requiredDocumentCriteria.add(dc1);
+		requiredDocumentCriteria.add(dc2);
+		requiredDocumentCriteria.add(dc3);
+
+		Set<DocumentCriteria> docCriteria = new HashSet<DocumentCriteria>();
+
+		DocumentCriteria dc1a = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
+				"1.1.1");
+		DocumentCriteria dc2a = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.1");
+		DocumentCriteria dc3a = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
+				PipelineKey.ABBREVIATION, "0.3.0");
+		docCriteria.add(dc1a);
+		docCriteria.add(dc2a);
+		docCriteria.add(dc3a);
+
+		assertTrue(ConceptPostProcessingFn.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria));
+		
+		
+		docCriteria = new HashSet<DocumentCriteria>();
+
+		DocumentCriteria dc2b = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.2");
+		docCriteria.add(dc1a);
+		docCriteria.add(dc2b); // version mismatch
+		docCriteria.add(dc3a);
+
+		assertFalse(ConceptPostProcessingFn.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria));
+
 	}
 
 }
