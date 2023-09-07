@@ -49,7 +49,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationUtil;
 public class AbbreviationFn
 		extends DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbbreviationFn.class);
+//	private static final Logger LOG = LoggerFactory.getLogger(AbbreviationFn.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -118,7 +118,7 @@ public class AbbreviationFn
 				for (TextAnnotation annot : td.getAnnotations()) {
 					writer.write(annot.getCoveredText() + "\n");
 					sentenceToSpanMap.put(annot.getCoveredText(), annot.getAggregateSpan());
-					LOG.warn("SENTENCE-TO-FILE: " + annot.getCoveredText());
+//					LOG.warn("SENTENCE-TO-FILE: " + annot.getCoveredText());
 				}
 			}
 
