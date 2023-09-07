@@ -130,7 +130,7 @@ public class DocumentTextAugmentationPipeline {
 				DocumentFormat.BIONLP, PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		PCollectionTuple output = DocumentTextAugmentationFn.process(statusEntity2Content, augDocTextOutputDocCriteria,
-				requiredDocCriteria, timestamp);
+				requiredDocCriteria, timestamp, PIPELINE_KEY);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAugmentedText = output
 				.get(DocumentTextAugmentationFn.AUGMENTED_TEXT_TAG);

@@ -213,7 +213,7 @@ public class ConceptPostProcessingPipeline {
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
 				inputDocCriteria, extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonPromotionMapView, // ancestorMapView,
-				options.getFilterFlag());
+				options.getFilterFlag(), PIPELINE_KEY);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output
 				.get(ConceptPostProcessingFn.ANNOTATIONS_TAG);

@@ -101,7 +101,7 @@ public class FilterUnactionableTextPipeline {
 				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		PCollectionTuple output = FilterUnactionableTextFn.process(statusEntity2Content, outputDocCriteria,
-				requiredDocCriteria, timestamp);
+				requiredDocCriteria, timestamp, PIPELINE_KEY);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAugmentedText = output
 				.get(FilterUnactionableTextFn.FILTERED_TEXT_TAG);

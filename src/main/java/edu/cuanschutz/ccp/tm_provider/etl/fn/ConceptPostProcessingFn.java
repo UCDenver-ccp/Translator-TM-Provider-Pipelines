@@ -35,6 +35,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
@@ -54,8 +55,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String, String>> {
-
-	static final String PIPELINE_VERSION_RECENT = "recent";
 
 	private static final long serialVersionUID = 1L;
 
@@ -88,7 +87,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView,
 			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView,
 //			PCollectionView<Map<String, Set<String>>> oboToAncestorsMapView, 
-			FilterFlag filterFlag) {
+			FilterFlag filterFlag, PipelineKey pipelineKey) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -107,14 +106,15 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						try {
 							// check to see if all documents are present
 							Map<DocumentCriteria, String> docs = statusEntityToText.getValue();
-							if (!fulfillsRequiredDocumentCriteria(docs.keySet(), requiredDocumentCriteria)) {
-//							if (!docs.keySet().equals(requiredDocumentCriteria)) {
-								PipelineMain.logFailure(ETL_FAILURE_TAG,
-										"Unable to complete post-processing due to missing annotation documents for: "
-												+ docId + " -- contains (" + docs.size() + ") "
-												+ docs.keySet().toString(),
-										outputDocCriteria, timestamp, out, docId, null);
-							} else {
+							if (PipelineMain.requiredDocumentsArePresent(docs.keySet(), requiredDocumentCriteria,
+									pipelineKey, ETL_FAILURE_TAG, docId, outputDocCriteria, timestamp, out)) {
+//							if (!PipelineMain.fulfillsRequiredDocumentCriteria(docs.keySet(), requiredDocumentCriteria)) {
+//								PipelineMain.logFailure(ETL_FAILURE_TAG,
+//										"Unable to complete post-processing due to missing annotation documents for: "
+//												+ docId + " -- contains (" + docs.size() + ") "
+//												+ docs.keySet().toString(),
+//										outputDocCriteria, timestamp, out, docId, null);
+//							} else {
 
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 										.getDocTypeToContentMap(statusEntity.getDocumentId(), docs);
@@ -187,42 +187,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 
 				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
-	}
-
-	/**
-	 * @param docCriteria
-	 * @param requiredDocumentCriteria
-	 * @return true if the input docCriteria fulfills the requiredDocumentCriteria.
-	 *         This doesn't need to be an exact match, b/c the required-doc-criteria
-	 *         may use "recent" as the pipeline version, where as the docCriteria
-	 *         has been extracted from Datastore and should have an explicit
-	 *         version. So we will check for an exact match if the pipeline version
-	 *         is specified as required, or a more loose match if the pipeline
-	 *         version is declared as 'recent'.
-	 */
-	@VisibleForTesting
-	protected static boolean fulfillsRequiredDocumentCriteria(Set<DocumentCriteria> docCriteria,
-			Set<DocumentCriteria> requiredDocumentCriteria) {
-
-		Set<String> pipelineVersionAgnosticDocCriteria = new HashSet<String>();
-		for (DocumentCriteria reqDc : docCriteria) {
-			pipelineVersionAgnosticDocCriteria.add(PipelineMain.createVersionAgnosticKey(reqDc));
-		}
-
-		for (DocumentCriteria reqDc : requiredDocumentCriteria) {
-			String pipelineVersion = reqDc.getPipelineVersion();
-			if (pipelineVersion.equalsIgnoreCase(PIPELINE_VERSION_RECENT)) {
-				String key = PipelineMain.createVersionAgnosticKey(reqDc);
-				if (!pipelineVersionAgnosticDocCriteria.contains(key)) {
-					return false;
-				}
-			} else {
-				if (!docCriteria.contains(reqDc)) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 	/**

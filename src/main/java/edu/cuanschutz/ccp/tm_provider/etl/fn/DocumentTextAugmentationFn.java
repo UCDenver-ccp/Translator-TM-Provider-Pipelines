@@ -23,6 +23,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
+import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
 import edu.ucdenver.ccp.common.file.reader.Line;
@@ -75,7 +76,7 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content,
 			DocumentCriteria outputDocCriteria, Set<DocumentCriteria> requiredDocumentCriteria,
-			com.google.cloud.Timestamp timestamp) {
+			com.google.cloud.Timestamp timestamp, PipelineKey pipelineKey) {
 
 		return statusEntity2Content.apply("Identify concept annotations", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -90,13 +91,16 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 						try {
 							// check to see if all documents are present
 							Map<DocumentCriteria, String> docs = statusEntityToText.getValue();
-							if (!docs.keySet().equals(requiredDocumentCriteria)) {
-								PipelineMain.logFailure(ETL_FAILURE_TAG,
-										"Unable to complete post-processing due to missing annotation documents for: "
-												+ docId + " -- contains (" + docs.size() + ") "
-												+ docs.keySet().toString(),
-										outputDocCriteria, timestamp, out, docId, null);
-							} else {
+							if (PipelineMain.requiredDocumentsArePresent(docs.keySet(), requiredDocumentCriteria,
+									pipelineKey, ETL_FAILURE_TAG, docId, outputDocCriteria, timestamp, out)) {
+//							if (!PipelineMain.fulfillsRequiredDocumentCriteria(docs.keySet(),
+//									requiredDocumentCriteria)) {
+//								PipelineMain.logFailure(ETL_FAILURE_TAG,
+//										"Unable to complete doc text augmentation due to missing annotation documents for: "
+//												+ docId + " -- contains (" + docs.size() + ") "
+//												+ docs.keySet().toString(),
+//										outputDocCriteria, timestamp, out, docId, null);
+//							} else {
 
 								Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 										.getDocTypeToContentMap(statusEntity.getDocumentId(), docs);
@@ -172,7 +176,8 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 		for (TextAnnotation longFormAnnot : sortedLongFormAnnots) {
 
 			TextAnnotation shortFormAnnot = ConceptPostProcessingFn.getShortAbbrevAnnot(longFormAnnot);
-			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, shortFormAnnot, sortedSentenceAnnots);
+			TextAnnotation sentenceAnnot = getOverlappingSentenceAnnot(longFormAnnot, shortFormAnnot,
+					sortedSentenceAnnots);
 
 			if (sentenceAnnot != null) {
 
@@ -191,7 +196,7 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 				String trailingChar = documentText.substring(sfEnd, sfEnd + 1);
 
 				if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
-						
+
 					String augmentedTextStart = sentenceText.substring(0, sfStart - 1 - sentOffset);
 					String augmentedTextEnd = sentenceText.substring(sfEnd + 1 - sentOffset);
 					String spaceStr = getEmptyStrOfLength(sfEnd + 1 - (sfStart - 1));

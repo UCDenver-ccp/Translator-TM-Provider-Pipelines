@@ -1534,47 +1534,4 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(expectedOutputAnnots, outputAnnots);
 	}
 
-	@Test
-	public void testFulfillsRequiredDocumentCriteria() {
-
-		Set<DocumentCriteria> requiredDocumentCriteria = new HashSet<DocumentCriteria>();
-
-		DocumentCriteria dc1 = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
-				ConceptPostProcessingFn.PIPELINE_VERSION_RECENT);
-		DocumentCriteria dc2 = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
-				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.1");
-		DocumentCriteria dc3 = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
-				PipelineKey.ABBREVIATION, ConceptPostProcessingFn.PIPELINE_VERSION_RECENT);
-
-		requiredDocumentCriteria.add(dc1);
-		requiredDocumentCriteria.add(dc2);
-		requiredDocumentCriteria.add(dc3);
-
-		Set<DocumentCriteria> docCriteria = new HashSet<DocumentCriteria>();
-
-		DocumentCriteria dc1a = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF,
-				"1.1.1");
-		DocumentCriteria dc2a = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
-				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.1");
-		DocumentCriteria dc3a = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
-				PipelineKey.ABBREVIATION, "0.3.0");
-		docCriteria.add(dc1a);
-		docCriteria.add(dc2a);
-		docCriteria.add(dc3a);
-
-		assertTrue(ConceptPostProcessingFn.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria));
-		
-		
-		docCriteria = new HashSet<DocumentCriteria>();
-
-		DocumentCriteria dc2b = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
-				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.2");
-		docCriteria.add(dc1a);
-		docCriteria.add(dc2b); // version mismatch
-		docCriteria.add(dc3a);
-
-		assertFalse(ConceptPostProcessingFn.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria));
-
-	}
-
 }

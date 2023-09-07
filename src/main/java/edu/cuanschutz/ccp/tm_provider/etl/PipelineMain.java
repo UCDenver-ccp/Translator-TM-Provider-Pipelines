@@ -33,6 +33,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.google.cloud.Timestamp;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.Create;
@@ -84,6 +86,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 public class PipelineMain {
 
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
+	public static final String PIPELINE_VERSION_RECENT = "recent";
 
 	private static final TupleTag<ProcessingStatus> statusTag = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag1 = new TupleTag<>();
@@ -1412,6 +1415,69 @@ public class PipelineMain {
 				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
 			}
 		}));
+	}
+
+	/**
+	 * This method is used to test if all of the required documents are present. It
+	 * allows for flexible matching of the pipeline version in case the pipeline
+	 * version is set to "recent".
+	 * 
+	 * @param docCriteria
+	 * @param requiredDocumentCriteria
+	 * @return true if the input docCriteria fulfills the requiredDocumentCriteria.
+	 *         This doesn't need to be an exact match, b/c the required-doc-criteria
+	 *         may use "recent" as the pipeline version, where as the docCriteria
+	 *         has been extracted from Datastore and should have an explicit
+	 *         version. So we will check for an exact match if the pipeline version
+	 *         is specified as required, or a more loose match if the pipeline
+	 *         version is declared as 'recent'.
+	 */
+	@VisibleForTesting
+	public static boolean fulfillsRequiredDocumentCriteria(Set<DocumentCriteria> docCriteria,
+			Set<DocumentCriteria> requiredDocumentCriteria) {
+
+		Set<String> pipelineVersionAgnosticDocCriteria = new HashSet<String>();
+		for (DocumentCriteria reqDc : docCriteria) {
+			pipelineVersionAgnosticDocCriteria.add(PipelineMain.createVersionAgnosticKey(reqDc));
+		}
+
+		for (DocumentCriteria reqDc : requiredDocumentCriteria) {
+			String pipelineVersion = reqDc.getPipelineVersion();
+			if (pipelineVersion.equalsIgnoreCase(PIPELINE_VERSION_RECENT)) {
+				String key = PipelineMain.createVersionAgnosticKey(reqDc);
+				if (!pipelineVersionAgnosticDocCriteria.contains(key)) {
+					return false;
+				}
+			} else {
+				if (!docCriteria.contains(reqDc)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Checks to see if required documents are present. Returns true if they are.
+	 * Logs an error if they are not.
+	 * 
+	 * @param docCriteria
+	 * @param requiredDocumentCriteria
+	 * @param pipelineKey
+	 * @return
+	 */
+	public static boolean requiredDocumentsArePresent(Set<DocumentCriteria> docCriteria,
+			Set<DocumentCriteria> requiredDocumentCriteria, PipelineKey pipelineKey,
+			TupleTag<EtlFailureData> failureTag, String documentId, DocumentCriteria errorDocCriteria,
+			Timestamp timestamp, MultiOutputReceiver out) {
+		if (!PipelineMain.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria)) {
+			PipelineMain.logFailure(failureTag, String.format(
+					"Unable to complete post-processing due to missing annotation documents for: %s. Observed (%d): %s, but requires (%d): %s.",
+					documentId, docCriteria.size(), docCriteria.toString(), requiredDocumentCriteria.size(),
+					requiredDocumentCriteria.toString()), errorDocCriteria, timestamp, out, documentId, null);
+			return false;
+		}
+		return true;
 	}
 
 }
