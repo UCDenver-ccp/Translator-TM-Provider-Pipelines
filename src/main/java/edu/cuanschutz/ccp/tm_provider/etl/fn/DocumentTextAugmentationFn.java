@@ -113,13 +113,19 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 
 								String documentText = PipelineMain.getDocumentText(docs);
 
-								String[] augmentedDocSent = getAugmentedDocumentTextAndSentenceBionlp(documentText,
-										abbrevAnnots, sentenceAnnots);
+								// there are some abstracts with no title and not abstract text, e.g.,
+								// PMID:37000644 -- they will have a null or empty sentenceAnnots collection so
+								// we account for them here. We won't output the augmented text or sentences in
+								// order to prevent further downstream processing.
+								if (sentenceAnnots != null && sentenceAnnots.size() > 0) {
+									String[] augmentedDocSent = getAugmentedDocumentTextAndSentenceBionlp(documentText,
+											abbrevAnnots, sentenceAnnots);
 
-								List<String> chunkedAugDocText = PipelineMain.chunkContent(augmentedDocSent[0]);
-								out.get(AUGMENTED_TEXT_TAG).output(KV.of(statusEntity, chunkedAugDocText));
-								List<String> chunkedAugSentText = PipelineMain.chunkContent(augmentedDocSent[1]);
-								out.get(AUGMENTED_SENTENCE_TAG).output(KV.of(statusEntity, chunkedAugSentText));
+									List<String> chunkedAugDocText = PipelineMain.chunkContent(augmentedDocSent[0]);
+									out.get(AUGMENTED_TEXT_TAG).output(KV.of(statusEntity, chunkedAugDocText));
+									List<String> chunkedAugSentText = PipelineMain.chunkContent(augmentedDocSent[1]);
+									out.get(AUGMENTED_SENTENCE_TAG).output(KV.of(statusEntity, chunkedAugSentText));
+								}
 							}
 						} catch (Throwable t) {
 							PipelineMain.logFailure(ETL_FAILURE_TAG, "Failure during document text augmentation. ",
