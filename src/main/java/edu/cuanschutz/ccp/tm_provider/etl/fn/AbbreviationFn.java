@@ -224,20 +224,22 @@ public class AbbreviationFn
 				if (!shortFormSpans.isEmpty() && !longFormSpans.isEmpty()) {
 
 					Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
+					// will be null if the only short form spans overlap with long form spans
+					if (shortLongFormSpans != null) {
+						TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+						Span shortFormSpan = shortLongFormSpans[0];
+						Span longFormSpan = shortLongFormSpans[1];
+						TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
+								shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
+						TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
+								longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
 
-					TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
-					Span shortFormSpan = shortLongFormSpans[0];
-					Span longFormSpan = shortLongFormSpans[1];
-					TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
-							shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
-					TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
-							longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
+						TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
+								shortFormAnnot.getClassMention());
 
-					TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
-							shortFormAnnot.getClassMention());
-
-					td.addAnnotation(shortFormAnnot);
-					td.addAnnotation(longFormAnnot);
+						td.addAnnotation(shortFormAnnot);
+						td.addAnnotation(longFormAnnot);
+					}
 				}
 
 			} else {
@@ -283,26 +285,29 @@ public class AbbreviationFn
 		List<Span> updatedSfSpans = new ArrayList<Span>(shortFormSpans);
 		updatedSfSpans.removeAll(toRemove);
 
-		// if there are only one short and long form span, then there is no need to
-		// compute distance between spans
-		if (updatedSfSpans.size() == 1 && longFormSpans.size() == 1) {
-			return new Span[] { updatedSfSpans.get(0), longFormSpans.get(0) };
-		}
+		if (!updatedSfSpans.isEmpty()) {
 
-		Map<Integer, Span[]> distanceToSpansMap = new HashMap<Integer, Span[]>();
-
-		for (Span shortFormSpan : updatedSfSpans) {
-			for (Span longFormSpan : longFormSpans) {
-				List<Span> spans = Arrays.asList(shortFormSpan, longFormSpan);
-				Collections.sort(spans, Span.ASCENDING());
-				int distance = spans.get(1).getSpanStart() - spans.get(0).getSpanEnd();
-				distanceToSpansMap.put(distance, new Span[] { shortFormSpan, longFormSpan });
+			// if there are only one short and long form span, then there is no need to
+			// compute distance between spans
+			if (updatedSfSpans.size() == 1 && longFormSpans.size() == 1) {
+				return new Span[] { updatedSfSpans.get(0), longFormSpans.get(0) };
 			}
+
+			Map<Integer, Span[]> distanceToSpansMap = new HashMap<Integer, Span[]>();
+
+			for (Span shortFormSpan : updatedSfSpans) {
+				for (Span longFormSpan : longFormSpans) {
+					List<Span> spans = Arrays.asList(shortFormSpan, longFormSpan);
+					Collections.sort(spans, Span.ASCENDING());
+					int distance = spans.get(1).getSpanStart() - spans.get(0).getSpanEnd();
+					distanceToSpansMap.put(distance, new Span[] { shortFormSpan, longFormSpan });
+				}
+			}
+
+			Map<Integer, Span[]> sortedMap = CollectionsUtil.sortMapByKeys(distanceToSpansMap, SortOrder.ASCENDING);
+			return sortedMap.entrySet().iterator().next().getValue();
 		}
-
-		Map<Integer, Span[]> sortedMap = CollectionsUtil.sortMapByKeys(distanceToSpansMap, SortOrder.ASCENDING);
-		return sortedMap.entrySet().iterator().next().getValue();
-
+		return null;
 	}
 
 	/**
