@@ -69,7 +69,7 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 								TextExtractionPipeline.DOCUMENT_COLLECTIONS_DELIMITER);
 
 						try {
-							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 							if (documentText == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG, "Unable to extract text for: " + docId,
 										outputDocCriteria, timestamp, out, docId, null);

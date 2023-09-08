@@ -86,7 +86,7 @@ public class OgerFn extends DoFn<KV<String, String>, KV<String, String>> {
 						// input document
 						try {
 							String augmentedDocText = PipelineMain
-									.getAugmentedDocumentText(statusEntityToText.getValue());
+									.getAugmentedDocumentText(statusEntityToText.getValue(), docId);
 
 							ServiceCaller csServiceCaller = new ServiceCaller(csOgerServiceUri, docId,
 									augmentedDocText);

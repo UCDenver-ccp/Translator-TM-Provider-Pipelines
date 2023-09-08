@@ -125,7 +125,7 @@ public class ElasticsearchDocumentCreatorFn extends DoFn<KV<String, String>, KV<
 
 		Set<String> jsonDocuments = new HashSet<String>();
 
-		String documentText = PipelineMain.getDocumentText(docs);
+		String documentText = PipelineMain.getDocumentText(docs, documentId);
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 				.getDocTypeToContentMap(documentId, docs);
 

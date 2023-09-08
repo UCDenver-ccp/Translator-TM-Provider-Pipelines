@@ -70,9 +70,9 @@ public class DependencyParseConlluToConll03Fn extends DoFn<KV<String, String>, K
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+						String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 						String conllu = PipelineMain.getDocumentByType(statusEntityToText.getValue(),
-								DocumentType.DEPENDENCY_PARSE);
+								DocumentType.DEPENDENCY_PARSE, docId);
 
 						try {
 							String conll03 = getTokensAsConll03(docId, documentText, conllu);

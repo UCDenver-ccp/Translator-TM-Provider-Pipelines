@@ -86,7 +86,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						try {
-							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 
 							Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());

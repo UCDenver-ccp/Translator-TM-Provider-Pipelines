@@ -132,7 +132,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 								// contain abbreviation definitions where the short form part of the definition
 								// has been replaced by whitespace. The replacement by whitespace allows for
 								// concept recognition matches that may not otherwise occur.
-								String augmentedDocumentText = PipelineMain.getAugmentedDocumentText(docs);
+								String augmentedDocumentText = PipelineMain.getAugmentedDocumentText(docs, docId);
 
 								Set<TextAnnotation> allAnnots = PipelineMain.spliceValues(docTypeToAnnotsMap.values());
 

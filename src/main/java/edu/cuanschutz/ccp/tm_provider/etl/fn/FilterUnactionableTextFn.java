@@ -89,7 +89,7 @@ public class FilterUnactionableTextFn extends DoFn<KV<String, String>, KV<String
 								Collection<TextAnnotation> sectionAnnots = docTypeToContentMap
 										.get(DocumentType.SECTIONS);
 
-								String documentText = PipelineMain.getDocumentText(docs);
+								String documentText = PipelineMain.getDocumentText(docs, docId);
 
 								String augmentedDocText = filterUnactionableText(documentText, sectionAnnots, out);
 

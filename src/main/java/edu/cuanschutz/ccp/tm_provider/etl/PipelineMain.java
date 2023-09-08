@@ -994,7 +994,7 @@ public class PipelineMain {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 
 		// document text is needed to parse some of the document formats
-		String documentText = getDocumentText(inputDocuments);
+		String documentText = getDocumentText(inputDocuments, documentId);
 
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentType documentType = entry.getKey().getDocumentType();
@@ -1032,8 +1032,8 @@ public class PipelineMain {
 	 * @param inputDocuments
 	 * @return
 	 */
-	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
-		return getDocumentByType(inputDocuments, DocumentType.TEXT);
+	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		return getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
 	}
 
 	/**
@@ -1043,15 +1043,15 @@ public class PipelineMain {
 	 * @param inputDocuments
 	 * @return
 	 */
-	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments) {
-		String originalText = getDocumentByType(inputDocuments, DocumentType.TEXT);
-		String augText = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT);
+	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		String originalText = getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
+		String augText = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT, documentId);
 		return originalText + augText;
 	}
 
-	public static String getAugmentedSentenceBionlp(Map<DocumentCriteria, String> inputDocuments) {
-		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE);
-		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE);
+	public static String getAugmentedSentenceBionlp(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE, documentId);
+		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE, documentId);
 		return originalSentBionlp + "\n" + augSentBionlp;
 	}
 
@@ -1061,15 +1061,18 @@ public class PipelineMain {
 	 * @param inputDocuments
 	 * @return
 	 */
-	public static String getDocumentByType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType) {
+	public static String getDocumentByType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType,
+			String documentId) {
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentCriteria documentCriteria = entry.getKey();
 			if (documentCriteria.getDocumentType() == docType) {
 				return entry.getValue();
 			}
 		}
-		throw new IllegalArgumentException(
-				String.format("Unable to find document type (%s) in input documents.", docType.name()));
+		LOGGER.log(Level.WARNING,
+				String.format("Unable to find document type (%s) in input documents for document id: %s.",
+						docType.name(), documentId));
+		return "";
 	}
 
 	private static Collection<TextAnnotation> deserializeAnnotations(String documentId, String content,

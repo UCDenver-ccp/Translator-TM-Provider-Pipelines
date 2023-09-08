@@ -74,9 +74,9 @@ public class DependencyParseConlluToSentenceFn extends DoFn<KV<String, String>, 
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+						String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 						String conllu = PipelineMain.getDocumentByType(statusEntityToText.getValue(),
-								DocumentType.DEPENDENCY_PARSE);
+								DocumentType.DEPENDENCY_PARSE, docId);
 
 						try {
 							String bionlp = getSentencesAsBioNLP(docId, documentText, conllu);

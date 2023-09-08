@@ -111,7 +111,7 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 								Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap
 										.get(DocumentType.SENTENCE);
 
-								String documentText = PipelineMain.getDocumentText(docs);
+								String documentText = PipelineMain.getDocumentText(docs, docId);
 
 								// there are some abstracts with no title and not abstract text, e.g.,
 								// PMID:37000644 -- they will have a null or empty sentenceAnnots collection so

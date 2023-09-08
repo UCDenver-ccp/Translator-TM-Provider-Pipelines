@@ -59,7 +59,7 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 						try {
 							String augmentedSentenceBionlp = PipelineMain
-									.getAugmentedSentenceBionlp(statusEntityToText.getValue());
+									.getAugmentedSentenceBionlp(statusEntityToText.getValue(), docId);
 
 							ServiceCaller craftServiceCaller = new ServiceCaller(craftCrfServiceUri, docId,
 									augmentedSentenceBionlp);
