@@ -193,50 +193,20 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 				// and trailing the short form and if it is punctuation, then we will include
 				// it as part of the short form.
 
+				// note that typically the short form occurs after the long form, and the short
+				// form is surrounded by parentheses, however this is not always the case, e.g.
+				// PMID:37021569. In this abstract the long form occurs after the short form and
+				// is in parentheses.
+
 				String sentenceText = documentText.substring(sentenceAnnot.getAnnotationSpanStart(),
 						sentenceAnnot.getAnnotationSpanEnd());
-				int sentOffset = sentenceAnnot.getAnnotationSpanStart();
-				int sfStart = shortFormAnnot.getAnnotationSpanStart();
-				int sfEnd = shortFormAnnot.getAnnotationSpanEnd();
-				String leadingChar = documentText.substring(sfStart - 1, sfStart);
-				String trailingChar = documentText.substring(sfEnd, sfEnd + 1);
 
-				if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
-
-					String augmentedTextStart = sentenceText.substring(0, sfStart - 1 - sentOffset);
-					String augmentedTextEnd = sentenceText.substring(sfEnd + 1 - sentOffset);
-					String spaceStr = getEmptyStrOfLength(sfEnd + 1 - (sfStart - 1));
-
-					String augmentedSentenceText = augmentedTextStart + spaceStr + augmentedTextEnd;
-
-					// write the augmented sentence to the StringBuilder. Each sentence will occupy
-					// two lines. The first line will include the SENT indicator in the first
-					// column, and the sentence start span from the original document in the second
-					// column, and the abbreviation annotation start span in the 3rd column. The
-					// augmented sentence text will appear on the second line.
-
-					augTextBuilder.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
-							sentenceAnnot.getAnnotationSpanStart(), longFormAnnot.getAnnotationSpanStart(),
-							shortFormAnnot.getAnnotationSpanEnd()));
-					augTextBuilder.append(String.format("%s\n", augmentedSentenceText));
-
-					// create a sentence annotation for the augmented sentence that was added to the
-					// document text above. It should have the span of the sentence relative to
-					// where it is located in the augmented text, i.e., it should take into account
-					// the length of the original document text which will be appended above the
-					// augmented portion of the text.
-					TextAnnotationFactory annotFactory = TextAnnotationFactory.createFactoryWithDefaults();
-					// -1 to account for the trailing line break
-					int end = documentText.length() + augTextBuilder.toString().length() - 1;
-					int start = end - augmentedSentenceText.length();
-					TextAnnotation augSentAnnot = annotFactory.createAnnotation(start, end, augmentedSentenceText,
-							AUG_SENT_TYPE);
-					augSentences.add(augSentAnnot);
+				if (shortFormAnnot.getAnnotationSpanStart() > longFormAnnot.getAnnotationSpanEnd()) {
+					addSfTrailingLfAugSentence(documentText, augTextBuilder, augSentences, longFormAnnot,
+							shortFormAnnot, sentenceAnnot, sentenceText);
 				} else {
-					// one or both of the characters leading and trailing the short-form text does
-					// not match a punctuation character. Not sure what to do here, so for now we
-					// will do nothing.
-					continue;
+					addSfPrecedingLfAugSentence(documentText, augTextBuilder, augSentences, longFormAnnot,
+							shortFormAnnot, sentenceAnnot, sentenceText);
 				}
 			}
 		}
@@ -265,6 +235,130 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 
 		return new String[] { augDocText, augBionlpBuilder.toString() };
 
+	}
+
+	/**
+	 * This is the non-canonical case, e.g. PMID:37021569, where the long form
+	 * appears in parentheses after the short form of the abbreviation
+	 * 
+	 * @param documentText
+	 * @param augTextBuilder
+	 * @param augSentences
+	 * @param longFormAnnot
+	 * @param shortFormAnnot
+	 * @param sentenceAnnot
+	 * @param sentenceText
+	 */
+	private static void addSfPrecedingLfAugSentence(String documentText, StringBuilder augTextBuilder,
+			List<TextAnnotation> augSentences, TextAnnotation longFormAnnot, TextAnnotation shortFormAnnot,
+			TextAnnotation sentenceAnnot, String sentenceText) {
+		int sentOffset = sentenceAnnot.getAnnotationSpanStart();
+		int sfStart = shortFormAnnot.getAnnotationSpanStart();
+		int sfEnd = shortFormAnnot.getAnnotationSpanEnd();
+		int lfStart = longFormAnnot.getAnnotationSpanStart();
+		int lfEnd = longFormAnnot.getAnnotationSpanEnd();
+		
+		String leadingChar = documentText.substring(lfStart - 1, lfStart);
+		String trailingChar = documentText.substring(lfEnd, lfEnd + 1);
+
+		if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
+
+			String augmentedTextStart = sentenceText.substring(0, sfStart - sentOffset);
+			String augmentedTextMid = sentenceText.substring(sfEnd-sentOffset, lfStart - 1 - sentOffset);
+			String augmentedTextEnd = sentenceText.substring(lfEnd + 1 - sentOffset);
+			String spaceStr = getEmptyStrOfLength(sfEnd - sfStart);
+
+			// single spaces added below replace the parentheses
+			String augmentedSentenceText = augmentedTextStart + spaceStr +  augmentedTextMid + " " + longFormAnnot.getCoveredText()+ " "+  augmentedTextEnd;
+
+			// write the augmented sentence to the StringBuilder. Each sentence will occupy
+			// two lines. The first line will include the SENT indicator in the first
+			// column, and the sentence start span from the original document in the second
+			// column, and the abbreviation annotation start span in the 3rd column. The
+			// augmented sentence text will appear on the second line.
+
+			augTextBuilder.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
+					sentenceAnnot.getAnnotationSpanStart(), shortFormAnnot.getAnnotationSpanStart(),
+					longFormAnnot.getAnnotationSpanEnd()));
+			augTextBuilder.append(String.format("%s\n", augmentedSentenceText));
+
+			// create a sentence annotation for the augmented sentence that was added to the
+			// document text above. It should have the span of the sentence relative to
+			// where it is located in the augmented text, i.e., it should take into account
+			// the length of the original document text which will be appended above the
+			// augmented portion of the text.
+			TextAnnotationFactory annotFactory = TextAnnotationFactory.createFactoryWithDefaults();
+			// -1 to account for the trailing line break
+			int end = documentText.length() + augTextBuilder.toString().length() - 1;
+			int start = end - augmentedSentenceText.length();
+			TextAnnotation augSentAnnot = annotFactory.createAnnotation(start, end, augmentedSentenceText,
+					AUG_SENT_TYPE);
+			augSentences.add(augSentAnnot);
+		} else {
+			// one or both of the characters leading and trailing the short-form text does
+			// not match a punctuation character. Not sure what to do here, so for now we
+			// will do nothing.
+		}
+	}
+
+	/**
+	 * Create an augmented sentence for the canonical case where the short form
+	 * appears after the long form. In this case we expect the short form to be
+	 * surrounded by parentheses.
+	 * 
+	 * @param documentText
+	 * @param augTextBuilder
+	 * @param augSentences
+	 * @param longFormAnnot
+	 * @param shortFormAnnot
+	 * @param sentenceAnnot
+	 * @param sentenceText
+	 */
+	private static void addSfTrailingLfAugSentence(String documentText, StringBuilder augTextBuilder,
+			List<TextAnnotation> augSentences, TextAnnotation longFormAnnot, TextAnnotation shortFormAnnot,
+			TextAnnotation sentenceAnnot, String sentenceText) {
+		int sentOffset = sentenceAnnot.getAnnotationSpanStart();
+		int sfStart = shortFormAnnot.getAnnotationSpanStart();
+		int sfEnd = shortFormAnnot.getAnnotationSpanEnd();
+		String leadingChar = documentText.substring(sfStart - 1, sfStart);
+		String trailingChar = documentText.substring(sfEnd, sfEnd + 1);
+
+		if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
+
+			String augmentedTextStart = sentenceText.substring(0, sfStart - 1 - sentOffset);
+			String augmentedTextEnd = sentenceText.substring(sfEnd + 1 - sentOffset);
+			String spaceStr = getEmptyStrOfLength(sfEnd + 1 - (sfStart - 1));
+
+			String augmentedSentenceText = augmentedTextStart + spaceStr + augmentedTextEnd;
+
+			// write the augmented sentence to the StringBuilder. Each sentence will occupy
+			// two lines. The first line will include the SENT indicator in the first
+			// column, and the sentence start span from the original document in the second
+			// column, and the abbreviation annotation start span in the 3rd column. The
+			// augmented sentence text will appear on the second line.
+
+			augTextBuilder.append(String.format("%s\t%d\t%d\t%d\n", AUGMENTED_SENTENCE_INDICATOR,
+					sentenceAnnot.getAnnotationSpanStart(), longFormAnnot.getAnnotationSpanStart(),
+					shortFormAnnot.getAnnotationSpanEnd()));
+			augTextBuilder.append(String.format("%s\n", augmentedSentenceText));
+
+			// create a sentence annotation for the augmented sentence that was added to the
+			// document text above. It should have the span of the sentence relative to
+			// where it is located in the augmented text, i.e., it should take into account
+			// the length of the original document text which will be appended above the
+			// augmented portion of the text.
+			TextAnnotationFactory annotFactory = TextAnnotationFactory.createFactoryWithDefaults();
+			// -1 to account for the trailing line break
+			int end = documentText.length() + augTextBuilder.toString().length() - 1;
+			int start = end - augmentedSentenceText.length();
+			TextAnnotation augSentAnnot = annotFactory.createAnnotation(start, end, augmentedSentenceText,
+					AUG_SENT_TYPE);
+			augSentences.add(augSentAnnot);
+		} else {
+			// one or both of the characters leading and trailing the short-form text does
+			// not match a punctuation character. Not sure what to do here, so for now we
+			// will do nothing.
+		}
 	}
 
 	/**

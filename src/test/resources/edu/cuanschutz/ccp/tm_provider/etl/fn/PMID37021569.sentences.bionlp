@@ -1,0 +1,13 @@
+T1	sentence 0 206	TRIM29 (Tripartite Motif Containing 29) Alleviates NLRC4 (NLR Family CARD Domain Containing Protein 4) Inflammasome Related Cerebral Injury via Promoting Proteasomal Degradation of NLRC4 in Ischemic Stroke.
+T2	sentence 208 311	Neuroinflammation plays extremely crucial roles in the neurological damage mediated by ischemic stroke.
+T3	sentence 312 565	TRIM29 (tripartite motif containing 29) has previously been proposed to contribute to the regulation of innate immunity, however, the effect of TRIM29 on ischemic stroke induced neurodegenerative processes and neuroinflammation still largely unexplored.
+T4	sentence 566 683	In the current article, we aimed to investigate the function and the precise mechanisms of TRIM29 in ischemic stroke.
+T5	sentence 684 837	Middle cerebral artery occlusion mice model and oxygen-glucose deprivation cell model were established as in vivo and in vitro models of ischemic stroke.
+T6	sentence 838 1002	Quantitative real-time polymerase chain reaction (PCR), Western blot, and ELSIA were used to detect the expression levels of TRIM29, cytokines, and marker proteins.
+T7	sentence 1003 1078	Immunofluorescence assay was performed to examine the extent of cell death.
+T8	sentence 1079 1195	Different truncations were generated, and coimmunoprecipitation assays were used to confirm the protein interaction.
+T9	sentence 1196 1267	Ubiquitination assay was performed to detect the ubiquitination levels.
+T10	sentence 1268 1472	We found that the cerebral ischemia-reperfusion induced injury was aggravated in TRIM29 knockout mice after middle cerebral artery occlusion operation as well as the increased neurological deficits score.
+T11	sentence 1473 1925	TRIM29 expression was also found to be up-regulated upon middle cerebral artery occlusion or OGD administration, and loss of TRIM29 promoted the apoptosis and pyroptosis of neurons and microglial cells induced by middle cerebral artery occlusion or OGD, consistent with the enhanced proinflammatory mediators production and activation of NLRC4 (NLR [NOD-like receptor] family CARD [caspase recruitment domain] domain containing protein 4) inflammasome.
+T12	sentence 1926 2096	Furthermore, we observed that TRIM29 interacted with NLRC4 directly and promoted the K48-linked polyubiquitination of NLRC4, lead to the proteasomal degradation of NLRC4.
+T13	sentence 2097 2247	In conclusion, for the first time, we revealed the role of TRIM29 in ischemic stroke and illustrated the direct relationship between TRIM29 and NLRC4.
