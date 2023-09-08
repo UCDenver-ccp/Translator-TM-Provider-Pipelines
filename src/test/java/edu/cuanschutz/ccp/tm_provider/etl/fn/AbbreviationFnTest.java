@@ -97,6 +97,18 @@ public class AbbreviationFnTest {
 
 	}
 
+	/**
+	 * Make sure that the short form spans don't overlap with the long form, e.g.
+	 * Nickel (Ni) 01234567890 Nickel (Ni)
+	 */
+	@Test
+	public void testFindNearestShortLongFormSpans_OverlappingSpans() {
+		List<Span> shortFormSpans = Arrays.asList(new Span(0, 2), new Span(8, 10));
+		List<Span> longFormSpans = Arrays.asList(new Span(0, 6));
+		Span[] shortLongFormSpans = AbbreviationFn.findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
+		assertArrayEquals(new Span[] { new Span(8, 10), new Span(0, 6) }, shortLongFormSpans);
+	}
+
 	// This data is from PMC9006252
 	@Test
 	public void testNullPointerExceptionInRealExample() throws IOException {

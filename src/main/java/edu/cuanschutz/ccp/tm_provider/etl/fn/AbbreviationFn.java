@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,8 +24,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.uima.pear.util.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -271,15 +271,27 @@ public class AbbreviationFn
 	@VisibleForTesting
 	protected static Span[] findNearestShortLongFormSpans(List<Span> shortFormSpans, List<Span> longFormSpans) {
 
+		// remove any short form spans that overlap with a long form span
+		Set<Span> toRemove = new HashSet<Span>();
+		for (Span sfSpan : shortFormSpans) {
+			for (Span lfSpan : longFormSpans) {
+				if (sfSpan.overlaps(lfSpan)) {
+					toRemove.add(sfSpan);
+				}
+			}
+		}
+		List<Span> updatedSfSpans = new ArrayList<Span>(shortFormSpans);
+		updatedSfSpans.removeAll(toRemove);
+
 		// if there are only one short and long form span, then there is no need to
 		// compute distance between spans
-		if (shortFormSpans.size() == 1 && longFormSpans.size() == 1) {
-			return new Span[] { shortFormSpans.get(0), longFormSpans.get(0) };
+		if (updatedSfSpans.size() == 1 && longFormSpans.size() == 1) {
+			return new Span[] { updatedSfSpans.get(0), longFormSpans.get(0) };
 		}
 
 		Map<Integer, Span[]> distanceToSpansMap = new HashMap<Integer, Span[]>();
 
-		for (Span shortFormSpan : shortFormSpans) {
+		for (Span shortFormSpan : updatedSfSpans) {
 			for (Span longFormSpan : longFormSpans) {
 				List<Span> spans = Arrays.asList(shortFormSpan, longFormSpan);
 				Collections.sort(spans, Span.ASCENDING());
