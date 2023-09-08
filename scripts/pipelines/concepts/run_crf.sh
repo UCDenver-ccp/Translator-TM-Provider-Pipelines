@@ -1,7 +1,7 @@
 #!/bin/sh
 
-SERVICE_URL=$1
-ONT=$2
+CRAFT_SERVICE_URL=$1
+NLMDISEASE_SERVICE_URL=$2
 SENTENCE_PIPELINE_KEY=$3
 SENTENCE_PIPELINE_VERSION=$4
 AUGMENTED_SENTENCE_PIPELINE_KEY=$5
@@ -15,24 +15,24 @@ OUTPUT_PIPELINE_VERSION=${12}
 JAR_VERSION=${13}
 
 
-TPSF="CRF_${ONT}_DONE"
-TDT="CRF_${ONT}"
-JOB_NAME=$(echo "CRF-${ONT}-${COLLECTION}" | tr '_' '-')
+# TPSF="CRF_${ONT}_DONE"
+# TDT="CRF_${ONT}"
+# JOB_NAME=$(echo "CRF-${ONT}-${COLLECTION}" | tr '_' '-')
+JOB_NAME=$(echo "CRF-${COLLECTION}" | tr '_' '-')
 
-
-echo "SERVICE URL: $SERVICE_URL"
-echo "ONT: $ONT"
+echo "CRAFT SERVICE URL: $CRAFT_SERVICE_URL"
+echo "NLM DISEASE SERVICE URL: $NLMDISEASE_SERVICE_URL"
+# echo "ONT: $ONT"
 echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
-echo "TPSF: $TPSF"
-echo "TDT: $TDT"
+# echo "TPSF: $TPSF"
+# echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
 
 java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" CRF \
 --jobName="$JOB_NAME" \
---crfServiceUri="$SERVICE_URL" \
---targetProcessingStatusFlag="$TPSF" \
---targetDocumentType="$TDT" \
+--craftCrfServiceUri="$CRAFT_SERVICE_URL" \
+--nlmDiseaseCrfServiceUri="$NLMDISEASE_SERVICE_URL" \
 --inputSentencePipelineKey="$SENTENCE_PIPELINE_KEY" \
 --inputSentencePipelineVersion="$SENTENCE_PIPELINE_VERSION" \
 --augmentedSentencePipelineKey="$AUGMENTED_SENTENCE_PIPELINE_KEY" \

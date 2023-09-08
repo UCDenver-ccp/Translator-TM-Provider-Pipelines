@@ -4,8 +4,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -40,25 +38,30 @@ import edu.ucdenver.ccp.common.collections.CollectionsUtil;
  */
 public class CrfNerPipeline {
 
-	private final static Logger LOGGER = Logger.getLogger(CrfNerPipeline.class.getName());
+//	private final static Logger LOGGER = Logger.getLogger(CrfNerPipeline.class.getName());
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.CRF;
 
 	public interface Options extends DataflowPipelineOptions {
-		@Description("URI for the CRF entity recognition service")
-		String getCrfServiceUri();
+		@Description("URIs for the CRAFT CRF entity recognition service")
+		String getCraftCrfServiceUri();
 
-		void setCrfServiceUri(String value);
+		void setCraftCrfServiceUri(String value);
 
-		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
-		ProcessingStatusFlag getTargetProcessingStatusFlag();
+		@Description("URIs for the NLM DISEASE CRF entity recognition service")
+		String getNlmDiseaseCrfServiceUri();
 
-		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
+		void setNlmDiseaseCrfServiceUri(String value);
 
-		@Description("The targetDocumentType should also align with the concept type served by the OGER service URI; pipe-delimited list")
-		DocumentType getTargetDocumentType();
-
-		void setTargetDocumentType(DocumentType type);
+//		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
+//		ProcessingStatusFlag getTargetProcessingStatusFlag();
+//
+//		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
+//
+//		@Description("The targetDocumentType should also align with the concept type served by the OGER service URI; pipe-delimited list")
+//		DocumentType getTargetDocumentType();
+//
+//		void setTargetDocumentType(DocumentType type);
 
 		@Description("This pipeline key will be used to select the input sentence bionlp documents that will be processed")
 		PipelineKey getInputSentencePipelineKey();
@@ -101,9 +104,10 @@ public class CrfNerPipeline {
 //		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
-		DocumentType targetDocumentType = options.getTargetDocumentType();
-		LOGGER.log(Level.INFO, String.format("Running CRF pipeline for: ", targetProcessingStatusFlag.name()));
+//		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
+		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.CRF_DONE;
+//		DocumentType targetDocumentType = options.getTargetDocumentType();
+//		LOGGER.log(Level.INFO, String.format("Running CRF pipeline for: ", targetProcessingStatusFlag.name()));
 
 		Pipeline p = Pipeline.create(options);
 
@@ -114,12 +118,12 @@ public class CrfNerPipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE,
 				ProcessingStatusFlag.SENTENCE_DONE);
 
-		/*
-		 * The pipeline will process each triple (URI, ProcessingStatusFlag,
-		 * DocumentType).
-		 */
-		LOGGER.log(Level.INFO, String.format("Initializing pipeline for: %s -- %s -- %s",
-				targetProcessingStatusFlag.name(), targetDocumentType.name(), options.getCrfServiceUri()));
+//		/*
+//		 * The pipeline will process each triple (URI, ProcessingStatusFlag,
+//		 * DocumentType).
+//		 */
+//		LOGGER.log(Level.INFO, String.format("Initializing pipeline for: %s -- %s -- %s",
+//				targetProcessingStatusFlag.name(), targetDocumentType.name(), options.getCrfServiceUri()));
 
 		/*
 		 * The CRF pipeline requires sentences and the document text.
@@ -133,12 +137,19 @@ public class CrfNerPipeline {
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(options.getTargetDocumentType(),
+		DocumentCriteria craftCrfOutputDocCriteria = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP,
+				PIPELINE_KEY, options.getOutputPipelineVersion());
+		DocumentCriteria nlmDiseaseCrfOutputDocCriteria = new DocumentCriteria(DocumentType.CRF_NLMDISEASE,
 				DocumentFormat.BIONLP, PIPELINE_KEY, options.getOutputPipelineVersion());
-		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCrfServiceUri(), outputDocCriteria,
-				timestamp);
 
-		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output.get(CrfNerFn.ANNOTATIONS_TAG);
+		// note: the craft document criteria is used as the error document criteria
+		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCraftCrfServiceUri(),
+				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp);
+
+		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCraftAnnotation = output
+				.get(CrfNerFn.CRAFT_NER_ANNOTATIONS_TAG);
+		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToNlmDiseaseAnnotation = output
+				.get(CrfNerFn.NLMDISEASE_NER_ANNOTATIONS_TAG);
 		PCollection<EtlFailureData> failures = output.get(CrfNerFn.ETL_FAILURE_TAG);
 
 		/*
@@ -146,7 +157,7 @@ public class CrfNerPipeline {
 		 * Datastore while ensuring no duplicates are sent to Datastore for storage.
 		 */
 		PCollection<Entity> updatedEntities = PipelineMain.updateStatusEntities(
-				statusEntityToAnnotation.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
+				statusEntityToCraftAnnotation.apply(Keys.<ProcessingStatus>create()), targetProcessingStatusFlag);
 		PCollection<Entity> nonredundantStatusEntities = PipelineMain.deduplicateStatusEntities(updatedEntities);
 		nonredundantStatusEntities.apply("status_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
@@ -155,16 +166,31 @@ public class CrfNerPipeline {
 				.getCollectionMappings(nonredundantStatusEntities).apply(View.<String, Set<String>>asMap());
 
 		/*
-		 * store the serialized annotation document content in Cloud Datastore -
-		 * deduplication is necessary to avoid Datastore non-transactional commit errors
+		 * store the serialized CRAFT NER annotation document content in Cloud Datastore
+		 * - deduplication is necessary to avoid Datastore non-transactional commit
+		 * errors
 		 */
-		PCollection<KV<String, List<String>>> nonredundantDocIdToAnnotations = PipelineMain
-				.deduplicateDocuments(statusEntityToAnnotation);
-		nonredundantDocIdToAnnotations
-				.apply("annotations->annot_entity",
-						ParDo.of(new DocumentToEntityFn(outputDocCriteria, options.getCollection(),
+		PCollection<KV<String, List<String>>> nonredundantDocIdToCraftAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToCraftAnnotation);
+		nonredundantDocIdToCraftAnnotations
+				.apply("craft annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(craftCrfOutputDocCriteria, options.getCollection(),
 								documentIdToCollections)).withSideInputs(documentIdToCollections))
-				.apply("annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+				.apply("craft annot_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/*
+		 * store the serialized NLM DISEASE NER annotation document content in Cloud
+		 * Datastore - deduplication is necessary to avoid Datastore non-transactional
+		 * commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantDocIdToNlmDiseaseAnnotations = PipelineMain
+				.deduplicateDocuments(statusEntityToNlmDiseaseAnnotation);
+		nonredundantDocIdToNlmDiseaseAnnotations
+				.apply("nlmdisease annotations->annot_entity",
+						ParDo.of(new DocumentToEntityFn(nlmDiseaseCrfOutputDocCriteria, options.getCollection(),
+								documentIdToCollections)).withSideInputs(documentIdToCollections))
+				.apply("nlmdisease annot_entity->datastore",
+						DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
 		 * store the failures for this pipeline in Cloud Datastore - deduplication is

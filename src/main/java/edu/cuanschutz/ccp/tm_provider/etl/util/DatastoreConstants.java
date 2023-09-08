@@ -158,6 +158,9 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
+	
+
+	public static final String STATUS_PROPERTY_OGER_DONE = "oger_done";
 
 	public static final String STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE = "oger_cs";
 	public static final String STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE = "oger_cimax";
@@ -182,6 +185,8 @@ public interface DatastoreConstants {
 	/////////////////// CRF CONCEPT PROCESSING /////////////////////
 	////////////////////////////////////////////////////////////////
 
+	public static final String STATUS_PROPERTY_CRF_DONE = "crf_done";
+	
 //	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
 	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
 //	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
