@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -22,10 +21,10 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.MultithreadedServiceCalls;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.OgerFn.OgerOutputType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -117,6 +116,11 @@ public class OgerPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("If ENABLED then the code calls the OGER services using multiple threads. The downside is that it becomes more difficult ot debug exceptions. If DISABLED, then the OGER service calls are made serially.")
+		MultithreadedServiceCalls getMultithreadedServiceCalls();
+
+		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
+
 	}
 
 	public static void main(String[] args) {
@@ -171,7 +175,8 @@ public class OgerPipeline {
 		// note: we are using the cs output doc criteria as the error doc criteria (any
 		// of the three could be chosen)
 		PCollectionTuple output = OgerFn.process(statusEntity2Content, csOgerServiceUri.toString(),
-				ciminOgerServiceUri.toString(), cimaxOgerServiceUri.toString(), csOutputDocCriteria, timestamp);
+				ciminOgerServiceUri.toString(), cimaxOgerServiceUri.toString(), csOutputDocCriteria, timestamp,
+				options.getMultithreadedServiceCalls());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCsAnnotation = output
 				.get(OgerFn.CS_ANNOTATIONS_TAG);

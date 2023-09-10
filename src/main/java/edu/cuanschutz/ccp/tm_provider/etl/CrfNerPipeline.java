@@ -20,6 +20,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.MultithreadedServiceCalls;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.CrfNerFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -98,6 +99,11 @@ public class CrfNerPipeline {
 
 		void setOutputPipelineVersion(String value);
 
+		@Description("If ENABLED then the code calls the CRF services using multiple threads. The downside is that it becomes more difficult ot debug exceptions. If DISABLED, then the CRF service calls are made serially.")
+		MultithreadedServiceCalls getMultithreadedServiceCalls();
+
+		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
+
 	}
 
 	public static void main(String[] args) {
@@ -144,7 +150,7 @@ public class CrfNerPipeline {
 
 		// note: the craft document criteria is used as the error document criteria
 		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCraftCrfServiceUri(),
-				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp);
+				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp, options.getMultithreadedServiceCalls());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCraftAnnotation = output
 				.get(CrfNerFn.CRAFT_NER_ANNOTATIONS_TAG);

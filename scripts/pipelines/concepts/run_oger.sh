@@ -13,7 +13,8 @@ AUGMENTED_TEXT_PIPELINE_KEY=${10}
 AUGMENTED_TEXT_PIPELINE_VERSION=${11}
 OUTPUT_PIPELINE_VERSION=${12}
 OVERWRITE=${13}
-JAR_VERSION=${14}
+MULTITHREADED_SERVICE_CALLS=${14}
+JAR_VERSION=${15}
 
 
 # TPSF="OGER_${ONT}_DONE"
@@ -35,6 +36,7 @@ echo "AUGMENTED TEXT PIPELINE KEY: $AUGMENTED_TEXT_PIPELINE_KEY"
 echo "AUGMENTED TEXT PIPELINE VERSION: $AUGMENTED_TEXT_PIPELINE_VERSION"
 echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
 echo "OVERWRITE KEY: $OVERWRITE"
+echo "MULTITHREADED_SERVICE_CALLS: $MULTITHREADED_SERVICE_CALLS"
 echo "JAR_VERSION: $JAR_VERSION"
 
 java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" OGER \
@@ -47,6 +49,7 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --augmentedTextPipelineKey="$AUGMENTED_TEXT_PIPELINE_KEY" \
 --augmentedTextPipelineVersion="$AUGMENTED_TEXT_PIPELINE_VERSION" \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
+--multithreadedServiceCalls="$MULTITHREADED_SERVICE_CALLS" \
 --collection="$COLLECTION" \
 --overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
@@ -56,6 +59,7 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=50 \
+--workerMachineType=n1-standard-2 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --defaultWorkerLogLevel=INFO \
 --runner=DataflowRunner

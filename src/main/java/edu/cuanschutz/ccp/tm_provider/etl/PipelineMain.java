@@ -117,6 +117,10 @@ public class PipelineMain {
 	private static final TupleTag<ProcessedDocument> documentTag26 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag27 = new TupleTag<>();
 
+	public enum MultithreadedServiceCalls {
+		ENABLED, DISABLED
+	}
+	
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 

@@ -37,5 +37,14 @@ public class SpanValidatorTest {
 		
 		assertTrue(SpanValidator.validate(Arrays.asList(new Span(0, 15)), s, documentText));
 	}
+	
+	
+	@Test
+	public void testValidate() {
+		String s = "T cell";
+		String documentText = "T cell";
+		
+		assertTrue(SpanValidator.validate(Arrays.asList(new Span(0, 6)), s, documentText));
+	}
 
 }

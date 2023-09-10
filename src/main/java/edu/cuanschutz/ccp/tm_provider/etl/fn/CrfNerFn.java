@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -23,12 +25,15 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.MultithreadedServiceCalls;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.HttpPostUtil;
 import lombok.Getter;
 
 public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
+
+	private final static Logger LOGGER = Logger.getLogger(CrfNerFn.class.getName());
 
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
@@ -44,7 +49,7 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 	public static PCollectionTuple process(
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToSentenceBionlp,
 			String craftCrfServiceUri, String nlmDiseaseCrfServiceUri, DocumentCriteria outputDocCriteria,
-			com.google.cloud.Timestamp timestamp) {
+			com.google.cloud.Timestamp timestamp, MultithreadedServiceCalls multithreadedServiceCalls) {
 
 		return statusEntityToSentenceBionlp.apply("Identify concept annotations in sentences", ParDo.of(
 				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
@@ -61,53 +66,83 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 							String augmentedSentenceBionlp = PipelineMain
 									.getAugmentedSentenceBionlp(statusEntityToText.getValue(), docId);
 
-							ServiceCaller craftServiceCaller = new ServiceCaller(craftCrfServiceUri, docId,
-									augmentedSentenceBionlp);
-							ServiceCaller nlmDiseaseServiceCaller = new ServiceCaller(nlmDiseaseCrfServiceUri, docId,
-									augmentedSentenceBionlp);
+							// there are cases where the document text is empty
+							if (!augmentedSentenceBionlp.trim().isEmpty()) {
 
-							// execute crf service calls in parallel and wait for them to finish
-							ExecutorService executor = Executors.newFixedThreadPool(5);
-							List<Future<?>> futures = Arrays.asList(executor.submit(craftServiceCaller),
-									executor.submit(nlmDiseaseServiceCaller));
-							for (Future<?> f : futures) {
-								f.get();
+								// possible to parallelize the service calls -- see below -- the only drawback
+								// is that when there's an exception the cause seems to get eaten and it's
+								// difficult to debug. If you want to debug - run with the
+								// multithreadedServiceCalls flag set to false.
+								if (multithreadedServiceCalls == MultithreadedServiceCalls.ENABLED) {
+									ServiceCaller craftServiceCaller = new ServiceCaller(craftCrfServiceUri, docId,
+											augmentedSentenceBionlp);
+									ServiceCaller nlmDiseaseServiceCaller = new ServiceCaller(nlmDiseaseCrfServiceUri,
+											docId, augmentedSentenceBionlp);
+
+									// execute crf service calls in parallel and wait for them to finish
+									ExecutorService executor = Executors.newFixedThreadPool(5);
+									List<Future<?>> futures = Arrays.asList(executor.submit(craftServiceCaller),
+											executor.submit(nlmDiseaseServiceCaller));
+									for (Future<?> f : futures) {
+										f.get();
+									}
+
+									List<String> craftChunkedCrfOutput = craftServiceCaller.getChunkedCrfOutput();
+									if (craftChunkedCrfOutput != null && !craftChunkedCrfOutput.isEmpty()) {
+										out.get(CRAFT_NER_ANNOTATIONS_TAG)
+												.output(KV.of(processingStatus, craftChunkedCrfOutput));
+									}
+
+									List<String> nlmDiseaseChunkedCrfOutput = nlmDiseaseServiceCaller
+											.getChunkedCrfOutput();
+									if (nlmDiseaseChunkedCrfOutput != null && !nlmDiseaseChunkedCrfOutput.isEmpty()) {
+										out.get(NLMDISEASE_NER_ANNOTATIONS_TAG)
+												.output(KV.of(processingStatus, nlmDiseaseChunkedCrfOutput));
+									}
+								} else {
+									callCrfService(CRAFT_NER_ANNOTATIONS_TAG, craftCrfServiceUri, out, processingStatus,
+											docId, augmentedSentenceBionlp);
+									callCrfService(NLMDISEASE_NER_ANNOTATIONS_TAG, nlmDiseaseCrfServiceUri, out,
+											processingStatus, docId, augmentedSentenceBionlp);
+								}
+							} else {
+								LOGGER.warning(String.format(
+										"Skipping CRF processing of document %s b/c there is no document text.",
+										docId));
 							}
-
-							out.get(CRAFT_NER_ANNOTATIONS_TAG)
-									.output(KV.of(processingStatus, craftServiceCaller.getChunkedCrfOutput()));
-							out.get(NLMDISEASE_NER_ANNOTATIONS_TAG)
-									.output(KV.of(processingStatus, nlmDiseaseServiceCaller.getChunkedCrfOutput()));
 
 						} catch (Throwable t) {
 							EtlFailureData failure = new EtlFailureData(outputDocCriteria,
-									"Failure during OGER annotation.", docId, t, timestamp);
+									"Failure during CRF annotation.", docId, t, timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 
 					}
 
-//					/**
-//					 * Calls the CRF service to annotate the provided sentences and output entity
-//					 * annotations to the specified multioutputreceiver
-//					 * 
-//					 * @param tag
-//					 * @param crfServiceUri
-//					 * @param out
-//					 * @param processingStatus
-//					 * @param docId
-//					 * @param augmentedSentenceBionlp
-//					 * @throws IOException
-//					 * @throws UnsupportedEncodingException
-//					 */
-//					private void callCrfService(TupleTag<KV<ProcessingStatus, List<String>>> tag, String crfServiceUri,
-//							MultiOutputReceiver out, ProcessingStatus processingStatus, String docId,
-//							String augmentedSentenceBionlp) throws IOException, UnsupportedEncodingException {
-//						String crfOutputInBionlpPlusDocId = annotate(augmentedSentenceBionlp, docId, crfServiceUri);
-//						String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
-//						List<String> chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
-//						out.get(tag).output(KV.of(processingStatus, chunkedCrfOutput));
-//					}
+					/**
+					 * Calls the CRF service to annotate the provided sentences and output entity
+					 * annotations to the specified multioutputreceiver
+					 * 
+					 * @param tag
+					 * @param crfServiceUri
+					 * @param out
+					 * @param processingStatus
+					 * @param docId
+					 * @param augmentedSentenceBionlp
+					 * @throws IOException
+					 * @throws UnsupportedEncodingException
+					 */
+					private void callCrfService(TupleTag<KV<ProcessingStatus, List<String>>> tag, String crfServiceUri,
+							MultiOutputReceiver out, ProcessingStatus processingStatus, String docId,
+							String augmentedSentenceBionlp) throws IOException, UnsupportedEncodingException {
+						String s = augmentedSentenceBionlp.replaceAll("\\n", "").trim();
+						if (!s.isEmpty()) {
+							String crfOutputInBionlpPlusDocId = annotate(augmentedSentenceBionlp, docId, crfServiceUri);
+							String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
+							List<String> chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
+							out.get(tag).output(KV.of(processingStatus, chunkedCrfOutput));
+						}
+					}
 
 				}).withOutputTags(CRAFT_NER_ANNOTATIONS_TAG,
 						TupleTagList.of(ETL_FAILURE_TAG).and(NLMDISEASE_NER_ANNOTATIONS_TAG)));
@@ -115,9 +150,9 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 
 	private static class ServiceCaller implements Runnable {
 
-		private String crfServiceUri;
-		private String docId;
-		private String augmentedSentenceBionlp;
+		private final String crfServiceUri;
+		private final String docId;
+		private final String augmentedSentenceBionlp;
 		@Getter
 		private List<String> chunkedCrfOutput;
 
@@ -131,12 +166,15 @@ public class CrfNerFn extends DoFn<KV<String, String>, KV<String, String>> {
 		public void run() {
 
 			try {
-				String crfOutputInBionlpPlusDocId = annotate(augmentedSentenceBionlp, docId, crfServiceUri);
-				String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
-				chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
+				String s = augmentedSentenceBionlp.replaceAll("\\n", "").trim();
+				if (!s.isEmpty()) {
+					String crfOutputInBionlpPlusDocId = annotate(augmentedSentenceBionlp, docId, crfServiceUri);
+					String crfOutputInBionlp = extractBionlp(crfOutputInBionlpPlusDocId);
+					chunkedCrfOutput = PipelineMain.chunkContent(crfOutputInBionlp);
+				}
 			} catch (IOException e) {
 				throw new IllegalStateException(
-						String.format("Error during CRF service call for document ID: %s", docId));
+						String.format("Error during CRF service call for document ID: %s", docId), e);
 			}
 		}
 

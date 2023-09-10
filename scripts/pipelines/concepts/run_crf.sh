@@ -12,7 +12,9 @@ OVERWRITE=$9
 STAGE_LOCATION=${10}
 TMP_LOCATION=${11}
 OUTPUT_PIPELINE_VERSION=${12}
-JAR_VERSION=${13}
+MULTITHREADED_SERVICE_CALLS=${13}
+JAR_VERSION=${14}
+
 
 
 # TPSF="CRF_${ONT}_DONE"
@@ -28,6 +30,7 @@ echo "PROJECT: $PROJECT"
 # echo "TPSF: $TPSF"
 # echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
+echo "MULTITHREADED_SERVICE_CALLS: $MULTITHREADED_SERVICE_CALLS"
 
 java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" CRF \
 --jobName="$JOB_NAME" \
@@ -38,6 +41,7 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --augmentedSentencePipelineKey="$AUGMENTED_SENTENCE_PIPELINE_KEY" \
 --augmentedSentencePipelineVersion="$AUGMENTED_SENTENCE_PIPELINE_VERSION" \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
+--multithreadedServiceCalls="$MULTITHREADED_SERVICE_CALLS" \
 --collection="$COLLECTION" \
 --overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
@@ -47,5 +51,6 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=50 \
+--workerMachineType=n1-standard-2 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner
