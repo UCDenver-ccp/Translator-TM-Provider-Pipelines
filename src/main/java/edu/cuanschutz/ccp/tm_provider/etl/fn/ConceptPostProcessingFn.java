@@ -84,7 +84,6 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria,
 			PCollectionView<Map<String, Set<String>>> extensionToOboMapView,
-			PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView,
 			PCollectionView<Map<String, Set<String>>> ncbiTaxonAncestorMapView,
 //			PCollectionView<Map<String, Set<String>>> oboToAncestorsMapView, 
 			FilterFlag filterFlag, PipelineKey pipelineKey) {
@@ -99,9 +98,17 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						Map<String, Set<String>> extensionToOboMap = context.sideInput(extensionToOboMapView);
-						Map<String, Set<String>> idToOgerDictEntriesMap = context.sideInput(idToOgerDictEntriesMapView);
-						Map<String, Set<String>> ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
+						Map<String, Set<String>> extensionToOboMap = null;
+						if (extensionToOboMapView != null) {
+							extensionToOboMap = context.sideInput(extensionToOboMapView);
+						}
+
+						Map<String, Set<String>> ncbitaxonPromotionMap = null;
+						if (ncbiTaxonAncestorMapView != null) {
+							// if reactivating this, need to re-add the map as a side input below (at end of
+							// this method)
+							ncbitaxonPromotionMap = context.sideInput(ncbiTaxonAncestorMapView);
+						}
 
 						try {
 							// check to see if all documents are present
@@ -145,8 +152,8 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 									nonRedundantAnnots.add(PipelineMain.clone(annot));
 								}
 
-								nonRedundantAnnots = postProcess(docId, extensionToOboMap, idToOgerDictEntriesMap,
-										ncbitaxonPromotionMap, abbrevAnnots, augmentedDocumentText, nonRedundantAnnots);
+								nonRedundantAnnots = postProcess(docId, extensionToOboMap, ncbitaxonPromotionMap,
+										abbrevAnnots, augmentedDocumentText, nonRedundantAnnots);
 
 								// check for duplicates
 								List<TextAnnotation> annots = new ArrayList<TextAnnotation>(nonRedundantAnnots);
@@ -185,7 +192,7 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 						}
 					}
 
-				}).withSideInputs(extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonAncestorMapView)
+				})// .withSideInputs(ncbiTaxonAncestorMapView) //, extensionToOboMapView,)
 				.withOutputTags(ANNOTATIONS_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
@@ -206,17 +213,25 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 	 */
 	@VisibleForTesting
 	protected static Set<TextAnnotation> postProcess(String docId, Map<String, Set<String>> extensionToOboMap,
-			Map<String, Set<String>> idToOgerDictEntriesMap, Map<String, Set<String>> ncbitaxonPromotionMap,
-			Collection<TextAnnotation> abbrevAnnots, String augmentedDocumentText, Set<TextAnnotation> inputAnnots)
-			throws FileNotFoundException, IOException {
+			Map<String, Set<String>> ncbitaxonPromotionMap, Collection<TextAnnotation> abbrevAnnots,
+			String augmentedDocumentText, Set<TextAnnotation> inputAnnots) throws FileNotFoundException, IOException {
 
-		inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
-		inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
+		if (extensionToOboMap != null) {
+			inputAnnots = convertExtensionToObo(inputAnnots, extensionToOboMap);
+		}
+
+		if (ncbitaxonPromotionMap != null) {
+			inputAnnots = promoteNcbiTaxonAnnots(inputAnnots, ncbitaxonPromotionMap);
+		}
 		inputAnnots = removeNcbiStopWords(inputAnnots);
 		inputAnnots = removeAnythingWithOddBracketCount(inputAnnots);
 		inputAnnots = resolveHpMondoOverlaps(inputAnnots);
 		inputAnnots = removeIdToTextExclusionPairs(inputAnnots);
-		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
+
+		// moved to separate oger post-processing pipeline b/c its inclusion here was
+		// causing the concept post processing pipeline to stall
+//		inputAnnots = removeSpuriousMatches(inputAnnots, idToOgerDictEntriesMap);
+
 		inputAnnots = removeMatchesLessThan(inputAnnots, 4);
 
 		if (abbrevAnnots != null) {
@@ -1065,82 +1080,83 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		return toReturn;
 	}
 
-	/**
-	 * OGER sometimes matches substrings of a label and considers it a complete
-	 * match for unknown reasons. This method attempts to filter out these spurious
-	 * matches by comparing the matched text to the available dictionary entries for
-	 * the concept. If there is not substantial agreement with one of the dictionary
-	 * entries, then the match is excluded.
-	 * 
-	 * @param allAnnots
-	 * @param idToOgerDictEntriesMap
-	 * @return
-	 */
-	@VisibleForTesting
-	protected static Set<TextAnnotation> removeSpuriousMatches(Set<TextAnnotation> allAnnots,
-			Map<String, Set<String>> idToOgerDictEntriesMap) {
-		LevenshteinDistance ld = LevenshteinDistance.getDefaultInstance();
-		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>();
-
-		for (TextAnnotation annot : allAnnots) {
-			String id = annot.getClassMention().getMentionName();
-			String coveredText = annot.getCoveredText();
-			// in the hybrid abbreviation handling, we sometimes get matches that contain
-			// consecutive whitespace, e.g., from where the short form portion of an
-			// abbreviation was removed in the covered text. Here we condense consecutive
-			// spaces into a single space so that the levenshstein distance calculation
-			// below isn't adversely affected.
-			coveredText = coveredText.replaceAll("\\s+", " ");
-
-			// if the covered text is just digits and punctuation, then we will exclude it
-			if (isDigitsAndPunctOnly(coveredText)) {
-				continue;
-			}
-
-			if (idToOgerDictEntriesMap.containsKey(id)) {
-				Set<String> dictEntries = idToOgerDictEntriesMap.get(id);
-				for (String dictEntry : dictEntries) {
-					Integer dist = ld.apply(coveredText.toLowerCase(), dictEntry.toLowerCase());
-					float percentChange = (float) dist / (float) dictEntry.length();
-					if (coveredText.contains("/") && percentChange != 0.0) {
-						// slashes seem to cause lots of false positives, so we won't accept a slash in
-						// a match unless it matches 100% with one of the dictionary entries
-						continue;
-					}
-					if (percentChange < 0.3) {
-						// 0.3 allows for some change due to normalizations
-
-						// However, if the covered text is characters but the closest match is
-						// characters with a number suffix, then we exclude, e.g. per matching Per1.
-						boolean exclude = false;
-						if (dictEntry.toLowerCase().startsWith(coveredText.toLowerCase())) {
-							String suffix = StringUtil.removePrefix(dictEntry.toLowerCase(), coveredText.toLowerCase());
-							if (suffix.matches("\\d+")) {
-								exclude = true;
-//								System.out.println("Excluding due to closest match has number suffix: " + annot.getAggregateSpan().toString() + " "
-//										+ coveredText + " -- " + annot.getClassMention().getMentionName());
-							}
-						}
-
-						if (!exclude) {
-							toReturn.add(annot);
-						}
-					}
-//					System.out.println(String.format("%s -- %s == %d %f", coveredText, dictEntry, dist, percentChange));
-				}
-			}
-		}
-
-		return toReturn;
-	}
-
-	private static boolean isDigitsAndPunctOnly(String coveredText) {
-		coveredText = coveredText.replaceAll("\\d", "");
-		coveredText = coveredText.replace("\\p{Punct}", "");
-		// actually if there is just one letter left, we will still count it as digits
-		// and punct only
-		return coveredText.trim().length() < 2;
-	}
+//	/**
+//	 * Moved to the OgerPostProcessing pipeline
+//	 * OGER sometimes matches substrings of a label and considers it a complete
+//	 * match for unknown reasons. This method attempts to filter out these spurious
+//	 * matches by comparing the matched text to the available dictionary entries for
+//	 * the concept. If there is not substantial agreement with one of the dictionary
+//	 * entries, then the match is excluded.
+//	 * 
+//	 * @param allAnnots
+//	 * @param idToOgerDictEntriesMap
+//	 * @return
+//	 */
+//	@VisibleForTesting
+//	protected static Set<TextAnnotation> removeSpuriousMatches(Set<TextAnnotation> allAnnots,
+//			Map<String, String> idToOgerDictEntriesMap) {
+//		LevenshteinDistance ld = LevenshteinDistance.getDefaultInstance();
+//		Set<TextAnnotation> toReturn = new HashSet<TextAnnotation>();
+//
+//		for (TextAnnotation annot : allAnnots) {
+//			String id = annot.getClassMention().getMentionName();
+//			String coveredText = annot.getCoveredText();
+//			// in the hybrid abbreviation handling, we sometimes get matches that contain
+//			// consecutive whitespace, e.g., from where the short form portion of an
+//			// abbreviation was removed in the covered text. Here we condense consecutive
+//			// spaces into a single space so that the levenshstein distance calculation
+//			// below isn't adversely affected.
+//			coveredText = coveredText.replaceAll("\\s+", " ");
+//
+//			// if the covered text is just digits and punctuation, then we will exclude it
+//			if (isDigitsAndPunctOnly(coveredText)) {
+//				continue;
+//			}
+//
+//			if (idToOgerDictEntriesMap.containsKey(id)) {
+//				String dictEntries = idToOgerDictEntriesMap.get(id);
+//				for (String dictEntry : dictEntries.split("\\|")) {
+//					Integer dist = ld.apply(coveredText.toLowerCase(), dictEntry.toLowerCase());
+//					float percentChange = (float) dist / (float) dictEntry.length();
+//					if (coveredText.contains("/") && percentChange != 0.0) {
+//						// slashes seem to cause lots of false positives, so we won't accept a slash in
+//						// a match unless it matches 100% with one of the dictionary entries
+//						continue;
+//					}
+//					if (percentChange < 0.3) {
+//						// 0.3 allows for some change due to normalizations
+//
+//						// However, if the covered text is characters but the closest match is
+//						// characters with a number suffix, then we exclude, e.g. per matching Per1.
+//						boolean exclude = false;
+//						if (dictEntry.toLowerCase().startsWith(coveredText.toLowerCase())) {
+//							String suffix = StringUtil.removePrefix(dictEntry.toLowerCase(), coveredText.toLowerCase());
+//							if (suffix.matches("\\d+")) {
+//								exclude = true;
+////								System.out.println("Excluding due to closest match has number suffix: " + annot.getAggregateSpan().toString() + " "
+////										+ coveredText + " -- " + annot.getClassMention().getMentionName());
+//							}
+//						}
+//
+//						if (!exclude) {
+//							toReturn.add(annot);
+//						}
+//					}
+////					System.out.println(String.format("%s -- %s == %d %f", coveredText, dictEntry, dist, percentChange));
+//				}
+//			}
+//		}
+//
+//		return toReturn;
+//	}
+//
+//	private static boolean isDigitsAndPunctOnly(String coveredText) {
+//		coveredText = coveredText.replaceAll("\\d", "");
+//		coveredText = coveredText.replace("\\p{Punct}", "");
+//		// actually if there is just one letter left, we will still count it as digits
+//		// and punct only
+//		return coveredText.trim().length() < 2;
+//	}
 
 	@VisibleForTesting
 	protected static Set<TextAnnotation> removeIdToTextExclusionPairs(Set<TextAnnotation> annots) {
@@ -1235,12 +1251,11 @@ public class ConceptPostProcessingFn extends DoFn<KV<String, String>, KV<String,
 		List<String> idList = new ArrayList<String>(ids);
 
 		for (int i = 0; i < idList.size(); i++) {
+			String id1 = idList.get(i);
+			Set<String> ancestors1 = ncbitaxonAncestorMap.get(id1);
 			for (int j = 0; j < idList.size(); j++) {
 				if (i != j) {
-					String id1 = idList.get(i);
 					String id2 = idList.get(j);
-
-					Set<String> ancestors1 = ncbitaxonAncestorMap.get(id1);
 					if (ancestors1.contains(id2)) {
 						toKeep.remove(id1);
 					} else {

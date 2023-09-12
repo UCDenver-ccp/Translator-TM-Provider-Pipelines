@@ -146,7 +146,11 @@ public interface DatastoreConstants {
 
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE = "concept_pp";
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
+	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_1_DONE = "oger_pp1";
+	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_2_DONE = "oger_pp2";
 
+	
+	
 	/**
 	 * Concept cooccurrence count status
 	 */

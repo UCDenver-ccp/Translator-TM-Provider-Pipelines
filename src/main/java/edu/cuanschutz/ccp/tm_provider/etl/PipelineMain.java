@@ -120,7 +120,7 @@ public class PipelineMain {
 	public enum MultithreadedServiceCalls {
 		ENABLED, DISABLED
 	}
-	
+
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 
@@ -149,6 +149,9 @@ public class PipelineMain {
 				break;
 			case CONCEPT_POST_PROCESS:
 				ConceptPostProcessingPipeline.main(pipelineArgs);
+				break;
+			case OGER_POST_PROCESS:
+				OgerPostProcessingPipeline.main(pipelineArgs);
 				break;
 			case CONCEPT_ANNOTATION_EXPORT:
 				ConceptAnnotationExportPipeline.main(pipelineArgs);
@@ -998,7 +1001,14 @@ public class PipelineMain {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 
 		// document text is needed to parse some of the document formats
-		String documentText = getDocumentText(inputDocuments, documentId);
+		// we will check to see if the DocumentType.AUGMENTED_TEXT is present -- if it
+		// is, then we will retrieve the augmented document text
+		String documentText = null;
+		if (containsDocumentType(inputDocuments, DocumentType.AUGMENTED_TEXT)) {
+			documentText = getAugmentedDocumentText(inputDocuments, documentId);
+		} else {
+			documentText = getDocumentText(inputDocuments, documentId);
+		}
 
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentType documentType = entry.getKey().getDocumentType();
@@ -1057,6 +1067,23 @@ public class PipelineMain {
 		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE, documentId);
 		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE, documentId);
 		return originalSentBionlp + "\n" + augSentBionlp;
+	}
+
+	/**
+	 * Returns true if the inputDocuments contains a document of the specified type
+	 * 
+	 * @param inputDocuments
+	 * @param docType
+	 * @return
+	 */
+	public static boolean containsDocumentType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType) {
+		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
+			DocumentCriteria documentCriteria = entry.getKey();
+			if (documentCriteria.getDocumentType() == docType) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1226,9 +1253,13 @@ public class PipelineMain {
 				addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(annots), DocumentType.CONCEPT_HP,
 						crfOrConcept);
 			} else if (documentType == DocumentType.CRF_CRAFT || documentType == DocumentType.CONCEPT_CIMAX
-					|| documentType == DocumentType.CONCEPT_CIMIN || documentType == DocumentType.CONCEPT_CS) {
+					|| documentType == DocumentType.CONCEPT_CIMIN || documentType == DocumentType.CONCEPT_CS
+					|| documentType == DocumentType.CONCEPT_OGER_PP1 || documentType == DocumentType.CONCEPT_OGER_PP2) {
 				// these documents have a mix of concept types, so we need to add them to the
-				// map individually
+				// map individually -- note only CONCEPT_OGER_PP2 is needed here likely but the
+				// others are kept as they were used in the past before we had to split up the
+				// post_processing (because the pipeline was stalling b/c the side inputs were
+				// too large)
 				for (TextAnnotation annot : annots) {
 					DocumentType indexType = getDocumentType(annot);
 					if (indexType != null) {

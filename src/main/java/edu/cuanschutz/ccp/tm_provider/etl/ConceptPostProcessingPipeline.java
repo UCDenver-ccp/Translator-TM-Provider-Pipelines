@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -24,7 +23,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.FilterFlag;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
@@ -69,20 +67,20 @@ public class ConceptPostProcessingPipeline {
 
 		void setRequiredProcessingStatusFlags(String flags);
 
-		@Description("path to the ID-to-Oger-Dict-Entry map file")
-		String getIdToOgerDictEntryMapFilePath();
+//		@Description("path to the ID-to-Oger-Dict-Entry map file")
+//		String getIdToOgerDictEntryMapFilePath();
+//
+//		void setIdToOgerDictEntryMapFilePath(String path);
+//
+//		@Description("delimiter used to separate columns in the ID-to-Oger-Dict-Entry map file")
+//		Delimiter getIdToOgerDictEntryMapFileDelimiter();
+//
+//		void setIdToOgerDictEntryMapFileDelimiter(Delimiter delimiter);
 
-		void setIdToOgerDictEntryMapFilePath(String path);
-
-		@Description("delimiter used to separate columns in the ID-to-Oger-Dict-Entry map file")
-		Delimiter getIdToOgerDictEntryMapFileDelimiter();
-
-		void setIdToOgerDictEntryMapFileDelimiter(Delimiter delimiter);
-
-		@Description("delimiter used to separate values in the 2nd column in the ID-to-Oger-Dict-Entry map file")
-		Delimiter getIdToOgerDictEntryMapFileSetDelimiter();
-
-		void setIdToOgerDictEntryMapFileSetDelimiter(Delimiter delimiter);
+//		@Description("delimiter used to separate values in the 2nd column in the ID-to-Oger-Dict-Entry map file")
+//		Delimiter getIdToOgerDictEntryMapFileSetDelimiter();
+//
+//		void setIdToOgerDictEntryMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("path to the NCBITaxon promotion map file")
 		String getNcbiTaxonPromotionMapFilePath();
@@ -134,10 +132,10 @@ public class ConceptPostProcessingPipeline {
 
 		void setFilterFlag(FilterFlag value);
 
-		@Description("Should be either ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE or ProcessingStatusFlag.CONCEPT_POST_PROCESSING_UNFILTERED_DONE;")
-		ProcessingStatusFlag getTargetProcessingStatusFlag();
-
-		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
+//		@Description("Should be either ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE or ProcessingStatusFlag.CONCEPT_POST_PROCESSING_UNFILTERED_DONE;")
+//		ProcessingStatusFlag getTargetProcessingStatusFlag();
+//
+//		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
 
 //		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
 //		String getAncestorMapFilePath();
@@ -161,7 +159,13 @@ public class ConceptPostProcessingPipeline {
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 
-		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
+		ProcessingStatusFlag targetProcessingStatusFlag = null;
+		if (options.getFilterFlag() == FilterFlag.BY_CRF) {
+			targetProcessingStatusFlag = ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE;
+		} else {
+			targetProcessingStatusFlag = ProcessingStatusFlag.CONCEPT_POST_PROCESSING_UNFILTERED_DONE;
+		}
+
 		Pipeline p = Pipeline.create(options);
 
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = PipelineMain
@@ -174,33 +178,33 @@ public class ConceptPostProcessingPipeline {
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
 						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
 
-		final PCollectionView<Map<String, Set<String>>> extensionToOboMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles("ext-to-obo map", p, options.getExtensionMapFilePath(),
-						options.getExtensionMapFileDelimiter(), options.getExtensionMapFileSetDelimiter(),
-						Compression.GZIP)
-				.apply(View.<String, Set<String>>asMap());
+		final PCollectionView<Map<String, Set<String>>> extensionToOboMapView = null;
+		// we are not currenlty using extension ontology from CRAFT, so we comment this
+		// out to reduce resource requirements
+//		final PCollectionView<Map<String, Set<String>>> extensionToOboMapView = PCollectionUtil
+//				.fromKeyToSetTwoColumnFiles("ext-to-obo map", p, options.getExtensionMapFilePath(),
+//						options.getExtensionMapFileDelimiter(), options.getExtensionMapFileSetDelimiter(),
+//						Compression.GZIP)
+//				.apply(View.<String, Set<String>>asMap());
 
-//		final PCollectionView<Map<String, String>> prPromotionMapView = PCollectionUtil
-//				.fromTwoColumnFiles("pr-promotion map", p, options.getPrPromotionMapFilePath(),
-//						options.getPrPromotionMapFileDelimiter(), Compression.GZIP)
+		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = null;
+//		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = PCollectionUtil
+//				.fromKeyToSetTwoColumnFiles("ncbitaxon promotion map", p, options.getNcbiTaxonPromotionMapFilePath(),
+//						options.getNcbiTaxonPromotionMapFileDelimiter(),
+//						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
+//				.apply(View.<String, Set<String>>asMap());
+
+		// pipeline was stalling when we brought in this map
+//		final PCollectionView<Map<String, String>> idToOgerDictEntriesMapView = PCollectionUtil
+//				.fromTwoColumnFiles("id to oger dict entry map part1", p, options.getIdToOgerDictEntryMapFilePath(),
+//						options.getIdToOgerDictEntryMapFileDelimiter(), Compression.GZIP)
 //				.apply(View.<String, String>asMap());
 
-		final PCollectionView<Map<String, Set<String>>> ncbiTaxonPromotionMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles("ncbitaxon promotion map", p, options.getNcbiTaxonPromotionMapFilePath(),
-						options.getNcbiTaxonPromotionMapFileDelimiter(),
-						options.getNcbiTaxonPromotionMapFileSetDelimiter(), Compression.GZIP)
-				.apply(View.<String, Set<String>>asMap());
-
-		final PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView = PCollectionUtil
-				.fromKeyToSetTwoColumnFiles("id to oger dict entry map", p, options.getIdToOgerDictEntryMapFilePath(),
-						options.getIdToOgerDictEntryMapFileDelimiter(),
-						options.getIdToOgerDictEntryMapFileSetDelimiter(), Compression.GZIP)
-				.apply(View.<String, Set<String>>asMap());
-
-		// ancestormap is no longer needed
-//		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil
-//				.fromKeyToSetTwoColumnFiles("ancestor map",p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
-//						options.getAncestorMapFileSetDelimiter(), Compression.GZIP)
+//		final PCollectionView<Map<String, Set<String>>> idToOgerDictEntriesMapView =
+//				PCollectionUtil
+//				.fromKeyToSetTwoColumnFiles("id to oger dict entry map", p, options.getIdToOgerDictEntryMapFilePath(),
+//						options.getIdToOgerDictEntryMapFileDelimiter(),
+//						options.getIdToOgerDictEntryMapFileSetDelimiter(), Compression.GZIP)
 //				.apply(View.<String, Set<String>>asMap());
 
 		DocumentType outputDocumentType = DocumentType.CONCEPT_ALL;
@@ -212,8 +216,8 @@ public class ConceptPostProcessingPipeline {
 				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		PCollectionTuple output = ConceptPostProcessingFn.process(statusEntity2Content, outputDocCriteria, timestamp,
-				inputDocCriteria, extensionToOboMapView, idToOgerDictEntriesMapView, ncbiTaxonPromotionMapView, // ancestorMapView,
-				options.getFilterFlag(), PIPELINE_KEY);
+				inputDocCriteria, extensionToOboMapView, ncbiTaxonPromotionMapView, options.getFilterFlag(),
+				PIPELINE_KEY);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToAnnotation = output
 				.get(ConceptPostProcessingFn.ANNOTATIONS_TAG);

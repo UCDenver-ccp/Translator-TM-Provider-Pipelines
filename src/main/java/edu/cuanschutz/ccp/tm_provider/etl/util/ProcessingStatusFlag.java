@@ -29,6 +29,8 @@ import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_MOP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_MP_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_NCBITAXON_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_POST_PROCESSING_PART_1_DONE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_POST_PROCESSING_PART_2_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_PR_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_SO_DONE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_OGER_UBERON_DONE;
@@ -282,7 +284,8 @@ public enum ProcessingStatusFlag {
 	SENTENCE_COOCCURRENCE_EXPORT_DONE(STATUS_PROPERTY_SENTENCE_COOCCURRENCE_EXPORT_DONE),
 	TEXT_EXTRACTION(STATUS_PROPERTY_TEXT_EXTRACTION_DONE), CONLL03(STATUS_PROPERTY_CONLL03_DONE),
 	FILTER_UNACTIONABLE_DONE(STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE), CRF_DONE(STATUS_PROPERTY_CRF_DONE),
-	OGER_DONE(STATUS_PROPERTY_OGER_DONE);
+	OGER_DONE(STATUS_PROPERTY_OGER_DONE), OGER_PP1_DONE(STATUS_PROPERTY_OGER_POST_PROCESSING_PART_1_DONE),
+	OGER_PP2_DONE(STATUS_PROPERTY_OGER_POST_PROCESSING_PART_2_DONE);
 
 	@Getter
 	private final String datastoreFlagPropertyName;

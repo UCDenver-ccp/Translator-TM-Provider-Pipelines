@@ -1,11 +1,9 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -18,14 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.Overlap;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.AugmentedSentence;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptPostProcessingFn.Overlap;
 import edu.cuanschutz.ccp.tm_provider.oger.dict.UtilityOgerDictFileFactory;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
@@ -137,68 +132,6 @@ public class ConceptPostProcessingFnTest {
 
 		assertEquals("annot2 is the only on that should remain.", expectedOutputAnnots, outputAnnots);
 
-	}
-
-	@Test
-	public void testRemoveSpuriousMatches() {
-
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
-
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
-		idToOgerDictEntriesMap.put("PR:O74957",
-				new HashSet<String>(Arrays.asList("Spom972h-ago1", "PAZ Piwi domain protein ago1")));
-
-		idToOgerDictEntriesMap.put("PR:000012547", new HashSet<String>(Arrays.asList("Per1")));
-
-		TextAnnotation legitAnnot1 = factory.createAnnotation(0, 28, "PAZ Piwi domain protein ago1", "PR:O74957");
-		TextAnnotation legitAnnot2 = factory.createAnnotation(0, 30, "PAZ Piwi domain protein (ago1)", "PR:O74957");
-		TextAnnotation spuriousAnnot1 = factory.createAnnotation(0, 6, "ago [1", "PR:O74957");
-
-		Set<TextAnnotation> allAnnots = new HashSet<TextAnnotation>(
-				Arrays.asList(legitAnnot1, legitAnnot2, spuriousAnnot1));
-		Set<TextAnnotation> updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots,
-				idToOgerDictEntriesMap);
-		Set<TextAnnotation> expectedUpdatedAnnotations = new HashSet<TextAnnotation>(
-				Arrays.asList(legitAnnot1, legitAnnot2));
-		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
-
-		TextAnnotation spuriousAnnot2 = factory.createAnnotation(0, 4, "per", "PR:000012547");
-
-		allAnnots = new HashSet<TextAnnotation>(Arrays.asList(spuriousAnnot2));
-		updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots, idToOgerDictEntriesMap);
-		expectedUpdatedAnnotations = new HashSet<TextAnnotation>(Arrays.asList());
-		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
-
-		TextAnnotation spuriousAnnot3 = factory.createAnnotation(0, 4, "12.3", "PR:000012547");
-
-		allAnnots = new HashSet<TextAnnotation>(Arrays.asList(spuriousAnnot3));
-		updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots, idToOgerDictEntriesMap);
-		expectedUpdatedAnnotations = new HashSet<TextAnnotation>(Arrays.asList());
-		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
-
-	}
-
-	@Test
-	public void testRemoveSpuriousMatches_UnexpectedGoCcExclusions() {
-
-		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("PMID:12345");
-
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
-		idToOgerDictEntriesMap.put("GO:0030424", new HashSet<String>(Arrays.asList("axon")));
-		idToOgerDictEntriesMap.put("GO:0005764", new HashSet<String>(Arrays.asList("lysosome")));
-		idToOgerDictEntriesMap.put("GO:0005737", new HashSet<String>(Arrays.asList("cytoplasm")));
-
-		TextAnnotation legitAnnot1 = factory.createAnnotation(0, 5, "axons", "GO:0030424");
-		TextAnnotation legitAnnot2 = factory.createAnnotation(0, 9, "lysosomal", "GO:0005764");
-		TextAnnotation legitAnnot3 = factory.createAnnotation(0, 9, "cytoplasmic", "GO:0005737");
-
-		Set<TextAnnotation> allAnnots = new HashSet<TextAnnotation>(
-				Arrays.asList(legitAnnot1, legitAnnot2, legitAnnot3));
-		Set<TextAnnotation> updatedAnnotations = ConceptPostProcessingFn.removeSpuriousMatches(allAnnots,
-				idToOgerDictEntriesMap);
-		Set<TextAnnotation> expectedUpdatedAnnotations = new HashSet<TextAnnotation>(
-				Arrays.asList(legitAnnot1, legitAnnot2, legitAnnot3));
-		assertEquals(expectedUpdatedAnnotations, updatedAnnotations);
 	}
 
 	@Test
@@ -1008,7 +941,8 @@ public class ConceptPostProcessingFnTest {
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		Map<String, String> idToOgerDictEntriesMap = new HashMap<String, String>();
+		Map<String, String> idToOgerDictEntriesMapPart2 = new HashMap<String, String>();
 		Collection<TextAnnotation> abbrevAnnots = new HashSet<TextAnnotation>();
 
 		TextAnnotation abbrevAnnot1 = factory.createAnnotation(0, 24, "Enhanced S-cone syndrome", "long_form");
@@ -1026,56 +960,69 @@ public class ConceptPostProcessingFnTest {
 		abbrevAnnots.add(abbrevAnnot1);
 		abbrevAnnots.add(abbrevAnnot3);
 
-		CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0100288", "enhanced S-cone syndrome", idToOgerDictEntriesMap);
+//		CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0100288", "enhanced S-cone syndrome", idToOgerDictEntriesMap);
+		idToOgerDictEntriesMap.put("MONDO:0100288", "enhanced S-cone syndrome");
 
 		String entries = "short-wavelength-sensitive (S) cone|S cone|short wavelength sensitive cone|S-cone photoreceptor|S-cone|short- (S) wavelength-sensitive cone|S cone cell|short-wavelength sensitive cone|S-(short-wavelength sensitive) cone";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("CL:0003050", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("CL:0003050", entries);
+
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("CL:0003050", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Nr2e3|RP37|rd7|UniProtKB:Q9QXZ7-1, 1-352|NR2E3|photoreceptor-specific nuclear receptor|mNR2E3/iso:m2|mNR2E3/iso:m1|PNR|RT06950p1|RNR|nuclear receptor subfamily 2 group E member 3|A930035N01Rik|photoreceptor-specific nuclear receptor isoform m2|photoreceptor-specific nuclear receptor isoform m1|mNR2E3|hNR2E3/iso:Short|Rp37|photoreceptor-specific nuclear receptor short form|photoreceptor-specific nuclear receptor long form|photoreceptor-specific nuclear receptor isoform Long|hormone receptor 51|hNR2E3/iso:Long|fly-NR2E3|photoreceptor-specific nuclear receptor isoform Short|nuclear receptor subfamily 2, group E, member 3|hNR2E3|ESCS|retina-specific nuclear receptor";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("PR:000011403", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("PR:000011403", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("PR:000011403", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "photoreceptor|photoreceptor activity";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("GO:0009881", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("GO:0009881", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("GO:0009881", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "nyctalopia|night blindness";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0004588", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("MONDO:0004588", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0004588", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Night blindness|Nyctalopia|Night-blindness|Poor night vision";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("HP:0000662", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("HP:0000662", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("HP:0000662", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Abnormal electroretinography|ERG abnormal|Abnormal ERG|Abnormal electroretinogram";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("HP:0000512", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("HP:0000512", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("HP:0000512", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Electroretinography|ERG - electroretinography|Electroretinogram|Electroretinography with medical evaluation|Electroretinogram with medical evaluation|ERG - Electroretinography|Electroretinography with medical evaluation (procedure)|Electroretinography (procedure)";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:6615001", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("SNOMEDCT:6615001", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:6615001", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "mERG/iso:7|erg-3|hERG/iso:h6|transcriptional regulator ERG isoform h5|transcriptional regulator ERG isoform 1|p55|transcriptional regulator ERG isoform h6|transcriptional regulator ERG isoform 2|mERG/iso:exon4-containing|transcriptional regulator ERG isoform 5|transcriptional regulator ERG isoform 6|transcriptional regulator ERG isoform 3|transcriptional regulator ERG isoform 4|transcriptional regulator ERG isoform h4|transcriptional regulator ERG isoform ERG-2|transcriptional regulator ERG isoform 7|transcriptional regulator ERG isoform ERG-3|hERG/iso:ERG-3|hERG/iso:ERG-2|mERG|mERG/iso:exon3-containing|hERG|transforming protein ERG|transcriptional regulator ERG isoform ERG-1|D030036I24Rik|transcriptional regulator ERG|transcriptional regulator Erg|transcriptional regulator ERG isoform containing exon 3|transcriptional regulator ERG isoform containing exon 4|ETS transcription factor|ETS transcription factor ERG|chick-ERG|hERG/iso:h4|hERG/iso:h5|ERG/iso:4|hERG/iso:5|ERG/iso:3|mERG/iso:2|ERG/iso:1|mERG/iso:1|ERG|Erg|mERG/iso:6|mERG/iso:5|mERG/iso:3";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007173", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("PR:000007173", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007173", s, idToOgerDictEntriesMap);
+//		}
 
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:1990603", "dark adaptation", idToOgerDictEntriesMap);
+//		CollectionsUtil.addToOne2ManyUniqueMap("GO:1990603", "dark adaptation", idToOgerDictEntriesMap);
+		idToOgerDictEntriesMap.put("GO:1990603", "dark adaptation");
 
 		entries = "Antimicrobial susceptibility test (procedure)|Sensitivity|Antimicrobial susceptibility test|Antimicrobial susceptibility test, NOS|Sensitivities";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:14788002", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("SNOMEDCT:14788002", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:14788002", s, idToOgerDictEntriesMap);
+//		}
 
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:0046960", "sensitization", idToOgerDictEntriesMap);
+//		CollectionsUtil.addToOne2ManyUniqueMap("GO:0046960", "sensitization", idToOgerDictEntriesMap);
+		idToOgerDictEntriesMap.put("GO:0046960", "sensitization");
 
 		String documentText = "Enhanced S-cone syndrome (ESCS) is an unusual disease of photoreceptors that includes night blindness (suggestive of rod dysfunction), an abnormal electroretinogram (ERG) with a waveform that is nearly identical under both light and dark adaptation, and an increased sensitivity of the ERG to short-wavelength light."
 				+ "\n" + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER + "\n";
@@ -1115,7 +1062,7 @@ public class ConceptPostProcessingFnTest {
 				annot5, annot6, annot7, annot8, annot9, annot10, annot11, annot12, annot13, annot14, annot15));
 
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
-				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, documentText, inputAnnots);
+				ncbitaxonPromotionMap, abbrevAnnots, documentText, inputAnnots);
 
 		TextAnnotation annot16 = factory.createAnnotation(26, 30, "ESCS", "MONDO:0100288");
 
@@ -1127,8 +1074,10 @@ public class ConceptPostProcessingFnTest {
 				annot7,
 				// annot8, - excluded b/c it's nested in annot7
 				// annot9, annot10, - excluded because they are a short form of an abbreviation
-				annot11, annot12
-		// , annot13 - excluded b/c sensitivity is not close enough to sensitization,
+				annot11, annot12, annot13 // annot13 no longer excluded b/c removespuriousmatches was moved to a
+											// separate
+											// pipeline. - excluded b/c sensitivity is not close enough to
+											// sensitization,
 		// annot14, annot15 - excluded because they are a short form of an abbreviation
 		));
 
@@ -1159,6 +1108,7 @@ public class ConceptPostProcessingFnTest {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
+	@Ignore("Ignoring this, hopefully temporarily, while we have disabled ncbitaxon promotion b/c the pipeline is stalling during the ncbi promotion step.")
 	@Test
 	public void testPostProcess2() throws FileNotFoundException, IOException {
 
@@ -1166,20 +1116,24 @@ public class ConceptPostProcessingFnTest {
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		Map<String, String> idToOgerDictEntriesMap = new HashMap<String, String>();
+		Map<String, String> idToOgerDictEntriesMapPart2 = new HashMap<String, String>();
 		Collection<TextAnnotation> abbrevAnnots = new HashSet<TextAnnotation>();
 
 		String entries = "NCBITaxon:9989|NCBITaxon:1|NCBITaxon:7742|NCBITaxon:2759|NCBITaxon:1437010|NCBITaxon:6072|NCBITaxon:33208|NCBITaxon:131567|NCBITaxon:9347|NCBITaxon:117571|NCBITaxon:117570|NCBITaxon:10066|NCBITaxon:39107|NCBITaxon:7711|NCBITaxon:7776|NCBITaxon:337687|NCBITaxon:314147|NCBITaxon:1338369|NCBITaxon:40674|NCBITaxon:314146|NCBITaxon:32524|NCBITaxon:89593|NCBITaxon:32525|NCBITaxon:32523|NCBITaxon:33213|NCBITaxon:33511|NCBITaxon:1963758|NCBITaxon:8287|NCBITaxon:33154";
+		idToOgerDictEntriesMap.put("", entries);
 		for (String s : entries.split("\\|")) {
 			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10088", s, ncbitaxonPromotionMap);
 		}
 
 		entries = "NCBITaxon:9989|NCBITaxon:1|NCBITaxon:7742|NCBITaxon:2759|NCBITaxon:1437010|NCBITaxon:6072|NCBITaxon:941326|NCBITaxon:33208|NCBITaxon:131567|NCBITaxon:9347|NCBITaxon:117571|NCBITaxon:117570|NCBITaxon:10088|NCBITaxon:10066|NCBITaxon:39107|NCBITaxon:7711|NCBITaxon:7776|NCBITaxon:337687|NCBITaxon:314147|NCBITaxon:1338369|NCBITaxon:40674|NCBITaxon:314146|NCBITaxon:32524|NCBITaxon:89593|NCBITaxon:32525|NCBITaxon:32523|NCBITaxon:33213|NCBITaxon:33511|NCBITaxon:1963758|NCBITaxon:8287|NCBITaxon:33154";
+		idToOgerDictEntriesMap.put("", entries);
 		for (String s : entries.split("\\|")) {
 			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10095", s, ncbitaxonPromotionMap);
 		}
 
 		entries = "NCBITaxon:91835|NCBITaxon:3887|NCBITaxon:35493|NCBITaxon:1|NCBITaxon:33090|NCBITaxon:3803|NCBITaxon:2759|NCBITaxon:71240|NCBITaxon:131567|NCBITaxon:131221|NCBITaxon:2231393|NCBITaxon:78536|NCBITaxon:58024|NCBITaxon:58023|NCBITaxon:3398|NCBITaxon:91827|NCBITaxon:163743|NCBITaxon:2233839|NCBITaxon:2233838|NCBITaxon:3814|NCBITaxon:71275|NCBITaxon:1437201|NCBITaxon:2231382|NCBITaxon:1437183|NCBITaxon:72025|NCBITaxon:3193";
+		idToOgerDictEntriesMap.put("", entries);
 		for (String s : entries.split("\\|")) {
 			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:3888", s, ncbitaxonPromotionMap);
 		}
@@ -1193,51 +1147,61 @@ public class ConceptPostProcessingFnTest {
 		abbrevAnnots.add(abbrevAnnot1);
 
 		entries = "mEWSR1|Ewsh|bK984G1.4|hEWSR1/iso:EWS-B|Ewing sarcoma breakpoint region 1 protein|RNA-binding protein EWS isoform EWS|hEWSR1/iso:h3|EWS-FLI1|Ewing sarcoma breakpoint region 1|hEWSR1/iso:h6|hEWSR1/iso:h5|hEWSR1/iso:h4|EWS|Ews|RNA-binding protein EWS|ewing sarcoma breakpoint region 1 protein|Ewsr1|RNA-binding protein EWS isoform EWS-B|RNA-binding protein EWS isoform h6|EWS RNA binding protein 1|EWSR1|hEWSR1|RNA-binding protein EWS isoform h3|RNA-binding protein EWS isoform h4|RNA-binding protein EWS isoform h5|EWS oncogene|hEWSR1/iso:EWS";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007243", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("PR:000007243", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007243", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "ETS translocation variant 4 isoform h3|Pea-3|protein PEA3|z-ETV4|E1A-F|ETS translocation variant 4 isoform h2|ETS translocation variant 4 isoform h1|E1AF|ETS translocation variant 4|mETV4|Peas3|PEA3|Pea3|hETV4/iso:h1|polyomavirus enhancer activator 3 homolog|hETV4/iso:h2|hETV4/iso:h3|ETS translocation variant 4 isoform m1|ets variant 4|PEAS3|ETS translocation variant 4 isoform m2|Etv4|ETV4|hETV4|adenovirus E1A enhancer-binding protein|ETS variant transcription factor 4|polyomavirus enhancer activator 3|mETV4/iso:m1|mETV4/iso:m2";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007227", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("PR:000007227", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("PR:000007227", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "mouse|Mus|mice|Mus <genus>";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10088", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("NCBITaxon:10088", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10088", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Mus sp.|mice";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10095", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("NCBITaxon:10095", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:10095", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "peas|Pisum sativum|garden pea|pea";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:3888", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("NCBITaxon:3888", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("NCBITaxon:3888", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Fusion procedure (procedure)|Fusion procedure|Fusion";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:122501008", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("SNOMEDCT:122501008", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("SNOMEDCT:122501008", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Ewing sarcoma|Ewing's sarcoma";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("HP:0012254", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("HP:0012254", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("HP:0012254", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "Ewing's family localized tumor|PNET of Thoracopulmonary region|Ewing sarcoma|Ewing's tumor|Ewing's sarcoma|Ewings sarcoma";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0012817", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("MONDO:0012817", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("MONDO:0012817", s, idToOgerDictEntriesMap);
+//		}
 
 		entries = "gene|genes|INSDC_feature:gene";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("SO:0000704", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("SO:0000704", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("SO:0000704", s, idToOgerDictEntriesMap);
+//		}
 
-		CollectionsUtil.addToOne2ManyUniqueMap("GO:0003677", "DNA binding", idToOgerDictEntriesMap);
+//		CollectionsUtil.addToOne2ManyUniqueMap("GO:0003677", "DNA binding", idToOgerDictEntriesMap);
+		idToOgerDictEntriesMap.put("GO:0003677", "DNA binding");
 
 		String documentText = "These findings prompted us to analyze mice in which we integrated EWS-Pea3, a break-point fusion product between the amino-terminal domain of the Ewing sarcoma (EWS) gene and the Pea3 DNA binding domain."
 				+ "\n" + UtilityOgerDictFileFactory.DOCUMENT_END_MARKER + "\n";
@@ -1277,7 +1241,7 @@ public class ConceptPostProcessingFnTest {
 				annot5, annot6, annot7, annot8, annot9, annot10, annot11, annot12, annot13, annot14, annot15));
 
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
-				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, documentText, inputAnnots);
+				ncbitaxonPromotionMap, abbrevAnnots, documentText, inputAnnots);
 
 		// these two annotations get added due to abbreviation propagation
 		TextAnnotation annot16 = factory.createAnnotation(66, 69, "EWS", "MONDO:0012817");
@@ -1380,16 +1344,19 @@ public class ConceptPostProcessingFnTest {
 		String docId = "craft-11597317";
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		Map<String, String> idToOgerDictEntriesMap = new HashMap<String, String>();
+		Map<String, String> idToOgerDictEntriesMapPart2 = new HashMap<String, String>();
 
 		String entries = "ESC|embryonic stem cell";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("CL:0002322", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+//		}
 		entries = "stem";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("UBERON:1", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
+//		}
 
 		Collection<TextAnnotation> abbrevAnnots = get11597317ClAbbrevAnnots();
 		Set<TextAnnotation> ogerAnnots = new HashSet<TextAnnotation>(get11597317ClOgerAnnots());
@@ -1398,7 +1365,7 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(2, ogerAnnots.size());
 
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
-				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+				ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
 
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
 		String coveredText = "embryonic stem (ES) cells";
@@ -1429,16 +1396,19 @@ public class ConceptPostProcessingFnTest {
 		String docId = "craft-11597317";
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		Map<String, String> idToOgerDictEntriesMap = new HashMap<String, String>();
+		Map<String, String> idToOgerDictEntriesMapPart2 = new HashMap<String, String>();
 
 		String entries = "embryonic stem cell";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("CL:0002322", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+//		}
 		entries = "embryonic stem cell";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("UBERON:1", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
+//		}
 
 		String abbreviationsBionlp = "T1\tUBERON:1 2709 2734\tembryonic stem      cells\n"
 				+ "T2\tCL:0002322 2709 2734\tembryonic stem      cells\n";
@@ -1456,7 +1426,7 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(2, ogerAnnots.size());
 
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
-				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+				ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
 
 		// the same two annotations should still be present
 		assertEquals(2, postProcessedAnnots.size());
@@ -1473,16 +1443,18 @@ public class ConceptPostProcessingFnTest {
 		String docId = "craft-11597317";
 		Map<String, Set<String>> extensionToOboMap = new HashMap<String, Set<String>>();
 		Map<String, Set<String>> ncbitaxonPromotionMap = new HashMap<String, Set<String>>();
-		Map<String, Set<String>> idToOgerDictEntriesMap = new HashMap<String, Set<String>>();
+		Map<String, String> idToOgerDictEntriesMap = new HashMap<String, String>();
 
 		String entries = "embryonic stem cell";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("CL:0002322", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("CL:0002322", s, idToOgerDictEntriesMap);
+//		}
 		entries = "Brca1-/- embryonic stem";
-		for (String s : entries.split("\\|")) {
-			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
-		}
+		idToOgerDictEntriesMap.put("UBERON:1", entries);
+//		for (String s : entries.split("\\|")) {
+//			CollectionsUtil.addToOne2ManyUniqueMap("UBERON:1", s, idToOgerDictEntriesMap);
+//		}
 
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults(docId);
 		TextAnnotation clAnnot = factory.createAnnotation(2709, 2734, "embryonic stem      cells", "CL:0002322");
@@ -1495,7 +1467,7 @@ public class ConceptPostProcessingFnTest {
 		assertEquals(2, ogerAnnots.size());
 
 		Set<TextAnnotation> postProcessedAnnots = ConceptPostProcessingFn.postProcess(docId, extensionToOboMap,
-				idToOgerDictEntriesMap, ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
+				ncbitaxonPromotionMap, abbrevAnnots, augmentedDocText, ogerAnnots);
 
 		// the UBERON concept should remain b/c it appears first in the document (this
 		// is an arbitrary inclusion criteria that is being used)
