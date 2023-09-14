@@ -51,6 +51,6 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=50 \
---workerMachineType=n1-standard-2 \
+--workerMachineType=n1-highmem-2 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --runner=DataflowRunner
