@@ -12,6 +12,7 @@ import org.apache.beam.examples.subprocess.configuration.SubProcessConfiguration
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -115,7 +116,7 @@ public class AbbreviationAb3pPipeline {
 		void setOverwrite(OverwriteOutput value);
 
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
-		@Required
+		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
 
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
