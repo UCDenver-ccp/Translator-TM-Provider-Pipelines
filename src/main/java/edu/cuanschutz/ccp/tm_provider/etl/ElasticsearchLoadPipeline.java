@@ -10,6 +10,7 @@ import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO.BulkIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO.ConnectionConfiguration;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO.DocToBulk;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -54,11 +55,13 @@ public class ElasticsearchLoadPipeline {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
 				+ "delimited between different document criteria and pipe-delimited within document criteria, "
 				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0")
+		@Required
 		String getInputDocumentCriteria();
 
 		void setInputDocumentCriteria(String docCriteria);
 
 		@Description("pipe-delimited list of processing status flags that will be used to query for status entities from Datastore")
+		@Required
 		String getRequiredProcessingStatusFlags();
 
 		void setRequiredProcessingStatusFlags(String flags);
@@ -69,42 +72,49 @@ public class ElasticsearchLoadPipeline {
 //		void setDocTypeToCount(DocumentType value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("The document collection to process")
+		@Required
 		SentenceInclusionFlag getSentenceInclusionFlag();
 
 		void setSentenceInclusionFlag(SentenceInclusionFlag value);
 
 		@Description("The DocumentType from which to extract the concept annotations - CONCEPT_ALL or CONCEPT_ALL_UNFILTERED")
+		@Required
 		DocumentType getConceptDocumentType();
 
 		void setConceptDocumentType(DocumentType value);
 
 		@Description("Elasticsearch URLs - pipe-delimited String")
+		@Required
 		String getElasticsearchAddresses();
 
 		void setElasticsearchAddresses(String indexName);
 
 		@Description("Elasticsearch index name")
+		@Required
 		String getElasticsearchIndexName();
 
 		void setElasticsearchIndexName(String indexName);
 
 		@Description("Elasticsearch API key")
+		@Required
 		String getElasticsearchApiKey();
 
 		void setElasticsearchApiKey(String apiKey);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 		
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
-		@Required
+		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
 		
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);

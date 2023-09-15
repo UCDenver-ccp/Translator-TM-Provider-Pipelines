@@ -73,16 +73,19 @@ public class CollectionAssignmentPipeline {
 		void setInputPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getInputCollection();
 
 		void setInputCollection(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getOutputCollection();
 
 		void setOutputCollection(String value);
 
 		@Description("The document collection to process")
+		@Required
 		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);

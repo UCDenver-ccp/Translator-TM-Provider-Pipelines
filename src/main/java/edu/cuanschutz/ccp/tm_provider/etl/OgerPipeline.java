@@ -9,8 +9,10 @@ import java.util.Set;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -47,16 +49,19 @@ public class OgerPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("URI for case sensitive OGER services; pipe-delimited list")
+		@Required
 		String getCsOgerServiceUri();
 
 		void setCsOgerServiceUri(String value);
 
 		@Description("URI for case-insentive min norm OGER services; pipe-delimited list")
+		@Required
 		String getCiminOgerServiceUri();
 
 		void setCiminOgerServiceUri(String value);
 
 		@Description("URI for case-insensitive max norm OGER services; pipe-delimited list")
+		@Required
 		String getCimaxOgerServiceUri();
 
 		void setCimaxOgerServiceUri(String value);
@@ -77,31 +82,37 @@ public class OgerPipeline {
 //		void setTargetDocumentFormat(DocumentFormat type);
 
 		@Description("This pipeline key will be used to select the input text documents that will be processed")
+		@Required
 		PipelineKey getTextPipelineKey();
 
 		void setTextPipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input text documents that will be processed")
+		@Required
 		String getTextPipelineVersion();
 
 		void setTextPipelineVersion(String value);
 
 		@Description("This pipeline key will be used to select the input augmented text documents that will be processed")
+		@Required
 		PipelineKey getAugmentedTextPipelineKey();
 
 		void setAugmentedTextPipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input augmented text documents that will be processed")
+		@Required
 		String getAugmentedTextPipelineVersion();
 
 		void setAugmentedTextPipelineVersion(String value);
 
 		@Description("This pipeline version will be used as part of the output document key/name")
+		@Required
 		String getOutputPipelineVersion();
 
 		void setOutputPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
@@ -113,16 +124,13 @@ public class OgerPipeline {
 //		void setOgerOutputType(OgerOutputType value);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("If ENABLED then the code calls the OGER services using multiple threads. The downside is that it becomes more difficult ot debug exceptions. If DISABLED, then the OGER service calls are made serially.")
-		MultithreadedServiceCalls getMultithreadedServiceCalls();
-
-		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
-
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
 		
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
@@ -180,9 +188,10 @@ public class OgerPipeline {
 
 		// note: we are using the cs output doc criteria as the error doc criteria (any
 		// of the three could be chosen)
+		// note: enabling multithreaded service calls results in out of memory errors
 		PCollectionTuple output = OgerFn.process(statusEntity2Content, csOgerServiceUri.toString(),
 				ciminOgerServiceUri.toString(), cimaxOgerServiceUri.toString(), csOutputDocCriteria, timestamp,
-				options.getMultithreadedServiceCalls());
+				MultithreadedServiceCalls.DISABLED);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCsAnnotation = output
 				.get(OgerFn.CS_ANNOTATIONS_TAG);

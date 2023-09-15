@@ -10,9 +10,9 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
-import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -45,17 +45,19 @@ public class BiocToTextPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
-		@Default.String("gs://tm-provider-dataflow-work/bioc-downloads/*")
+		@Required
 		String getBiocDir();
 
 		void setBiocDir(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Overwrite any previous imported documents")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);

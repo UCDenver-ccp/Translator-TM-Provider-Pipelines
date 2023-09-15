@@ -21,6 +21,7 @@ import org.apache.beam.sdk.io.jdbc.JdbcIO;
 import org.apache.beam.sdk.io.jdbc.JdbcIO.DataSourceConfiguration;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -73,61 +74,73 @@ public class ConceptCooccurrenceMetricsPipeline {
 	public interface Options extends DataflowPipelineOptions {
 
 		@Description("Pipe-delimited list of Cooccur levels to process, e.g. DOCUMENT, ABSTRACT, TITLE, SENTENCE")
+		@Required
 		String getCooccurLevelsToProcess();
 
 		void setCooccurLevelsToProcess(String value);
 
 		@Description("Path to the bucket where the count files are located")
+		@Required
 		String getCountFileBucket();
 
 		void setCountFileBucket(String bucketPath);
 
 		@Description("if true, concept ancestors are added to the cooccurrence computation when they appear. Note that this increases the computational intensiveness of computing coocccurrence metrics immensely.")
+		@Required
 		boolean getAddAncestors();
 
 		void setAddAncestors(boolean value);
 
 		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		@Required
 		String getAncestorMapFilePath();
 
 		void setAncestorMapFilePath(String path);
 
 		@Description("delimiter used to separate columns in the ancestor map file")
+		@Required
 		Delimiter getAncestorMapFileDelimiter();
 
 		void setAncestorMapFileDelimiter(Delimiter delimiter);
 
 		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		@Required
 		Delimiter getAncestorMapFileSetDelimiter();
 
 		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("The name of the database")
+		@Required
 		String getDatabaseName();
 
 		void setDatabaseName(String value);
 
 		@Description("The database username")
+		@Required
 		String getDbUsername();
 
 		void setDbUsername(String value);
 
 		@Description("The password for the corresponding database user")
+		@Required
 		String getDbPassword();
 
 		void setDbPassword(String value);
 
 		@Description("Cloud SQL MySQL instance name")
+		@Required
 		String getMySqlInstanceName();
 
 		void setMySqlInstanceName(String value);
 
 		@Description("GCP region for the Cloud SQL instance (see the connection name in the GCP console)")
+		@Required
 		String getCloudSqlRegion();
 
 		void setCloudSqlRegion(String value);
 
 		@Description("A pipe-delimited list of concept prefixes to include")
+		@Required
 		String getConceptPrefixesToInclude();
 
 		void setConceptPrefixesToInclude(String value);

@@ -10,6 +10,7 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -57,6 +58,7 @@ public class ConceptPostProcessingPipeline {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
 				+ "delimited between different document criteria and pipe-delimited within document criteria, "
 				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0")
+		@Required
 		String getInputDocumentCriteria();
 
 		void setInputDocumentCriteria(String docCriteria);
@@ -65,6 +67,7 @@ public class ConceptPostProcessingPipeline {
 		// in a way -- see if they can be combined
 
 		@Description("pipe-delimited list of processing status flags that will be used to query for status entities from Datastore")
+		@Required
 		String getRequiredProcessingStatusFlags();
 
 		void setRequiredProcessingStatusFlags(String flags);
@@ -85,51 +88,61 @@ public class ConceptPostProcessingPipeline {
 //		void setIdToOgerDictEntryMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("path to the NCBITaxon promotion map file")
+		@Required
 		String getNcbiTaxonPromotionMapFilePath();
 
 		void setNcbiTaxonPromotionMapFilePath(String path);
 
 		@Description("delimiter used to separate columns in the NCBITaxon promotion map file")
+		@Required
 		Delimiter getNcbiTaxonPromotionMapFileDelimiter();
 
 		void setNcbiTaxonPromotionMapFileDelimiter(Delimiter delimiter);
 
 		@Description("delimiter used to separate values in the 2nd column in the NCBITaxon promotion map file")
+		@Required
 		Delimiter getNcbiTaxonPromotionMapFileSetDelimiter();
 
 		void setNcbiTaxonPromotionMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("path to (pattern for) CRAFT extension class to OBO class mapping files are located")
+		@Required
 		String getExtensionMapFilePath();
 
 		void setExtensionMapFilePath(String path);
 
 		@Description("delimiter used to separate columns in the extension-to-obo class map file")
+		@Required
 		Delimiter getExtensionMapFileDelimiter();
 
 		void setExtensionMapFileDelimiter(Delimiter delimiter);
 
 		@Description("delimiter used to separate items in the set in the second column of the extension-to-obo class map file")
+		@Required
 		Delimiter getExtensionMapFileSetDelimiter();
 
 		void setExtensionMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("The version that is assigned to the Datastore documents created by this pipeline")
+		@Required
 		String getOutputPipelineVersion();
 
 		void setOutputPipelineVersion(String value);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
 		@Description("Allows user to specify whether concept annotations should be filtered by CRFs or not")
+		@Required
 		FilterFlag getFilterFlag();
 
 		void setFilterFlag(FilterFlag value);

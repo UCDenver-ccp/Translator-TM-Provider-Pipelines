@@ -8,6 +8,7 @@ import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -27,16 +28,19 @@ public class UpdateIdCollectionPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("GCP file prefix for files that make up the identifier collection")
+		@Required
 		String getCollectionFilePrefix();
 
 		void setCollectionFilePrefix(String value);
 
 		@Description("GCP file pattern for the file(s) containing potential identifiers to add")
+		@Required
 		String getInputFilePattern();
 
 		void setInputFilePattern(String value);
 
 		@Description("date stamp is used as part of the output file names to ensure the output file names don't get overwritten each day")
+		@Required
 		String getDateStamp();
 
 		void setDateStamp(String value);

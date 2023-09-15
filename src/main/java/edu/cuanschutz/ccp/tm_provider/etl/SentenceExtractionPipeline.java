@@ -56,6 +56,7 @@ public class SentenceExtractionPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
+		@Required
 		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
@@ -63,31 +64,37 @@ public class SentenceExtractionPipeline {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
 				+ "delimited between different document criteria and pipe-delimited within document criteria, "
 				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0")
+		@Required
 		String getInputDocumentCriteria();
 
 		void setInputDocumentCriteria(String docCriteria);
 
 		@Description("Keywords to include in the sentences that are extracted. Input is a pipe-delimited list of keywords")
+		@Required
 		String getKeywords();
 
 		void setKeywords(String keywords);
 
 		@Description("prefix of the concept type, e.g. CHEBI, CL, etc. Must align with placeholder X. Can be a pipe-delimited list of multiple prefixes.")
+		@Required
 		String getPrefixX();
 
 		void setPrefixX(String prefix);
 
 		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with prefix X.")
+		@Required
 		String getPlaceholderX();
 
 		void setPlaceholderX(String placeholder);
 
 		@Description("prefix of the concept type, e.g. CHEBI, CL, etc.  Must align with placeholder Y. Can be a pipe-delimited list of multiple prefixes.")
+		@Required
 		String getPrefixY();
 
 		void setPrefixY(String prefix);
 
 		@Description("placeholder of the concept type, e.g. CHEBI, CL, etc. Must align with prefix Y.")
+		@Required
 		String getPlaceholderY();
 
 		void setPlaceholderY(String placeholder);
@@ -113,36 +120,43 @@ public class SentenceExtractionPipeline {
 //		void setInputPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Path to the bucket where results will be written")
+		@Required
 		String getOutputBucket();
 
 		void setOutputBucket(String bucketPath);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
 		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+		@Required
 		String getAncestorMapFilePath();
 
 		void setAncestorMapFilePath(String path);
 
 		@Description("delimiter used to separate columns in the ancestor map file")
+		@Required
 		Delimiter getAncestorMapFileDelimiter();
 
 		void setAncestorMapFileDelimiter(Delimiter delimiter);
 
 		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+		@Required
 		Delimiter getAncestorMapFileSetDelimiter();
 
 		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("CURIEs indicating concept identifiers that should be excluded from the extracted sentences")
+		@Required
 		String getConceptIdsToExclude();
 
 		void setConceptIdsToExclude(String path);

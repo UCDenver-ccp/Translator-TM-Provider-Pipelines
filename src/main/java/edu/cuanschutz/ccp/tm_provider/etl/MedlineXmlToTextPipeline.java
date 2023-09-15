@@ -15,6 +15,7 @@ import org.apache.beam.sdk.io.xml.XmlIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -57,22 +58,25 @@ public class MedlineXmlToTextPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
-		@Default.String("gs://translator-tm-provider-datastore-staging-stage/medline2020/baseline")
+		@Required
 		String getMedlineXmlDir();
 
 		void setMedlineXmlDir(String value);
 
 		@Description("path to a file containing PMIDs to skip during the load")
+		@Required
 		String getPmidSkipFilePath();
 
 		void setPmidSkipFilePath(String path);
 
 		@Description("The name of the document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Overwrite any previous imported documents")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);

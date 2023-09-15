@@ -11,6 +11,7 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -40,26 +41,31 @@ public class ConceptAnnotationExportPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Location of the output bucket")
+		@Required
 		String getOutputBucket();
 
 		void setOutputBucket(String value);
 
 		@Description("This pipeline key will be used to select the input text documents that will be exported")
+		@Required
 		PipelineKey getTextInputPipelineKey();
 
 		void setTextInputPipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input text documents that will be exported")
+		@Required
 		String getTextInputPipelineVersion();
 
 		void setTextInputPipelineVersion(String value);
 
 		@Description("This pipeline version will be used to select the concept annotation documents that will be exported")
+		@Required
 		String getConceptPostProcessPipelineVersion();
 
 		void setConceptPostProcessPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);

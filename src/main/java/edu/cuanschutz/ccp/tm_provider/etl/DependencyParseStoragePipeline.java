@@ -13,6 +13,7 @@ import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -47,16 +48,19 @@ public class DependencyParseStoragePipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("GCS path to the CONLL-U files to load - this is the base path with the next directory expected to be the collection name.")
+		@Required
 		String getBaseDependencyParseFilePath();
 
 		void setBaseDependencyParseFilePath(String path);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Overwrite any previous CONLL-U data")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);

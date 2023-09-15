@@ -48,11 +48,13 @@ public class CrfNerPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("URIs for the CRAFT CRF entity recognition service")
+		@Required
 		String getCraftCrfServiceUri();
 
 		void setCraftCrfServiceUri(String value);
 
 		@Description("URIs for the NLM DISEASE CRF entity recognition service")
+		@Required
 		String getNlmDiseaseCrfServiceUri();
 
 		void setNlmDiseaseCrfServiceUri(String value);
@@ -68,44 +70,46 @@ public class CrfNerPipeline {
 //		void setTargetDocumentType(DocumentType type);
 
 		@Description("This pipeline key will be used to select the input sentence bionlp documents that will be processed")
+		@Required
 		PipelineKey getInputSentencePipelineKey();
 
 		void setInputSentencePipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input sentence bionlp documents that will be processed")
+		@Required
 		String getInputSentencePipelineVersion();
 
 		void setInputSentencePipelineVersion(String value);
 
 		@Description("This pipeline key will be used to select the input augmented sentence bionlp documents that will be processed")
+		@Required
 		PipelineKey getAugmentedSentencePipelineKey();
 
 		void setAugmentedSentencePipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input augmented sentence bionlp documents that will be processed")
+		@Required
 		String getAugmentedSentencePipelineVersion();
 
 		void setAugmentedSentencePipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
 		@Description("Version that will be assigned to the Datastore documents created by this pipeline")
+		@Required
 		String getOutputPipelineVersion();
 
 		void setOutputPipelineVersion(String value);
-
-		@Description("If ENABLED then the code calls the CRF services using multiple threads. The downside is that it becomes more difficult ot debug exceptions. If DISABLED, then the CRF service calls are made serially.")
-		MultithreadedServiceCalls getMultithreadedServiceCalls();
-
-		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
 
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
 		@Default.Enum("YES")
@@ -159,9 +163,10 @@ public class CrfNerPipeline {
 				DocumentFormat.BIONLP, PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		// note: the craft document criteria is used as the error document criteria
+		// note: enabling multithreaded service calls results in out of memory errors
 		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCraftCrfServiceUri(),
 				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp,
-				options.getMultithreadedServiceCalls());
+				MultithreadedServiceCalls.DISABLED);
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCraftAnnotation = output
 				.get(CrfNerFn.CRAFT_NER_ANNOTATIONS_TAG);

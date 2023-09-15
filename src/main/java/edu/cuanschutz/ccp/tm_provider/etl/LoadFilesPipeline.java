@@ -13,6 +13,7 @@ import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -43,36 +44,43 @@ public class LoadFilesPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("Path of the file to read from")
+		@Required
 		String getLoadDir();
 
 		void setLoadDir(String value);
 
 		@Description("File suffix to load")
+		@Required
 		String getFileSuffix();
 
 		void setFileSuffix(String value);
 
 		@Description("The targetProcessingStatusFlag should align with the content of the file being loaded")
+		@Required
 		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
 
 		@Description("Output document type, i.e. the document type that will be saved in Datastore")
+		@Required
 		DocumentType getOutputDocumentType();
 
 		void setOutputDocumentType(DocumentType value);
 
 		@Description("Output document format, i.e. the document format that will be saved in Datastore")
+		@Required
 		DocumentFormat getOutputDocumentFormat();
 
 		void setOutputDocumentFormat(DocumentFormat value);
 
 		@Description("Pipeline key")
+		@Required
 		PipelineKey getPipelineKey();
 
 		void setPipelineKey(PipelineKey value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);

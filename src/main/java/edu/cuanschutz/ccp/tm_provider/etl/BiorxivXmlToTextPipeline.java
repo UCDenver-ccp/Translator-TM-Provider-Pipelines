@@ -8,6 +8,7 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.biorxiv.*;
@@ -31,17 +32,19 @@ public class BiorxivXmlToTextPipeline {
 
     public interface Options extends DataflowPipelineOptions {
         @Description("Path of the file to read from")
-        @Default.String("gs://translator-tm-provider-datastore-staging-stage/biorxiv/test")
+        @Required
         String getBiorxivXmlDir();
 
         void setBiorxivXmlDir(String value);
 
         @Description("The name of the document collection to process")
+        @Required
         String getCollection();
 
         void setCollection(String value);
 
         @Description("Overwrite any previous imported documents")
+        @Required
         OverwriteOutput getOverwrite();
 
         void setOverwrite(OverwriteOutput value);

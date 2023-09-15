@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -38,11 +39,13 @@ public class DryRunPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("The targetProcessingStatusFlag should align with the concept type served by the OGER service URI; pipe-delimited list")
+		@Required
 		ProcessingStatusFlag getTargetProcessingStatusFlag();
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag flag);
 
 		@Description("The targetDocumentType should also align with the concept type served by the OGER service URI; pipe-delimited list")
+		@Required
 		DocumentType getTargetDocumentType();
 
 		void setTargetDocumentType(DocumentType type);
@@ -53,32 +56,37 @@ public class DryRunPipeline {
 //		void setTargetDocumentFormat(DocumentFormat type);
 //
 		@Description("This pipeline key will be used to select the input text documents that will be processed")
+		@Required
 		PipelineKey getInputPipelineKey();
 
 		void setInputPipelineKey(PipelineKey value);
 
 		@Description("This pipeline version will be used to select the input text documents that will be processed")
+		@Required
 		String getInputPipelineVersion();
 
 		void setInputPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Name of the directory where the IDs that will be processed are written to file(s)")
+		@Required
 		String getOutputDirectory();
 
 		void setOutputDirectory(String value);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 		
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
-		@Required
+		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
 		
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
