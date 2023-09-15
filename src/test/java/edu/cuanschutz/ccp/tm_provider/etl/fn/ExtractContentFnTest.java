@@ -50,7 +50,8 @@ public class ExtractContentFnTest {
 				pipelineVersion);
 		String collection = "CORD19";
 
-		PCollectionTuple output = ExtractContentFn.process(input, outputDocCriteria, timestamp, ".txt", collection, ProcessingStatusFlag.TEXT_DONE);
+		PCollectionTuple output = ExtractContentFn.process(input, outputDocCriteria, timestamp, ".txt", collection,
+				ProcessingStatusFlag.TEXT_DONE);
 
 		List<String> chunks = CollectionsUtil.createList(plainText[0], plainText[1]);
 

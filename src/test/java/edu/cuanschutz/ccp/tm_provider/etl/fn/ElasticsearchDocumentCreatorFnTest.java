@@ -104,7 +104,7 @@ public class ElasticsearchDocumentCreatorFnTest {
 
 		String documentText = "Hydrocodone and oxycodone are prescribed commonly to treat back pain.";
 		for (int i = 0; i < so; i++) {
-			documentText= " " + documentText;
+			documentText = " " + documentText;
 		}
 		TextAnnotation sentenceAnnot = factory.createAnnotation(0 + so, 69 + so, documentText, "sentence");
 

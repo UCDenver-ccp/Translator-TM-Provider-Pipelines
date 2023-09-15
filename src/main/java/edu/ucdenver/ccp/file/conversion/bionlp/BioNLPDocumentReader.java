@@ -135,16 +135,17 @@ public class BioNLPDocumentReader extends DocumentReader {
 					TextAnnotation targetTa = annotIdToAnnotMap.get(annotId2);
 
 					if (sourceTa == null) {
-						System.err.println("Missing annotation for annot id: " + annotId1 + " -- Most likely an annotation with discontinous spans which are not currentl handled.");
+						System.err.println("Missing annotation for annot id: " + annotId1
+								+ " -- Most likely an annotation with discontinous spans which are not currentl handled.");
 						continue;
 					}
 
 					if (targetTa == null) {
-						System.err.println("Missing annotation for annot id: " + annotId2 + " -- Most likely an annotation with discontinous spans which are not currentl handled.");
+						System.err.println("Missing annotation for annot id: " + annotId2
+								+ " -- Most likely an annotation with discontinous spans which are not currentl handled.");
 						continue;
 					}
 
-					
 					DocumentReader.createAnnotationRelation(sourceTa, targetTa, relationType);
 				} else {
 					throw new IllegalStateException("Unable to parse relation from line: " + line);

@@ -171,17 +171,15 @@ public class BigQueryAnnotationSerializerTest {
 
 	}
 
-	
 	@Test
-	public void test () {
+	public void test() {
 		String value = "asdf\n\n\n \n\n\n";
 		while (StringUtil.endsWithRegex(value, "\\s")) {
-			value = value.substring(0, value.length()-1);
+			value = value.substring(0, value.length() - 1);
 		}
 		assertEquals("asdf", value);
 	}
-	
-	
+
 	@Test
 	public void testSectionAnnotSerialization() {
 
@@ -206,7 +204,7 @@ public class BigQueryAnnotationSerializerTest {
 		assertEquals(expectedAnnotationLine, serializedSection1.get(TableKey.ANNOTATION));
 
 	}
-	
+
 	@Test
 	public void testSectionAnnotSerialization_sectionInSection() {
 
@@ -526,7 +524,7 @@ public class BigQueryAnnotationSerializerTest {
 //		assertEquals(expectedSerializedTokenStrs_concept, serializedTokenStrs_concept);
 //
 //	}
-	
+
 	@Test
 	public void testDetermineLayer() {
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("12345");
@@ -537,13 +535,12 @@ public class BigQueryAnnotationSerializerTest {
 				.determineLayer(factory.createAnnotation(0, 5, "Hello", "paragraph", "bioc")));
 		assertEquals(Layer.SENTENCE, BigQueryAnnotationSerializer
 				.determineLayer(factory.createAnnotation(0, 5, "Hello", "sentence", "turku")));
-		assertEquals(Layer.TOKEN, BigQueryAnnotationSerializer
-				.determineLayer(factory.createAnnotation(0, 5, "Hello", "VERB", "turku")));
+		assertEquals(Layer.TOKEN,
+				BigQueryAnnotationSerializer.determineLayer(factory.createAnnotation(0, 5, "Hello", "VERB", "turku")));
 		assertEquals(Layer.SENTENCE, BigQueryAnnotationSerializer
 				.determineLayer(factory.createAnnotation(0, 5, "Hello", "reference", "bioc")));
-		assertEquals(Layer.SECTION, BigQueryAnnotationSerializer
-				.determineLayer(factory.createAnnotation(0, 5, "Hello", "TITLE", "bioc")));
+		assertEquals(Layer.SECTION,
+				BigQueryAnnotationSerializer.determineLayer(factory.createAnnotation(0, 5, "Hello", "TITLE", "bioc")));
 	}
-	
 
 }

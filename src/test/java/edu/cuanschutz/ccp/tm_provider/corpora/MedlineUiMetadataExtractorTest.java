@@ -173,7 +173,7 @@ public class MedlineUiMetadataExtractorTest {
 		assertEquals("Jan", month);
 
 	}
-	
+
 	@Test
 	public void testSingle() {
 		String month = MedlineUiMetadataExtractor.getMonth("2023 First Quarter", "1234");

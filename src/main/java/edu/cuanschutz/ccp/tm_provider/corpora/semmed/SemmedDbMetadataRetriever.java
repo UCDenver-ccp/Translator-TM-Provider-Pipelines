@@ -117,7 +117,7 @@ public class SemmedDbMetadataRetriever {
 			if (line.getLineNumber() % 1000 == 0) {
 				System.out.println("progress: " + line.getLineNumber());
 			}
-			
+
 			// skip the header
 			if (line.getLineNumber() == 0) {
 				continue;

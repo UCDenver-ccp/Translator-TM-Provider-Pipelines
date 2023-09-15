@@ -74,7 +74,8 @@ public class ConceptPairSentenceExtractor {
 	// @formatter:on
 
 	public static void search(String elasticUrl, int elasticPort, String apiKeyAuth, String indexName, int maxReturned,
-			Set<ConceptPair> conceptPairs, BufferedWriter writer, BiolinkAssociation association, Set<String> conceptIdsToExclude) throws IOException {
+			Set<ConceptPair> conceptPairs, BufferedWriter writer, BiolinkAssociation association,
+			Set<String> conceptIdsToExclude) throws IOException {
 
 		Map<ConceptPair, Set<TextDocument>> map = new HashMap<ConceptPair, Set<TextDocument>>();
 

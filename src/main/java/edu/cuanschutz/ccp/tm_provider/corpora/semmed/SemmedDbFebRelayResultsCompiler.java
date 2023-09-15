@@ -288,11 +288,11 @@ public class SemmedDbFebRelayResultsCompiler {
 			}
 
 			try {
-			if (predicationToAnswerId.get(predicationId).equals(ASSERTION_CORRECT)) {
-				predicationIdToFeedbackIdMap.put(predicationId, feedbackId);
-			}
-			} catch(Exception e) {
-				
+				if (predicationToAnswerId.get(predicationId).equals(ASSERTION_CORRECT)) {
+					predicationIdToFeedbackIdMap.put(predicationId, feedbackId);
+				}
+			} catch (Exception e) {
+
 			}
 
 		}
@@ -333,7 +333,8 @@ public class SemmedDbFebRelayResultsCompiler {
 		System.out.println();
 		int total = improvementsToCountMap.get(ASSERTION_CORRECT);
 		for (Entry<String, Integer> entry : improvementsToCountMap.entrySet()) {
-			System.out.println("IMPROVEMENT: " + entry.getKey() + " -- " + entry.getValue() + " -- " + (float)entry.getValue()/(float)total);
+			System.out.println("IMPROVEMENT: " + entry.getKey() + " -- " + entry.getValue() + " -- "
+					+ (float) entry.getValue() / (float) total);
 		}
 
 	}

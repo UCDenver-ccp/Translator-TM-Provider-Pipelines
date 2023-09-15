@@ -22,7 +22,8 @@ public class GoBpOgerDictFileFactory extends OgerDictFileFactory {
 
 	/**
 	 * This will add _BP to the GO identifiers in the generated dictionary so that
-	 * they don't need to be disambiguated with CC and MF classes later on, e.g., GO_BP:0001234
+	 * they don't need to be disambiguated with CC and MF classes later on, e.g.,
+	 * GO_BP:0001234
 	 */
 	@Override
 	protected String getIdAddOn() {

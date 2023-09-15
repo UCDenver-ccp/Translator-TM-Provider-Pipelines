@@ -72,8 +72,8 @@ public class CraftGoMfExtReverter {
 
 	}
 
-	private static TextDocument loadBionlpFile(File craftBaseDir, BioNLPDocumentReader bionlpReader, File origBionlpFile)
-			throws IOException {
+	private static TextDocument loadBionlpFile(File craftBaseDir, BioNLPDocumentReader bionlpReader,
+			File origBionlpFile) throws IOException {
 		String docId = origBionlpFile.getName().split("\\.")[0];
 		File txtFile = ExcludeCraftNestedConcepts.getTextFile(docId, craftBaseDir);
 		return bionlpReader.readDocument(docId, "craft", origBionlpFile, txtFile, ENCODING);
@@ -89,13 +89,13 @@ public class CraftGoMfExtReverter {
 
 		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
 		File goOwlFile = new File(ontBase, "go.owl.gz");
-		
+
 		try {
 			revertExt(goOwlFile, origGoMfBionlpDir, extGoMfBionlpDir, craftBaseDir);
 		} catch (OWLOntologyCreationException | IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 }

@@ -330,8 +330,9 @@ public class ElasticsearchToBratExporterTest {
 		int batchSize = 4;
 		Set<String> identifiersToExclude = new HashSet<String>();
 		Set<String> alreadyAssignedSentenceIds = new HashSet<String>();
-		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize, inputSentences,
-				alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage, Collections.emptyList());
+		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
+				inputSentences, alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage,
+				Collections.emptyList());
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
@@ -440,8 +441,8 @@ public class ElasticsearchToBratExporterTest {
 		int batchSize = 5;
 		Set<String> identifiersToExclude = new HashSet<String>();
 		Set<String> alreadyAssignedSentenceIds = new HashSet<String>();
-		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize, inputSentences,
-				alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage, redundantSentences);
+		ElasticsearchToBratExporter.createBratFiles(outputDirectory, biolinkAssociation, batchId, batchSize,
+				inputSentences, alreadyAssignedSentenceIds, identifiersToExclude, sentencesPerPage, redundantSentences);
 
 		File annFile = new File(outputDirectory,
 				String.format("%s_%s_0.ann", biolinkAssociation.name().toLowerCase(), batchId));
@@ -696,18 +697,15 @@ public class ElasticsearchToBratExporterTest {
 //		assertEquals(10, redundantSentences.size());
 //
 //	}
-	
-	
-	
+
 	@Test
 	public void testExistenceOfClasspathResources() throws IOException {
 		String booleanQueryTemplate = ElasticsearchToBratExporter.getBooleanQueryTemplateFromClasspath();
 		assertFalse(booleanQueryTemplate.isEmpty());
-		
+
 		String annotatedTextMatchTemplate = ElasticsearchToBratExporter.getAnnotatedTextMatchTemplateFromClasspath();
 		assertFalse(annotatedTextMatchTemplate.isEmpty());
-		
+
 	}
-	
 
 }

@@ -402,7 +402,8 @@ public class BratToBertConverterTest {
 				chemicalAnnot1, chemicalAnnot2);
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer, new HashSet<String>());
+			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer,
+					new HashSet<String>());
 		}
 
 		// @formatter:off
@@ -494,7 +495,8 @@ public class BratToBertConverterTest {
 				chemicalAnnot1, chemicalAnnot2);
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer, new HashSet<String>());
+			BratToBertConverter.generateBertStyleTrainingData(biolinkAssociation, sentences, entityAnnots, writer,
+					new HashSet<String>());
 		}
 
 		// @formatter:off

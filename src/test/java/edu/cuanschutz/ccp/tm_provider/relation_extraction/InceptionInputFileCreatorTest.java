@@ -49,7 +49,7 @@ public class InceptionInputFileCreatorTest {
 		}
 
 		Set<String> alreadyAnnotatedSentenceIds = InceptionInputFileCreator
-				.loadAlreadyAnnotatedSentenceIds(CollectionsUtil.createList( outputFile1, outputFile2 ));
+				.loadAlreadyAnnotatedSentenceIds(CollectionsUtil.createList(outputFile1, outputFile2));
 
 		Set<String> expectedHashes = new HashSet<String>();
 

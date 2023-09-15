@@ -42,19 +42,22 @@ public class TurkuDepParserFn extends DoFn<KV<String, String>, KV<String, String
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
 
-	public static PCollectionTuple process(PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
+	public static PCollectionTuple process(
+			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText,
 			String dependencyParserServiceUri, DocumentCriteria dc, com.google.cloud.Timestamp timestamp) {
 
-		return statusEntityToText.apply("Compute dependency parse",
-				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
+		return statusEntityToText.apply("Compute dependency parse", ParDo.of(
+				new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>>() {
 					private static final long serialVersionUID = 1L;
 
 					@ProcessElement
-					public void processElement(@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
+					public void processElement(
+							@Element KV<ProcessingStatus, Map<DocumentCriteria, String>> statusEntityToText,
 							MultiOutputReceiver out) {
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
-						// there is only one entry in the input map and it is the plain text of the input document
+						// there is only one entry in the input map and it is the plain text of the
+						// input document
 						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
 
 						/*

@@ -76,11 +76,11 @@ public class NerBertToBionlpConverterTest {
 		assertEquals("15328538", doc1.getSourceid());
 		String doc1Text = doc1.getText();
 		assertTrue(doc1Text.startsWith("Loss of Skeletal Muscle"));
-		
+
 		for (TextAnnotation annot : doc1.getAnnotations()) {
 			System.out.println(annot);
 		}
-		
+
 		assertEquals(2, doc1.getAnnotations().size());
 
 		assertTrue(docIter.hasNext());
@@ -94,11 +94,11 @@ public class NerBertToBionlpConverterTest {
 		for (TextAnnotation annot : doc2.getAnnotations()) {
 			System.out.println(annot);
 		}
-		// 155..160  161..164
+		// 155..160 161..164
 		TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults("16410827");
 		TextAnnotation innerEarAnnot = factory.createAnnotation(155, 164, "inner ear", "UBERON");
 		assertTrue(doc2.getAnnotations().contains(innerEarAnnot));
-		
+
 		assertFalse(docIter.hasNext());
 	}
 

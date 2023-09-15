@@ -220,16 +220,14 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 		int maxSentenceCount = countSentences(inputSentenceFiles);
 
-
 		System.out.println("Max sentence count: " + maxSentenceCount);
 
 		Set<Integer> indexesForNewBatch = getRandomIndexes(maxSentenceCount, batchSize);
-		
+
 //		System.out.println("Indexes: "+ indexesForNewBatch.toString());
 //		for (int i = 0; i < 10; i++) {
 //			System.out.println("random index: " + indexesForNewBatch.get(i));
 //		}
-
 
 		List<Request> updateRequests = new ArrayList<Request>();
 		updateRequests.addAll(writeHeaderToSpreadsheet(biolinkAssociation, sheetsService, sheetId));
@@ -266,15 +264,13 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 						}
 					}
 
-					if (previousSentenceText == null
-							|| !previousSentenceText.equals(sentence.getSentenceText())) {
+					if (previousSentenceText == null || !previousSentenceText.equals(sentence.getSentenceText())) {
 						previousSentenceText = sentence.getSentenceText();
 						sentenceCount++;
 					}
 
-					
 //					System.out.println("Line: " + line.getLineNumber() + " -- sentence: "+ sentenceCount + " -- exclude: " + exclude);
-					
+
 					if (!exclude) {
 
 						// TODO: remove this as it was only used for disease-phenotype annotation
@@ -283,25 +279,24 @@ public class GoogleSheetsAssertionAnnotationSheetCreator {
 
 //							System.out.println("passed MONDO/HP test " + sentenceCount);
 
-							if (indexesForNewBatch.contains(sentenceCount)) {
-								String hash = computeHash(sentence);
-								if (!alreadyAnnotated.contains(hash)) {
-									if (validateSubjectObject(sentence)) {
-										hashesOutputInThisBatch.add(hash);
+						if (indexesForNewBatch.contains(sentenceCount)) {
+							String hash = computeHash(sentence);
+							if (!alreadyAnnotated.contains(hash)) {
+								if (validateSubjectObject(sentence)) {
+									hashesOutputInThisBatch.add(hash);
 //										System.out.println("output hash: " + hash);
+									updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
+											sheetId, extractedSentenceCount, biolinkAssociation, false));
+									extractedSentenceCount++;
+									if (includeInverse) {
 										updateRequests.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
-												sheetId, extractedSentenceCount, biolinkAssociation, false));
+												sheetId, extractedSentenceCount, biolinkAssociation, true));
 										extractedSentenceCount++;
-										if (includeInverse) {
-											updateRequests
-													.addAll(writeSentenceToSpreadsheet(hash, sentence, sheetsService,
-															sheetId, extractedSentenceCount, biolinkAssociation, true));
-											extractedSentenceCount++;
-										}
 									}
-
 								}
+
 							}
+						}
 //						}
 					}
 

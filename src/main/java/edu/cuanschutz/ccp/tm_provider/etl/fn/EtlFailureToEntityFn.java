@@ -71,12 +71,12 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 		 * blob and store it unindexed
 		 */
 		ByteString stackTraceBlob = ByteString.copyFrom(stackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
-		ByteString causeStackTraceBlob = (causeStackTrace == null) ? ByteString.EMPTY : ByteString.copyFrom(causeStackTrace,
-				CharacterEncoding.UTF_8.getCharacterSetName());
+		ByteString causeStackTraceBlob = (causeStackTrace == null) ? ByteString.EMPTY
+				: ByteString.copyFrom(causeStackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
 		if (causeMessage == null) {
 			causeMessage = "";
 		}
-		
+
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());

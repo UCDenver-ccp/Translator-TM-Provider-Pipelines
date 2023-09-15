@@ -102,11 +102,11 @@ public class DocumentTextAugmentationPipeline {
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
-		
+
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
 		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
-		
+
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 	}
 
@@ -139,7 +139,8 @@ public class DocumentTextAugmentationPipeline {
 				inputSentDocCriteria, inputAbbrevDocCriteria);
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(requiredDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(), options.getConstrainDocumentsToCollection());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria augDocTextOutputDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT,
 				DocumentFormat.TEXT, PIPELINE_KEY, options.getOutputPipelineVersion());

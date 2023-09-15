@@ -669,8 +669,8 @@ public class ElasticsearchToBratExporter {
 
 	@VisibleForTesting
 	protected static String getAnnotatedTextMatchTemplateFromClasspath() throws IOException {
-		return ClassPathUtil.getContentsFromClasspathResource(
-				ElasticsearchToBratExporter.class, ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
+		return ClassPathUtil.getContentsFromClasspathResource(ElasticsearchToBratExporter.class,
+				ELASTIC_ANNOTATEDTEXT_MATCH_TEMPLATE, UTF8);
 	}
 
 	@VisibleForTesting

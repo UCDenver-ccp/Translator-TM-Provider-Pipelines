@@ -50,7 +50,6 @@ public class SentenceCooccurrenceBuilder implements Serializable {
 
 		StringBuilder builder = new StringBuilder();
 
-
 		Map<Span, TextAnnotation> spanToSentenceAnnotMap = new HashMap<Span, TextAnnotation>();
 
 		for (TextAnnotation ta : td.getAnnotations()) {
@@ -261,7 +260,8 @@ public class SentenceCooccurrenceBuilder implements Serializable {
 
 		// if the covered text from the bionlp file matches the text.substring using the
 		// indexes as is, then keep them, otherwise update them
-		if (ta.getAnnotationSpanEnd() >= text.length() || !coveredText.equals(text.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd()))) {
+		if (ta.getAnnotationSpanEnd() >= text.length()
+				|| !coveredText.equals(text.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd()))) {
 
 			int updatedSpanStart = new String(Arrays.copyOfRange(text.getBytes(), 0, ta.getAnnotationSpanStart()))
 					.length();

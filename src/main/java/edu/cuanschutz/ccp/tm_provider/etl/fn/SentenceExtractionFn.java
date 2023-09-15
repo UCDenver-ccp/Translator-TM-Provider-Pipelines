@@ -160,7 +160,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes, ancestorMap);
 		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes, ancestorMap);
-		
+
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
 

@@ -107,12 +107,11 @@ public class ClassifiedSentenceStoragePipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		
 		p.getCoderRegistry().registerCoderForClass(AssertionTableValues.class, new AssertionTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EvidenceTableValues.class, new EvidenceTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EntityTableValues.class, new EntityTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EvidenceScoreTableValues.class, new EvidenceScoreTableValuesCoder());
-		
+
 		System.out.println("bert output file: " + options.getBertOutputFilePath());
 		System.out.println("sentence metadata file: " + options.getSentenceMetadataFilePath());
 

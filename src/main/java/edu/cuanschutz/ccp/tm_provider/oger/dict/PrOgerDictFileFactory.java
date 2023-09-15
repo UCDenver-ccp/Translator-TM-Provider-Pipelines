@@ -234,14 +234,16 @@ public class PrOgerDictFileFactory extends OgerDictFileFactory {
 			if (label == null) {
 				label = "CS_addition";
 			}
-			caseSensWriter.write(getDictLine(ONTOLOGY_PREFIX, cls.getIRI().toString(), syn, label, "protein", true, null));
+			caseSensWriter
+					.write(getDictLine(ONTOLOGY_PREFIX, cls.getIRI().toString(), syn, label, "protein", true, null));
 		}
 		for (String syn : caseInsensitiveSyns) {
 			String label = CollectionsUtil.createDelimitedString(synonymToSourceMap.get(syn), "|");
 			if (label == null) {
 				label = "CI_addition";
 			}
-			caseInsensWriter.write(getDictLine(ONTOLOGY_PREFIX, cls.getIRI().toString(), syn, label, "protein", true, null));
+			caseInsensWriter
+					.write(getDictLine(ONTOLOGY_PREFIX, cls.getIRI().toString(), syn, label, "protein", true, null));
 		}
 	}
 

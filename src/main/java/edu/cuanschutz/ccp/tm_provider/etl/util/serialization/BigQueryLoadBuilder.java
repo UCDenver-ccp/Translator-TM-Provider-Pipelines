@@ -156,7 +156,8 @@ public class BigQueryLoadBuilder implements Serializable {
 						new ByteArrayInputStream(entry.getValue().trim().getBytes()),
 						new ByteArrayInputStream(td.getText().trim().getBytes()), CharacterEncoding.UTF_8);
 
-				// TODO: this should not be needed -- all offsets in Datastore should be assumed to be correct
+				// TODO: this should not be needed -- all offsets in Datastore should be assumed
+				// to be correct
 				for (TextAnnotation ta : doc.getAnnotations()) {
 					SentenceCooccurrenceBuilder.convertFromByteToCharOffset(ta, text);
 					ta.setAnnotator(new Annotator(null, "oger", null));

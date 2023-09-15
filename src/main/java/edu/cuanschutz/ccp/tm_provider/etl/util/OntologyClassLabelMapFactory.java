@@ -33,13 +33,13 @@ public class OntologyClassLabelMapFactory {
 			OWLClass cls = classIterator.next();
 
 			String label = ontUtil.getLabel(cls);
-			
+
 			if (label == null) {
 				label = "_null";
 			}
-			
+
 			if (label.endsWith("\"")) {
-				label = label.substring(0, label.length()-1);
+				label = label.substring(0, label.length() - 1);
 			}
 
 			writeMapping(writer, getId(cls), label);

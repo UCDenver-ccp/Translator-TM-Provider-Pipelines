@@ -71,9 +71,9 @@ public class SemmedDbIdf {
 //
 		// we create this file here - it maps CUIs to IDF
 		File cui2idfFile = new File("/Users/bill/projects/ncats-translator/integrating-semmed/cuiToIdf.tsv.gz");
-		
-		
-		File umlsMrconsoFile = new File("/Users/bill/projects/ncats-translator/integrating-semmed/umls/2023AA/META/MRCONSO.RRF.gz");
+
+		File umlsMrconsoFile = new File(
+				"/Users/bill/projects/ncats-translator/integrating-semmed/umls/2023AA/META/MRCONSO.RRF.gz");
 
 //		// extracted from the ENTITY table file
 //		File semmedSentToCuiFile = new File(
@@ -100,15 +100,13 @@ public class SemmedDbIdf {
 //		// output files
 //		File cui2pmidCountFile = new File("/home/input/cuiToPmidCount.tsv.gz");
 //		File cui2idfFile = new File("/home/input/cuiToIdf.tsv.gz");
-		
 
 		try {
 
 //			createCui2PmidFile(semmedEntityTableFile, semmedCui2PmidFile);
 
 //			createCui2PmidFile(semmedSentToCuiFile, semmedSentToPmidFile, serializedCui2PmidMapFile);
-			
-			
+
 //			createCui2PmidCountFile(cui2pmidFile, umlsIsaOwlFile, cui2pmidCountFile);
 			computeIdf(cui2pmidCountFile, cui2LabelFile, cui2idfFile);
 		} catch (IOException e) {
@@ -225,7 +223,7 @@ public class SemmedDbIdf {
 
 	public static void createCui2PmidCountFile(File cui2pmidFile, File umlsIsaOwlFile, File outputFile)
 			throws OWLOntologyCreationException, FileNotFoundException, IOException {
-		
+
 		System.out.println("Loading UMLS IS-A ontology...");
 		OntologyUtil ontUtil = new OntologyUtil(umlsIsaOwlFile);
 
@@ -358,11 +356,11 @@ public class SemmedDbIdf {
 
 	}
 
-	private static Map<String, String> loadCuiToLabelMapMRCONSO(File mrconsoFile) throws FileNotFoundException, IOException {
+	private static Map<String, String> loadCuiToLabelMapMRCONSO(File mrconsoFile)
+			throws FileNotFoundException, IOException {
 		Map<String, String> map = new HashMap<String, String>();
-		for (StreamLineIterator lineIter = new StreamLineIterator(
-				new GZIPInputStream(new FileInputStream(mrconsoFile)), CharacterEncoding.UTF_8, null); lineIter
-						.hasNext();) {
+		for (StreamLineIterator lineIter = new StreamLineIterator(new GZIPInputStream(new FileInputStream(mrconsoFile)),
+				CharacterEncoding.UTF_8, null); lineIter.hasNext();) {
 
 			Line line = lineIter.next();
 			if (line.getLineNumber() % 10000 == 0) {
@@ -377,9 +375,7 @@ public class SemmedDbIdf {
 		}
 		return map;
 	}
-	
-	
-	
+
 	private static Map<String, String> loadCuiToLabelMap(File cui2labelFile) throws FileNotFoundException, IOException {
 		Map<String, String> map = new HashMap<String, String>();
 		for (StreamLineIterator lineIter = new StreamLineIterator(

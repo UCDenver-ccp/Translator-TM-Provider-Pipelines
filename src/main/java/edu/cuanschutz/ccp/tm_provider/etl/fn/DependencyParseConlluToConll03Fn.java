@@ -78,8 +78,8 @@ public class DependencyParseConlluToConll03Fn extends DoFn<KV<String, String>, K
 							String conll03 = getTokensAsConll03(docId, documentText, conllu);
 							out.get(CONLL03_TAG).output(KV.of(statusEntity, conll03));
 						} catch (Throwable t) {
-							EtlFailureData failure = new EtlFailureData(dc, "Failure during dp-to-conll03.",
-									docId, t, timestamp);
+							EtlFailureData failure = new EtlFailureData(dc, "Failure during dp-to-conll03.", docId, t,
+									timestamp);
 							out.get(ETL_FAILURE_TAG).output(failure);
 						}
 					}

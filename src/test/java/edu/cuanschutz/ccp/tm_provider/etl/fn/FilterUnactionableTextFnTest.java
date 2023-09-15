@@ -116,7 +116,8 @@ public class FilterUnactionableTextFnTest {
 
 	@Test
 	public void testFilterUnactionableText() {
-		String filteredDocText = FilterUnactionableTextFn.filterUnactionableText(td.getText(), td.getAnnotations(), null);
+		String filteredDocText = FilterUnactionableTextFn.filterUnactionableText(td.getText(), td.getAnnotations(),
+				null);
 
 		String expectedFilteredDocText = td.getText().substring(0, 20163);
 

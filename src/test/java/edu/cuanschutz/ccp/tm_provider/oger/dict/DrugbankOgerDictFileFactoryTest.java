@@ -20,8 +20,7 @@ public class DrugbankOgerDictFileFactoryTest {
 		OntologyUtil ontUtil = null;
 		Set<String> augmentedSyns = new DrugbankOgerDictFileFactory().augmentSynonyms(iri, syns, ontUtil);
 		assertEquals(0, augmentedSyns.size());
-		
-		
+
 	}
 
 }

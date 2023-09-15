@@ -62,12 +62,12 @@ public class ElasticsearchQueryUtil {
 
 			String scrollId = response.scrollId();
 			List<Hit<Sentence>> hits = response.hits().hits();
-			
+
 			for (Hit<Sentence> hit : hits) {
 				Set<String> ontologyPrefixesToIncludeInSearchHits = new HashSet<String>();
 				TextDocument td = ElasticsearchToBratExporter.deserializeAnnotatedText(hit.source().getAnnotatedText(),
-						ontologyPrefixesToIncludeInSearchHits , null);
-				
+						ontologyPrefixesToIncludeInSearchHits, null);
+
 				System.out.println("HIT: " + td.getText());
 			}
 
@@ -88,15 +88,14 @@ public class ElasticsearchQueryUtil {
 		return matchTemplate;
 
 	}
-	
-	
+
 	public static void main(String[] args) {
 		String indexName = args[0];
 		String elasticUrl = args[1];
 		int elasticPort = Integer.parseInt(args[2]);
 		String elasticApiKey = args[3];
 		String sentence = "9-Phenanthrol , a TRPM4 inhibitor , protects isolated rat hearts from ischemia-reperfusion injury .";
-		
+
 		try {
 			sentenceSearch(sentence, indexName, elasticUrl, elasticPort, elasticApiKey);
 		} catch (ElasticsearchException | IOException e) {

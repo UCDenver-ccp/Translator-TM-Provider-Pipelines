@@ -37,7 +37,7 @@ public class UpdateStatusFnTest {
 
 		Set<ProcessingStatusFlag> expectedFlags = new HashSet<ProcessingStatusFlag>(
 				Arrays.asList(ProcessingStatusFlag.OGER_CHEBI_DONE, ProcessingStatusFlag.OGER_PR_DONE));
-		
+
 		assertEquals(expectedFlags, flagsToUpdate);
 	}
 

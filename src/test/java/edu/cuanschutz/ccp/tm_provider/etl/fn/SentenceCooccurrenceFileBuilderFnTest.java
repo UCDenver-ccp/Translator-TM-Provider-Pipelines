@@ -158,7 +158,8 @@ public class SentenceCooccurrenceFileBuilderFnTest {
 				"PMC1790863-sentences.bionlp", CharacterEncoding.UTF_8);
 		PAssert.that(output.get(OpenNLPSentenceSegmentFn.SENTENCE_ANNOT_TAG))
 				.containsInAnyOrder(KV.of(
-						PipelineTestUtil.createProcessingStatus(docId, ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE),
+						PipelineTestUtil.createProcessingStatus(docId,
+								ProcessingStatusFlag.SENTENCE_COOCCURRENCE_EXPORT_DONE),
 						CollectionsUtil.createList(expectedBioNlp)));
 
 		pipeline.run();

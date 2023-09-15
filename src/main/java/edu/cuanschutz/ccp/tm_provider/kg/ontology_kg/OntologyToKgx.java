@@ -242,8 +242,10 @@ public class OntologyToKgx {
 			outputFilePrefix = StringUtil.removeSuffix(outputFilePrefix, ".gz");
 		}
 
-		File kgxNodesFile = new File(outputDir, String.format("%s-subclass-hierarchy.nodes.kgx.tsv.gz", outputFilePrefix));
-		File kgxEdgesFile = new File(outputDir, String.format("%s-subclass-hierarchy.edges.kgx.tsv.gz", outputFilePrefix));
+		File kgxNodesFile = new File(outputDir,
+				String.format("%s-subclass-hierarchy.nodes.kgx.tsv.gz", outputFilePrefix));
+		File kgxEdgesFile = new File(outputDir,
+				String.format("%s-subclass-hierarchy.edges.kgx.tsv.gz", outputFilePrefix));
 
 		int nodeColumnCount = KGX_NODE_FILE_HEADER.split("\\t").length;
 

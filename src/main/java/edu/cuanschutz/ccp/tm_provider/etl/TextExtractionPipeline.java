@@ -47,15 +47,14 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
  */
 public class TextExtractionPipeline {
 
-
-
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXPORT;
 
 	public static final String COMMENT_INDICATOR = "###C: ";
 	public static final String DOCUMENT_ID_PREFIX_PART = "DOCUMENT_ID\t";
 	public static final String DOCUMENT_ID_COMMENT_PREFIX = COMMENT_INDICATOR + DOCUMENT_ID_PREFIX_PART;
 	public static final String DOCUMENT_COLLECTIONS_PREFIX_PART = "DOCUMENT_COLLECTIONS\t";
-	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR + DOCUMENT_COLLECTIONS_PREFIX_PART;
+	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR
+			+ DOCUMENT_COLLECTIONS_PREFIX_PART;
 	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
 
 	public interface Options extends DataflowPipelineOptions {
@@ -89,11 +88,11 @@ public class TextExtractionPipeline {
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
-		
+
 		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
 		@Default.Enum("YES")
 		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
-		
+
 		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 
 	}
@@ -115,7 +114,8 @@ public class TextExtractionPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(), options.getConstrainDocumentsToCollection());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getConstrainDocumentsToCollection());
 
 		// the output document criteria is used primarily to populate error messages in
 		// case of pipeline failures

@@ -20,13 +20,14 @@ public class GoCcOgerDictFileFactory extends OgerDictFileFactory {
 
 	/**
 	 * This will add _CC to the GO identifiers in the generated dictionary so that
-	 * they don't need to be disambiguated with BP and MF classes later on, e.g., GO_CC:0001234
+	 * they don't need to be disambiguated with BP and MF classes later on, e.g.,
+	 * GO_CC:0001234
 	 */
 	@Override
 	protected String getIdAddOn() {
 		return "_CC";
 	}
-	
+
 	public static final Set<String> EXCLUDED_INDIVIDUAL_CLASSES = new HashSet<String>(Arrays.asList());
 
 	@Override

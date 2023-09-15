@@ -149,8 +149,6 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_1_DONE = "oger_pp1";
 	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_2_DONE = "oger_pp2";
 
-	
-	
 	/**
 	 * Concept cooccurrence count status
 	 */
@@ -162,7 +160,6 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
-	
 
 	public static final String STATUS_PROPERTY_OGER_DONE = "oger_done";
 
@@ -190,7 +187,7 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 
 	public static final String STATUS_PROPERTY_CRF_DONE = "crf_done";
-	
+
 //	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
 	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
 //	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
@@ -206,7 +203,6 @@ public interface DatastoreConstants {
 //	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
 	public static final String STATUS_PROPERTY_CRF_CRAFT_DONE = "crf_craft";
 	public static final String STATUS_PROPERTY_CRF_NLMDISEASE_DONE = "crf_nlm_disease";
-	
 
 	////////////////////////////////////////////////////////////////
 	///////////////////// SENTENCE EXPORT //////////////////////////

@@ -257,19 +257,20 @@ public class DocumentTextAugmentationFn extends DoFn<KV<String, String>, KV<Stri
 		int sfEnd = shortFormAnnot.getAnnotationSpanEnd();
 		int lfStart = longFormAnnot.getAnnotationSpanStart();
 		int lfEnd = longFormAnnot.getAnnotationSpanEnd();
-		
+
 		String leadingChar = documentText.substring(lfStart - 1, lfStart);
 		String trailingChar = documentText.substring(lfEnd, lfEnd + 1);
 
 		if (leadingChar.matches("\\p{Punct}") && trailingChar.matches("\\p{Punct}")) {
 
 			String augmentedTextStart = sentenceText.substring(0, sfStart - sentOffset);
-			String augmentedTextMid = sentenceText.substring(sfEnd-sentOffset, lfStart - 1 - sentOffset);
+			String augmentedTextMid = sentenceText.substring(sfEnd - sentOffset, lfStart - 1 - sentOffset);
 			String augmentedTextEnd = sentenceText.substring(lfEnd + 1 - sentOffset);
 			String spaceStr = getEmptyStrOfLength(sfEnd - sfStart);
 
 			// single spaces added below replace the parentheses
-			String augmentedSentenceText = augmentedTextStart + spaceStr +  augmentedTextMid + " " + longFormAnnot.getCoveredText()+ " "+  augmentedTextEnd;
+			String augmentedSentenceText = augmentedTextStart + spaceStr + augmentedTextMid + " "
+					+ longFormAnnot.getCoveredText() + " " + augmentedTextEnd;
 
 			// write the augmented sentence to the StringBuilder. Each sentence will occupy
 			// two lines. The first line will include the SENT indicator in the first

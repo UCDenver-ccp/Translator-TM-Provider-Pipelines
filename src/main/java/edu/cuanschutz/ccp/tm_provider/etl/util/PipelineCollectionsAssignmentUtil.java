@@ -177,8 +177,8 @@ public class PipelineCollectionsAssignmentUtil {
 		String collection = "PUBMED";
 		String newCollection = "CRF_REDO_20230914";
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.CRF_DONE;
-		new PipelineCollectionsAssignmentUtil().assignCollectionBasedOnMissingDocuments(docCriteria, collection, newCollection,
-				targetProcessingStatusFlag);
+		new PipelineCollectionsAssignmentUtil().assignCollectionBasedOnMissingDocuments(docCriteria, collection,
+				newCollection, targetProcessingStatusFlag);
 
 	}
 
