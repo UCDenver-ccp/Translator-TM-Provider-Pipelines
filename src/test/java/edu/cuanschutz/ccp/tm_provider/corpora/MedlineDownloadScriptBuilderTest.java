@@ -1,6 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.corpora;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 

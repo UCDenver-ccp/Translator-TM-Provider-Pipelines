@@ -1,6 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
