@@ -51,8 +51,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 
 import com.google.cloud.Timestamp;
-import com.google.cloud.datastore.KeyQuery;
-import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
@@ -120,6 +118,10 @@ public class PipelineMain {
 
 	public enum MultithreadedServiceCalls {
 		ENABLED, DISABLED
+	}
+
+	public enum ConstrainDocumentsToCollection {
+		YES, NO
 	}
 
 	public static void main(String[] args) {
@@ -278,13 +280,18 @@ public class PipelineMain {
 	 * @param requiredProcessStatusFlags
 	 * @param collection
 	 * @param overwriteOutput
+	 * @param constrainDocumentsToCollection if YES, then the collection is added to
+	 *                                       the filters when searching for
+	 *                                       documents; if NO, the collection filter
+	 *                                       is excludeds
 	 * @return a mapping from the status entity to various document content (a
 	 *         mapping from the document criteria to the document content)
 	 */
 	public static PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> getStatusEntity2Content(
 			Set<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String collection, OverwriteOutput overwriteOutput) {
+			String collection, OverwriteOutput overwriteOutput,
+			ConstrainDocumentsToCollection constrainDocumentsToCollection) {
 
 		Map<Integer, TupleTag<ProcessedDocument>> tagMap = populateTagMap();
 
@@ -310,7 +317,7 @@ public class PipelineMain {
 		int tagIndex = 1;
 		for (DocumentCriteria docCriteria : inputDocCriteria) {
 			PCollection<KV<String, ProcessedDocument>> docId2Document = getDocumentEntitiesToProcess(beamPipeline,
-					docCriteria, collection, gcpProjectId);
+					docCriteria, collection, gcpProjectId, constrainDocumentsToCollection);
 			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
@@ -584,14 +591,27 @@ public class PipelineMain {
 		return docId2Status;
 	}
 
+	/**
+	 * @param p
+	 * @param docCriteria
+	 * @param collection
+	 * @param gcpProjectId
+	 * @param constrainDocumentsToCollection if YES, then the collection is added to
+	 *                                       the filters when searching for
+	 *                                       documents; if NO, the collection filter
+	 *                                       is excluded
+	 * @return
+	 */
 	public static PCollection<KV<String, ProcessedDocument>> getDocumentEntitiesToProcess(Pipeline p,
-			DocumentCriteria docCriteria, String collection, String gcpProjectId) {
+			DocumentCriteria docCriteria, String collection, String gcpProjectId,
+			ConstrainDocumentsToCollection constrainDocumentsToCollection) {
 		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
 		DocumentType documentType = docCriteria.getDocumentType();
 		PipelineKey pipelineKey = docCriteria.getPipelineKey();
 		String pipelineVersion = docCriteria.getPipelineVersion();
 
-		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion);
+		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion,
+				constrainDocumentsToCollection);
 
 		Query.Builder query = Query.newBuilder();
 		query.addKindBuilder().setName(DOCUMENT_KIND);
@@ -642,13 +662,14 @@ public class PipelineMain {
 	 * @return
 	 */
 	public static PCollection<String> getDocumentIdsForExistingDocuments(Pipeline p, DocumentCriteria docCriteria,
-			String collection, String gcpProjectId) {
+			String collection, String gcpProjectId, ConstrainDocumentsToCollection constrainDocumentsToCollection) {
 		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
 		DocumentType documentType = docCriteria.getDocumentType();
 		PipelineKey pipelineKey = docCriteria.getPipelineKey();
 		String pipelineVersion = docCriteria.getPipelineVersion();
 
-		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion);
+		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion,
+				constrainDocumentsToCollection);
 
 		Query.Builder query = Query.newBuilder();
 		query.addKindBuilder().setName(DOCUMENT_KIND);
@@ -681,8 +702,20 @@ public class PipelineMain {
 		return docId;
 	}
 
+	/**
+	 * @param collection
+	 * @param documentFormat
+	 * @param documentType
+	 * @param pipelineKey
+	 * @param pipelineVersion
+	 * @param constrainDocumentsToCollection if YES, then the collection is added to
+	 *                                       the filters; if NO, the collection
+	 *                                       filter is excluded
+	 * @return
+	 */
 	private static List<Filter> setFilters(String collection, DocumentFormat documentFormat, DocumentType documentType,
-			PipelineKey pipelineKey, String pipelineVersion) {
+			PipelineKey pipelineKey, String pipelineVersion,
+			ConstrainDocumentsToCollection constrainDocumentsToCollection) {
 		List<Filter> filters = new ArrayList<Filter>();
 		if (documentFormat != null) {
 			Filter filter = makeFilter(DOCUMENT_PROPERTY_FORMAT, PropertyFilter.Operator.EQUAL,
@@ -712,7 +745,7 @@ public class PipelineMain {
 		}
 
 		/* incorporate the collection name into the query if there is one */
-		if (collection != null) {
+		if (collection != null && constrainDocumentsToCollection == ConstrainDocumentsToCollection.YES) {
 			filters.add(makeFilter(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, PropertyFilter.Operator.EQUAL,
 					makeValue(collection)).build());
 		}

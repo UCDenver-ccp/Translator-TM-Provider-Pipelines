@@ -12,6 +12,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -27,11 +28,12 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionWebAnnoFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionWebAnnoFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -117,6 +119,11 @@ public class WebAnnoSentenceExtractionPipeline {
 
 		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Default.Enum("ConstrainDocumentsToCollection.YES")
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 	}
 
 	public static void main(String[] args) {
@@ -142,7 +149,8 @@ public class WebAnnoSentenceExtractionPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(conceptDocumentType, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);

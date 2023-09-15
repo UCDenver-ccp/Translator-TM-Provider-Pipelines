@@ -21,6 +21,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.MultithreadedServiceCalls;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -121,6 +122,11 @@ public class OgerPipeline {
 
 		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
 
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
+		
 	}
 
 	public static void main(String[] args) {
@@ -161,7 +167,7 @@ public class OgerPipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria, inputAugTextDocCriteria),
 						options.getProject(), p, targetProcessingStatusFlag, requiredProcessStatusFlags,
-						options.getCollection(), options.getOverwrite());
+						options.getCollection(), options.getOverwrite(), options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria csOutputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_CS, DocumentFormat.BIONLP,
 				PIPELINE_KEY, options.getOutputPipelineVersion());

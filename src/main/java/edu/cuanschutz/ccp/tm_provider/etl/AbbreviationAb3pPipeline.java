@@ -26,6 +26,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.AbbreviationFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -113,6 +114,12 @@ public class AbbreviationAb3pPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Required
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
+
 	}
 
 	public static void main(String[] args) {
@@ -144,7 +151,8 @@ public class AbbreviationAb3pPipeline {
 						options.getInputTextPipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
 				PIPELINE_KEY, options.getOutputPipelineVersion());

@@ -14,8 +14,10 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -28,6 +30,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
@@ -143,6 +146,12 @@ public class SentenceExtractionPipeline {
 		String getConceptIdsToExclude();
 
 		void setConceptIdsToExclude(String path);
+		
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Default.Enum("YES")
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 
 	}
 
@@ -176,7 +185,7 @@ public class SentenceExtractionPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(), options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP,
 				PIPELINE_KEY, pipelineVersion);

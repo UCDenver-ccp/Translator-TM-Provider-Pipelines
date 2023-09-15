@@ -11,6 +11,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -18,6 +19,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -74,6 +76,12 @@ public class DryRunPipeline {
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
+		
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Required
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 
 	}
 
@@ -96,7 +104,7 @@ public class DryRunPipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> docId2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite());
+						options.getOverwrite(), options.getConstrainDocumentsToCollection());
 
 		docId2Content.apply(Keys.<ProcessingStatus>create())
 				.apply("extract-doc-id", ParDo.of(new DoFn<ProcessingStatus, String>() {

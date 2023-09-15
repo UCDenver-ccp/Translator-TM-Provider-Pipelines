@@ -12,6 +12,7 @@ import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO.DocToBulk;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -19,6 +20,7 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
@@ -100,6 +102,12 @@ public class ElasticsearchLoadPipeline {
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
+		
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Required
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
 
 	}
 
@@ -123,7 +131,7 @@ public class ElasticsearchLoadPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(), options.getConstrainDocumentsToCollection());
 
 		PCollectionTuple output = ElasticsearchDocumentCreatorFn.createDocuments(statusEntity2Content, timestamp,
 				inputDocCriteria, errorCriteria, options.getConceptDocumentType());

@@ -8,8 +8,10 @@ import java.util.Set;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -20,6 +22,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.MultithreadedServiceCalls;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.CrfNerFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
@@ -104,6 +107,12 @@ public class CrfNerPipeline {
 
 		void setMultithreadedServiceCalls(MultithreadedServiceCalls value);
 
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Default.Enum("YES")
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
+
 	}
 
 	public static void main(String[] args) {
@@ -141,7 +150,8 @@ public class CrfNerPipeline {
 						options.getAugmentedSentencePipelineKey(), options.getAugmentedSentencePipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getConstrainDocumentsToCollection());
 
 		DocumentCriteria craftCrfOutputDocCriteria = new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP,
 				PIPELINE_KEY, options.getOutputPipelineVersion());
@@ -150,7 +160,8 @@ public class CrfNerPipeline {
 
 		// note: the craft document criteria is used as the error document criteria
 		PCollectionTuple output = CrfNerFn.process(statusEntity2Content, options.getCraftCrfServiceUri(),
-				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp, options.getMultithreadedServiceCalls());
+				options.getNlmDiseaseCrfServiceUri(), craftCrfOutputDocCriteria, timestamp,
+				options.getMultithreadedServiceCalls());
 
 		PCollection<KV<ProcessingStatus, List<String>>> statusEntityToCraftAnnotation = output
 				.get(CrfNerFn.CRAFT_NER_ANNOTATIONS_TAG);

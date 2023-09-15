@@ -6,6 +6,7 @@ import java.util.Set;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -22,6 +23,7 @@ import org.apache.beam.sdk.values.PCollection;
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
@@ -85,6 +87,12 @@ public class CollectionAssignmentPipeline {
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
 
+		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
+		@Default.Enum("YES")
+		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+
+		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
+
 	}
 
 	public static void main(String[] args) {
@@ -93,6 +101,7 @@ public class CollectionAssignmentPipeline {
 		String inputCollection = options.getInputCollection();
 		String project = options.getProject();
 		String outputCollection = options.getOutputCollection();
+		ConstrainDocumentsToCollection constrainDocumentsToCollection = options.getConstrainDocumentsToCollection();
 
 		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		Pipeline p = Pipeline.create(options);
@@ -110,7 +119,7 @@ public class CollectionAssignmentPipeline {
 		 * document that matches the inputDocCriteria
 		 */
 		PCollection<String> observedDocumentIdsMatchingDocCriteria = PipelineMain.getDocumentIdsForExistingDocuments(p,
-				inputDocCriteria, inputCollection, project);
+				inputDocCriteria, inputCollection, project, constrainDocumentsToCollection);
 
 		/* retrieve all ProcessingStatus objects for the specified collection */
 		PCollection<KV<String, ProcessingStatus>> processingStatusForCollection = PipelineMain
@@ -156,7 +165,8 @@ public class CollectionAssignmentPipeline {
 						// get the processing status -- there will only be one
 						ProcessingStatus processingStatus = result.getOnly(STATUS_TAG);
 						Iterable<Object> docIdMissingDoc = result.getAll(MISSING_TAG);
-						if (processingStatus != null && docIdMissingDoc != null && docIdMissingDoc.iterator().hasNext()) {
+						if (processingStatus != null && docIdMissingDoc != null
+								&& docIdMissingDoc.iterator().hasNext()) {
 							processingStatus.addCollection(outputCollection);
 							processingStatus.disableFlag(targetProcessingStatusFlag);
 							// we are using the updateStatusEntity method simply to convert ProcessingStatus
