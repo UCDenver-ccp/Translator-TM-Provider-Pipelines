@@ -12,25 +12,17 @@ OVERWRITE=$9
 STAGE_LOCATION=${10}
 TMP_LOCATION=${11}
 OUTPUT_PIPELINE_VERSION=${12}
-MULTITHREADED_SERVICE_CALLS=${13}
+OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION=${13}
 JAR_VERSION=${14}
 
-
-
-# TPSF="CRF_${ONT}_DONE"
-# TDT="CRF_${ONT}"
-# JOB_NAME=$(echo "CRF-${ONT}-${COLLECTION}" | tr '_' '-')
 JOB_NAME=$(echo "CRF-${COLLECTION}" | tr '_' '-')
 
 echo "CRAFT SERVICE URL: $CRAFT_SERVICE_URL"
 echo "NLM DISEASE SERVICE URL: $NLMDISEASE_SERVICE_URL"
-# echo "ONT: $ONT"
 echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
-# echo "TPSF: $TPSF"
-# echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
-echo "MULTITHREADED_SERVICE_CALLS: $MULTITHREADED_SERVICE_CALLS"
+echo "OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION: $OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION"
 
 java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" CRF \
 --jobName="$JOB_NAME" \
@@ -41,7 +33,7 @@ java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar"
 --augmentedSentencePipelineKey="$AUGMENTED_SENTENCE_PIPELINE_KEY" \
 --augmentedSentencePipelineVersion="$AUGMENTED_SENTENCE_PIPELINE_VERSION" \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
---multithreadedServiceCalls="$MULTITHREADED_SERVICE_CALLS" \
+--optionalDocumentSpecificCollection="$OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION" \
 --collection="$COLLECTION" \
 --overwrite="$OVERWRITE" \
 --project="${PROJECT}" \

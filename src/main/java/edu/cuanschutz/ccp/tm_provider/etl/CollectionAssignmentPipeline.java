@@ -6,7 +6,6 @@ import java.util.Set;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
-import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -22,7 +21,6 @@ import org.apache.beam.sdk.values.PCollection;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
@@ -90,11 +88,10 @@ public class CollectionAssignmentPipeline {
 
 		void setTargetProcessingStatusFlag(ProcessingStatusFlag value);
 
-		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
-		@Default.Enum("YES")
-		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
 
-		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
+		void setOptionalDocumentSpecificCollection(String value);
 
 	}
 
@@ -104,7 +101,7 @@ public class CollectionAssignmentPipeline {
 		String inputCollection = options.getInputCollection();
 		String project = options.getProject();
 		String outputCollection = options.getOutputCollection();
-		ConstrainDocumentsToCollection constrainDocumentsToCollection = options.getConstrainDocumentsToCollection();
+		String optionalDocumentSpecificCollection = options.getOptionalDocumentSpecificCollection();
 
 		ProcessingStatusFlag targetProcessingStatusFlag = options.getTargetProcessingStatusFlag();
 		Pipeline p = Pipeline.create(options);
@@ -121,8 +118,12 @@ public class CollectionAssignmentPipeline {
 		 * create a collection of document identifiers that have a corresponding
 		 * document that matches the inputDocCriteria
 		 */
+		String documentCollection = inputCollection;
+		if (optionalDocumentSpecificCollection != null) {
+			documentCollection = optionalDocumentSpecificCollection;
+		}
 		PCollection<String> observedDocumentIdsMatchingDocCriteria = PipelineMain.getDocumentIdsForExistingDocuments(p,
-				inputDocCriteria, inputCollection, project, constrainDocumentsToCollection);
+				inputDocCriteria, documentCollection, project);
 
 		/* retrieve all ProcessingStatus objects for the specified collection */
 		PCollection<KV<String, ProcessingStatus>> processingStatusForCollection = PipelineMain

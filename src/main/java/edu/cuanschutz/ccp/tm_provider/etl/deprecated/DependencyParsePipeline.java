@@ -8,7 +8,6 @@ import java.util.Set;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
-import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Keys;
@@ -23,7 +22,6 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
-import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
@@ -75,12 +73,10 @@ public class DependencyParsePipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("If yes, then the specified collection is used as a filter when searching for documents specified by the input doc criteria. If NO, then the collection filter is excluded. This is helpful when only the status entity has been assigned to a particular collection that we want to process. It may be inefficient in that more documents will be returned, and then filtered, but allows for processing of a collection assigned only the the status entities, e.g., the redo collections.")
-		@Default.Enum("YES")
-		ConstrainDocumentsToCollection getConstrainDocumentsToCollection();
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
 
-		void setConstrainDocumentsToCollection(ConstrainDocumentsToCollection value);
-
+		void setOptionalDocumentSpecificCollection(String value);
 	}
 
 	public static void main(String[] args) {
@@ -107,7 +103,7 @@ public class DependencyParsePipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite(), options.getConstrainDocumentsToCollection());
+						options.getOverwrite(), options.getOptionalDocumentSpecificCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);
