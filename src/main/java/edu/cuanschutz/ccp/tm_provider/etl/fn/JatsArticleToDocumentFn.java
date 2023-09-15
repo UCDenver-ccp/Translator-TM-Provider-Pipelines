@@ -1,17 +1,6 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
-import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
-import edu.cuanschutz.ccp.tm_provider.etl.util.*;
-import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.file.conversion.TextDocument;
-import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
-import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.values.*;
-import org.biorxiv.*;
+import static edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.chunkContent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,7 +9,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.chunkContent;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTag;
+import org.biorxiv.Abstract;
+import org.biorxiv.Article;
+import org.biorxiv.ArticleID;
+import org.biorxiv.ArticleMeta;
+import org.biorxiv.Body;
+import org.biorxiv.Fig;
+import org.biorxiv.PubDate;
+import org.biorxiv.Section;
+
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
+import edu.ucdenver.ccp.common.file.CharacterEncoding;
+import edu.ucdenver.ccp.file.conversion.TextDocument;
+import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
+import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 public class JatsArticleToDocumentFn extends DoFn<Article, KV<String, List<String>>> {
 

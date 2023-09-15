@@ -3,8 +3,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,21 +21,11 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
 import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
-import edu.cuanschutz.ccp.tm_provider.etl.util.SpanValidator;
 import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.common.io.ClassPathUtil;
 import edu.ucdenver.ccp.file.conversion.TextDocument;
 import edu.ucdenver.ccp.file.conversion.bionlp.BioNLPDocumentWriter;
 import edu.ucdenver.ccp.file.conversion.conllu.CoNLLUDocumentReader;
-import edu.ucdenver.ccp.nlp.core.annotation.Annotator;
-import edu.ucdenver.ccp.nlp.core.annotation.SpanUtils;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
-import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
-import edu.ucdenver.ccp.nlp.core.annotation.impl.DefaultTextAnnotation;
-import edu.ucdenver.ccp.nlp.core.mention.impl.DefaultClassMention;
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.sentdetect.SentenceModel;
-import opennlp.tools.util.Span;
 
 /**
  * This function takes dependency parse CoNNL-U files and plain text files, and

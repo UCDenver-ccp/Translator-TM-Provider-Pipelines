@@ -1,12 +1,12 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import org.apache.beam.sdk.io.FileIO;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.biorxiv.Article;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import static edu.cuanschutz.ccp.tm_provider.etl.BiorxivXmlToTextPipeline.LOGGER;
+
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -15,13 +15,14 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
 
-import static edu.cuanschutz.ccp.tm_provider.etl.BiorxivXmlToTextPipeline.LOGGER;
+import org.apache.beam.sdk.io.FileIO;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.biorxiv.Article;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 public class JatsFileToArticleFn extends DoFn<FileIO.ReadableFile, Article> {
 

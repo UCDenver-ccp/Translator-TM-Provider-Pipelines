@@ -11,7 +11,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,7 +30,6 @@ import edu.ucdenver.ccp.common.file.FileWriterUtil;
 import edu.ucdenver.ccp.common.file.reader.Line;
 import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.common.string.StringUtil;
-import edu.ucdenver.ccp.common.string.StringUtil.RemoveFieldEnclosures;
 import edu.ucdenver.ccp.datasource.fileparsers.obo.OntologyUtil;
 
 /**

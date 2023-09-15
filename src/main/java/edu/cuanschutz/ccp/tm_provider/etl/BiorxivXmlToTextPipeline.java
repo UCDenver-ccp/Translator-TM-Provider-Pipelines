@@ -1,30 +1,45 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.*;
+import static edu.cuanschutz.ccp.tm_provider.etl.fn.JatsArticleToDocumentFn.etlFailureTag;
+import static edu.cuanschutz.ccp.tm_provider.etl.fn.JatsArticleToDocumentFn.processingStatusTag;
+import static edu.cuanschutz.ccp.tm_provider.etl.fn.JatsArticleToDocumentFn.sectionAnnotationsTag;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
-import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
-import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.values.*;
-import org.biorxiv.*;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TupleTagList;
+import org.biorxiv.Article;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.JatsArticleToDocumentFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.JatsDocumentToEntityFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.JatsFileToArticleFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ProcessingStatusToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
-import java.util.*;
-import java.util.logging.Logger;
-
-import static edu.cuanschutz.ccp.tm_provider.etl.fn.JatsArticleToDocumentFn.*;
 
 public class BiorxivXmlToTextPipeline {
 

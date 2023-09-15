@@ -22,8 +22,8 @@ import org.apache.beam.sdk.values.PCollection;
 
 import com.google.datastore.v1.Entity;
 
-import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
+import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;

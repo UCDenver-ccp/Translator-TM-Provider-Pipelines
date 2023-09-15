@@ -11,7 +11,6 @@ import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -24,8 +23,8 @@ import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
-import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToCollection;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.TurkuDepParserFn;

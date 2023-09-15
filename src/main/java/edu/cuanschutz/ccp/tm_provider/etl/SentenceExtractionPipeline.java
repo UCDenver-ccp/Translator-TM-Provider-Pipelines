@@ -34,9 +34,9 @@ import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain.ConstrainDocumentsToColle
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
-import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;

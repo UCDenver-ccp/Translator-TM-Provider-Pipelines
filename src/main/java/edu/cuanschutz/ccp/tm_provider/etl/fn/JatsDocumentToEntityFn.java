@@ -1,12 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
-import com.google.datastore.v1.Entity;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
+import static edu.cuanschutz.ccp.tm_provider.etl.BiorxivXmlToTextPipeline.LOGGER;
+import static edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn.createEntity;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
@@ -14,8 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static edu.cuanschutz.ccp.tm_provider.etl.BiorxivXmlToTextPipeline.LOGGER;
-import static edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn.createEntity;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+
+import com.google.datastore.v1.Entity;
+
+import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

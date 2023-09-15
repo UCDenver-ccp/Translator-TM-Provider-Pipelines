@@ -35,7 +35,6 @@ import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
 import com.google.cloud.datastore.Value;
-import com.google.cloud.datastore.ValueBuilder;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SuccessStatusFn;
