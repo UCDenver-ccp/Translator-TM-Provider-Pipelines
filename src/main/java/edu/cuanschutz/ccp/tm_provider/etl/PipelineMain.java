@@ -33,8 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.google.cloud.Timestamp;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.transforms.Create;
@@ -52,6 +50,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.datastore.KeyQuery;
+import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
@@ -140,6 +141,9 @@ public class PipelineMain {
 				break;
 			case BIOC_TO_TEXT:
 				BiocToTextPipeline.main(pipelineArgs);
+				break;
+			case COLLECTION_ASSIGNMENT:
+				CollectionAssignmentPipeline.main(pipelineArgs);
 				break;
 			case CRF:
 				CrfNerPipeline.main(pipelineArgs);
@@ -627,6 +631,56 @@ public class PipelineMain {
 		return docId2Document;
 	}
 
+	/**
+	 * Return the document IDs for documents that match the specified document
+	 * criteria and collection
+	 * 
+	 * @param p
+	 * @param docCriteria
+	 * @param collection
+	 * @param gcpProjectId
+	 * @return
+	 */
+	public static PCollection<String> getDocumentIdsForExistingDocuments(Pipeline p, DocumentCriteria docCriteria,
+			String collection, String gcpProjectId) {
+		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
+		DocumentType documentType = docCriteria.getDocumentType();
+		PipelineKey pipelineKey = docCriteria.getPipelineKey();
+		String pipelineVersion = docCriteria.getPipelineVersion();
+
+		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion);
+
+		Query.Builder query = Query.newBuilder();
+		query.addKindBuilder().setName(DOCUMENT_KIND);
+
+		if (!filters.isEmpty()) {
+			Filter filter = makeAndFilter(filters).build();
+			query.setFilter(filter);
+		}
+
+		PCollection<Entity> documents = p.apply(
+				String.format("load %s", (documentType == null) ? "all types" : documentType.name().toLowerCase()),
+				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
+
+		PCollection<String> docId = documents.apply("extract doc id", ParDo.of(new DoFn<Entity, String>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(@Element Entity statusEntity, OutputReceiver<String> out) {
+
+				try {
+					ProcessedDocument pd = new ProcessedDocument(statusEntity);
+					out.output(pd.getDocumentId());
+				} catch (UnsupportedEncodingException e) {
+					throw new IllegalStateException("Error while extracting document ID from entity.", e);
+				}
+
+			}
+		}));
+
+		return docId;
+	}
+
 	private static List<Filter> setFilters(String collection, DocumentFormat documentFormat, DocumentType documentType,
 			PipelineKey pipelineKey, String pipelineVersion) {
 		List<Filter> filters = new ArrayList<Filter>();
@@ -855,7 +909,7 @@ public class PipelineMain {
 	 * @return an updated version of the input {@link Entity} with the specified
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
-	private static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
+	public static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
 		String documentId = origEntity.getDocumentId();
 		Key key = DatastoreKeyUtil.createStatusKey(documentId);
 
@@ -887,8 +941,10 @@ public class PipelineMain {
 		for (Entry<String, Boolean> entry : origEntity.getFlagPropertiesMap().entrySet()) {
 			entityBuilder.putProperties(entry.getKey(), makeValue(entry.getValue()).build());
 		}
-		for (ProcessingStatusFlag flag : flagsToActivate) {
-			entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
+		if (flagsToActivate != null) {
+			for (ProcessingStatusFlag flag : flagsToActivate) {
+				entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
+			}
 		}
 
 		/*
