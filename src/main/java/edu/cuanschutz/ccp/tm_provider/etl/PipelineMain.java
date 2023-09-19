@@ -43,6 +43,7 @@ import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGbkResultSchema;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -310,14 +311,17 @@ public class PipelineMain {
 		}
 
 		int tagIndex = 1;
+		Map<Integer, DocumentCriteria> tagIndexToDocCriteriaMap = new HashMap<Integer, DocumentCriteria>();
 		for (DocumentCriteria docCriteria : inputDocCriteria) {
 			String documentCollection = collection;
-			if (documentSpecificCollection != null && !documentSpecificCollection.trim().isEmpty()) {
+			if (documentSpecificCollection != null && !documentSpecificCollection.trim().isEmpty()
+					&& !documentSpecificCollection.equalsIgnoreCase("null")) {
 				documentCollection = documentSpecificCollection;
 			}
 
 			PCollection<KV<String, ProcessedDocument>> docId2Document = getDocumentEntitiesToProcess(beamPipeline,
 					docCriteria, documentCollection, gcpProjectId);
+			tagIndexToDocCriteriaMap.put(tagIndex, docCriteria);
 			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
@@ -334,51 +338,65 @@ public class PipelineMain {
 						KV<String, CoGbkResult> element = c.element();
 						CoGbkResult result = element.getValue();
 
-						// get the processing status -- there will only be one
 						try {
-							ProcessingStatus processingStatus = result.getOnly(statusTag);
+							// when doing the redo runs, it is possible that there are documents collected
+							// (b/c we are unable to be specific about which collection to use for the
+							// documents) but no processing status entity. When we were sure that a
+							// processing status would be returned, we used to use
+							// result.getOnly(statusTag), however, now we must use result.getAll(statusTag)
+							// and then check to see if the result is null or empty before proceeding.
+//							ProcessingStatus processingStatus = result.getOnly(statusTag);
+							Iterable<ProcessingStatus> allProcessingStatus = result.getAll(statusTag);
+							// there will be a max of one in this iterable
+							if (allProcessingStatus != null) {
+								for (ProcessingStatus processingStatus : allProcessingStatus) {
+									if (processingStatus != null) {
+										// get all associated documents -- there should be only one
+										// ProcessedDocument associated with each documentTag
+										Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
+										boolean hasAllDocuments = true;
+										DocumentCriteria missingDocCriteria = null;
+										// index starts with 1 here b/c the tagMap keys start with 1
+										for (int index = 1; index <= inputDocCriteria.size(); index++) {
+											// we use result.getAll here b/c it is possible for multiple documents to be
+											// returned for a single DocumentCriteria if the pipeline version is set to
+											// "recent" instead of a specific semantic version, e.g. 0.1.2.
+											Iterable<ProcessedDocument> allDocs = result.getAll(tagMap.get(index));
+											if (allDocs != null) {
+												for (ProcessedDocument doc : result.getAll(tagMap.get(index))) {
+													allDocuments.add(doc);
+												}
+											} else {
+												missingDocCriteria = tagIndexToDocCriteriaMap.get(index);
+												LOGGER.log(Level.WARNING, String.format(
+														"Skipping processing due to missing documents for id: %s criteria: %s",
+														element.getKey(), missingDocCriteria.toString()));
+												hasAllDocuments = false;
+												break;
+											}
 
-							if (processingStatus != null) {
-								// get all associated documents -- there should be only one
-								// ProcessedDocument associated with each documentTag
-								Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
-								boolean hasAllDocuments = true;
-								// index starts with 1 here b/c the tagMap keys start with 1
-								for (int index = 1; index <= inputDocCriteria.size(); index++) {
-									// we use result.getAll here b/c it is possible for multiple documents to be
-									// returned for a single DocumentCriteria if the pipeline version is set to
-									// "recent" instead of a specific semantic version, e.g. 0.1.2.
-									Iterable<ProcessedDocument> allDocs = result.getAll(tagMap.get(index));
-									if (allDocs != null) {
-										for (ProcessedDocument doc : result.getAll(tagMap.get(index))) {
-											allDocuments.add(doc);
 										}
-									} else {
-										hasAllDocuments = false;
-										break;
+
+										if (hasAllDocuments) {
+											// piece together documents that have been split for storage
+											Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(
+													allDocuments);
+
+											// if there are documents with the same pipeline key, type, and format, but
+											// with
+											// different versions, then keep the most recent (highest) version
+											Map<DocumentCriteria, String> filteredContentMap = filterForMostRecent(
+													contentMap);
+
+											c.output(KV.of(processingStatus, filteredContentMap));
+										}
 									}
-
-								}
-
-								if (hasAllDocuments) {
-									// piece together documents that have been split for storage
-									Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
-
-									// if there are documents with the same pipeline key, type, and format, but with
-									// different versions, then keep the most recent (highest) version
-									Map<DocumentCriteria, String> filteredContentMap = filterForMostRecent(contentMap);
-
-									c.output(KV.of(processingStatus, filteredContentMap));
-								} else {
-									LOGGER.log(Level.WARNING,
-											"Skipping processing due to missing documents for id: " + element.getKey());
 								}
 							}
 						} catch (IllegalArgumentException e) {
 							LOGGER.log(Level.WARNING,
-									"Skipping processing due to missing documents for id: " + element.getKey());
-							// TODO: this should probably output an EtlFailure here instead of logging a
-							// warning
+									"Skipping processing due to IllegalArgumentException for id: " + element.getKey(),
+									e);
 						}
 					}
 
@@ -1590,7 +1608,7 @@ public class PipelineMain {
 			Timestamp timestamp, MultiOutputReceiver out) {
 		if (!PipelineMain.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria)) {
 			PipelineMain.logFailure(failureTag, String.format(
-					"Unable to complete post-processing due to missing annotation documents for: %s. Observed (%d): %s, but requires (%d): %s.",
+					"Unable to complete processing due to missing annotation documents for: %s. Observed (%d): %s, but requires (%d): %s.",
 					documentId, docCriteria.size(), docCriteria.toString(), requiredDocumentCriteria.size(),
 					requiredDocumentCriteria.toString()), errorDocCriteria, timestamp, out, documentId, null);
 			return false;

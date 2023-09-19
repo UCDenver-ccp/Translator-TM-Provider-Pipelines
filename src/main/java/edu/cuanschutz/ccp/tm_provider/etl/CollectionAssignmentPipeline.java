@@ -1,6 +1,8 @@
 package edu.cuanschutz.ccp.tm_provider.etl;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
@@ -18,13 +20,12 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 
 import com.google.datastore.v1.Entity;
 
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
-import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
 
@@ -46,29 +47,37 @@ public class CollectionAssignmentPipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 
-		@Description("This pipeline key will be used to select the input text documents that will be processed")
+		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
+				+ "delimited between different document criteria and pipe-delimited within document criteria, "
+				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;OGER_CHEBI|BIONLP|OGER|0.1.0")
 		@Required
-		DocumentType getInputDocumentType();
+		String getInputDocumentCriteria();
 
-		void setInputDocumentType(DocumentType value);
+		void setInputDocumentCriteria(String docCriteria);
 
-		@Description("This pipeline key will be used to select the input text documents that will be processed")
-		@Required
-		DocumentFormat getInputDocumentFormat();
-
-		void setInputDocumentFormat(DocumentFormat value);
-
-		@Description("This pipeline key will be used to select the input text documents that will be processed")
-		@Required
-		PipelineKey getInputPipelineKey();
-
-		void setInputPipelineKey(PipelineKey value);
-
-		@Description("This pipeline version will be used to select the input text documents that will be processed")
-		@Required
-		String getInputPipelineVersion();
-
-		void setInputPipelineVersion(String value);
+//		@Description("This pipeline key will be used to select the input text documents that will be processed")
+//		@Required
+//		DocumentType getInputDocumentType();
+//
+//		void setInputDocumentType(DocumentType value);
+//
+//		@Description("This pipeline key will be used to select the input text documents that will be processed")
+//		@Required
+//		DocumentFormat getInputDocumentFormat();
+//
+//		void setInputDocumentFormat(DocumentFormat value);
+//
+//		@Description("This pipeline key will be used to select the input text documents that will be processed")
+//		@Required
+//		PipelineKey getInputPipelineKey();
+//
+//		void setInputPipelineKey(PipelineKey value);
+//
+//		@Description("This pipeline version will be used to select the input text documents that will be processed")
+//		@Required
+//		String getInputPipelineVersion();
+//
+//		void setInputPipelineVersion(String value);
 
 		@Description("The document collection to process")
 		@Required
@@ -111,8 +120,11 @@ public class CollectionAssignmentPipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
 		/* initialize the document criteria that we are searching for */
-		DocumentCriteria inputDocCriteria = new DocumentCriteria(options.getInputDocumentType(),
-				options.getInputDocumentFormat(), options.getInputPipelineKey(), options.getInputPipelineVersion());
+		List<DocumentCriteria> inputDocCriterias = new ArrayList<DocumentCriteria>(
+				PipelineMain.compileInputDocumentCriteria(options.getInputDocumentCriteria()));
+
+//		DocumentCriteria inputDocCriteria = new DocumentCriteria(options.getInputDocumentType(),
+//				options.getInputDocumentFormat(), options.getInputPipelineKey(), options.getInputPipelineVersion());
 
 		/*
 		 * create a collection of document identifiers that have a corresponding
@@ -122,8 +134,17 @@ public class CollectionAssignmentPipeline {
 		if (optionalDocumentSpecificCollection != null) {
 			documentCollection = optionalDocumentSpecificCollection;
 		}
-		PCollection<String> observedDocumentIdsMatchingDocCriteria = PipelineMain.getDocumentIdsForExistingDocuments(p,
-				inputDocCriteria, documentCollection, project);
+
+		PCollectionList<String> observedDocumentIDsMatchingDocCriterias = PCollectionList.of(PipelineMain
+				.getDocumentIdsForExistingDocuments(p, inputDocCriterias.get(0), documentCollection, project));
+		for (int i = 1; i < inputDocCriterias.size(); i++) {
+			observedDocumentIDsMatchingDocCriterias = observedDocumentIDsMatchingDocCriterias.and(PipelineMain
+					.getDocumentIdsForExistingDocuments(p, inputDocCriterias.get(i), documentCollection, project));
+		}
+
+		/* take the intersection of all observed-document-ids-matching-doc-criteria */
+		PCollection<String> observedDocumentIdsMatchingDocCriteria = observedDocumentIDsMatchingDocCriterias
+				.apply("intersection", Sets.intersectAll());
 
 		/* retrieve all ProcessingStatus objects for the specified collection */
 		PCollection<KV<String, ProcessingStatus>> processingStatusForCollection = PipelineMain
