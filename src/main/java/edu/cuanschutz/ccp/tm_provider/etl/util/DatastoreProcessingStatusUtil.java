@@ -1,9 +1,10 @@
 package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_KIND;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_COLLECTIONS;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_DOCUMENT_ID;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_PUBLICATION_TYPES;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.STATUS_PROPERTY_YEAR_PUBLISHED;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,9 +30,11 @@ import com.google.cloud.datastore.Entity.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Transaction;
+import com.google.cloud.datastore.Value;
 
 import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SuccessStatusFn;
@@ -216,6 +219,43 @@ public class DatastoreProcessingStatusUtil {
 					for (ProcessingStatusFlag flag : statusFlags) {
 						builder.set(flag.getDatastoreFlagPropertyName(), status);
 					}
+					transaction.put(builder.build());
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Unable to find status for key %s. Cannot update status for tasks:%s.",
+									key.toString(), statusFlags.toString()));
+				}
+			}
+			transaction.commit();
+		} finally {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+		}
+	}
+
+	public void setStatusAndAddCollection(List<Key> keys, Set<ProcessingStatusFlag> statusFlags, boolean status,
+			String newCollection) {
+		Transaction transaction = datastore.newTransaction();
+		try {
+
+			int count = 0;
+			for (Key key : keys) {
+				if (count++ % 100 == 0) {
+					System.out.println("update progress: " + count);
+				}
+
+				Entity statusEntity = transaction.get(key);
+				if (statusEntity != null) {
+					List<Value<?>> collections = statusEntity.getList(STATUS_PROPERTY_COLLECTIONS);
+					List<Value<?>> updatedCollections = new ArrayList<Value<?>>(collections);
+					updatedCollections.add(StringValue.of(newCollection));
+					Builder builder = Entity.newBuilder(statusEntity);
+					statusFlags.remove(ProcessingStatusFlag.NOOP);
+					for (ProcessingStatusFlag flag : statusFlags) {
+						builder.set(flag.getDatastoreFlagPropertyName(), status);
+					}
+					builder.set(STATUS_PROPERTY_COLLECTIONS, updatedCollections);
 					transaction.put(builder.build());
 				} else {
 					throw new IllegalArgumentException(

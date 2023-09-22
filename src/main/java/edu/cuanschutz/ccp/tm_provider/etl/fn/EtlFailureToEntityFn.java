@@ -1,15 +1,15 @@
 package edu.cuanschutz.ccp.tm_provider.etl.fn;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_MESSAGE;
+import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_STACKTRACE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_FORMAT;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_ID;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_DOCUMENT_TYPE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_MESSAGE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_MESSAGE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_PIPELINE_VERSION;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_STACKTRACE;
-import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_CAUSE_STACKTRACE;
 import static edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants.FAILURE_PROPERTY_TIMESTAMP;
 
 import java.io.UnsupportedEncodingException;
@@ -71,12 +71,12 @@ public class EtlFailureToEntityFn extends DoFn<EtlFailureData, KV<String, Entity
 		 * blob and store it unindexed
 		 */
 		ByteString stackTraceBlob = ByteString.copyFrom(stackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
-		ByteString causeStackTraceBlob = (causeStackTrace == null) ? ByteString.EMPTY : ByteString.copyFrom(causeStackTrace,
-				CharacterEncoding.UTF_8.getCharacterSetName());
+		ByteString causeStackTraceBlob = (causeStackTrace == null) ? ByteString.EMPTY
+				: ByteString.copyFrom(causeStackTrace, CharacterEncoding.UTF_8.getCharacterSetName());
 		if (causeMessage == null) {
 			causeMessage = "";
 		}
-		
+
 		Entity.Builder entityBuilder = Entity.newBuilder();
 		entityBuilder.setKey(key);
 		entityBuilder.putProperties(FAILURE_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());

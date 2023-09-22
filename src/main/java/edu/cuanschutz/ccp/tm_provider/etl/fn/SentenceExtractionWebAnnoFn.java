@@ -14,8 +14,6 @@ import java.util.Set;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -86,7 +84,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						try {
-							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 
 							Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());

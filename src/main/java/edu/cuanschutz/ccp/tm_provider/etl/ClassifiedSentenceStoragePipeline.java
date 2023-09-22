@@ -11,6 +11,7 @@ import org.apache.beam.sdk.io.jdbc.JdbcIO.DataSourceConfiguration;
 import org.apache.beam.sdk.io.jdbc.JdbcIO.RetryConfiguration;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -42,46 +43,55 @@ public class ClassifiedSentenceStoragePipeline {
 
 	public interface Options extends DataflowPipelineOptions {
 		@Description("GCS path to the BERT output file")
+		@Required
 		String getBertOutputFilePath();
 
 		void setBertOutputFilePath(String path);
 
 		@Description("GCS path to the sentence metadata file")
+		@Required
 		String getSentenceMetadataFilePath();
 
 		void setSentenceMetadataFilePath(String path);
 
 		@Description("The Biolink Association that is being processed.")
+		@Required
 		BiolinkAssociation getBiolinkAssociation();
 
 		void setBiolinkAssociation(BiolinkAssociation assoc);
 
 		@Description("The name of the database")
+		@Required
 		String getDatabaseName();
 
 		void setDatabaseName(String value);
 
 		@Description("The database username")
+		@Required
 		String getDbUsername();
 
 		void setDbUsername(String value);
 
 		@Description("The password for the corresponding database user")
+		@Required
 		String getDbPassword();
 
 		void setDbPassword(String value);
 
 		@Description("Cloud SQL MySQL instance name")
+		@Required
 		String getMySqlInstanceName();
 
 		void setMySqlInstanceName(String value);
 
 		@Description("GCP region for the Cloud SQL instance (see the connection name in the GCP console)")
+		@Required
 		String getCloudSqlRegion();
 
 		void setCloudSqlRegion(String value);
 
 		@Description("The minimum BERT classification score required for a sentence to be kept as evidence for an assertion.")
+		@Required
 		double getBertScoreInclusionMinimumThreshold();
 
 		void setBertScoreInclusionMinimumThreshold(double minThreshold);
@@ -97,12 +107,11 @@ public class ClassifiedSentenceStoragePipeline {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline p = Pipeline.create(options);
 
-		
 		p.getCoderRegistry().registerCoderForClass(AssertionTableValues.class, new AssertionTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EvidenceTableValues.class, new EvidenceTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EntityTableValues.class, new EntityTableValuesCoder());
 		p.getCoderRegistry().registerCoderForClass(EvidenceScoreTableValues.class, new EvidenceScoreTableValuesCoder());
-		
+
 		System.out.println("bert output file: " + options.getBertOutputFilePath());
 		System.out.println("sentence metadata file: " + options.getSentenceMetadataFilePath());
 

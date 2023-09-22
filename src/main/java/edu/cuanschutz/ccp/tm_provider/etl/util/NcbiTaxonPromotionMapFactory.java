@@ -2,12 +2,10 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -64,13 +62,19 @@ public class NcbiTaxonPromotionMapFactory {
 	}
 
 	public static void main(String[] args) {
-		File ncbitaxonOwlFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon.owl.gz");
-		File outputFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon-promotion-map.tsv");
+//		File ncbitaxonOwlFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon.owl.gz");
+//		File outputFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/ncbitaxon-promotion-map.tsv");
+
+		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
+
+		File ncbitaxonOwlFile = new File(ontBase, "ncbitaxon.owl");
+		File outputFile = new File(ontBase, "ncbitaxon-promotion-map.tsv");
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ncbitaxonOwlFile)));
+			OntologyUtil ontUtil = new OntologyUtil(ncbitaxonOwlFile);
+//			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(ncbitaxonOwlFile)));
 			new NcbiTaxonPromotionMapFactory(ontUtil).createMappingFile(writer);
 
 		} catch (FileNotFoundException e) {

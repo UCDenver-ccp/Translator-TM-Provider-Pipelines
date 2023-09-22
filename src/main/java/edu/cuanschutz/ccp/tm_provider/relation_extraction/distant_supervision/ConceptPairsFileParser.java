@@ -103,7 +103,7 @@ public class ConceptPairsFileParser {
 		Set<ConceptPair> negativeConceptPairs = new HashSet<ConceptPair>();
 		for (Entry<String, Set<String>> entry : positiveSubToObjMap.entrySet()) {
 			if (count++ % 100 == 0) {
-				System.out.println(String.format("Progress: %d of %d", (count -1), positiveSubToObjMap.size()));
+				System.out.println(String.format("Progress: %d of %d", (count - 1), positiveSubToObjMap.size()));
 			}
 			String subjectCurie = entry.getKey();
 

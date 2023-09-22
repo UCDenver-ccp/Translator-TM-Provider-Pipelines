@@ -1,0 +1,29 @@
+#!/usr/local/bin/bash
+
+## This script creates sentence annotation files (bionlp) based on the sentences extracted during dependency parsing.
+
+source ./rrun.env.sh
+
+SCRIPT=./scripts/pipelines/sentences/run_dp_to_sentence.sh
+
+########### CHOOSE MEDLINE OR PMCOA
+#### MEDLINE
+TEXT_PIPELINE_KEY=MEDLINE_XML_TO_TEXT
+TEXT_PIPELINE_VERSION='0.1.0'
+SUBSET_PREFIX=PUBMED_SUB_
+MAX_SUBSET_INDEX=37
+
+#### PMCOA
+# PIPELINE_KEY=BIOC_TO_TEXT
+# TEXT_PIPELINE_VERSION=
+# SUBSET_PREFIX=PMC_SUBSET_
+# MAX_SUBSET_INDEX=36
+
+OVERWRITE=YES
+OUTPUT_SENTENCE_VERSION='0.3.0'
+DP_PIPELINE_VERSION='0.2.1'
+JAR_VERSION='0.2.1'
+
+echo "Starting DP-to-sentence pipeline..."
+COLLECTION="TEST"
+$SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $OUTPUT_SENTENCE_VERSION $DP_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/dp-to-sent-${COLLECTION}.log" &

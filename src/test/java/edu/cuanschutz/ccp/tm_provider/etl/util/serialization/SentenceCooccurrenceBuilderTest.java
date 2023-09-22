@@ -55,8 +55,8 @@ public class SentenceCooccurrenceBuilderTest {
 
 	@Test
 	public void testIsAsExpected() throws IOException {
-		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class,
-				"PMC1790863.txt", CharacterEncoding.UTF_8);
+		String version1 = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class, "PMC1790863.txt",
+				CharacterEncoding.UTF_8);
 		assertEquals(version1.trim(), text.trim());
 	}
 
@@ -77,11 +77,12 @@ public class SentenceCooccurrenceBuilderTest {
 
 		for (TextAnnotation ta : td.getAnnotations()) {
 			String substring = td.getText().substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd());
-			
-			System.out.println("SUBSTRING: " + substring + " --- " + ta.getCoveredText() + " --- " + ta.getAggregateSpan().toString());
+
+			System.out.println("SUBSTRING: " + substring + " --- " + ta.getCoveredText() + " --- "
+					+ ta.getAggregateSpan().toString());
 			assertEquals(ta.getCoveredText(),
 					text.substring(ta.getAggregateSpan().getSpanStart(), ta.getAggregateSpan().getSpanEnd()));
-			
+
 			assertFalse(substring.startsWith(" "));
 		}
 
@@ -283,20 +284,18 @@ public class SentenceCooccurrenceBuilderTest {
 			byte[] byteSubset = Arrays.copyOfRange(text.getBytes(), ta.getAnnotationSpanStart(),
 					ta.getAnnotationSpanEnd());
 
-			int updatedSpanStart = new String(Arrays.copyOfRange(text.getBytes(), 0,
-					ta.getAnnotationSpanStart())).length();
-			int updatedSpanEnd = new String(Arrays.copyOfRange(text.getBytes(), 0,
-					ta.getAnnotationSpanEnd())).length();
+			int updatedSpanStart = new String(Arrays.copyOfRange(text.getBytes(), 0, ta.getAnnotationSpanStart()))
+					.length();
+			int updatedSpanEnd = new String(Arrays.copyOfRange(text.getBytes(), 0, ta.getAnnotationSpanEnd())).length();
 
-			
-			assertEquals(new String(byteSubset),text.substring(updatedSpanStart, updatedSpanEnd) );
+			assertEquals(new String(byteSubset), text.substring(updatedSpanStart, updatedSpanEnd));
 			System.out.println(text.substring(updatedSpanStart, updatedSpanEnd) + " ====== " + new String(byteSubset)
 					+ " ==== " + ta.getCoveredText() + " ----- "
 					+ text.substring(ta.getAnnotationSpanStart(), ta.getAnnotationSpanEnd()));
 
 		}
 	}
-	
+
 	@Test
 	public void testToOgerAnnotAlignment2() throws IOException {
 //		String docId = "567";
@@ -321,14 +320,12 @@ public class SentenceCooccurrenceBuilderTest {
 			byte[] byteSubset = Arrays.copyOfRange(text.getBytes(), ta.getAnnotationSpanStart(),
 					ta.getAnnotationSpanEnd());
 
-			int updatedSpanStart = new String(Arrays.copyOfRange(text.getBytes(), 0,
-					ta.getAnnotationSpanStart())).length();
-			int updatedSpanEnd = new String(Arrays.copyOfRange(text.getBytes(), 0,
-					ta.getAnnotationSpanEnd())).length();
+			int updatedSpanStart = new String(Arrays.copyOfRange(text.getBytes(), 0, ta.getAnnotationSpanStart()))
+					.length();
+			int updatedSpanEnd = new String(Arrays.copyOfRange(text.getBytes(), 0, ta.getAnnotationSpanEnd())).length();
 
 //			System.out.println("span before: " + ta.getAggregateSpan().toString() + " ----> " + new Span(updatedSpanStart, updatedSpanEnd).toString());
-			
-			
+
 //			assertEquals("cell",text.substring(updatedSpanStart, updatedSpanEnd) );
 			System.out.println(text.substring(updatedSpanStart, updatedSpanEnd) + " ====== " + new String(byteSubset)
 					+ " ==== " + ta.getCoveredText() + " ----- "

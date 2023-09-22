@@ -92,7 +92,8 @@ public class ExtractedSentence extends DoFn {
 	}
 
 	public String getSentenceIdentifier() {
-		return DigestUtils.sha256Hex(documentId + documentZone + entityId1 + entitySpan1 + entityId2 + entitySpan2 + sentenceText);
+		return DigestUtils.sha256Hex(
+				documentId + documentZone + entityId1 + entitySpan1 + entityId2 + entitySpan2 + sentenceText);
 	}
 
 	public String getSentenceWithPlaceholders() {
@@ -149,7 +150,7 @@ public class ExtractedSentence extends DoFn {
 					getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
 					entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
 //					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceContext), "\t");
-			sentenceText, documentZone, pubTypesStr, documentYearPublished), "\t");
+					sentenceText, documentZone, pubTypesStr, documentYearPublished), "\t");
 
 		} catch (NullPointerException e) {
 			StringBuilder msgBuilder = new StringBuilder();
@@ -214,7 +215,6 @@ public class ExtractedSentence extends DoFn {
 		int documentYearPublished = Integer.parseInt(cols[index++]);
 //		String sentenceContext = cols[index++];
 
-		
 		int entity1Start = entitySpan1.get(0).getSpanStart();
 		int entity2Start = entitySpan2.get(0).getSpanStart();
 
@@ -250,7 +250,7 @@ public class ExtractedSentence extends DoFn {
 		}
 
 		return new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1, entityPlaceholder1,
-				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, //sentenceContext,
+				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, // sentenceContext,
 				documentZone, documentPublicationTypes, documentYearPublished);
 	}
 

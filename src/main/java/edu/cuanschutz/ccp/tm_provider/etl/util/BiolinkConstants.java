@@ -27,9 +27,27 @@ public class BiolinkConstants {
 	private static final String BL_DISEASE_OR_PHENOTYPIC_FEATURE_TO_LOCATION_ASSOCIATION = "biolink:DiseaseOrPhenotypicFeatureToLocationAssociation";
 	private static final String BL_GENE_REGULATORY_RELATIONSHIP_ASSOCIATION = "biolink:GeneRegulatoryRelationship";
 	private static final String BL_GENE_TO_DISEASE_ASSOCIATION = "biolink:GeneToDiseaseAssociation";
-	private static final String BL_GENE_TO_CELLULAR_COMPONENT_ASSOCIATION = "biolink:GeneToCellularComponentAssociation"; // TODO: This Association needs to be added to Biolink
-	private static final String BL_GENE_TO_CELL_ASSOCIATION = "biolink:GeneToCellAssociation"; // TODO: This Association needs to be added to Biolink
-	private static final String BL_GENE_TO_ANATOMICAL_ENTITY_ASSOCIATION = "biolink:GeneToAnatomalEntityAssociation"; // TODO: This Association needs to be added to Biolink
+	private static final String BL_GENE_TO_CELLULAR_COMPONENT_ASSOCIATION = "biolink:GeneToCellularComponentAssociation"; // TODO:
+																															// This
+																															// Association
+																															// needs
+																															// to
+																															// be
+																															// added
+																															// to
+																															// Biolink
+	private static final String BL_GENE_TO_CELL_ASSOCIATION = "biolink:GeneToCellAssociation"; // TODO: This Association
+																								// needs to be added to
+																								// Biolink
+	private static final String BL_GENE_TO_ANATOMICAL_ENTITY_ASSOCIATION = "biolink:GeneToAnatomalEntityAssociation"; // TODO:
+																														// This
+																														// Association
+																														// needs
+																														// to
+																														// be
+																														// added
+																														// to
+																														// Biolink
 	private static final String BL_GENE_TO_BIOLOGICAL_PROCESS_ASSOCIATION = "biolink:GeneToBiologicalProcessAssociation";
 
 	// TODO: THis is not yet an official Biolink Association

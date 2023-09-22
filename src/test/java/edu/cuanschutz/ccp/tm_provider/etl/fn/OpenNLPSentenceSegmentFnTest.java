@@ -52,8 +52,8 @@ public class OpenNLPSentenceSegmentFnTest {
 
 		DocumentCriteria inputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
 				PipelineKey.FILE_LOAD, "v0.1.3");
-		String documentText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class,
-				"PMC1790863.txt", CharacterEncoding.UTF_8);
+		String documentText = ClassPathUtil.getContentsFromClasspathResource(BiocToTextFnTest.class, "PMC1790863.txt",
+				CharacterEncoding.UTF_8);
 		String docId = "PMC1790863";
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.SENTENCE_DONE;
 //		Entity expectedEntity = createEntity(docId, targetProcessingStatusFlag);

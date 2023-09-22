@@ -1,4 +1,4 @@
-package edu.cuanschutz.ccp.tm_provider.etl;
+package edu.cuanschutz.ccp.tm_provider.etl.deprecated;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -20,6 +20,9 @@ import org.apache.beam.sdk.values.PCollectionView;
 
 import com.google.datastore.v1.Entity;
 
+import edu.cuanschutz.ccp.tm_provider.etl.EtlFailureData;
+import edu.cuanschutz.ccp.tm_provider.etl.PipelineMain;
+import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.DocumentToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.TurkuDepParserFn;
@@ -33,6 +36,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
+ * NOTE: this is not in active use.
+ * 
  * This Apache Beam pipeline processes documents with a dependency parser
  * reached via HTTP POST. Input is plain text; Output is CoNLL-U format.
  */
@@ -68,6 +73,10 @@ public class DependencyParsePipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
+
+		void setOptionalDocumentSpecificCollection(String value);
 	}
 
 	public static void main(String[] args) {
@@ -94,7 +103,7 @@ public class DependencyParsePipeline {
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(CollectionsUtil.createSet(inputTextDocCriteria), options.getProject(), p,
 						targetProcessingStatusFlag, requiredProcessStatusFlags, options.getCollection(),
-						options.getOverwrite());
+						options.getOverwrite(), options.getOptionalDocumentSpecificCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PIPELINE_KEY, pipelineVersion);

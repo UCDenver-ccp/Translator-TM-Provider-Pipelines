@@ -95,7 +95,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 						}
 
 						try {
-							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 
 							Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap = PipelineMain
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
@@ -160,7 +160,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes, ancestorMap);
 		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes, ancestorMap);
-		
+
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
 

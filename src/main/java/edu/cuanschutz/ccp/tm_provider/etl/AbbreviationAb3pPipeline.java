@@ -35,7 +35,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentFormat;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
 import edu.cuanschutz.ccp.tm_provider.etl.util.ProcessingStatusFlag;
-import edu.cuanschutz.ccp.tm_provider.etl.util.Version;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 
 /**
@@ -102,16 +101,27 @@ public class AbbreviationAb3pPipeline {
 
 		void setCollection(String value);
 
+		@Description("The version that will be assigned to the datastore documents created by this pipeline")
+		@Required
+		String getOutputPipelineVersion();
+
+		void setOutputPipelineVersion(String value);
+
 		@Description("Overwrite any previous runs")
 		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
+
+		void setOptionalDocumentSpecificCollection(String value);
+
 	}
 
 	public static void main(String[] args) {
-		String pipelineVersion = Version.getProjectVersion();
+//		String pipelineVersion = Version.getProjectVersion();
 		com.google.cloud.Timestamp timestamp = com.google.cloud.Timestamp.now();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		ProcessingStatusFlag targetProcessingStatusFlag = ProcessingStatusFlag.ABBREVIATIONS_DONE;
@@ -139,10 +149,11 @@ public class AbbreviationAb3pPipeline {
 						options.getInputTextPipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getOptionalDocumentSpecificCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ABBREVIATIONS, DocumentFormat.BIONLP,
-				PIPELINE_KEY, pipelineVersion);
+				PIPELINE_KEY, options.getOutputPipelineVersion());
 
 		List<String> filesToDownloadToWorker = Arrays.asList(options.getBinaryFileAndDependencies().split("\\|"));
 		AbbreviationFn abbreviationFn = new AbbreviationFn(configuration, abbreviationsBinaryName,

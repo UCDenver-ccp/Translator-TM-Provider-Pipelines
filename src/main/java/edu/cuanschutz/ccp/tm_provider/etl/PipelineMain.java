@@ -43,14 +43,15 @@ import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGbkResultSchema;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.tools.ant.util.StringUtils;
 
+import com.google.cloud.Timestamp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Filter;
@@ -59,6 +60,8 @@ import com.google.datastore.v1.PropertyFilter;
 import com.google.datastore.v1.Query;
 import com.google.datastore.v1.Value;
 
+import edu.cuanschutz.ccp.tm_provider.etl.deprecated.BigQueryExportPipeline;
+import edu.cuanschutz.ccp.tm_provider.etl.deprecated.WebAnnoSentenceExtractionPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.update.UpdateMedlineEntitiesPipeline;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreConstants;
@@ -83,6 +86,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 public class PipelineMain {
 
 	private final static Logger LOGGER = Logger.getLogger(PipelineMain.class.getName());
+	public static final String PIPELINE_VERSION_RECENT = "recent";
 
 	private static final TupleTag<ProcessingStatus> statusTag = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag1 = new TupleTag<>();
@@ -113,6 +117,10 @@ public class PipelineMain {
 	private static final TupleTag<ProcessedDocument> documentTag26 = new TupleTag<>();
 	private static final TupleTag<ProcessedDocument> documentTag27 = new TupleTag<>();
 
+	public enum MultithreadedServiceCalls {
+		ENABLED, DISABLED
+	}
+
 	public static void main(String[] args) {
 		System.out.println("Running pipeline version: " + Version.getProjectVersion());
 
@@ -133,6 +141,9 @@ public class PipelineMain {
 			case BIOC_TO_TEXT:
 				BiocToTextPipeline.main(pipelineArgs);
 				break;
+			case COLLECTION_ASSIGNMENT:
+				CollectionAssignmentPipeline.main(pipelineArgs);
+				break;
 			case CRF:
 				CrfNerPipeline.main(pipelineArgs);
 				break;
@@ -141,6 +152,9 @@ public class PipelineMain {
 				break;
 			case CONCEPT_POST_PROCESS:
 				ConceptPostProcessingPipeline.main(pipelineArgs);
+				break;
+			case OGER_POST_PROCESS:
+				OgerPostProcessingPipeline.main(pipelineArgs);
 				break;
 			case CONCEPT_ANNOTATION_EXPORT:
 				ConceptAnnotationExportPipeline.main(pipelineArgs);
@@ -157,9 +171,10 @@ public class PipelineMain {
 			case CONCEPT_IDF:
 				ConceptIdfPipeline.main(pipelineArgs);
 				break;
-			case DEPENDENCY_PARSE_IMPORT:
-				DependencyParseStoragePipeline.main(pipelineArgs);
-				break;
+			// This pipeline is not actively used.
+//			case DEPENDENCY_PARSE:
+//				DependencyParsePipeline.main(pipelineArgs);
+//				break;
 			case FILE_LOAD:
 				LoadFilesPipeline.main(pipelineArgs);
 				break;
@@ -171,6 +186,15 @@ public class PipelineMain {
 				break;
 			case SENTENCE_EXTRACTION:
 				SentenceExtractionPipeline.main(pipelineArgs);
+				break;
+			case DEPENDENCY_PARSE_IMPORT:
+				DependencyParseStoragePipeline.main(pipelineArgs);
+				break;
+			case DEPENDENCY_PARSE_TO_SENTENCE:
+				DependencyParseToSentencePipeline.main(pipelineArgs);
+				break;
+			case DEPENDENCY_PARSE_TO_CONLL03:
+				DependencyParseToConll03Pipeline.main(pipelineArgs);
 				break;
 			case SENTENCE_SEGMENTATION:
 				SentenceSegmentationPipeline.main(pipelineArgs);
@@ -189,6 +213,12 @@ public class PipelineMain {
 				break;
 			case ELASTICSEARCH_LOAD:
 				ElasticsearchLoadPipeline.main(pipelineArgs);
+				break;
+			case DOC_TEXT_AUGMENTATION:
+				DocumentTextAugmentationPipeline.main(pipelineArgs);
+				break;
+			case FILTER_UNACTIONABLE_TEXT:
+				FilterUnactionableTextPipeline.main(pipelineArgs);
 				break;
 			case TEXT_EXPORT:
 				TextExtractionPipeline.main(pipelineArgs);
@@ -247,13 +277,17 @@ public class PipelineMain {
 	 * @param requiredProcessStatusFlags
 	 * @param collection
 	 * @param overwriteOutput
+	 * @param constrainDocumentsToCollection if YES, then the collection is added to
+	 *                                       the filters when searching for
+	 *                                       documents; if NO, the collection filter
+	 *                                       is excludeds
 	 * @return a mapping from the status entity to various document content (a
 	 *         mapping from the document criteria to the document content)
 	 */
 	public static PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> getStatusEntity2Content(
 			Set<DocumentCriteria> inputDocCriteria, String gcpProjectId, Pipeline beamPipeline,
 			ProcessingStatusFlag targetProcessStatusFlag, Set<ProcessingStatusFlag> requiredProcessStatusFlags,
-			String collection, OverwriteOutput overwriteOutput) {
+			String collection, OverwriteOutput overwriteOutput, String documentSpecificCollection) {
 
 		Map<Integer, TupleTag<ProcessedDocument>> tagMap = populateTagMap();
 
@@ -277,15 +311,25 @@ public class PipelineMain {
 		}
 
 		int tagIndex = 1;
+		Map<Integer, DocumentCriteria> tagIndexToDocCriteriaMap = new HashMap<Integer, DocumentCriteria>();
 		for (DocumentCriteria docCriteria : inputDocCriteria) {
+			String documentCollection = collection;
+			if (documentSpecificCollection != null && !documentSpecificCollection.trim().isEmpty()
+					&& !documentSpecificCollection.equalsIgnoreCase("null")) {
+				documentCollection = documentSpecificCollection;
+			}
+
 			PCollection<KV<String, ProcessedDocument>> docId2Document = getDocumentEntitiesToProcess(beamPipeline,
-					docCriteria, collection, gcpProjectId);
+					docCriteria, documentCollection, gcpProjectId);
+			tagIndexToDocCriteriaMap.put(tagIndex, docCriteria);
 			tuple = tuple.and(tagMap.get(tagIndex++), docId2Document);
 		}
 
-		PCollection<KV<String, CoGbkResult>> result = tuple.apply(CoGroupByKey.create());
+		PCollection<KV<String, CoGbkResult>> result = tuple.apply("merge status entities with docs",
+				CoGroupByKey.create());
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> outputPCollection = result.apply(
+				"check for required docs",
 				ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<ProcessingStatus, Map<DocumentCriteria, String>>>() {
 					private static final long serialVersionUID = 1L;
 
@@ -294,46 +338,182 @@ public class PipelineMain {
 						KV<String, CoGbkResult> element = c.element();
 						CoGbkResult result = element.getValue();
 
-						// get the processing status -- there will only be one
 						try {
-							ProcessingStatus processingStatus = result.getOnly(statusTag);
+							// when doing the redo runs, it is possible that there are documents collected
+							// (b/c we are unable to be specific about which collection to use for the
+							// documents) but no processing status entity. When we were sure that a
+							// processing status would be returned, we used to use
+							// result.getOnly(statusTag), however, now we must use result.getAll(statusTag)
+							// and then check to see if the result is null or empty before proceeding.
+//							ProcessingStatus processingStatus = result.getOnly(statusTag);
+							Iterable<ProcessingStatus> allProcessingStatus = result.getAll(statusTag);
+							// there will be a max of one in this iterable
+							if (allProcessingStatus != null) {
+								for (ProcessingStatus processingStatus : allProcessingStatus) {
+									if (processingStatus != null) {
+										// get all associated documents -- there should be only one
+										// ProcessedDocument associated with each documentTag
+										Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
+										boolean hasAllDocuments = true;
+										DocumentCriteria missingDocCriteria = null;
+										// index starts with 1 here b/c the tagMap keys start with 1
+										for (int index = 1; index <= inputDocCriteria.size(); index++) {
+											// we use result.getAll here b/c it is possible for multiple documents to be
+											// returned for a single DocumentCriteria if the pipeline version is set to
+											// "recent" instead of a specific semantic version, e.g. 0.1.2.
+											Iterable<ProcessedDocument> allDocs = result.getAll(tagMap.get(index));
+											if (allDocs != null) {
+												for (ProcessedDocument doc : result.getAll(tagMap.get(index))) {
+													allDocuments.add(doc);
+												}
+											} else {
+												missingDocCriteria = tagIndexToDocCriteriaMap.get(index);
+												LOGGER.log(Level.WARNING, String.format(
+														"Skipping processing due to missing documents for id: %s criteria: %s",
+														element.getKey(), missingDocCriteria.toString()));
+												hasAllDocuments = false;
+												break;
+											}
 
-							if (processingStatus != null) {
-								// get all associated documents -- there should be only one
-								// ProcessedDocument associated with each documentTag
-								Set<ProcessedDocument> allDocuments = new HashSet<ProcessedDocument>();
-								boolean hasAllDocuments = true;
-								// index starts with 1 here b/c the tagMap keys start with 1
-								for (int index = 1; index <= inputDocCriteria.size(); index++) {
-									ProcessedDocument doc = result.getOnly(tagMap.get(index));
-									if (doc != null) {
-										allDocuments.add(doc);
-									} else {
-										hasAllDocuments = false;
-										break;
+										}
+
+										if (hasAllDocuments) {
+											// piece together documents that have been split for storage
+											Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(
+													allDocuments);
+
+											// if there are documents with the same pipeline key, type, and format, but
+											// with
+											// different versions, then keep the most recent (highest) version
+											Map<DocumentCriteria, String> filteredContentMap = filterForMostRecent(
+													contentMap);
+
+											c.output(KV.of(processingStatus, filteredContentMap));
+										}
 									}
-								}
-
-								if (hasAllDocuments) {
-									// piece together documents that have been split for storage
-									Map<DocumentCriteria, String> contentMap = spliceDocumentChunks(allDocuments);
-									c.output(KV.of(processingStatus, contentMap));
-								} else {
-									LOGGER.log(Level.WARNING,
-											"Skipping processing due to missing documents for id: " + element.getKey());
 								}
 							}
 						} catch (IllegalArgumentException e) {
 							LOGGER.log(Level.WARNING,
-									"Skipping processing due to missing documents for id: " + element.getKey());
-							// TODO: this should probably output an EtlFailure here instead of logging a
-							// warning
+									"Skipping processing due to IllegalArgumentException for id: " + element.getKey(),
+									e);
 						}
 					}
 
 				}));
 
 		return outputPCollection;
+	}
+
+	@VisibleForTesting
+	protected static Map<DocumentCriteria, String> filterForMostRecent(Map<DocumentCriteria, String> contentMap) {
+		Map<String, Map<DocumentCriteria, String>> map = new HashMap<String, Map<DocumentCriteria, String>>();
+
+		// organize the documents by a key that does not include the pipeline version,
+		// but does include pipeline key, doc type, doc format
+		for (Entry<DocumentCriteria, String> entry : contentMap.entrySet()) {
+			String key = createVersionAgnosticKey(entry.getKey());
+			if (map.containsKey(key)) {
+				map.get(key).put(entry.getKey(), entry.getValue());
+			} else {
+				Map<DocumentCriteria, String> innerMap = new HashMap<DocumentCriteria, String>();
+				innerMap.put(entry.getKey(), entry.getValue());
+				map.put(key, innerMap);
+			}
+		}
+
+		// now keep only the most recent version of a given document
+		// NOTE: if we ever want to import multiple versions of the same document - this
+		// will prevent such an operation
+		Map<DocumentCriteria, String> filteredContentMap = new HashMap<DocumentCriteria, String>();
+		for (Entry<String, Map<DocumentCriteria, String>> entry : map.entrySet()) {
+			KV<DocumentCriteria, String> mostRecent = getMostRecent(entry.getValue());
+			filteredContentMap.put(mostRecent.getKey(), mostRecent.getValue());
+		}
+
+		return filteredContentMap;
+
+	}
+
+	/**
+	 * Given a mapping from DocumentCriteria to document content, return the
+	 * <DocumentCriteria,content> pair that is most recent, i.e., has the highest
+	 * semantic version
+	 * 
+	 * @param map
+	 * @return
+	 */
+	@VisibleForTesting
+	protected static KV<DocumentCriteria, String> getMostRecent(Map<DocumentCriteria, String> map) {
+		String previousVersion = null;
+		KV<DocumentCriteria, String> mostRecent = null;
+		for (Entry<DocumentCriteria, String> entry : map.entrySet()) {
+			DocumentCriteria dc = entry.getKey();
+			if (previousVersion == null || isMoreRecent(dc.getPipelineVersion(), previousVersion)) {
+				mostRecent = KV.of(dc, entry.getValue());
+				previousVersion = dc.getPipelineVersion();
+			}
+		}
+
+		return mostRecent;
+	}
+
+	/**
+	 * @param version1
+	 * @param version2
+	 * @return true is version1 is more recent than version2
+	 */
+	@VisibleForTesting
+	protected static boolean isMoreRecent(String version1, String version2) {
+		int[] semanticVersion1 = getSemanticVersion(version1);
+		int[] semanticVersion2 = getSemanticVersion(version2);
+
+		// we assume that at a maximum the version has 3 numbers, e.g. 0.4.7
+		for (int i = 0; i < 3; i++) {
+			// starting with the left-most number we compare versions. If at any point
+			// version1 is > version2 then return true. If version1 is < version2 then
+			// return false. If version1==version2, then the loop will move on to the next
+			// number. If the versions happen to be identical, which should not happen, then
+			// false is returned.
+			if (semanticVersion1[i] > semanticVersion2[i]) {
+				return true;
+			} else if (semanticVersion1[i] < semanticVersion2[i]) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	@VisibleForTesting
+	protected static int[] getSemanticVersion(String version) {
+		String[] cols = version.split("\\.");
+		if (cols.length > 3) {
+			throw new IllegalArgumentException("Unable to handle semantic versions with > 3 numbers: " + version);
+		}
+		int[] semanticVersion = new int[3];
+		for (int i = 0; i < 3; i++) {
+			if (cols.length > i) {
+				semanticVersion[i] = Integer.parseInt(cols[i]);
+			} else {
+				// if a version has fewer than three numbers, then use zero as a placeholder,
+				// e.g., 1.2 == 1.2.0
+				semanticVersion[i] = 0;
+			}
+		}
+		return semanticVersion;
+	}
+
+	/**
+	 * Creates a key that does not include the pipeline version, but does include
+	 * pipeline key, doc type, doc format
+	 * 
+	 * @param dc
+	 * @return
+	 */
+	public static String createVersionAgnosticKey(DocumentCriteria dc) {
+		return String.format("%s_%s_%s", dc.getPipelineKey().name(), dc.getDocumentType().name(),
+				dc.getDocumentFormat().name());
 	}
 
 	@VisibleForTesting
@@ -411,7 +591,7 @@ public class PipelineMain {
 		query.addKindBuilder().setName(STATUS_KIND);
 		query.setFilter(filter);
 
-		PCollection<Entity> status = p.apply("load status entities",
+		PCollection<Entity> status = p.apply(String.format("load status entities - %s", collection),
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 
 		PCollection<KV<String, ProcessingStatus>> docId2Status = status.apply("status entity->status",
@@ -429,6 +609,15 @@ public class PipelineMain {
 		return docId2Status;
 	}
 
+	/**
+	 * @param p
+	 * @param docCriteria
+	 * @param collection
+	 * @param gcpProjectId
+	 * @param documentSpecificCollection if assigned, this collection will be used
+	 *                                   in the search for documents
+	 * @return
+	 */
 	public static PCollection<KV<String, ProcessedDocument>> getDocumentEntitiesToProcess(Pipeline p,
 			DocumentCriteria docCriteria, String collection, String gcpProjectId) {
 		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
@@ -446,8 +635,8 @@ public class PipelineMain {
 			query.setFilter(filter);
 		}
 
-		PCollection<Entity> documents = p.apply(
-				String.format("load %s", (documentType == null) ? "all types" : documentType.name().toLowerCase()),
+		PCollection<Entity> documents = p.apply(String.format("load %s - %s",
+				(documentType == null) ? "all types" : documentType.name().toLowerCase(), collection),
 				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
 
 		PCollection<KV<String, ProcessedDocument>> docId2Document = documents.apply("document entity -> PD",
@@ -476,6 +665,64 @@ public class PipelineMain {
 		return docId2Document;
 	}
 
+	/**
+	 * Return the document IDs for documents that match the specified document
+	 * criteria and collection
+	 * 
+	 * @param p
+	 * @param docCriteria
+	 * @param collection
+	 * @param gcpProjectId
+	 * @return
+	 */
+	public static PCollection<String> getDocumentIdsForExistingDocuments(Pipeline p, DocumentCriteria docCriteria,
+			String collection, String gcpProjectId) {
+		DocumentFormat documentFormat = docCriteria.getDocumentFormat();
+		DocumentType documentType = docCriteria.getDocumentType();
+		PipelineKey pipelineKey = docCriteria.getPipelineKey();
+		String pipelineVersion = docCriteria.getPipelineVersion();
+
+		List<Filter> filters = setFilters(collection, documentFormat, documentType, pipelineKey, pipelineVersion);
+
+		Query.Builder query = Query.newBuilder();
+		query.addKindBuilder().setName(DOCUMENT_KIND);
+
+		if (!filters.isEmpty()) {
+			Filter filter = makeAndFilter(filters).build();
+			query.setFilter(filter);
+		}
+
+		PCollection<Entity> documents = p.apply(
+				String.format("load %s", (documentType == null) ? "all types" : documentType.name().toLowerCase()),
+				DatastoreIO.v1().read().withQuery(query.build()).withProjectId(gcpProjectId));
+
+		PCollection<String> docId = documents.apply("extract doc id", ParDo.of(new DoFn<Entity, String>() {
+			private static final long serialVersionUID = 1L;
+
+			@ProcessElement
+			public void processElement(@Element Entity statusEntity, OutputReceiver<String> out) {
+
+				try {
+					ProcessedDocument pd = new ProcessedDocument(statusEntity);
+					out.output(pd.getDocumentId());
+				} catch (UnsupportedEncodingException e) {
+					throw new IllegalStateException("Error while extracting document ID from entity.", e);
+				}
+
+			}
+		}));
+
+		return docId;
+	}
+
+	/**
+	 * @param collection
+	 * @param documentFormat
+	 * @param documentType
+	 * @param pipelineKey
+	 * @param pipelineVersion
+	 * @return
+	 */
 	private static List<Filter> setFilters(String collection, DocumentFormat documentFormat, DocumentType documentType,
 			PipelineKey pipelineKey, String pipelineVersion) {
 		List<Filter> filters = new ArrayList<Filter>();
@@ -497,7 +744,10 @@ public class PipelineMain {
 			filters.add(filter);
 		}
 
-		if (pipelineVersion != null) {
+		// if the pipeline version is set to "recent" then we will retrieve all versions
+		// of a given document and the most recent (highest semantic version number)
+		// will be selected at a later time
+		if (pipelineVersion != null && !pipelineVersion.equals("recent")) {
 			Filter filter = makeFilter(DOCUMENT_PROPERTY_PIPELINE_VERSION, PropertyFilter.Operator.EQUAL,
 					makeValue(pipelineVersion)).build();
 			filters.add(filter);
@@ -701,7 +951,7 @@ public class PipelineMain {
 	 * @return an updated version of the input {@link Entity} with the specified
 	 *         ProcessingStatusFlags activated (set to true)
 	 */
-	private static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
+	public static Entity updateStatusEntity(ProcessingStatus origEntity, ProcessingStatusFlag... flagsToActivate) {
 		String documentId = origEntity.getDocumentId();
 		Key key = DatastoreKeyUtil.createStatusKey(documentId);
 
@@ -733,8 +983,10 @@ public class PipelineMain {
 		for (Entry<String, Boolean> entry : origEntity.getFlagPropertiesMap().entrySet()) {
 			entityBuilder.putProperties(entry.getKey(), makeValue(entry.getValue()).build());
 		}
-		for (ProcessingStatusFlag flag : flagsToActivate) {
-			entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
+		if (flagsToActivate != null) {
+			for (ProcessingStatusFlag flag : flagsToActivate) {
+				entityBuilder.putProperties(flag.getDatastoreFlagPropertyName(), makeValue(true).build());
+			}
 		}
 
 		/*
@@ -847,7 +1099,14 @@ public class PipelineMain {
 		Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
 
 		// document text is needed to parse some of the document formats
-		String documentText = getDocumentText(inputDocuments);
+		// we will check to see if the DocumentType.AUGMENTED_TEXT is present -- if it
+		// is, then we will retrieve the augmented document text
+		String documentText = null;
+		if (containsDocumentType(inputDocuments, DocumentType.AUGMENTED_TEXT)) {
+			documentText = getAugmentedDocumentText(inputDocuments, documentId);
+		} else {
+			documentText = getDocumentText(inputDocuments, documentId);
+		}
 
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentType documentType = entry.getKey().getDocumentType();
@@ -870,7 +1129,9 @@ public class PipelineMain {
 			Collection<TextAnnotation> annots = deserializeAnnotations(documentId, content, documentFormat,
 					documentText);
 
-			docTypeToAnnotMap.put(documentType, annots);
+			if (!annots.isEmpty()) {
+				docTypeToAnnotMap.put(documentType, annots);
+			}
 
 		}
 
@@ -883,14 +1144,64 @@ public class PipelineMain {
 	 * @param inputDocuments
 	 * @return
 	 */
-	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments) {
+	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		return getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
+	}
+
+	/**
+	 * The augmented document text consists of the original document text with the
+	 * addition of extra sentences that have abbreviation definitions.
+	 * 
+	 * @param inputDocuments
+	 * @return
+	 */
+	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		String originalText = getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
+		String augText = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT, documentId);
+		return originalText + augText;
+	}
+
+	public static String getAugmentedSentenceBionlp(Map<DocumentCriteria, String> inputDocuments, String documentId) {
+		String originalSentBionlp = getDocumentByType(inputDocuments, DocumentType.SENTENCE, documentId);
+		String augSentBionlp = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_SENTENCE, documentId);
+		return originalSentBionlp + "\n" + augSentBionlp;
+	}
+
+	/**
+	 * Returns true if the inputDocuments contains a document of the specified type
+	 * 
+	 * @param inputDocuments
+	 * @param docType
+	 * @return
+	 */
+	public static boolean containsDocumentType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType) {
 		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
 			DocumentCriteria documentCriteria = entry.getKey();
-			if (documentCriteria.getDocumentType() == DocumentType.TEXT) {
+			if (documentCriteria.getDocumentType() == docType) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * cycle through the input documents and return the specified DocumentType
+	 * 
+	 * @param inputDocuments
+	 * @return
+	 */
+	public static String getDocumentByType(Map<DocumentCriteria, String> inputDocuments, DocumentType docType,
+			String documentId) {
+		for (Entry<DocumentCriteria, String> entry : inputDocuments.entrySet()) {
+			DocumentCriteria documentCriteria = entry.getKey();
+			if (documentCriteria.getDocumentType() == docType) {
 				return entry.getValue();
 			}
 		}
-		throw new IllegalArgumentException("Unable to find document text in input documents.");
+		LOGGER.log(Level.WARNING,
+				String.format("Unable to find document type (%s) in input documents for document id: %s.",
+						docType.name(), documentId));
+		return "";
 	}
 
 	private static Collection<TextAnnotation> deserializeAnnotations(String documentId, String content,
@@ -915,37 +1226,74 @@ public class PipelineMain {
 		NONE, BY_CRF
 	}
 
-	public static Map<DocumentType, Collection<TextAnnotation>> filterConceptAnnotations(
+	/**
+	 * This method returns a mapping from DocumentType (we use the concept document
+	 * type, e.g., CONCEPT_CHEBI, CONCEPT_CL, etc.) to filtered concept annotations.
+	 * 
+	 * If the FilterFlag is CRF, then if there are both concepts and CRF annotations
+	 * for a concept type, then only those concept annotations that overlap with a
+	 * CRF annotation are returned. If there is are concept annotations but no CRF
+	 * annotations, then the concept annotations are returned (no filtering is
+	 * applied).
+	 * 
+	 * If the FilterFlag is NONE, then all concept annotations are returned. No
+	 * filtering is applied.
+	 * 
+	 * @param docTypeToAnnotMap
+	 * @param filterFlag
+	 * @return
+	 */
+	public static Map<DocumentType, Set<TextAnnotation>> filterConceptAnnotations(
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToAnnotMap, FilterFlag filterFlag) {
-		Map<DocumentType, Collection<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
+		Map<DocumentType, Set<TextAnnotation>> typeToAnnotMap = new HashMap<DocumentType, Set<TextAnnotation>>();
 
-		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> map = pairConceptWithCrfAnnots(
-				docTypeToAnnotMap);
+		Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> map = pairConceptWithCrfAnnots(docTypeToAnnotMap);
 
-		for (Entry<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> entry : map.entrySet()) {
+		for (Entry<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> entry : map.entrySet()) {
 
 			DocumentType type = entry.getKey();
-			Collection<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
+			Set<TextAnnotation> conceptAnnots = entry.getValue().get(CrfOrConcept.CONCEPT);
+			if (conceptAnnots != null) {
 
-			// if there isn't a pair for the CONCEPT then output it without filtering
-			if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
-				Collection<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
-				Collection<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
-				typeToAnnotMap.put(type, filteredAnnots);
-			} else if (filterFlag == FilterFlag.NONE || entry.getValue().get(CrfOrConcept.CRF) == null) {
-				typeToAnnotMap.put(type, conceptAnnots);
-			} else {
-				throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+				if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) != null) {
+					Set<TextAnnotation> crfAnnots = entry.getValue().get(CrfOrConcept.CRF);
+					Set<TextAnnotation> filteredAnnots = filterViaCrf(conceptAnnots, crfAnnots);
+					if (filteredAnnots.size() > 0) {
+						typeToAnnotMap.put(type, filteredAnnots);
+					}
+				} else if (filterFlag == FilterFlag.BY_CRF && entry.getValue().get(CrfOrConcept.CRF) == null) {
+					// if the concept type is DRUGBANK or SNOMEDCT we pass it through without
+					// filtering b/c we don't have a CRF for those concept types -- but if there are
+					// no CRF annotations for a concept type that we do have a CRF for, then we
+					// filter all concept annotations for that type.
+					if (entry.getKey() == DocumentType.CONCEPT_DRUGBANK
+							|| entry.getKey() == DocumentType.CONCEPT_SNOMEDCT) {
+						typeToAnnotMap.put(type, conceptAnnots);
+					}
+				} else if (filterFlag == FilterFlag.NONE) {
+					typeToAnnotMap.put(type, conceptAnnots);
+				} else {
+					throw new IllegalArgumentException("Unhandled FilterFlag: " + filterFlag.name());
+				}
 			}
 
 		}
 		return typeToAnnotMap;
 	}
 
-	public static List<TextAnnotation> filterViaCrf(Collection<TextAnnotation> conceptAnnots,
+	/**
+	 * Takes as input a collection of concept annotations and a collection of crf
+	 * annotations and returns a list of concept annotations that overlap with a crf
+	 * annotation.
+	 * 
+	 * @param conceptAnnots
+	 * @param crfAnnots
+	 * @return
+	 */
+	public static Set<TextAnnotation> filterViaCrf(Collection<TextAnnotation> conceptAnnots,
 			Collection<TextAnnotation> crfAnnots) {
 
-		List<TextAnnotation> toKeep = new ArrayList<TextAnnotation>();
+		Set<TextAnnotation> toKeep = new HashSet<TextAnnotation>();
 
 		// annotations must be sorted
 		List<TextAnnotation> conceptList = new ArrayList<TextAnnotation>(conceptAnnots);
@@ -955,6 +1303,12 @@ public class PipelineMain {
 
 		for (TextAnnotation conceptAnnot : conceptList) {
 			for (TextAnnotation crfAnnot : crfList) {
+				if (conceptAnnot.getAnnotationSpanEnd() < crfAnnot.getAnnotationSpanStart()) {
+					// if the concept annot ends before the crf annotation starts, then we don't
+					// need to look at any more crf annotations b/c none will overlap - we can make
+					// this assumption b/c the lists are sorted by span
+					break;
+				}
 				if (conceptAnnot.overlaps(crfAnnot)) {
 					toKeep.add(conceptAnnot);
 					break;
@@ -969,29 +1323,102 @@ public class PipelineMain {
 		CRF, CONCEPT
 	}
 
-	private static Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> pairConceptWithCrfAnnots(
+	@VisibleForTesting
+	protected static Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> pairConceptWithCrfAnnots(
 			Map<DocumentType, Collection<TextAnnotation>> inputMap) {
 
 		/*
 		 * outer map key is the concept type, e.g. CHEBI, CL, etc. inner map links keys:
 		 * CONCEPT & CRF to the associated bionlp formatted doc content
 		 */
-		Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> docTypeToSplitAnnotMap = new HashMap<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>>();
+		Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> docTypeToSplitAnnotMap = new HashMap<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>>();
 
 		for (Entry<DocumentType, Collection<TextAnnotation>> entry : inputMap.entrySet()) {
 			DocumentType documentType = entry.getKey();
 			Collection<TextAnnotation> annots = entry.getValue();
 
+			CrfOrConcept crfOrConcept = CrfOrConcept.CONCEPT;
 			if (documentType.name().startsWith("CRF_")) {
-				String type = StringUtils.removePrefix(documentType.name(), "CRF_");
-				DocumentType indexType = DocumentType.valueOf("CONCEPT_" + type);
-				addToMap(docTypeToSplitAnnotMap, annots, indexType, CrfOrConcept.CRF);
-			} else if (documentType.name().startsWith("CONCEPT_")) {
-				addToMap(docTypeToSplitAnnotMap, annots, documentType, CrfOrConcept.CONCEPT);
+				crfOrConcept = CrfOrConcept.CRF;
+			}
+			// we will equate the NLMDISEASE CRF annotations with MONDO and to HP so it is
+			// easier to
+			// match them -- use of HashSet makes for easier testing b/c order doesn't
+			// matter
+			if (documentType == DocumentType.CRF_NLMDISEASE) {
+				addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(annots), DocumentType.CONCEPT_MONDO,
+						crfOrConcept);
+				addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(annots), DocumentType.CONCEPT_HP,
+						crfOrConcept);
+			} else if (documentType == DocumentType.CRF_CRAFT || documentType == DocumentType.CONCEPT_CIMAX
+					|| documentType == DocumentType.CONCEPT_CIMIN || documentType == DocumentType.CONCEPT_CS
+					|| documentType == DocumentType.CONCEPT_OGER_PP1 || documentType == DocumentType.CONCEPT_OGER_PP2) {
+				// these documents have a mix of concept types, so we need to add them to the
+				// map individually -- note only CONCEPT_OGER_PP2 is needed here likely but the
+				// others are kept as they were used in the past before we had to split up the
+				// post_processing (because the pipeline was stalling b/c the side inputs were
+				// too large)
+				for (TextAnnotation annot : annots) {
+					DocumentType indexType = getDocumentType(annot);
+					if (indexType != null) {
+						addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(Arrays.asList(annot)), indexType,
+								crfOrConcept);
+						// add CRAFT MONDO CRF annotations to the CRF HP annotations too
+						if (crfOrConcept == CrfOrConcept.CRF && indexType == DocumentType.CONCEPT_MONDO) {
+							addToMap(docTypeToSplitAnnotMap, new HashSet<TextAnnotation>(Arrays.asList(annot)),
+									DocumentType.CONCEPT_HP, crfOrConcept);
+						}
+					}
+				}
+			} else if (documentType.name().startsWith("CRF_") || documentType.name().startsWith("CONCEPT_")) {
+				throw new IllegalArgumentException(
+						String.format("Unhandled CRF or CONCEPT type (%s). Code changes needed.", documentType.name()));
 			}
 		}
 
 		return docTypeToSplitAnnotMap;
+
+	}
+
+	private static DocumentType getDocumentType(TextAnnotation annot) {
+		String idPrefix = annot.getClassMention().getMentionName().split(":")[0];
+		if (idPrefix.startsWith("B-") || idPrefix.startsWith("I-")) {
+			idPrefix = idPrefix.substring(2);
+		}
+		switch (idPrefix) {
+		case "CHEBI":
+			return DocumentType.CONCEPT_CHEBI;
+		case "CL":
+			return DocumentType.CONCEPT_CL;
+		case "GO_BP":
+			return DocumentType.CONCEPT_GO_BP;
+		case "GO_CC":
+			return DocumentType.CONCEPT_GO_CC;
+		case "GO_MF":
+			return DocumentType.CONCEPT_GO_MF;
+		case "DRUGBANK":
+			return DocumentType.CONCEPT_DRUGBANK;
+		case "HP":
+			return DocumentType.CONCEPT_HP;
+		case "MONDO":
+			return DocumentType.CONCEPT_MONDO;
+		case "NCBITaxon":
+			return DocumentType.CONCEPT_NCBITAXON;
+		case "PR":
+			return DocumentType.CONCEPT_PR;
+		case "SNOMEDCT":
+			return DocumentType.CONCEPT_SNOMEDCT;
+		case "SO":
+			return DocumentType.CONCEPT_SO;
+		case "UBERON":
+			return DocumentType.CONCEPT_UBERON;
+		case "TMKPUTIL":
+			return null;
+
+		default:
+			throw new IllegalArgumentException(
+					String.format("Unhandled concept id prefix (%s). Cannot convert to DocumentType.", idPrefix));
+		}
 	}
 
 	/**
@@ -1003,13 +1430,16 @@ public class PipelineMain {
 	 * @param crfOrConcept
 	 */
 	@VisibleForTesting
-	protected static void addToMap(
-			Map<DocumentType, Map<CrfOrConcept, Collection<TextAnnotation>>> conceptTypeToContentMap,
-			Collection<TextAnnotation> annots, DocumentType type, CrfOrConcept crfOrConcept) {
+	protected static void addToMap(Map<DocumentType, Map<CrfOrConcept, Set<TextAnnotation>>> conceptTypeToContentMap,
+			Set<TextAnnotation> annots, DocumentType type, CrfOrConcept crfOrConcept) {
 		if (conceptTypeToContentMap.containsKey(type)) {
-			conceptTypeToContentMap.get(type).put(crfOrConcept, annots);
+			if (conceptTypeToContentMap.get(type).containsKey(crfOrConcept)) {
+				conceptTypeToContentMap.get(type).get(crfOrConcept).addAll(annots);
+			} else {
+				conceptTypeToContentMap.get(type).put(crfOrConcept, annots);
+			}
 		} else {
-			Map<CrfOrConcept, Collection<TextAnnotation>> innerMap = new HashMap<CrfOrConcept, Collection<TextAnnotation>>();
+			Map<CrfOrConcept, Set<TextAnnotation>> innerMap = new HashMap<CrfOrConcept, Set<TextAnnotation>>();
 			innerMap.put(crfOrConcept, annots);
 			conceptTypeToContentMap.put(type, innerMap);
 		}
@@ -1033,7 +1463,7 @@ public class PipelineMain {
 		return set;
 	}
 
-	public static <T> Set<T> spliceValues(Collection<Collection<T>> collections) {
+	public static <T> Set<T> spliceValues(Collection<Set<T>> collections) {
 		Set<T> set = new HashSet<T>();
 		for (Collection<T> collection : collections) {
 			for (T t : collection) {
@@ -1121,6 +1551,69 @@ public class PipelineMain {
 				c.output(KV.of(ps.getDocumentId(), ps.getCollections()));
 			}
 		}));
+	}
+
+	/**
+	 * This method is used to test if all of the required documents are present. It
+	 * allows for flexible matching of the pipeline version in case the pipeline
+	 * version is set to "recent".
+	 * 
+	 * @param docCriteria
+	 * @param requiredDocumentCriteria
+	 * @return true if the input docCriteria fulfills the requiredDocumentCriteria.
+	 *         This doesn't need to be an exact match, b/c the required-doc-criteria
+	 *         may use "recent" as the pipeline version, where as the docCriteria
+	 *         has been extracted from Datastore and should have an explicit
+	 *         version. So we will check for an exact match if the pipeline version
+	 *         is specified as required, or a more loose match if the pipeline
+	 *         version is declared as 'recent'.
+	 */
+	@VisibleForTesting
+	public static boolean fulfillsRequiredDocumentCriteria(Set<DocumentCriteria> docCriteria,
+			Set<DocumentCriteria> requiredDocumentCriteria) {
+
+		Set<String> pipelineVersionAgnosticDocCriteria = new HashSet<String>();
+		for (DocumentCriteria reqDc : docCriteria) {
+			pipelineVersionAgnosticDocCriteria.add(PipelineMain.createVersionAgnosticKey(reqDc));
+		}
+
+		for (DocumentCriteria reqDc : requiredDocumentCriteria) {
+			String pipelineVersion = reqDc.getPipelineVersion();
+			if (pipelineVersion.equalsIgnoreCase(PIPELINE_VERSION_RECENT)) {
+				String key = PipelineMain.createVersionAgnosticKey(reqDc);
+				if (!pipelineVersionAgnosticDocCriteria.contains(key)) {
+					return false;
+				}
+			} else {
+				if (!docCriteria.contains(reqDc)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Checks to see if required documents are present. Returns true if they are.
+	 * Logs an error if they are not.
+	 * 
+	 * @param docCriteria
+	 * @param requiredDocumentCriteria
+	 * @param pipelineKey
+	 * @return
+	 */
+	public static boolean requiredDocumentsArePresent(Set<DocumentCriteria> docCriteria,
+			Set<DocumentCriteria> requiredDocumentCriteria, PipelineKey pipelineKey,
+			TupleTag<EtlFailureData> failureTag, String documentId, DocumentCriteria errorDocCriteria,
+			Timestamp timestamp, MultiOutputReceiver out) {
+		if (!PipelineMain.fulfillsRequiredDocumentCriteria(docCriteria, requiredDocumentCriteria)) {
+			PipelineMain.logFailure(failureTag, String.format(
+					"Unable to complete processing due to missing annotation documents for: %s. Observed (%d): %s, but requires (%d): %s.",
+					documentId, docCriteria.size(), docCriteria.toString(), requiredDocumentCriteria.size(),
+					requiredDocumentCriteria.toString()), errorDocCriteria, timestamp, out, documentId, null);
+			return false;
+		}
+		return true;
 	}
 
 }

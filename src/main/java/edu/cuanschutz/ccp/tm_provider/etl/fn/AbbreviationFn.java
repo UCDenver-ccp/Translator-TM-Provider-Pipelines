@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,8 +24,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.uima.pear.util.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -49,7 +49,7 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationUtil;
 public class AbbreviationFn
 		extends DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, List<String>>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbbreviationFn.class);
+//	private static final Logger LOG = LoggerFactory.getLogger(AbbreviationFn.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -118,7 +118,7 @@ public class AbbreviationFn
 				for (TextAnnotation annot : td.getAnnotations()) {
 					writer.write(annot.getCoveredText() + "\n");
 					sentenceToSpanMap.put(annot.getCoveredText(), annot.getAggregateSpan());
-					LOG.warn("SENTENCE-TO-FILE: " + annot.getCoveredText());
+//					LOG.warn("SENTENCE-TO-FILE: " + annot.getCoveredText());
 				}
 			}
 
@@ -188,6 +188,8 @@ public class AbbreviationFn
 				@SuppressWarnings("unused")
 				String confidence = cols[2].trim();
 
+				// TODO: we are seeing some errors where we get a NPE on the next command.
+				// Somehow currentSentence is null (I think), e.g. PMID:36116712
 				// use current sentence to find span offset
 				int offset = sentenceToSpanMap.get(currentSentence).getSpanStart();
 
@@ -224,20 +226,22 @@ public class AbbreviationFn
 				if (!shortFormSpans.isEmpty() && !longFormSpans.isEmpty()) {
 
 					Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
+					// will be null if the only short form spans overlap with long form spans
+					if (shortLongFormSpans != null) {
+						TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+						Span shortFormSpan = shortLongFormSpans[0];
+						Span longFormSpan = shortLongFormSpans[1];
+						TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
+								shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
+						TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
+								longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
 
-					TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
-					Span shortFormSpan = shortLongFormSpans[0];
-					Span longFormSpan = shortLongFormSpans[1];
-					TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
-							shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
-					TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
-							longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
+						TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
+								shortFormAnnot.getClassMention());
 
-					TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
-							shortFormAnnot.getClassMention());
-
-					td.addAnnotation(shortFormAnnot);
-					td.addAnnotation(longFormAnnot);
+						td.addAnnotation(shortFormAnnot);
+						td.addAnnotation(longFormAnnot);
+					}
 				}
 
 			} else {
@@ -271,26 +275,41 @@ public class AbbreviationFn
 	@VisibleForTesting
 	protected static Span[] findNearestShortLongFormSpans(List<Span> shortFormSpans, List<Span> longFormSpans) {
 
-		// if there are only one short and long form span, then there is no need to
-		// compute distance between spans
-		if (shortFormSpans.size() == 1 && longFormSpans.size() == 1) {
-			return new Span[] { shortFormSpans.get(0), longFormSpans.get(0) };
-		}
-
-		Map<Integer, Span[]> distanceToSpansMap = new HashMap<Integer, Span[]>();
-
-		for (Span shortFormSpan : shortFormSpans) {
-			for (Span longFormSpan : longFormSpans) {
-				List<Span> spans = Arrays.asList(shortFormSpan, longFormSpan);
-				Collections.sort(spans, Span.ASCENDING());
-				int distance = spans.get(1).getSpanStart() - spans.get(0).getSpanEnd();
-				distanceToSpansMap.put(distance, new Span[] { shortFormSpan, longFormSpan });
+		// remove any short form spans that overlap with a long form span
+		Set<Span> toRemove = new HashSet<Span>();
+		for (Span sfSpan : shortFormSpans) {
+			for (Span lfSpan : longFormSpans) {
+				if (sfSpan.overlaps(lfSpan)) {
+					toRemove.add(sfSpan);
+				}
 			}
 		}
+		List<Span> updatedSfSpans = new ArrayList<Span>(shortFormSpans);
+		updatedSfSpans.removeAll(toRemove);
 
-		Map<Integer, Span[]> sortedMap = CollectionsUtil.sortMapByKeys(distanceToSpansMap, SortOrder.ASCENDING);
-		return sortedMap.entrySet().iterator().next().getValue();
+		if (!updatedSfSpans.isEmpty()) {
 
+			// if there are only one short and long form span, then there is no need to
+			// compute distance between spans
+			if (updatedSfSpans.size() == 1 && longFormSpans.size() == 1) {
+				return new Span[] { updatedSfSpans.get(0), longFormSpans.get(0) };
+			}
+
+			Map<Integer, Span[]> distanceToSpansMap = new HashMap<Integer, Span[]>();
+
+			for (Span shortFormSpan : updatedSfSpans) {
+				for (Span longFormSpan : longFormSpans) {
+					List<Span> spans = Arrays.asList(shortFormSpan, longFormSpan);
+					Collections.sort(spans, Span.ASCENDING());
+					int distance = spans.get(1).getSpanStart() - spans.get(0).getSpanEnd();
+					distanceToSpansMap.put(distance, new Span[] { shortFormSpan, longFormSpan });
+				}
+			}
+
+			Map<Integer, Span[]> sortedMap = CollectionsUtil.sortMapByKeys(distanceToSpansMap, SortOrder.ASCENDING);
+			return sortedMap.entrySet().iterator().next().getValue();
+		}
+		return null;
 	}
 
 	/**

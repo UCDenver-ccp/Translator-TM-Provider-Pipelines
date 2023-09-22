@@ -128,6 +128,11 @@ public interface DatastoreConstants {
 	 * 
 	 */
 	public static final String STATUS_PROPERTY_TEXT_DONE = "text";
+
+	public static final String STATUS_PROPERTY_TEXT_AUG_DONE = "text_aug";
+
+	public static final String STATUS_PROPERTY_FILTER_UNACTIONABLE_TEXT_DONE = "filt_unact";
+
 	public static final String STATUS_PROPERTY_SECTIONS_DONE = "sections";
 
 	public static final String STATUS_PROPERTY_ABBREVIATIONS_DONE = "abbrev";
@@ -141,6 +146,8 @@ public interface DatastoreConstants {
 
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_DONE = "concept_pp";
 	public static final String STATUS_PROPERTY_CONCEPT_POST_PROCESSING_UNFILTERED_DONE = "concept_pp_unfiltered";
+	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_1_DONE = "oger_pp1";
+	public static final String STATUS_PROPERTY_OGER_POST_PROCESSING_PART_2_DONE = "oger_pp2";
 
 	/**
 	 * Concept cooccurrence count status
@@ -153,6 +160,12 @@ public interface DatastoreConstants {
 	////////////////////////////////////////////////////////////////
 	/////////////////// OGER CONCEPT PROCESSING ////////////////////
 	////////////////////////////////////////////////////////////////
+
+	public static final String STATUS_PROPERTY_OGER_DONE = "oger_done";
+
+	public static final String STATUS_PROPERTY_OGER_CASE_SENSITIVE_DONE = "oger_cs";
+	public static final String STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MAX_NORM_DONE = "oger_cimax";
+	public static final String STATUS_PROPERTY_OGER_CASE_INSENSITIVE_MIN_NORM_DONE = "oger_cimin";
 
 	public static final String STATUS_PROPERTY_OGER_CHEBI_DONE = "oger_chebi";
 	public static final String STATUS_PROPERTY_OGER_CL_DONE = "oger_cl";
@@ -173,19 +186,23 @@ public interface DatastoreConstants {
 	/////////////////// CRF CONCEPT PROCESSING /////////////////////
 	////////////////////////////////////////////////////////////////
 
-	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
+	public static final String STATUS_PROPERTY_CRF_DONE = "crf_done";
+
+//	public static final String STATUS_PROPERTY_CRF_CHEBI_DONE = "crf_chebi";
 	public static final String STATUS_PROPERTY_CRF_NLMCHEM_DONE = "crf_nlmchem";
-	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
-	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
-	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
-	public static final String STATUS_PROPERTY_CRF_GO_MF_DONE = "crf_gomf";
+//	public static final String STATUS_PROPERTY_CRF_CL_DONE = "crf_cl";
+//	public static final String STATUS_PROPERTY_CRF_GO_BP_DONE = "crf_gobp";
+//	public static final String STATUS_PROPERTY_CRF_GO_CC_DONE = "crf_gocc";
+//	public static final String STATUS_PROPERTY_CRF_GO_MF_DONE = "crf_gomf";
 	public static final String STATUS_PROPERTY_CRF_HP_DONE = "crf_hp";
-	public static final String STATUS_PROPERTY_CRF_MONDO_DONE = "crf_mondo";
-	public static final String STATUS_PROPERTY_CRF_MOP_DONE = "crf_mop";
-	public static final String STATUS_PROPERTY_CRF_NCBITAXON_DONE = "crf_ncbitaxon";
-	public static final String STATUS_PROPERTY_CRF_SO_DONE = "crf_so";
-	public static final String STATUS_PROPERTY_CRF_PR_DONE = "crf_pr";
-	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
+//	public static final String STATUS_PROPERTY_CRF_MONDO_DONE = "crf_mondo";
+//	public static final String STATUS_PROPERTY_CRF_MOP_DONE = "crf_mop";
+//	public static final String STATUS_PROPERTY_CRF_NCBITAXON_DONE = "crf_ncbitaxon";
+//	public static final String STATUS_PROPERTY_CRF_SO_DONE = "crf_so";
+//	public static final String STATUS_PROPERTY_CRF_PR_DONE = "crf_pr";
+//	public static final String STATUS_PROPERTY_CRF_UBERON_DONE = "crf_uberon";
+	public static final String STATUS_PROPERTY_CRF_CRAFT_DONE = "crf_craft";
+	public static final String STATUS_PROPERTY_CRF_NLMDISEASE_DONE = "crf_nlm_disease";
 
 	////////////////////////////////////////////////////////////////
 	///////////////////// SENTENCE EXPORT //////////////////////////
@@ -273,6 +290,7 @@ public interface DatastoreConstants {
 	public static final String STATUS_PROPERTY_COLLECTIONS = "collections";
 
 	public static final String STATUS_PROPERTY_TEXT_EXTRACTION_DONE = "text_extract";
+	public static final String STATUS_PROPERTY_CONLL03_DONE = "conll03";
 
 //	public static final String STATUS_PROPERTY_IN_CORD19_COLLECTION = "in_cord19";
 //	public static final String STATUS_PROPERTY_IN_PMCOA_COLLECTION = "in_pmcoa";

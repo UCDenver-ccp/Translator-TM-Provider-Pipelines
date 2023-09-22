@@ -2,14 +2,12 @@ package edu.cuanschutz.ccp.tm_provider.etl.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -103,14 +101,21 @@ public class PrPromotionMapFactory {
 	}
 
 	public static void main(String[] args) {
-		File prOwlFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+//		File prOwlFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr.owl.gz");
+//
+//		File outputFile = new File(
+//				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
 
-		File outputFile = new File(
-				"/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20210918/pr-promotion-map.tsv");
+		File ontBase = new File("/Users/bill/projects/ncats-translator/ontology-resources/ontologies/20230716");
+
+		File prOwlFile = new File(ontBase, "pr.owl");
+
+		File outputFile = new File(ontBase, "pr-promotion-map.tsv");
 
 		try (BufferedWriter writer = FileWriterUtil.initBufferedWriter(outputFile)) {
-			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(prOwlFile)));
+			OntologyUtil ontUtil = new OntologyUtil(prOwlFile);
+//			OntologyUtil ontUtil = new OntologyUtil(new GZIPInputStream(new FileInputStream(prOwlFile)));
 			new PrPromotionMapFactory(ontUtil).createMappingFile(writer);
 
 		} catch (FileNotFoundException e) {

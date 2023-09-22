@@ -83,8 +83,7 @@ public class BiocToTextConverterTest {
 
 		System.out.println(td.getText());
 	}
-	
-	
+
 	@Test
 	public void testConvert3() throws FactoryConfigurationError, XMLStreamException, IOException {
 		InputStream sampleDocStream = ClassPathUtil.getResourceStreamFromClasspath(getClass(), "PMC1069648.xml");
@@ -98,9 +97,9 @@ public class BiocToTextConverterTest {
 
 		String expectedText = ClassPathUtil.getContentsFromClasspathResource(getClass(), "PMC1069648.txt",
 				CharacterEncoding.UTF_8);
-		
+
 		System.out.println(td.getText());
-		
+
 		assertEquals(expectedText, td.getText());
 
 		for (TextAnnotation ta : td.getAnnotations()) {

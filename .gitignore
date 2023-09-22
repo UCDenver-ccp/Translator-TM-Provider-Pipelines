@@ -27,3 +27,9 @@ scripts/airflow/backfill-sentence-classification-pubmed.py
 src/main/java/edu/cuanschutz/ccp/tm_provider/trapi/PrToUniProtMapFileCreatorMain.java
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/BratAssertionAnnotationFileCreatorMain.java
 src/main/java/edu/cuanschutz/ccp/tm_provider/relation_extraction/ElasticsearchToBratExporterMain.java
+prime-oger-stage.sh
+prime-crf-stage.sh
+eval.sh
+prime-crf-prod.sh
+prime-oger-prod.sh
+rrun.env.sh

@@ -1,0 +1,46 @@
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-13.py37
+
+RUN apt-get update && apt-get install -y \
+  less \
+  wget \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# Installs google cloud sdk, this allows use of gsutil
+# from: https://cloud.google.com/ai-platform/training/docs/custom-containers-training
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+    mkdir /root/tools && \
+    tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
+    rm google-cloud-sdk.tar.gz && \
+    /root/tools/google-cloud-sdk/install.sh --usage-reporting=false \
+        --path-update=false --bash-completion=false \
+        --disable-installation-options && \
+    rm -rf /root/.config/* && \
+    ln -s /root/.config /config && \
+    # Remove the backup directory that gcloud creates
+    rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
+# Path configuration
+ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
+
+WORKDIR /home/flair
+
+RUN python3 -m venv env
+RUN source env/bin/activate
+RUN python3 -m pip install --user flair
+
+RUN wget https://storage.googleapis.com/translator-text-workflow-dev-public/models/entities/transformer/flair_sequence_tagger_ner_craft_model_0.3.tar.gz && \
+    tar -xzvf flair_sequence_tagger_ner_craft_model_0.3.tar.gz
+COPY entrypoint.predict.sh /home/flair
+COPY predict.py /home/flair
+RUN chmod 755 entrypoint.predict.sh
+
+RUN mkdir /home/flair/input_conll03 && mkdir /home/flair/output_conll03
+
+ENV GPU_NUM_DEVICES=1
+ENV XRT_TPU_CONFIG=
+
+ENTRYPOINT /home/flair/entrypoint.predict.sh "$@"
+

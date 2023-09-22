@@ -17,7 +17,7 @@ public class SpanValidatorTest {
 
 		String s = "2′-deoxyinosine";
 
-		System.out.println("slngth: "+ s.length());
+		System.out.println("slngth: " + s.length());
 		byte[] sBytes = s.getBytes();
 		String asciiEncodedString = new String(sBytes, StandardCharsets.US_ASCII);
 		System.out.println("ASCII: " + asciiEncodedString);
@@ -28,14 +28,21 @@ public class SpanValidatorTest {
 
 		assertEquals(s, utf8EncodedString);
 	}
-	
-	
+
 	@Test
 	public void testValidateForceUtf8() {
 		String s = "2′-deoxyinosine";
 		String documentText = "2′-deoxyinosine";
-		
+
 		assertTrue(SpanValidator.validate(Arrays.asList(new Span(0, 15)), s, documentText));
+	}
+
+	@Test
+	public void testValidate() {
+		String s = "T cell";
+		String documentText = "T cell";
+
+		assertTrue(SpanValidator.validate(Arrays.asList(new Span(0, 6)), s, documentText));
 	}
 
 }

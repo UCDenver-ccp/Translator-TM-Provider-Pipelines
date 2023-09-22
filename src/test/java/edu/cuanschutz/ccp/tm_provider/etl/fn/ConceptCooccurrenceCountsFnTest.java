@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,13 +36,13 @@ import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotationFactory;
 
 public class ConceptCooccurrenceCountsFnTest {
 
-	private static final String Y_000001 = "Y:000001";
-	private static final String X_000001 = "X:000001";
-	private static final String X_000002 = "X:000002";
+	private static final String Y_000001 = "CL:000001";
+	private static final String X_000001 = "PR:000001";
+	private static final String X_000002 = "PR:000002";
 
-	private static final String Y_000000 = "Y:000000";
-	private static final String X_000000 = "X:000000";
-	private static final String X_000003 = "X:000003";
+	private static final String Y_000000 = "CL:000000";
+	private static final String X_000000 = "PR:000000";
+	private static final String X_000003 = "PR:000003";
 
 	// 1 2 3 4
 	// 012345678901234567890123456789012345678901234567890123456789
@@ -118,7 +119,7 @@ public class ConceptCooccurrenceCountsFnTest {
 	private static String conceptXAnnotationBionlp;
 	private static String crfXAnnotationBionlp;
 	private static String conceptYAnnotationBionlp;
-	private static String crfYAnnotationBionlp;
+//	private static String crfYAnnotationBionlp;
 	private static String conceptAllAnnotationBionlp;
 
 	// this map contains all CONCEPT and CRF annotations plus text, sentences, etc.
@@ -182,14 +183,15 @@ public class ConceptCooccurrenceCountsFnTest {
 		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
 			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+			crfDocX.addAnnotations(crfDocY.getAnnotations());
 			writer.serialize(crfDocX, outStream, encoding);
 			crfXAnnotationBionlp = outStream.toString();
 		}
-		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
-			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
-			writer.serialize(crfDocY, outStream, encoding);
-			crfYAnnotationBionlp = outStream.toString();
-		}
+//		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+//			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
+//			writer.serialize(crfDocY, outStream, encoding);
+//			crfYAnnotationBionlp = outStream.toString();
+//		}
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
 			BioNLPDocumentWriter writer = new BioNLPDocumentWriter();
 			writer.serialize(allConceptsDoc, outStream, encoding);
@@ -206,17 +208,17 @@ public class ConceptCooccurrenceCountsFnTest {
 				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
 				documentText);
 		docCriteriaToContentMapPreCrfFiltering.put(
-				new DocumentCriteria(DocumentType.CONCEPT_CHEBI, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"),
+				new DocumentCriteria(DocumentType.CONCEPT_CS, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"),
 				conceptXAnnotationBionlp);
 		docCriteriaToContentMapPreCrfFiltering.put(
-				new DocumentCriteria(DocumentType.CRF_CHEBI, DocumentFormat.BIONLP, PipelineKey.CRF, "0.1.0"),
+				new DocumentCriteria(DocumentType.CRF_CRAFT, DocumentFormat.BIONLP, PipelineKey.CRF, "0.1.0"),
 				crfXAnnotationBionlp);
 		docCriteriaToContentMapPreCrfFiltering.put(
-				new DocumentCriteria(DocumentType.CONCEPT_CL, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"),
+				new DocumentCriteria(DocumentType.CONCEPT_CIMIN, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"),
 				conceptYAnnotationBionlp);
-		docCriteriaToContentMapPreCrfFiltering.put(
-				new DocumentCriteria(DocumentType.CRF_CL, DocumentFormat.BIONLP, PipelineKey.CRF, "0.1.0"),
-				crfYAnnotationBionlp);
+//		docCriteriaToContentMapPreCrfFiltering.put(
+//				new DocumentCriteria(DocumentType.CRF_CL, DocumentFormat.BIONLP, PipelineKey.CRF, "0.1.0"),
+//				crfYAnnotationBionlp);
 
 		docCriteriaToContentMapPostCrfFiltering = new HashMap<DocumentCriteria, String>();
 		docCriteriaToContentMapPostCrfFiltering.put(new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
@@ -257,10 +259,8 @@ public class ConceptCooccurrenceCountsFnTest {
 		String sentenceId2 = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, sentence2Annot);
 
 		Map<String, Set<String>> expectedTextIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
-		expectedTextIdToSingletonConceptIdsMap.put(sentenceId1,
-				CollectionsUtil.createSet(X_000002));
-		expectedTextIdToSingletonConceptIdsMap.put(sentenceId2,
-				CollectionsUtil.createSet(X_000001, Y_000001));
+		expectedTextIdToSingletonConceptIdsMap.put(sentenceId1, CollectionsUtil.createSet(X_000002));
+		expectedTextIdToSingletonConceptIdsMap.put(sentenceId2, CollectionsUtil.createSet(X_000001, Y_000001));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
@@ -277,8 +277,7 @@ public class ConceptCooccurrenceCountsFnTest {
 		String docId = ConceptCooccurrenceCountsFn.computeUniqueTextIdentifier(documentId, level, documentAnnot);
 
 		Map<String, Set<String>> expectedTextIdToSingletonConceptIdsMap = new HashMap<String, Set<String>>();
-		expectedTextIdToSingletonConceptIdsMap.put(docId,
-				CollectionsUtil.createSet(X_000002, X_000001, Y_000001));
+		expectedTextIdToSingletonConceptIdsMap.put(docId, CollectionsUtil.createSet(X_000002, X_000001, Y_000001));
 
 		assertEquals(expectedTextIdToSingletonConceptIdsMap.size(), textIdToSingletonConceptIdsMap.size());
 		assertEquals(expectedTextIdToSingletonConceptIdsMap, textIdToSingletonConceptIdsMap);
@@ -347,12 +346,13 @@ public class ConceptCooccurrenceCountsFnTest {
 			}
 		}
 
-		Map<DocumentType, Collection<TextAnnotation>> outputAnnotMap = PipelineMain
+		Map<DocumentType, Set<TextAnnotation>> outputAnnotMap = PipelineMain
 				.filterConceptAnnotations(docTypeToContentMap, FilterFlag.BY_CRF);
 
-		Map<DocumentType, Collection<TextAnnotation>> expectedAnnotMap = new HashMap<DocumentType, Collection<TextAnnotation>>();
-		expectedAnnotMap.put(DocumentType.CONCEPT_CHEBI, Arrays.asList(x2Sentence1Annot, x1Sentence2Annot));
-		expectedAnnotMap.put(DocumentType.CONCEPT_CL, Arrays.asList(y1Sentence2Annot));
+		Map<DocumentType, Set<TextAnnotation>> expectedAnnotMap = new HashMap<DocumentType, Set<TextAnnotation>>();
+		expectedAnnotMap.put(DocumentType.CONCEPT_PR,
+				new HashSet<TextAnnotation>(Arrays.asList(x2Sentence1Annot, x1Sentence2Annot)));
+		expectedAnnotMap.put(DocumentType.CONCEPT_CL, new HashSet<TextAnnotation>(Arrays.asList(y1Sentence2Annot)));
 
 		assertEquals(expectedAnnotMap.size(), outputAnnotMap.size());
 		assertEquals(expectedAnnotMap, outputAnnotMap);
@@ -439,8 +439,8 @@ public class ConceptCooccurrenceCountsFnTest {
 
 	@Test
 	public void testConceptPairEquals() {
-		ConceptPair cp1 = new ConceptPair("X:0001", "Y:0002");
-		ConceptPair cp2 = new ConceptPair("Y:0002", "X:0001");
+		ConceptPair cp1 = new ConceptPair("PR:0001", "CL:0002");
+		ConceptPair cp2 = new ConceptPair("CL:0002", "PR:0001");
 
 		assertEquals(cp1.hashCode(), cp2.hashCode());
 		assertEquals(cp1, cp2);

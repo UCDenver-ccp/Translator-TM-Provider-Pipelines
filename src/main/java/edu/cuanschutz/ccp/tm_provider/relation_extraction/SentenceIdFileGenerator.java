@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.relation_extraction;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn.computeSentenceIdentifier;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;

@@ -3,8 +3,6 @@ package edu.cuanschutz.ccp.tm_provider.etl.fn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -12,9 +10,6 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
-import edu.ucdenver.ccp.common.file.CharacterEncoding;
-import edu.ucdenver.ccp.common.file.reader.Line;
-import edu.ucdenver.ccp.common.file.reader.StreamLineIterator;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 
 public class ExtractedSentenceTest {
@@ -112,7 +107,7 @@ public class ExtractedSentenceTest {
 
 		ExtractedSentence expectedEs = new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1,
 				entityPlaceholder1, entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword,
-				sentenceText, 
+				sentenceText,
 //				sentenceContext, 
 				documentZone, documentPublicationTypes, documentYearPublished);
 
@@ -133,8 +128,7 @@ public class ExtractedSentenceTest {
 		assertEquals(expectedEs.getDocumentZone(), es.getDocumentZone());
 
 	}
-	
-	
+
 	@Test
 	public void testToTsvRobustness() {
 		String keyword = null;
@@ -143,19 +137,19 @@ public class ExtractedSentenceTest {
 				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, keyword, sentence2,
 //				documentText,
 				null, null, 1997);
-		
+
 		// tests that null publication types don't result in NPE
-		
+
 		assertNotNull(es.toTsv());
-				
+
 	}
-	
+
 //	@Test
 //	public void testReal1() throws IOException {
 //		String line = "87199fbda36d11ff59658425696120970134fbb5727bddd0aa0718d8ccc4c2c4	@GENE_REGULATOR$, @GENE_REGULATOR$	light signaling/ photomorphogenesis	Cop1 (human)	repression of bZIP transcriptional regulators	PMC317288	COP1	PR:000013922|PR:000005036|PR:000017427|PR:000005036|PR:000017427	0|4	SPA1	PR:000014881|PR:000014880|PR:000014880	6|10		105		COP1, SPA1	light signaling/ photomorphogenesis	Cop1 (human)	repression of bZIP transcriptional regulators	RESULTS		2155\n";
 //		ExtractedSentence.fromTsv(line, true);
 //	}
-	
+
 //	@Test
 //	public void testReal() throws IOException {
 //		
@@ -168,6 +162,5 @@ public class ExtractedSentenceTest {
 //		}
 //		
 //	}
-	
 
 }

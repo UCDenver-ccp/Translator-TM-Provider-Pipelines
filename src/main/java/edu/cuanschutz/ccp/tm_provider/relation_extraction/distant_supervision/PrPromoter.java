@@ -40,7 +40,7 @@ public class PrPromoter {
 					System.out.println("NOT PROMOTED! " + prConcept);
 				}
 				writer.write(prConcept + "\t" + cols[1] + "\t" + cols[2] + "\n");
-				
+
 			}
 		}
 	}

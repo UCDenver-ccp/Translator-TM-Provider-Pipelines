@@ -97,6 +97,9 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 
 	protected static class BulkConlluIterator implements Iterator<String> {
 
+		private static final String DOCUMENT_COLLECTIONS_PREFIX = "# "
+				+ TextExtractionPipeline.DOCUMENT_COLLECTIONS_PREFIX_PART;
+		private static final String DOCUMENT_ID_PREFIX = "# " + TextExtractionPipeline.DOCUMENT_ID_PREFIX_PART;
 		/**
 		 * thisDocId corresponds to the next Conll-U document that will be returned;
 		 * note the document ID must be requested prior to calling next() in order for
@@ -168,17 +171,21 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 				 * if we reach the next comment line that contains a document ID, then the
 				 * current document is complete
 				 */
-				if (text.startsWith(TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX)) {
+				if (text.startsWith(DOCUMENT_ID_PREFIX)) {
 					setNextConlluDoc(nextConlluDocBuilder.toString());
+
+					System.out.println("id line: " + text);
 
 					/* reset the string builder and add the document ID line as the first line */
 					nextConlluDocBuilder = new StringBuilder();
 					nextConlluDocBuilder.append(text + "\n");
 
 					return;
-				} else if (text.startsWith(TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX)) {
+				} else if (text.startsWith(DOCUMENT_COLLECTIONS_PREFIX)) {
 					updateDocCollectionsFromCommentLine(text);
 					nextConlluDocBuilder.append(text + "\n");
+
+					System.out.println("collections line: " + text);
 				} else {
 					nextConlluDocBuilder.append(text + "\n");
 				}
@@ -214,7 +221,7 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 					 * the document ID of the next document. If the line contains text, but not a
 					 * document ID comment, then error as this is unexpected.
 					 */
-					if (text.startsWith(TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX)) {
+					if (text.startsWith(DOCUMENT_ID_PREFIX)) {
 						/* here we set the document ID for "this" document */
 						updateDocIdFromCommentLine(text);
 						nextConlluDocBuilder = new StringBuilder();
@@ -237,7 +244,7 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 		 * @param docIdCommentLine
 		 */
 		private void updateDocIdFromCommentLine(String docIdCommentLine) {
-			thisDocId = StringUtils.removePrefix(docIdCommentLine, TextExtractionPipeline.DOCUMENT_ID_COMMENT_PREFIX).trim();
+			thisDocId = StringUtils.removePrefix(docIdCommentLine, DOCUMENT_ID_PREFIX).trim();
 		}
 
 		/**
@@ -246,8 +253,7 @@ public class DependencyParseImportFn extends DoFn<KV<String, String>, KV<String,
 		 * @param docIdCommentLine
 		 */
 		private void updateDocCollectionsFromCommentLine(String commentLine) {
-			String collectionsStr = StringUtils.removePrefix(commentLine,
-					TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX);
+			String collectionsStr = StringUtils.removePrefix(commentLine, DOCUMENT_COLLECTIONS_PREFIX);
 			thisDocCollections = new HashSet<String>(Arrays.asList(collectionsStr.split("\\|")));
 		}
 

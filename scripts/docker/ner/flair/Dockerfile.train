@@ -1,0 +1,33 @@
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-13.py37
+
+RUN apt-get update && apt-get install -y \
+  less \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+#RUN groupadd -r flair && useradd -m -r -g flair flair
+
+#COPY entrypoint.sh /home/flair
+#COPY train.py /home/flair
+
+#RUN chown -R flair:flair /home/flair
+
+#USER flair
+
+WORKDIR /home/flair
+
+RUN python3 -m venv env
+RUN source env/bin/activate
+RUN python3 -m pip install --user flair
+
+
+COPY entrypoint.train.sh /home/flair
+COPY train.py /home/flair
+RUN chmod 755 entrypoint.train.sh
+
+ENV GPU_NUM_DEVICES=1
+ENV XRT_TPU_CONFIG=
+
+ENTRYPOINT [ "/home/flair/entrypoint.train.sh" ]
+

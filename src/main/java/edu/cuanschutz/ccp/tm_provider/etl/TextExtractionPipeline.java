@@ -47,9 +47,12 @@ public class TextExtractionPipeline {
 
 	private static final PipelineKey PIPELINE_KEY = PipelineKey.TEXT_EXPORT;
 
-	public static final String COMMENT_INDICATOR = "# ";
-	public static final String DOCUMENT_ID_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_ID\t";
-	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR + "DOCUMENT_COLLECTIONS\t";
+	public static final String COMMENT_INDICATOR = "###C: ";
+	public static final String DOCUMENT_ID_PREFIX_PART = "DOCUMENT_ID\t";
+	public static final String DOCUMENT_ID_COMMENT_PREFIX = COMMENT_INDICATOR + DOCUMENT_ID_PREFIX_PART;
+	public static final String DOCUMENT_COLLECTIONS_PREFIX_PART = "DOCUMENT_COLLECTIONS\t";
+	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR
+			+ DOCUMENT_COLLECTIONS_PREFIX_PART;
 	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
 
 	public interface Options extends DataflowPipelineOptions {
@@ -67,19 +70,27 @@ public class TextExtractionPipeline {
 		void setInputTextPipelineVersion(String value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Path to the bucket where results will be written")
+		@Required
 		String getOutputBucket();
 
 		void setOutputBucket(String bucketPath);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
+
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
+
+		void setOptionalDocumentSpecificCollection(String value);
 
 	}
 
@@ -100,7 +111,8 @@ public class TextExtractionPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getOptionalDocumentSpecificCollection());
 
 		// the output document criteria is used primarily to populate error messages in
 		// case of pipeline failures

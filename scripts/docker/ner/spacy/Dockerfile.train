@@ -1,0 +1,58 @@
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-13.py37
+
+RUN apt-get update && apt-get install -y \
+  less \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+WORKDIR /home/spacy
+
+RUN python3 -m venv env
+RUN source env/bin/activate
+RUN python3 -m pip install --user spacy
+RUN python3 -m pip install transformers spacy-transformers
+RUN python3 -m pip install pip install scispacy
+
+# en_core_sci_scibert
+RUN python3 -m pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_scibert-0.5.1.tar.gz
+
+# en_core_sci_lg
+#RUN python3 -m pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_lg-0.5.1.tar.gz
+
+COPY iob/train.tsv /home/spacy/iob/
+COPY iob/dev.tsv /home/spacy/iob/
+
+# we must convert the training data from IOB to spacy JSON, then to spacy binary format
+RUN mkdir /home/spacy/json
+RUN mkdir /home/spacy/binary
+
+# convert to JSON
+RUN python3 -m spacy convert /home/spacy/iob/train.tsv /home/spacy/json -t json -n 1 -c iob
+RUN python3 -m spacy convert /home/spacy/iob/dev.tsv /home/spacy/json -t json -n 1 -c iob
+
+# convert to Spacy binary
+RUN python3 -m spacy convert /home/spacy/json/train.json /home/spacy/binary -t spacy
+RUN python3 -m spacy convert /home/spacy/json/dev.json /home/spacy/binary -t spacy
+
+RUN python3 -m pip install -U spacy[cuda113,transformers]
+RUN python3 -m pip install cupy-cuda113
+
+#ENV CUDA_PATH /usr/local/cuda-11.3/
+#RUN CUDA_PATH=/usr/local/cuda-11.3 python3 -m pip install cupy
+
+COPY spacy.cfg /home/spacy
+
+RUN python3 -m spacy init fill-config /home/spacy/spacy.cfg /home/spacy/config_spacy.cfg
+RUN python3 -m spacy debug data /home/spacy/config_spacy.cfg
+
+RUN mkdir /home/spacy/model
+
+COPY entrypoint.train.sh /home/spacy
+RUN chmod 755 entrypoint.train.sh
+
+ENV GPU_NUM_DEVICES=1
+ENV XRT_TPU_CONFIG=
+
+ENTRYPOINT [ "/home/spacy/entrypoint.train.sh" ]
+

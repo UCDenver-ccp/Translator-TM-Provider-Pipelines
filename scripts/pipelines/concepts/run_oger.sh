@@ -1,42 +1,49 @@
 #!/bin/sh
 
-SERVICE_URL=$1
-ONT=$2
-PROJECT=$3
-COLLECTION=$4
-STAGE_LOCATION=$5
-TMP_LOCATION=$6
-PIPELINE_KEY=$7
-OUTPUT_PIPELINE_VERSION=$8
-OVERWRITE=$9
+CS_SERVICE_URL=$1
+CIMIN_SERVICE_URL=$2
+CIMAX_SERVICE_URL=$3
+PROJECT=$4
+COLLECTION=$5
+STAGE_LOCATION=$6
+TMP_LOCATION=$7
+TEXT_PIPELINE_KEY=$8
+TEXT_PIPELINE_VERSION=$9
+AUGMENTED_TEXT_PIPELINE_KEY=${10}
+AUGMENTED_TEXT_PIPELINE_VERSION=${11}
+OUTPUT_PIPELINE_VERSION=${12}
+OVERWRITE=${13}
+OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION=${14}
+JAR_VERSION=${15}
 
+JOB_NAME=$(echo "OGER-${COLLECTION}" | tr '_' '-')
 
-TPSF="OGER_${ONT}_DONE"
-TDT="CONCEPT_${ONT}"
-JOB_NAME=$(echo "OGER-${ONT}-${COLLECTION}-${PIPELINE_KEY}" | tr '_' '-')
-
-
-echo "SERVICE URL: $SERVICE_URL"
-echo "ONT: $ONT"
+echo "CS SERVICE URL: $CS_SERVICE_URL"
+echo "CIMIN SERVICE URL: $CIMIN_SERVICE_URL"
+echo "CIMAX SERVICE URL: $CIMAX_SERVICE_URL"
 echo "COLLECTION: $COLLECTION"
 echo "PROJECT: $PROJECT"
-echo "TPSF: $TPSF"
-echo "TDT: $TDT"
 echo "JOB_NAME: $JOB_NAME"
-echo "PIPELINE KEY: $PIPELINE_KEY"
+echo "TEXT PIPELINE KEY: $TEXT_PIPELINE_KEY"
+echo "TEXT PIPELINE VERSION: $TEXT_PIPELINE_VERSION"
+echo "AUGMENTED TEXT PIPELINE KEY: $AUGMENTED_TEXT_PIPELINE_KEY"
+echo "AUGMENTED TEXT PIPELINE VERSION: $AUGMENTED_TEXT_PIPELINE_VERSION"
 echo "OUTPUT_PIPELINE_VERSION KEY: $OUTPUT_PIPELINE_VERSION"
 echo "OVERWRITE KEY: $OVERWRITE"
+echo "OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION: $OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION"
+echo "JAR_VERSION: $JAR_VERSION"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
+java -Dfile.encoding=UTF-8 -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" OGER \
 --jobName="$JOB_NAME" \
---ogerServiceUri="$SERVICE_URL" \
---ogerOutputType=TSV \
---targetProcessingStatusFlag="$TPSF" \
---targetDocumentType="$TDT" \
---targetDocumentFormat="BIONLP" \
---inputPipelineKey="$PIPELINE_KEY" \
---inputPipelineVersion='0.1.0' \
+--csOgerServiceUri="$CS_SERVICE_URL" \
+--ciminOgerServiceUri="$CIMIN_SERVICE_URL" \
+--cimaxOgerServiceUri="$CIMAX_SERVICE_URL" \
+--textPipelineKey="$TEXT_PIPELINE_KEY" \
+--textPipelineVersion="$TEXT_PIPELINE_VERSION" \
+--augmentedTextPipelineKey="$AUGMENTED_TEXT_PIPELINE_KEY" \
+--augmentedTextPipelineVersion="$AUGMENTED_TEXT_PIPELINE_VERSION" \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
+--optionalDocumentSpecificCollection="$OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION" \
 --collection="$COLLECTION" \
 --overwrite="$OVERWRITE" \
 --project="${PROJECT}" \
@@ -46,6 +53,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar OGER \
 --region=us-central1 \
 --numWorkers=10 \
 --maxNumWorkers=50 \
+--workerMachineType=n1-highmem-2 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --defaultWorkerLogLevel=INFO \
 --runner=DataflowRunner

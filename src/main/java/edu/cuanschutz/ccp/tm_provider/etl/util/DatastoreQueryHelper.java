@@ -367,7 +367,6 @@ public class DatastoreQueryHelper {
 
 	}
 
-
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
 //		new DatastoreQueryHelper().getStatuses();
@@ -391,7 +390,7 @@ public class DatastoreQueryHelper {
 
 		File outputFile = new File("/Users/bill/projects/ncats-translator/current-kgs/20221205_document_ids.txt");
 		new DatastoreQueryHelper().getAllDocumentIds(outputFile);
-		
+
 	}
 
 }

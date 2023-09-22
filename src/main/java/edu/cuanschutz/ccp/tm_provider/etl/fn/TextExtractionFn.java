@@ -55,7 +55,7 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> inputDocCriteria) {
 
-		return statusEntityToText.apply("Identify concept annotations",
+		return statusEntityToText.apply("Exporting text",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, String>>() {
 					private static final long serialVersionUID = 1L;
 
@@ -69,7 +69,7 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 								TextExtractionPipeline.DOCUMENT_COLLECTIONS_DELIMITER);
 
 						try {
-							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue());
+							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
 							if (documentText == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG, "Unable to extract text for: " + docId,
 										outputDocCriteria, timestamp, out, docId, null);
@@ -82,7 +82,8 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 										+ "\n";
 								String docCollectionsCommentLine = TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX
 										+ docCollectionsStr + "\n";
-								documentText = docIdCommentLine + docCollectionsCommentLine + documentText;
+								documentText = docIdCommentLine + docCollectionsCommentLine + "\n" + documentText
+										+ "\n";
 
 								out.get(EXTRACTED_TEXT_TAG).output(KV.of(statusEntity, documentText));
 							}

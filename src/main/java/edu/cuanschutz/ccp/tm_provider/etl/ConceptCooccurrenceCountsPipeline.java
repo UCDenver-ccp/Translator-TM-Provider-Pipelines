@@ -10,6 +10,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -40,39 +41,51 @@ public class ConceptCooccurrenceCountsPipeline {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
 				+ "delimited between different document criteria and pipe-delimited within document criteria, "
 				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0")
+		@Required
 		String getInputDocumentCriteria();
 
 		void setInputDocumentCriteria(String docCriteria);
 
 		@Description("pipe-delimited list of processing status flags that will be used to query for status entities from Datastore")
+		@Required
 		String getRequiredProcessingStatusFlags();
 
 		void setRequiredProcessingStatusFlags(String flags);
 
 		@Description("The document type, e.g. CONCEPT_ALL, CONCEPT_MP, etc., indicating the document type containing the annotations that will be counted. This document type must be in the InputDocumentCriteria input parameter.")
+		@Required
 		DocumentType getDocTypeToCount();
 
 		void setDocTypeToCount(DocumentType value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("Path to the bucket where results will be written")
+		@Required
 		String getOutputBucket();
 
 		void setOutputBucket(String bucketPath);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
 
 		@Description("'levels' of cooccurrence for which to compute counts, e.g. Document, Sentence, etc. This paramter should be pipe-delimited values from the CooccurLevel enum.")
+		@Required
 		String getCooccurLevels();
 
 		void setCooccurLevels(String value);
+
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
+
+		void setOptionalDocumentSpecificCollection(String value);
 
 	}
 
@@ -97,7 +110,8 @@ public class ConceptCooccurrenceCountsPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getOptionalDocumentSpecificCollection());
 
 		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.NGD_COUNTS, DocumentFormat.TSV,
 				PIPELINE_KEY, pipelineVersion);

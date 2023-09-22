@@ -1,6 +1,7 @@
 package edu.cuanschutz.ccp.tm_provider.relation_extraction.annot_batch_cli;
 
 import static edu.cuanschutz.ccp.tm_provider.etl.fn.ElasticsearchDocumentCreatorFn.computeSentenceIdentifier;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

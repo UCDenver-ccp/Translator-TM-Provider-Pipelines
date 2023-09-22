@@ -9,18 +9,17 @@ import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 
-import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ConceptCooccurrenceCountsFn.CooccurLevel;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
 
@@ -33,21 +32,25 @@ public class ConceptCountDistributionPipeline {
 	public interface Options extends DataflowPipelineOptions {
 
 		@Description("File pattern to match the files containing concept-id/document-id pairs")
+		@Required
 		String getSingletonFilePattern();
 
 		void setSingletonFilePattern(String filePattern);
 
 		@Description("File pattern to match the files containing concept-id to label pairs")
+		@Required
 		String getLabelMapFilePattern();
 
 		void setLabelMapFilePattern(String filePattern);
 
 		@Description("Delimiter used in the id-to-label file")
+		@Required
 		Delimiter getLabelMapFileDelimiter();
 
 		void setLabelMapFileDelimiter(Delimiter delimiter);
 
 		@Description("Path to the bucket where results will be written")
+		@Required
 		String getOutputBucket();
 
 		void setOutputBucket(String bucketPath);

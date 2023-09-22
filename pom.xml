@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.cuanschutz.edu</groupId>
 	<artifactId>tm-pipelines</artifactId>
-	<version>0.2.1</version>
+	<version>0.3.0</version>
 	<description>Pipelines used by the Translator Text Mining Provider</description>
 
 
@@ -379,6 +379,13 @@
 			<groupId>org.apache.beam</groupId>
 			<artifactId>beam-sdks-java-io-xml</artifactId>
 			<version>${beam.version}</version>
+			<!-- this exclusion was required in order to parse the drugbank xml file -->
+			<!-- <exclusions>
+				<exclusion>
+					<groupId>org.codehaus.woodstox</groupId>
+					<artifactId>woodstox-core-asl</artifactId>
+				</exclusion>
+			</exclusions> --> 
 		</dependency>
 
 
@@ -626,6 +633,13 @@
 			<groupId>com.pengyifan.bioc</groupId>
 			<artifactId>pengyifan-bioc</artifactId>
 			<version>1.0.3</version>
+			<!-- this exclusion was required in order to parse the drugbank xml file -->
+			<!-- <exclusions>
+				<exclusion>
+					<groupId>org.codehaus.woodstox</groupId>
+					<artifactId>woodstox-core-asl</artifactId>
+				</exclusion>
+			</exclusions> -->
 		</dependency>
 
 		<dependency>

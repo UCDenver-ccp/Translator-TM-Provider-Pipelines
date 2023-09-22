@@ -143,10 +143,10 @@ public class DocumentToEntityFn extends DoFn<KV<String, List<String>>, Entity> {
 		entityBuilder.putProperties(DOCUMENT_PROPERTY_PIPELINE, makeValue(dc.getPipelineKey().name()).build());
 
 		List<Value> collections = new ArrayList<Value>();
-		
+
 		List<String> sortedCollectionNames = new ArrayList<String>(collectionNames);
 		Collections.sort(sortedCollectionNames);
-		
+
 		for (String collection : sortedCollectionNames) {
 			collections.add(makeValue(collection).build());
 		}

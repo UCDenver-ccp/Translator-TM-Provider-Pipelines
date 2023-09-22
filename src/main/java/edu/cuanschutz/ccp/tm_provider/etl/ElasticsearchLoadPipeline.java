@@ -12,6 +12,7 @@ import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO.DocToBulk;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -52,11 +53,13 @@ public class ElasticsearchLoadPipeline {
 		@Description("Defines the documents required for input in order to extract the sentences appropriately. The string is a semi-colon "
 				+ "delimited between different document criteria and pipe-delimited within document criteria, "
 				+ "e.g.  TEXT|TEXT|MEDLINE_XML_TO_TEXT|0.1.0;CONCEPT_ALL|BIONLP|CONCEPT_POST_PROCESS|0.1.0")
+		@Required
 		String getInputDocumentCriteria();
 
 		void setInputDocumentCriteria(String docCriteria);
 
 		@Description("pipe-delimited list of processing status flags that will be used to query for status entities from Datastore")
+		@Required
 		String getRequiredProcessingStatusFlags();
 
 		void setRequiredProcessingStatusFlags(String flags);
@@ -67,39 +70,51 @@ public class ElasticsearchLoadPipeline {
 //		void setDocTypeToCount(DocumentType value);
 
 		@Description("The document collection to process")
+		@Required
 		String getCollection();
 
 		void setCollection(String value);
 
 		@Description("The document collection to process")
+		@Required
 		SentenceInclusionFlag getSentenceInclusionFlag();
 
 		void setSentenceInclusionFlag(SentenceInclusionFlag value);
 
 		@Description("The DocumentType from which to extract the concept annotations - CONCEPT_ALL or CONCEPT_ALL_UNFILTERED")
+		@Required
 		DocumentType getConceptDocumentType();
 
 		void setConceptDocumentType(DocumentType value);
 
 		@Description("Elasticsearch URLs - pipe-delimited String")
+		@Required
 		String getElasticsearchAddresses();
 
 		void setElasticsearchAddresses(String indexName);
 
 		@Description("Elasticsearch index name")
+		@Required
 		String getElasticsearchIndexName();
 
 		void setElasticsearchIndexName(String indexName);
 
 		@Description("Elasticsearch API key")
+		@Required
 		String getElasticsearchApiKey();
 
 		void setElasticsearchApiKey(String apiKey);
 
 		@Description("Overwrite any previous runs")
+		@Required
 		OverwriteOutput getOverwrite();
 
 		void setOverwrite(OverwriteOutput value);
+
+		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		String getOptionalDocumentSpecificCollection();
+
+		void setOptionalDocumentSpecificCollection(String value);
 
 	}
 
@@ -123,7 +138,8 @@ public class ElasticsearchLoadPipeline {
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
-						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite());
+						requiredProcessStatusFlags, options.getCollection(), options.getOverwrite(),
+						options.getOptionalDocumentSpecificCollection());
 
 		PCollectionTuple output = ElasticsearchDocumentCreatorFn.createDocuments(statusEntity2Content, timestamp,
 				inputDocCriteria, errorCriteria, options.getConceptDocumentType());
