@@ -18,6 +18,13 @@ public class SentenceTsvBuilderFn extends DoFn<KV<ProcessingStatus, ExtractedSen
 	@SuppressWarnings("serial")
 	public static TupleTag<KV<ProcessingStatus, String>> OUTPUT_TSV_TAG = new TupleTag<KV<ProcessingStatus, String>>() {
 	};
+
+	// TODO
+//	add new output tag - format will be Turku comment line with sentence ID followed by sentence on the next line
+//	
+//	also add BERT output format?????
+//			
+
 	@SuppressWarnings("serial")
 	public static TupleTag<EtlFailureData> ETL_FAILURE_TAG = new TupleTag<EtlFailureData>() {
 	};
