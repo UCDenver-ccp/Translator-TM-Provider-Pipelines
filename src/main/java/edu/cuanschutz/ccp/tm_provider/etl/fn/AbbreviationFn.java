@@ -188,6 +188,8 @@ public class AbbreviationFn
 				@SuppressWarnings("unused")
 				String confidence = cols[2].trim();
 
+				// TODO: we are seeing some errors where we get a NPE on the next command.
+				// Somehow currentSentence is null (I think), e.g. PMID:36116712
 				// use current sentence to find span offset
 				int offset = sentenceToSpanMap.get(currentSentence).getSpanStart();
 
