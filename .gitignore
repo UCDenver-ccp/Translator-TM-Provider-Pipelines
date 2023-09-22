@@ -32,3 +32,4 @@ prime-crf-stage.sh
 eval.sh
 prime-crf-prod.sh
 prime-oger-prod.sh
+rrun.env.sh
