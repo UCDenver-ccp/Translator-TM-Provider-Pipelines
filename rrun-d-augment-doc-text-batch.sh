@@ -1,0 +1,72 @@
+#!/usr/local/bin/bash
+
+source ./rrun.env.sh
+
+########## CHOOSE MEDLINE OR PMCOA
+### MEDLINE
+TEXT_PIPELINE_KEY=MEDLINE_XML_TO_TEXT
+TEXT_PIPELINE_VERSION='0.1.1'
+SUBSET_PREFIX=PUBMED_SUB_
+MAX_SUBSET_INDEX=36
+
+# #### PMCOA
+# TEXT_PIPELINE_KEY=BIOC_TO_TEXT
+# TEXT_PIPELINE_VERSION='0.1.0'
+# SUBSET_PREFIX=PMC_SUBSET_
+# MAX_SUBSET_INDEX=37
+
+SCRIPT=./scripts/pipelines/text/run_doc_text_augment.sh
+
+OVERWRITE=YES
+
+SENTENCE_PIPELINE_KEY="SENTENCE_SEGMENTATION"
+SENTENCE_PIPELINE_VERSION='0.2.1'
+ABBREVIATION_PIPELINE_VERSION='recent'
+
+OUTPUT_PIPELINE_VERSION='0.3.0'
+
+# echo "Starting DOC TEXT AUGMENT pipeline..."
+# COLLECTION="PUBMED_SUB_37"
+# $SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
+
+# ---------------------------------------------------
+# bulk processing below
+
+# for INDEX in $(seq 0 4 $MAX_SUBSET_INDEX)  
+#   do 
+#     ind=$(($INDEX + 0))
+#     if (( ind <= $MAX_SUBSET_INDEX)); then
+#         echo "Starting doc text augmentation pipeline... ${ind} $(date)"
+#         COLLECTION="${SUBSET_PREFIX}${ind}"
+#         $SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
+#         sleep 120
+#     fi
+#     ind=$(($INDEX + 1))
+#     if (( ind <= $MAX_SUBSET_INDEX)); then
+#         echo "Starting doc text augmentation pipeline... ${ind} $(date)"
+#         COLLECTION="${SUBSET_PREFIX}${ind}"
+#         $SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
+#         sleep 120
+#     fi
+#     ind=$(($INDEX + 2))
+#     if (( ind <= $MAX_SUBSET_INDEX)); then
+#         echo "Starting doc text augmentation pipeline... ${ind} $(date)"
+#         COLLECTION="${SUBSET_PREFIX}${ind}"
+#         $SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
+#         sleep 120
+#     fi
+#     ind=$(($INDEX + 3))
+#     if (( ind <= $MAX_SUBSET_INDEX)); then
+#         echo "Starting doc text augmentation pipeline... ${ind} $(date)"
+#         COLLECTION="${SUBSET_PREFIX}${ind}"
+#         $SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
+#     fi
+#     wait 
+#   done
+
+# ---------------------------------------------
+# use the below to do a redo the text augmentation run where the status entities have been
+# tagged by the collection-assignment pipeline. 
+OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION=PUBMED
+COLLECTION="REDO_AUG_TEXT_20230915"
+$SCRIPT $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $ABBREVIATION_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $OPTIONAL_DOCUMENT_SPECIFIC_COLLECTION $JAR_VERSION $OVERWRITE &> "./logs/doc-text-aug-${COLLECTION}.log" &
