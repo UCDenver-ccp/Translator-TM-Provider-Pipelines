@@ -1,4 +1,4 @@
-## v0.2.2 (Sep 2023)
+## v0.3.0 (Sep 2023)
 
 - concept recognition pipeline refresh
   - updates based on comprehensive error analysis and updated ontologies
