@@ -17,6 +17,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.collections.CollectionsUtil.SortOrder;
+import edu.ucdenver.ccp.common.string.RegExPatterns;
 import edu.ucdenver.ccp.nlp.core.annotation.Span;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,10 @@ public class ExtractedSentence extends DoFn {
 	private final String documentZone;
 	private final Set<String> documentPublicationTypes;
 	private final int documentYearPublished;
+	private final int sentenceSpanStart;
+	private final List<String> otherEntityIds;
+	private final List<String> otherEntityCoveredText;
+	private final List<List<Span>> otherEntitySpans;
 
 //	/**
 //	 * Larger block of text, perhaps entire abstract
@@ -53,8 +58,12 @@ public class ExtractedSentence extends DoFn {
 			String entityPlaceholder1, String entityId2, String entityCoveredText2, List<Span> entitySpan2,
 //			String entityPlaceholder2, String keyword, String sentenceText, String sentenceContext, String documentZone,
 			String entityPlaceholder2, String keyword, String sentenceText, String documentZone,
-			Set<String> documentPublicationTypes, int documentYearPublished) {
+			Set<String> documentPublicationTypes, int documentYearPublished, int sentenceSpanStart,
+			List<String> otherEntityIds, List<String> otherEntityCoveredText, List<List<Span>> otherEntitySpans) {
 		super();
+		this.otherEntityIds = otherEntityIds;
+		this.otherEntityCoveredText = otherEntityCoveredText;
+		this.otherEntitySpans = otherEntitySpans;
 
 		// order entities by span so that their order is reproducible
 		Span aggregateSpan1 = getAggregateSpan(entitySpan1);
@@ -89,6 +98,7 @@ public class ExtractedSentence extends DoFn {
 				? new HashSet<String>(documentPublicationTypes)
 				: new HashSet<String>();
 		this.documentYearPublished = documentYearPublished;
+		this.sentenceSpanStart = sentenceSpanStart;
 	}
 
 	public String getSentenceIdentifier() {
@@ -192,7 +202,7 @@ public class ExtractedSentence extends DoFn {
 	public static ExtractedSentence fromTsv(String tsv, boolean sentenceIdInFirstColumn) {
 		Pattern placeholderPattern = Pattern.compile("(@.*?\\$)"); // e.g. @GENE$
 
-		String[] cols = tsv.split("\\t");
+		String[] cols = tsv.split("\\t", -1);
 
 		int index = 0;
 		if (sentenceIdInFirstColumn) {
@@ -213,6 +223,15 @@ public class ExtractedSentence extends DoFn {
 		String documentZone = cols[index++];
 		Set<String> documentPublicationTypes = new HashSet<String>(Arrays.asList(cols[index++].split("\\|")));
 		int documentYearPublished = Integer.parseInt(cols[index++]);
+		int sentenceSpanStart = Integer.parseInt(cols[index++]);
+
+		List<String> otherEntityIds = Arrays.asList(cols[index++].split(";"));
+		List<String> otherEntityCoveredText = Arrays.asList(cols[index++].split("\\|"));
+		List<List<Span>> otherEntitySpans = new ArrayList<List<Span>>();
+		for (String spanStr : cols[index++].split("!")) {
+			otherEntitySpans.add(getSpans(spanStr));
+		}
+
 //		String sentenceContext = cols[index++];
 
 		int entity1Start = entitySpan1.get(0).getSpanStart();
@@ -251,7 +270,8 @@ public class ExtractedSentence extends DoFn {
 
 		return new ExtractedSentence(documentId, entityId1, entityCoveredText1, entitySpan1, entityPlaceholder1,
 				entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword, sentenceText, // sentenceContext,
-				documentZone, documentPublicationTypes, documentYearPublished);
+				documentZone, documentPublicationTypes, documentYearPublished, sentenceSpanStart, otherEntityIds,
+				otherEntityCoveredText, otherEntitySpans);
 	}
 
 	protected static List<Span> getSpans(String spanStr) {
@@ -308,6 +328,43 @@ public class ExtractedSentence extends DoFn {
 	private Span getAggregateSpan(List<Span> spans) {
 		Collections.sort(spans, Span.ASCENDING());
 		return new Span(spans.get(0).getSpanStart(), spans.get(spans.size() - 1).getSpanEnd());
+	}
+
+	/**
+	 * return the sentence text. If there are multi-token concepts, connect the
+	 * tokens with underscores, e.g., red blood cells = red_blood_cells
+	 * 
+	 * @param es
+	 * @return
+	 */
+	public String getSentenceTextWithUnderscoredEntities() {
+		String sentenceText = getSentenceText();
+
+		String entityCoveredText1 = getEntityCoveredText1();
+		if (entityCoveredText1.contains(" ")) {
+			entityCoveredText1 = entityCoveredText1.replaceAll(" ", "_");
+			sentenceText = sentenceText.replaceAll(RegExPatterns.escapeCharacterForRegEx(getEntityCoveredText1()),
+					entityCoveredText1);
+		}
+
+		String entityCoveredText2 = getEntityCoveredText2();
+		if (entityCoveredText2.contains(" ")) {
+			entityCoveredText2 = entityCoveredText2.replaceAll(" ", "_");
+			sentenceText = sentenceText.replaceAll(RegExPatterns.escapeCharacterForRegEx(getEntityCoveredText2()),
+					entityCoveredText2);
+		}
+		
+		for (String otherEntityCoveredText : getOtherEntityCoveredText()) {
+			if (otherEntityCoveredText.contains(" ")) {
+				String underscoredOtherEntityCoveredText = otherEntityCoveredText.replaceAll(" ", "_");
+				sentenceText = sentenceText.replaceAll(RegExPatterns.escapeCharacterForRegEx(otherEntityCoveredText),
+						underscoredOtherEntityCoveredText);
+			}
+		}
+		
+
+		return sentenceText;
+
 	}
 
 }

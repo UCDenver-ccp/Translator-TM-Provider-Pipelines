@@ -165,7 +165,7 @@ public class WebAnnoSentenceExtractionPipeline {
 		prefixToPlaceholderMap.put(options.getPrefixY(), options.getPlaceholderY());
 
 		PCollectionTuple output = SentenceExtractionWebAnnoFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType, ancestorMapView);
+				timestamp, inputDocCriteria, prefixToPlaceholderMap, conceptDocumentType);//, ancestorMapView);
 
 		PCollection<KV<ProcessingStatus, String>> statusToOutputTsv = output
 				.get(SentenceExtractionWebAnnoFn.EXTRACTED_SENTENCES_TAG);

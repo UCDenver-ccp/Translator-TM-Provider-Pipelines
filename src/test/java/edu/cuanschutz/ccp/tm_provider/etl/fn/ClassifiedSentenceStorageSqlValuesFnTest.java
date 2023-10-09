@@ -106,7 +106,7 @@ public class ClassifiedSentenceStorageSqlValuesFnTest {
 		BiolinkAssociation biolinkAssoc = BiolinkAssociation.BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE;
 		double bertScoreInclusionMinimumThreshold = 0.9;
 		String bertOutputLine = "108be6abe12d0fa43eda98a11db0f64601bc27fc67327cbdd2a6e23ecbc985e7\t@CHEMICAL$ and ciprofloxacin were started to treat suspected community-acquired @DISEASE$.\t0.9994267\t0.00019880748\t0.0003744";
-		String metadataLine = "108be6abe12d0fa43eda98a11db0f64601bc27fc67327cbdd2a6e23ecbc985e7\t@CHEMICAL$ and ciprofloxacin were started to treat suspected community-acquired @DISEASE$.\tPMC6940177\tCeftriaxone\tDRUGBANK:DB01212\t0|11\tpneumonia\tMONDO:0005249\t81|90\t\t91\t\tCeftriaxone and ciprofloxacin were started to treat suspected community-acquired pneumonia.\tCASE\t\t2155";
+		String metadataLine = "108be6abe12d0fa43eda98a11db0f64601bc27fc67327cbdd2a6e23ecbc985e7\t@CHEMICAL$ and ciprofloxacin were started to treat suspected community-acquired @DISEASE$.\tPMC6940177\tCeftriaxone\tDRUGBANK:DB01212\t0|11\tpneumonia\tMONDO:0005249\t81|90\t\t91\t\tCeftriaxone and ciprofloxacin were started to treat suspected community-acquired pneumonia.\tCASE\t\t2155\t123\t\t\t";
 		List<AssertionTableValues> assertionTableValues = new ArrayList<AssertionTableValues>();
 		List<EvidenceTableValues> evidenceTableValues = new ArrayList<EvidenceTableValues>();
 		List<EntityTableValues> entityTableValues = new ArrayList<EntityTableValues>();

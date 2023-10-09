@@ -63,6 +63,7 @@ public class ChebiOgerDictFileFactory extends OgerDictFileFactory {
 					OBO_PURL + "CHEBI_15377", // water
 					OBO_PURL + "CHEBI_25367", // molecule
 					OBO_PURL + "CHEBI_36357", // compound
+					OBO_PURL + "CHEBI_46662", // mineral
 					OBO_PURL + "CHEBI_7754", // oligonucleotide
 					OBO_PURL + "CHEBI_4705", // double-stranded DNA
 					OBO_PURL + "CHEBI_9160" // single-stranded DNA

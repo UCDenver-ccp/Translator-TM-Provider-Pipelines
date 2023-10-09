@@ -17,7 +17,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
@@ -67,7 +66,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria, Map<List<String>, String> prefixesToPlaceholderMap,
-			DocumentType conceptDocType, PCollectionView<Map<String, Set<String>>> ancestorsMapView,
+			DocumentType conceptDocType, // PCollectionView<Map<String, Set<String>>> ancestorsMapView,
 			Set<String> conceptIdsToExclude) {
 
 		return statusEntityToText.apply("Identify concept annotations", ParDo.of(
@@ -80,7 +79,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
+//						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						Set<String> documentPublicationTypes = Collections.emptySet();
 						List<String> publicationTypes = statusEntity.getPublicationTypes();
@@ -102,7 +101,8 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 
 							Set<ExtractedSentence> extractedSentences = extractSentences(docId, documentText,
 									documentPublicationTypes, documentYearPublished, docTypeToContentMap, keywords,
-									prefixesToPlaceholderMap, conceptDocType, ancestorsMap, conceptIdsToExclude);
+									prefixesToPlaceholderMap, conceptDocType, // ancestorsMap,
+									conceptIdsToExclude);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -120,7 +120,7 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 						}
 					}
 
-				}).withSideInputs(ancestorsMapView)
+				})// .withSideInputs(ancestorsMapView)
 				.withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
@@ -129,52 +129,55 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
 			Map<List<String>, String> prefixesToPlaceholderMap, DocumentType conceptDocType,
-			Map<String, Set<String>> ancestorMap, Set<String> conceptIdsToExclude) throws IOException {
+//			Map<String, Set<String>> ancestorMap, 
+			Set<String> conceptIdsToExclude) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocType);
 		Collection<TextAnnotation> sectionAnnots = docTypeToContentMap.get(DocumentType.SECTIONS);
 
-		// remove concepts-to-exclude
-		conceptAnnots = removeConceptsToExclude(conceptAnnots, conceptIdsToExclude);
-
-		List<String> xPrefixes = new ArrayList<String>();
-		List<String> yPrefixes = new ArrayList<String>();
-		String xPlaceholder = null;
-		// there are only two placeholders in the map, e.g. @GENE$ so we use the
-		// placeholders to assign the prefixes to distinct lists
-		for (List<String> prefixes : prefixesToPlaceholderMap.keySet()) {
-			if (xPlaceholder == null || xPlaceholder.equals(prefixesToPlaceholderMap.get(prefixes))) {
-				xPrefixes.addAll(prefixes);
-				xPlaceholder = prefixesToPlaceholderMap.get(prefixes);
-			} else {
-				yPrefixes.addAll(prefixes);
-			}
-		}
-
-		// if there is only one prefix - then we are looking for sentences that have two
-		// of the same kind of anntotation, e.g. two protein annotations
-		if (yPrefixes.isEmpty()) {
-			yPrefixes.addAll(xPrefixes);
-		}
-
-		List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes, ancestorMap);
-		List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes, ancestorMap);
-
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
-		if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
+		if (conceptAnnots != null && !conceptAnnots.isEmpty()) {
+			// remove concepts-to-exclude
+			conceptAnnots = removeConceptsToExclude(conceptAnnots, conceptIdsToExclude);
 
-			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
-					sentenceAnnots, conceptXAnnots, conceptYAnnots);
+			List<String> xPrefixes = new ArrayList<String>();
+			List<String> yPrefixes = new ArrayList<String>();
+			String xPlaceholder = null;
+			// there are only two placeholders in the map, e.g. @GENE$ so we use the
+			// placeholders to assign the prefixes to distinct lists
+			for (List<String> prefixes : prefixesToPlaceholderMap.keySet()) {
+				if (xPlaceholder == null || xPlaceholder.equals(prefixesToPlaceholderMap.get(prefixes))) {
+					xPrefixes.addAll(prefixes);
+					xPlaceholder = prefixesToPlaceholderMap.get(prefixes);
+				} else {
+					yPrefixes.addAll(prefixes);
+				}
+			}
 
-			// xPlaceholder was already set above
+			// if there is only one prefix - then we are looking for sentences that have two
+			// of the same kind of anntotation, e.g. two protein annotations
+			if (yPrefixes.isEmpty()) {
+				yPrefixes.addAll(xPrefixes);
+			}
+
+			List<TextAnnotation> conceptXAnnots = getAnnotsByPrefix(conceptAnnots, xPrefixes);// , ancestorMap);
+			List<TextAnnotation> conceptYAnnots = getAnnotsByPrefix(conceptAnnots, yPrefixes);// , ancestorMap);
+
+			if (!conceptXAnnots.isEmpty() && !conceptYAnnots.isEmpty()) {
+
+				Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap = buildSentenceToConceptMap(
+						sentenceAnnots, conceptXAnnots, conceptYAnnots);
+
+				// xPlaceholder was already set above
 //			String xPlaceholder = prefixToPlaceholderMap.get(xPrefixes.get(0));
-			String yPlaceholder = prefixesToPlaceholderMap.get(yPrefixes);
+				String yPlaceholder = prefixesToPlaceholderMap.get(yPrefixes);
 
-			extractedSentences
-					.addAll(catalogExtractedSentences(keywords, documentText, documentId, documentPublicationTypes,
-							documentYearPublished, sentenceToConceptMap, xPlaceholder, yPlaceholder, sectionAnnots));
+				extractedSentences.addAll(catalogExtractedSentences(keywords, documentText, documentId,
+						documentPublicationTypes, documentYearPublished, sentenceToConceptMap, xPlaceholder,
+						yPlaceholder, sectionAnnots, conceptAnnots));
 
+			}
 		}
 		return extractedSentences;
 	}
@@ -202,10 +205,14 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	 * filters the input collection of annotations by keeping only those that share
 	 * the specified prefix, e.g. CHEBI
 	 * 
-	 * Note: the prefix can now be just a prefix, e.g. "GO" or it can be a CURIE,
-	 * e.g. "GO:0005575" to indicate a subset of an ontology - in this case the
-	 * GO:cellular_component hierarchy. The ancestor map is used to ensure that any
-	 * concept identifier that starts with "GO:" is also a descendant of
+	 * Note: GO concepts are now prefixed with GO_BP, GO_CC, and GO_MF -- internally
+	 * -- so we no longer need the ancestor map that was previously used to
+	 * distinguish between the sub-hierarchies.
+	 * 
+	 * OLD Note: the prefix can now be just a prefix, e.g. "GO" or it can be a
+	 * CURIE, e.g. "GO:0005575" to indicate a subset of an ontology - in this case
+	 * the GO:cellular_component hierarchy. The ancestor map is used to ensure that
+	 * any concept identifier that starts with "GO:" is also a descendant of
 	 * "GO:0005575".
 	 * 
 	 * @param conceptAnnots
@@ -213,34 +220,34 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	 * @return
 	 */
 	public static List<TextAnnotation> getAnnotsByPrefix(Collection<TextAnnotation> conceptAnnots,
-			List<String> prefixes, Map<String, Set<String>> ancestorMap) {
+			List<String> prefixes) { // , Map<String, Set<String>> ancestorMap) {
 		Set<TextAnnotation> annots = new HashSet<TextAnnotation>();
 
 		for (TextAnnotation annot : conceptAnnots) {
 			for (String prefixOrAncestorId : prefixes) {
 				String prefix = prefixOrAncestorId;
-				String ancestorId = null;
-				if (prefixOrAncestorId.contains(":")) {
-					prefix = prefixOrAncestorId.substring(0, prefixOrAncestorId.indexOf(":"));
-					ancestorId = prefixOrAncestorId;
-				}
+//				String ancestorId = null;
+//				if (prefixOrAncestorId.contains(":")) {
+//					prefix = prefixOrAncestorId.substring(0, prefixOrAncestorId.indexOf(":"));
+//					ancestorId = prefixOrAncestorId;
+//				}
 
 				String conceptId = annot.getClassMention().getMentionName();
-				if (ancestorId == null) {
-					// then the prefixOrAncestorId is simply a prefix, so we look to see if the
-					// concept ID also starts with that prefix
-					if (conceptId.startsWith(prefix)) {
-						annots.add(annot);
-					}
-				} else {
-					// the prefixOrAncestorId is an ancestor ID so we make sure the concept ID
-					// exists in the ancestor map and that the ancestor ID is an ancestor of the
-					// concept ID.
-					if (ancestorMap.containsKey(conceptId) && ancestorMap.get(conceptId).contains(ancestorId)
-							|| conceptId.equals(ancestorId)) {
-						annots.add(annot);
-					}
+//				if (ancestorId == null) {
+				// then the prefixOrAncestorId is simply a prefix, so we look to see if the
+				// concept ID also starts with that prefix
+				if (conceptId.startsWith(prefix)) {
+					annots.add(annot);
 				}
+//				} else {
+//					// the prefixOrAncestorId is an ancestor ID so we make sure the concept ID
+//					// exists in the ancestor map and that the ancestor ID is an ancestor of the
+//					// concept ID.
+//					if (ancestorMap.containsKey(conceptId) && ancestorMap.get(conceptId).contains(ancestorId)
+//							|| conceptId.equals(ancestorId)) {
+//						annots.add(annot);
+//					}
+//				}
 			}
 		}
 
@@ -253,11 +260,12 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 	protected static Set<ExtractedSentence> catalogExtractedSentences(Set<String> keywords, String documentText,
 			String documentId, Set<String> documentPublicationTypes, int documentYearPublished,
 			Map<TextAnnotation, Map<String, Set<TextAnnotation>>> sentenceToConceptMap, String xPlaceholder,
-			String yPlaceholder, Collection<TextAnnotation> sectionAnnots) {
+			String yPlaceholder, Collection<TextAnnotation> sectionAnnots, Collection<TextAnnotation> conceptAnnots) {
 
 		Set<ExtractedSentence> extractedSentences = new HashSet<ExtractedSentence>();
 		for (Entry<TextAnnotation, Map<String, Set<TextAnnotation>>> entry : sentenceToConceptMap.entrySet()) {
 			TextAnnotation sentenceAnnot = entry.getKey();
+			int sentenceSpanStart = sentenceAnnot.getAnnotationSpanStart();
 			String documentZone = determineDocumentZone(sentenceAnnot, sectionAnnots);
 			String keywordInSentence = sentenceContainsKeyword(sentenceAnnot.getCoveredText(), keywords);
 			if (keywords == null || keywords.isEmpty() || keywordInSentence != null) {
@@ -271,6 +279,24 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 					// for Y concepts
 					xConceptsInSentence = mergeOverlappingConcepts(xConceptsInSentence);
 					yConceptsInSentence = mergeOverlappingConcepts(yConceptsInSentence);
+
+					Set<TextAnnotation> allConceptsInSentence = getAllConceptsInSentence(sentenceAnnot, conceptAnnots);
+
+					/*
+					 * the next three lists are used to store information for all concepts in the
+					 * sentence
+					 */
+					List<String> otherEntityIds = new ArrayList<String>();
+					List<String> otherEntityCoveredText = new ArrayList<String>();
+					List<List<Span>> otherEntitySpans = new ArrayList<List<Span>>();
+					for (TextAnnotation annot : allConceptsInSentence) {
+						String conceptId = annot.getClassMention().getMentionName();
+						String coveredText = annot.getCoveredText();
+						List<Span> spans = annot.getSpans();
+						otherEntityIds.add(conceptId);
+						otherEntityCoveredText.add(coveredText);
+						otherEntitySpans.add(offsetSpan(spans, sentenceAnnot.getAnnotationSpanStart()));
+					}
 
 					// for each pair of X&Y concepts, create an ExtractedSentence
 					for (TextAnnotation xAnnot : xConceptsInSentence) {
@@ -292,8 +318,9 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 										xPlaceholder, yId, yText, ySpan, yPlaceholder, keywordInSentence,
 										documentText.substring(sentenceAnnot.getAnnotationSpanStart(),
 												sentenceAnnot.getAnnotationSpanEnd()),
-//										documentText,
-										documentZone, documentPublicationTypes, documentYearPublished);
+										documentZone, documentPublicationTypes, documentYearPublished,
+										sentenceSpanStart, otherEntityIds, otherEntityCoveredText, otherEntitySpans);
+
 								extractedSentences.add(es);
 							}
 						}
@@ -302,6 +329,24 @@ public class SentenceExtractionFn extends DoFn<KV<String, String>, KV<String, St
 			}
 		}
 		return extractedSentences;
+	}
+
+	/**
+	 * Returns the set of concept annots in the specified sentence
+	 * 
+	 * @param sentenceAnnot
+	 * @param conceptAnnots
+	 * @return
+	 */
+	private static Set<TextAnnotation> getAllConceptsInSentence(TextAnnotation sentenceAnnot,
+			Collection<TextAnnotation> conceptAnnots) {
+		Set<TextAnnotation> annots = new HashSet<TextAnnotation>();
+		for (TextAnnotation conceptAnnot : conceptAnnots) {
+			if (conceptAnnot.overlaps(sentenceAnnot)) {
+				annots.add(conceptAnnot);
+			}
+		}
+		return annots;
 	}
 
 	private static Set<TextAnnotation> mergeOverlappingConcepts(Set<TextAnnotation> conceptAnnots) {
