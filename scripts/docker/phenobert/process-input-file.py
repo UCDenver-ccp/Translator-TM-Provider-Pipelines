@@ -31,6 +31,49 @@ def document_iter(file):
             # return the compiled block
             yield id, block
 
+
+def fix_phenobert_output(id, raw_phenobert_output):
+    """Taks as input the output of phenobert and removes some incorrect line breaks. 
+    It appears that when there is a line break following a matched concept, the line break 
+    is included in the output file, e.g.,
+
+    25037   25051   IOP depression  HP:0000490      0.99
+    26156   26170   increased IOP
+    HP:0007906      1.00
+    26245   26257   hypertension    HP:0000822      1.00
+
+    This function looks for output lines wiht only 3 columns and appends those lines to the 
+    next line assuming the next line doesn't start with a number and has < 5 columns.
+    """
+    fixed_phenobert_output = ""
+    prev_line = None
+    for line in raw_phenobert_output.split("\n"):
+        if line:
+            # only process lines with content
+            cols = line.split("\t")
+            if (len(cols) >= 5):
+                # then we assume this line to be correctly formatted
+                fixed_phenobert_output = fixed_phenobert_output + line + "\n"
+            else:
+                if prev_line == None:
+                    prev_line = line
+                else:
+                    # there is a previous line, so let's check to make sure the current 
+                    # line doesn't start with a number
+                    if not cols[0].isnumeric():
+                        # then we will connect this line to the previous line, removing the incorrect line break
+                        updated_line = f"{prev_line}\t{line}\n"
+                        fixed_phenobert_output = fixed_phenobert_output + updated_line
+                        prev_line = None
+                    else:
+                        # the first column is a number - not sure what to do here - hopefully this is not possible
+                        # this shouldn't be possible, but we will set the prev_line to line in this case 
+                        prev_line = line
+                        logging.warning("Unexpected error in phenobert raw output in {id}. Short line starting with numbers ({line}) observed after short line {prev_line}.")
+    return fixed_phenobert_output
+
+
+
 # phenobert output lines look like the following:
 # 0       27      Hypertrophic cardiomyopathy     HP:0001639      1.00
 # 29      56      Hypertrophic cardiomyopathy     HP:0001639      1.00
@@ -41,25 +84,25 @@ def convert_to_bionlp_format(phenobert_output):
     returns the annotations in bionlp format. There are some annotations tagged 
     with 'Neg'. We will ignore these for now as their meaning is unclear. It may
     represent the opposite of an HP concept?"""
-    # bionlp = ""
-    # t_index = 1
-    # for line in phenobert_output.split("\n"):
-    #     if line:
-    #         # only process lines with content
-    #         cols = line.split("\t")
-    #         if len(cols) > 5 and cols[5] == 'Neg':
-    #             # skip lines tagged with Neg
-    #             continue
-    #         span_start= cols[0]
-    #         span_end = cols[1]
-    #         covered_text = cols[2]
-    #         concept_id = cols[3]
-    #         bionlp_line = f"T{t_index}\t{concept_id} {span_start} {span_end}\t{covered_text}\n"
-    #         t_index = t_index + 1
-    #         bionlp = bionlp + bionlp_line
+    bionlp = ""
+    t_index = 1
+    for line in phenobert_output.split("\n"):
+        if line:
+            # only process lines with content
+            cols = line.split("\t")
+            if len(cols) > 5 and cols[5] == 'Neg':
+                # skip lines tagged with Neg
+                continue
+            span_start= cols[0]
+            span_end = cols[1]
+            covered_text = cols[2]
+            concept_id = cols[3]
+            bionlp_line = f"T{t_index}\t{concept_id} {span_start} {span_end}\t{covered_text}\n"
+            t_index = t_index + 1
+            bionlp = bionlp + bionlp_line
 
-    # return bionlp
-    return phenobert_output
+    return bionlp
+    # return phenobert_output
 
 
 def serialize_output(document_id, bionlp, file):
@@ -69,6 +112,13 @@ def serialize_output(document_id, bionlp, file):
     file.write(f"{bionlp}\n")
     file.write(f"###C: DOCUMENT_END\n")
 
+
+# # for testing locally
+# with open("/Users/bill/projects/ncats-translator/prototype/tm-pipelines.git/scripts/docker/phenobert/CRAFT.BATCH_1.phenobert.bionlp", mode="rt", encoding="utf-8") as in_file:
+#     for id, datablock in document_iter(in_file):
+#         print(f"{id}\n{datablock}")
+#         fixed = fix_phenobert_output(id, datablock)
+#         convert_to_bionlp_format(fixed)
 
 # for testing locally
 # with gzip.open(
@@ -95,15 +145,20 @@ with gzip.open(
 ) as in_file, gzip.open(
     "/home/code/output/phenobert.bionlp.gz", mode="wt", encoding="utf-8"
 ) as out_file:
+    
     for id, datablock in document_iter(in_file):
         ct = datetime.datetime.now()
-        logging.warning(f"processing {id} at {ct} -- datablock length: {len(datablock)}")
+        start = time.time()
         # annotate the input file in single document chunks
         phenobert_output = annotate_text(datablock)
+        # remove incorrect line breaks in phenobert_output
+        fixed_phenobert_output = fix_phenobert_output(id, phenobert_output)
         # convert the annotations from the annotated chunk to bionlp format
         pheno_annots_bionlp = convert_to_bionlp_format(phenobert_output)
         # store the output in chunks in a single, compressed file
         serialize_output(id, pheno_annots_bionlp, out_file)
+        end = time.time()
+        logging.warning(f"processed {id} at {ct} -- datablock length: {len(datablock)} -- elapsed time: {end - start}")
 
 # TODO: re-run text extraction pipeline (on CRAFT and PUBMED_SUB_37)
 # TODO: test phenobert run on CRAFT
