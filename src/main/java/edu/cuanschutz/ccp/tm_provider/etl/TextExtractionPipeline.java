@@ -54,6 +54,7 @@ public class TextExtractionPipeline {
 	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR
 			+ DOCUMENT_COLLECTIONS_PREFIX_PART;
 	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
+	public static final String DOCUMENT_END_COMMENT = COMMENT_INDICATOR + "DOCUMENT_END";
 
 	public interface Options extends DataflowPipelineOptions {
 
