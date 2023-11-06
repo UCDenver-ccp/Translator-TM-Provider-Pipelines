@@ -154,7 +154,7 @@ with gzip.open(
         # remove incorrect line breaks in phenobert_output
         fixed_phenobert_output = fix_phenobert_output(id, phenobert_output)
         # convert the annotations from the annotated chunk to bionlp format
-        pheno_annots_bionlp = convert_to_bionlp_format(phenobert_output)
+        pheno_annots_bionlp = convert_to_bionlp_format(fixed_phenobert_output)
         # store the output in chunks in a single, compressed file
         serialize_output(id, pheno_annots_bionlp, out_file)
         end = time.time()
