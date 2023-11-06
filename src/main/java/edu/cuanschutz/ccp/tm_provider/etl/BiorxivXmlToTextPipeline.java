@@ -95,6 +95,7 @@ public class BiorxivXmlToTextPipeline {
 		// endregion
 
 		// region Retrieve the various outputs from processing the articles.
+		PCollection<KV<String, List<String>>> statusEntityToPlainText = outputs.get(JatsArticleToDocumentFn.plainTextTag);
 		PCollection<ProcessingStatus> statuses = outputs.get(JatsArticleToDocumentFn.processingStatusTag);
 		PCollection<KV<String, List<String>>> sections = outputs.get(sectionAnnotationsTag);
 		PCollection<EtlFailureData> failures = outputs.get(etlFailureTag);
@@ -134,6 +135,18 @@ public class BiorxivXmlToTextPipeline {
 						DatastoreIO.v1().write().withProjectId(options.getProject()));
 		// endregion
 
+		
+		/*
+		 * store the plain text document content in Cloud Datastore - deduplication is
+		 * necessary to avoid Datastore non-transactional commit errors
+		 */
+		PCollection<KV<String, List<String>>> nonredundantPlainText = PipelineMain
+				.deduplicateDocumentsByStringKey(statusEntityToPlainText);
+		nonredundantPlainText
+				.apply("plaintext->document_entity",
+						ParDo.of(new JatsDocumentToEntityFn(sectionCriteria, collectionsMap)).withSideInputs(collectionsMap))
+				.apply("document_entity->datastore", DatastoreIO.v1().write().withProjectId(options.getProject()));
+		
 		// region Store the Failure data in Cloud DataStore
 		PCollection<KV<String, Entity>> failureEntities = failures.apply("failure->failure_entity",
 				ParDo.of(new EtlFailureToEntityFn()));
