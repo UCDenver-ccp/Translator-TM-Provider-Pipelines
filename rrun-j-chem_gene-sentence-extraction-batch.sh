@@ -15,11 +15,11 @@ CONCEPT_POST_PROCESS_VERSION="0.3.0"
 
 
 # For chemical/drug to disease/phenotype sentences
-ASSOCIATION="bl_chemical_to_disease_or_phenotypic_feature"
+ASSOCIATION="bl_chemical_to_gene"
 PREFIX_X="CHEBI|DRUGBANK"
 PLACEHOLDER_X="@CHEMICAL$"
-PREFIX_Y="MONDO|HP"
-PLACEHOLDER_Y="@DISEASE$"
+PREFIX_Y="PR"
+PLACEHOLDER_Y="@GENE$"
 
 # ---------------------------------------------
 # process a single collection
