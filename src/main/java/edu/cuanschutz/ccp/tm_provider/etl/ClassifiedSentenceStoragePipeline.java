@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.jdbc.JdbcIO;
 import org.apache.beam.sdk.io.jdbc.JdbcIO.DataSourceConfiguration;
@@ -33,6 +34,8 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesF
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceScoreTableValuesCoder;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceTableValues;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceTableValuesCoder;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceVersionTableValues;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceVersionTableValuesCoder;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
 
 /**
@@ -128,7 +131,8 @@ public class ClassifiedSentenceStoragePipeline {
 		PCollection<KV<String, String>> idToBertOutputLines = getKV(bertOutputLines, 0);
 
 		final String sentenceMetadataFilePath = options.getSentenceMetadataFilePath();
-		PCollection<String> metadataLines = p.apply(TextIO.read().from(sentenceMetadataFilePath));
+		PCollection<String> metadataLines = p
+				.apply(TextIO.read().from(sentenceMetadataFilePath).withCompression(Compression.GZIP));
 		PCollection<KV<String, String>> idToMetadataLines = getKV(metadataLines, 0);
 
 		/* group the lines by their ids */
@@ -148,7 +152,7 @@ public class ClassifiedSentenceStoragePipeline {
 //		final String idSuffixToProcess = options.getIdSuffixToProcess();
 
 		PCollectionTuple sql = ClassifiedSentenceStorageSqlValuesFn.process(result, bertOutputTag, metadataTag,
-				biolinkAssoc, bertScoreInclusionMinimumThreshold);
+				biolinkAssoc, bertScoreInclusionMinimumThreshold, databaseVersion);
 
 //		
 //		
@@ -441,6 +445,9 @@ public class ClassifiedSentenceStoragePipeline {
 		PCollection<EvidenceTableValues> evidenceTableValues = sql
 				.get(ClassifiedSentenceStorageSqlValuesFn.EVIDENCE_VALUES_OUTPUT_TAG);
 
+		PCollection<EvidenceVersionTableValues> evidenceVersionTableValues = sql
+				.get(ClassifiedSentenceStorageSqlValuesFn.EVIDENCE_VERSION_VALUES_OUTPUT_TAG);
+
 		/* Insert into assertions table - first, remove potential redundant records */
 
 		PCollection<AssertionTableValues> uniqueAssertionTableValues = assertionTableValues
@@ -497,18 +504,25 @@ public class ClassifiedSentenceStoragePipeline {
 					}
 				}));
 
-		uniqueEvidenceTableValues.apply("insert evidence-to-version",
-				JdbcIO.<EvidenceTableValues>write().withDataSourceConfiguration(dbConfig)
+		/* Insert into evidence table and evidence-to-version table */
+		// for some reason, following the identical pattern as the other tables resulted in a error: "the keyCoder of a GroupByKey must be deterministic"
+		// I was not able to figure out why since the coder should be deterministic
+//		PCollection<EvidenceVersionTableValues> uniqueEvidenceVersionTableValues = evidenceVersionTableValues
+//				.apply(Distinct.<EvidenceVersionTableValues>create());
+//				.setCoder(new EvidenceVersionTableValuesCoder());
+
+		evidenceVersionTableValues.apply("insert evidence-to-version",
+				JdbcIO.<EvidenceVersionTableValues>write().withDataSourceConfiguration(dbConfig)
 						.withRetryConfiguration(retryConfiguration)
-						.withStatement("INSERT INTO evidence_version (evidence_id, version) \n" + "values(?, ?) \n"
+						.withStatement("INSERT INTO evidence_version (evidence_id, version) \n" + "values(?, ?) ON DUPLICATE KEY UPDATE\n"
 								+ "  evidence_id = VALUES(evidence_id),\n" + "  version = VALUES(version)")
-						.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<EvidenceTableValues>() {
+						.withPreparedStatementSetter(new JdbcIO.PreparedStatementSetter<EvidenceVersionTableValues>() {
 							private static final long serialVersionUID = 1L;
 
-							public void setParameters(EvidenceTableValues evidenceValues, PreparedStatement query)
-									throws SQLException {
-								query.setString(1, evidenceValues.getEvidenceId()); // evidence_id
-								query.setInt(2, databaseVersion);
+							public void setParameters(EvidenceVersionTableValues evidenceVersionValues,
+									PreparedStatement query) throws SQLException {
+								query.setString(1, evidenceVersionValues.getEvidenceId()); // evidence_id
+								query.setInt(2, evidenceVersionValues.getVersion()); // database_version
 							}
 						}));
 

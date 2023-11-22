@@ -20,6 +20,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesF
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceScoreTableValuesCoder;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceTableValues;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceTableValuesCoder;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.EvidenceVersionTableValues;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkPredicate;
 
@@ -105,18 +106,21 @@ public class ClassifiedSentenceStorageSqlValuesFnTest {
 	public void testProcessLines() {
 		BiolinkAssociation biolinkAssoc = BiolinkAssociation.BL_CHEMICAL_TO_DISEASE_OR_PHENOTYPIC_FEATURE;
 		double bertScoreInclusionMinimumThreshold = 0.9;
+		int databaseVersion = 2;
 		String bertOutputLine = "108be6abe12d0fa43eda98a11db0f64601bc27fc67327cbdd2a6e23ecbc985e7\t@CHEMICAL$ and ciprofloxacin were started to treat suspected community-acquired @DISEASE$.\t0.9994267\t0.00019880748\t0.0003744";
 		String metadataLine = "108be6abe12d0fa43eda98a11db0f64601bc27fc67327cbdd2a6e23ecbc985e7\t@CHEMICAL$ and ciprofloxacin were started to treat suspected community-acquired @DISEASE$.\tPMC6940177\tCeftriaxone\tDRUGBANK:DB01212\t0|11\tpneumonia\tMONDO:0005249\t81|90\t\t91\t\tCeftriaxone and ciprofloxacin were started to treat suspected community-acquired pneumonia.\tCASE\t\t2155\t123\t\t\t";
 		List<AssertionTableValues> assertionTableValues = new ArrayList<AssertionTableValues>();
 		List<EvidenceTableValues> evidenceTableValues = new ArrayList<EvidenceTableValues>();
+		List<EvidenceVersionTableValues> evidenceVersionTableValues = new ArrayList<EvidenceVersionTableValues>();
 		List<EntityTableValues> entityTableValues = new ArrayList<EntityTableValues>();
 		List<EvidenceScoreTableValues> evidenceScoreTableValues = new ArrayList<EvidenceScoreTableValues>();
 		ClassifiedSentenceStorageSqlValuesFn.processLines(biolinkAssoc, bertScoreInclusionMinimumThreshold,
-				bertOutputLine, metadataLine, assertionTableValues, evidenceTableValues, entityTableValues,
-				evidenceScoreTableValues);
+				databaseVersion, bertOutputLine, metadataLine, assertionTableValues, evidenceTableValues,
+				entityTableValues, evidenceScoreTableValues, evidenceVersionTableValues);
 
 		List<AssertionTableValues> expectedAssertionTableValues = new ArrayList<AssertionTableValues>();
 		List<EvidenceTableValues> expectedEvidenceTableValues = new ArrayList<EvidenceTableValues>();
+		List<EvidenceVersionTableValues> expectedEvidenceVersionTableValues = new ArrayList<EvidenceVersionTableValues>();
 		List<EntityTableValues> expectedEntityTableValues = new ArrayList<EntityTableValues>();
 		List<EvidenceScoreTableValues> expectedEvidenceScoreTableValues = new ArrayList<EvidenceScoreTableValues>();
 
@@ -145,6 +149,9 @@ public class ClassifiedSentenceStorageSqlValuesFnTest {
 				subjectEntityId, objectEntityId, documentZone, documentPublicationTypesStr, documentYearPublished);
 		expectedEvidenceTableValues.add(expectedEvt);
 
+		EvidenceVersionTableValues expectedEv = new EvidenceVersionTableValues(evidenceId, databaseVersion);
+		expectedEvidenceVersionTableValues.add(expectedEv);
+
 		EntityTableValues subjectEtv = new EntityTableValues(subjectEntityId, subjectSpanStr, "Ceftriaxone");
 		EntityTableValues objectEtv = new EntityTableValues(objectEntityId, objectSpanStr, "pneumonia");
 		expectedEntityTableValues.add(subjectEtv);
@@ -161,6 +168,7 @@ public class ClassifiedSentenceStorageSqlValuesFnTest {
 
 		assertEquals(expectedAssertionTableValues, assertionTableValues);
 		assertEquals(expectedEvidenceTableValues, evidenceTableValues);
+		assertEquals(expectedEvidenceVersionTableValues, evidenceVersionTableValues);
 		assertEquals(expectedEntityTableValues, entityTableValues);
 		assertEquals(new HashSet<EvidenceScoreTableValues>(expectedEvidenceScoreTableValues),
 				new HashSet<EvidenceScoreTableValues>(evidenceScoreTableValues));

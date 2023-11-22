@@ -140,6 +140,7 @@ public class ExtractedSentence extends DoFn {
 	}
 
 	/**
+	 * TODO: add other entity columns to TSV output!!!!!
 	 * @return
 	 */
 	public String toTsv() {
@@ -223,13 +224,16 @@ public class ExtractedSentence extends DoFn {
 		String documentZone = cols[index++];
 		Set<String> documentPublicationTypes = new HashSet<String>(Arrays.asList(cols[index++].split("\\|")));
 		int documentYearPublished = Integer.parseInt(cols[index++]);
+		
 		int sentenceSpanStart = Integer.parseInt(cols[index++]);
-
 		List<String> otherEntityIds = Arrays.asList(cols[index++].split(";"));
 		List<String> otherEntityCoveredText = Arrays.asList(cols[index++].split("\\|"));
 		List<List<Span>> otherEntitySpans = new ArrayList<List<Span>>();
-		for (String spanStr : cols[index++].split("!")) {
-			otherEntitySpans.add(getSpans(spanStr));
+		String spanStrs = cols[index++];
+		if (!spanStrs.isEmpty()) {
+			for (String spanStr : spanStrs.split("!")) {
+				otherEntitySpans.add(getSpans(spanStr));
+			}
 		}
 
 //		String sentenceContext = cols[index++];

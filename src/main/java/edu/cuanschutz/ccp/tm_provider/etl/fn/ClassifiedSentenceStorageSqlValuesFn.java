@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.CoderException;
+import org.apache.beam.sdk.coders.CustomCoder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -59,8 +60,13 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 	public static TupleTag<EvidenceTableValues> EVIDENCE_VALUES_OUTPUT_TAG = new TupleTag<EvidenceTableValues>() {
 	};
 
+	@SuppressWarnings("serial")
+	public static TupleTag<EvidenceVersionTableValues> EVIDENCE_VERSION_VALUES_OUTPUT_TAG = new TupleTag<EvidenceVersionTableValues>() {
+	};
+
 	public static PCollectionTuple process(PCollection<KV<String, CoGbkResult>> results, TupleTag<String> bertOutputTag,
-			TupleTag<String> metadataTag, BiolinkAssociation biolinkAssoc, double bertScoreInclusionMinimumThreshold) {
+			TupleTag<String> metadataTag, BiolinkAssociation biolinkAssoc, double bertScoreInclusionMinimumThreshold,
+			int databaseVersion) {
 		return results.apply("compile sql values", ParDo.of(new DoFn<KV<String, CoGbkResult>, AssertionTableValues>() {
 			private static final long serialVersionUID = 1L;
 
@@ -145,9 +151,11 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 				List<EvidenceTableValues> evidenceTableValues = new ArrayList<EvidenceTableValues>();
 				List<EntityTableValues> entityTableValues = new ArrayList<EntityTableValues>();
 				List<EvidenceScoreTableValues> evidenceScoreTableValues = new ArrayList<EvidenceScoreTableValues>();
+				List<EvidenceVersionTableValues> evidenceVersionTableValues = new ArrayList<EvidenceVersionTableValues>();
 
-				processLines(biolinkAssoc, bertScoreInclusionMinimumThreshold, bertOutputLine, metadataLine,
-						assertionTableValues, evidenceTableValues, entityTableValues, evidenceScoreTableValues);
+				processLines(biolinkAssoc, bertScoreInclusionMinimumThreshold, databaseVersion, bertOutputLine,
+						metadataLine, assertionTableValues, evidenceTableValues, entityTableValues,
+						evidenceScoreTableValues, evidenceVersionTableValues);
 
 				for (AssertionTableValues val : assertionTableValues) {
 					out.get(ASSERTION_VALUES_OUTPUT_TAG).output(val);
@@ -155,6 +163,10 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 
 				for (EvidenceTableValues val : evidenceTableValues) {
 					out.get(EVIDENCE_VALUES_OUTPUT_TAG).output(val);
+				}
+
+				for (EvidenceVersionTableValues val : evidenceVersionTableValues) {
+					out.get(EVIDENCE_VERSION_VALUES_OUTPUT_TAG).output(val);
 				}
 
 				for (EntityTableValues val : entityTableValues) {
@@ -167,66 +179,67 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 
 			}
 
-			private String getNextMetadataOutputLine(Iterator<String> metadataLineIter) {
-				String metadataLine = null;
-				if (metadataLineIter.hasNext()) {
-					metadataLine = metadataLineIter.next();
-					if (metadataLineIter.hasNext()) {
-						// if there is another line, check it just to make sure it's a redundant copy.
-						// If it's not identical, then error.
-						//
-						// Note: this does happen -- there was a case of a sentence segment in both
-						// title and abstract -- document section probably needs to be used as part of
-						// the hash for creating the sentence id.
-
-						/*
-						 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
-						 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
-						 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
-						 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
-						 * vector. title 2155 production of the synthetic drug anti-CD25/IL-10 using
-						 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
-						 * using minicircle vector. --- != ---
-						 * 
-						 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
-						 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
-						 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
-						 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
-						 * vector. abstract 2155 production of the synthetic drug anti-CD25/IL-10 using
-						 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
-						 * using minicircle vector.
-						 * 
-						 */
-						String nextMetadataLine = metadataLineIter.next();
-						if (!nextMetadataLine.equals(metadataLine)) {
-							throw new IllegalArgumentException(
-									"Did not expect another line to match from the metadata file: " + metadataLine
-											+ " --- != --- " + nextMetadataLine);
-						}
-					}
-				}
-				return metadataLine;
-			}
-
-			private String getNextBertOutputLine(Iterator<String> bertOutputLineIter) {
-				String bertOutputLine = null;
-				if (bertOutputLineIter.hasNext()) {
-					bertOutputLine = bertOutputLineIter.next();
-					if (bertOutputLineIter.hasNext()) {
-						// if there is another line, check it just to make sure it's a redundant copy.
-						// If it's not identical, then error.
-						String nextBertOutputLine = bertOutputLineIter.next();
-						if (!nextBertOutputLine.equals(bertOutputLine)) {
-							throw new IllegalArgumentException(
-									"Did not expect another line to match from the BERT output file: " + bertOutputLine
-											+ " --- != --- " + nextBertOutputLine);
-						}
-					}
-				}
-				return bertOutputLine;
-			}
-		}).withOutputTags(ASSERTION_VALUES_OUTPUT_TAG, TupleTagList.of(EVIDENCE_SCORE_OUTPUT_TAG)
-				.and(ENTITY_VALUES_OUTPUT_TAG).and(EVIDENCE_VALUES_OUTPUT_TAG)));
+//			private String getNextMetadataOutputLine(Iterator<String> metadataLineIter) {
+//				String metadataLine = null;
+//				if (metadataLineIter.hasNext()) {
+//					metadataLine = metadataLineIter.next();
+//					if (metadataLineIter.hasNext()) {
+//						// if there is another line, check it just to make sure it's a redundant copy.
+//						// If it's not identical, then error.
+//						//
+//						// Note: this does happen -- there was a case of a sentence segment in both
+//						// title and abstract -- document section probably needs to be used as part of
+//						// the hash for creating the sentence id.
+//
+//						/*
+//						 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
+//						 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
+//						 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
+//						 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
+//						 * vector. title 2155 production of the synthetic drug anti-CD25/IL-10 using
+//						 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
+//						 * using minicircle vector. --- != ---
+//						 * 
+//						 * e04d66197e09a4bcc57a0189add3d92d76ae641fac8a61d9b1ff6a675dd4e90f production
+//						 * of the synthetic drug anti-@GENE$/@CHEMICAL$ using minicircle vector.
+//						 * PMID:31266358 CD25 PR:000001380|PR:000012910 38|42 IL-10 DRUGBANK:DB12880
+//						 * 43|48 73 production of the synthetic drug anti-CD25/IL-10 using minicircle
+//						 * vector. abstract 2155 production of the synthetic drug anti-CD25/IL-10 using
+//						 * minicircle vector.|||||||| production of the synthetic drug anti-CD25/IL-10
+//						 * using minicircle vector.
+//						 * 
+//						 */
+//						String nextMetadataLine = metadataLineIter.next();
+//						if (!nextMetadataLine.equals(metadataLine)) {
+//							throw new IllegalArgumentException(
+//									"Did not expect another line to match from the metadata file: " + metadataLine
+//											+ " --- != --- " + nextMetadataLine);
+//						}
+//					}
+//				}
+//				return metadataLine;
+//			}
+//
+//			private String getNextBertOutputLine(Iterator<String> bertOutputLineIter) {
+//				String bertOutputLine = null;
+//				if (bertOutputLineIter.hasNext()) {
+//					bertOutputLine = bertOutputLineIter.next();
+//					if (bertOutputLineIter.hasNext()) {
+//						// if there is another line, check it just to make sure it's a redundant copy.
+//						// If it's not identical, then error.
+//						String nextBertOutputLine = bertOutputLineIter.next();
+//						if (!nextBertOutputLine.equals(bertOutputLine)) {
+//							throw new IllegalArgumentException(
+//									"Did not expect another line to match from the BERT output file: " + bertOutputLine
+//											+ " --- != --- " + nextBertOutputLine);
+//						}
+//					}
+//				}
+//				return bertOutputLine;
+//			}
+		}).withOutputTags(ASSERTION_VALUES_OUTPUT_TAG,
+				TupleTagList.of(EVIDENCE_SCORE_OUTPUT_TAG).and(ENTITY_VALUES_OUTPUT_TAG).and(EVIDENCE_VALUES_OUTPUT_TAG)
+						.and(EVIDENCE_VERSION_VALUES_OUTPUT_TAG)));
 	}
 //					private static final long serialVersionUID = 1L;
 //
@@ -515,9 +528,10 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 	}
 
 	protected static void processLines(BiolinkAssociation biolinkAssoc, double bertScoreInclusionMinimumThreshold,
-			String bertOutputLine, String metadataLine, List<AssertionTableValues> assertionTableValues,
-			List<EvidenceTableValues> evidenceTableValues, List<EntityTableValues> entityTableValues,
-			List<EvidenceScoreTableValues> evidenceScoreTableValues) {
+			int databaseVersion, String bertOutputLine, String metadataLine,
+			List<AssertionTableValues> assertionTableValues, List<EvidenceTableValues> evidenceTableValues,
+			List<EntityTableValues> entityTableValues, List<EvidenceScoreTableValues> evidenceScoreTableValues,
+			List<EvidenceVersionTableValues> evidenceVersionTableValues) {
 		/* both lines must have data in order to continue */
 		if (metadataLine != null && bertOutputLine != null) {
 
@@ -685,6 +699,10 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 											assertionId, documentId, sentence, subjectEntityId, objectEntityId,
 											documentZone, pubTypes, documentYearPublished);
 									evidenceTableValues.add(evidenceValues);
+
+									EvidenceVersionTableValues evidenceVersionValues = new EvidenceVersionTableValues(
+											evidenceId, databaseVersion);
+									evidenceVersionTableValues.add(evidenceVersionValues);
 
 									EntityTableValues subjEntityValues = new EntityTableValues(subjectEntityId,
 											subjectSpanStr, subjectCoveredText);
@@ -937,6 +955,47 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 		@Override
 		public void verifyDeterministic() throws NonDeterministicException {
 		}
+	}
+
+	@Data
+	public static class EvidenceVersionTableValues implements Serializable {
+		private static final long serialVersionUID = 2L;
+		private final String evidenceId;
+		private final int version;
+	}
+
+	public static class EvidenceVersionTableValuesCoder extends CustomCoder<EvidenceVersionTableValues> {
+
+		private static final long serialVersionUID = 2L;
+		private static final String SEPARATOR = "|||";
+
+		@Override
+		public void encode(EvidenceVersionTableValues val, OutputStream outStream) throws IOException {
+			String serializablePerson = val.getEvidenceId() + SEPARATOR + val.getVersion();
+			outStream.write(serializablePerson.getBytes());
+		}
+
+		@Override
+		public EvidenceVersionTableValues decode(InputStream inStream) throws CoderException, IOException {
+			String serialized = IOUtils.toString(inStream, CharacterEncoding.UTF_8.getCharacterSetName());
+			String[] cols = serialized.split("\\|\\|\\|");
+			return new EvidenceVersionTableValues(cols[0], Integer.parseInt(cols[1]));
+		}
+
+		@Override
+		public void verifyDeterministic() throws NonDeterministicException {
+		}
+
+		
+		
+//		@Override
+//		public List<? extends Coder<?>> getCoderArguments() {
+//			return Collections.emptyList();
+//		}
+//
+//		@Override
+//		public void verifyDeterministic() throws NonDeterministicException {
+//		}
 	}
 
 //	@Data
