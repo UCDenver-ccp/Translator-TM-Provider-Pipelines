@@ -23,7 +23,6 @@ import edu.cuanschutz.ccp.tm_provider.etl.ProcessingStatus;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentCriteria;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DocumentType;
 import edu.cuanschutz.ccp.tm_provider.etl.util.PipelineKey;
-import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.nlp.core.annotation.TextAnnotation;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -119,10 +118,10 @@ public class FilterUnactionableTextFn extends DoFn<KV<String, String>, KV<String
 		List<TextAnnotation> topLevelSections = getTopLevelSections(sectionAnnots);
 		Collections.sort(topLevelSections, TextAnnotation.BY_SPAN());
 
-		Set<String> topLevelSectionNames = getTopLevelSectionNames(topLevelSections);
-		if (out != null) {
-			out.get(TOP_LEVEL_SECTION_TAG).output(CollectionsUtil.createDelimitedString(topLevelSectionNames, "\n"));
-		}
+//		Set<String> topLevelSectionNames = getTopLevelSectionNames(topLevelSections);
+//		if (out != null) {
+//			out.get(TOP_LEVEL_SECTION_TAG).output(CollectionsUtil.createDelimitedString(topLevelSectionNames, "\n"));
+//		}
 
 		// working from the bottom, exclude sections that have been deemed unactionable,
 		// e.g., the references

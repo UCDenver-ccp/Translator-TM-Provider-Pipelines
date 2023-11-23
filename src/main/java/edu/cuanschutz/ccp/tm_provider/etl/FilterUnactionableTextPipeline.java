@@ -75,13 +75,13 @@ public class FilterUnactionableTextPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("temporary - output the names of the top level sections")
-		@Required
-		String getOutputBucket();
+//		@Description("temporary - output the names of the top level sections")
+//		@Required
+//		String getOutputBucket();
+//
+//		void setOutputBucket(String value);
 
-		void setOutputBucket(String value);
-
-		@Description("An optional collection that can be used when retrieving documents that do not below to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
+		@Description("An optional collection that can be used when retrieving documents that do not belong to the same collection as the status entity. This is helpful when only the status entity has been assigned to a particular collection that we want to process, e.g., the redo collections.")
 		String getOptionalDocumentSpecificCollection();
 
 		void setOptionalDocumentSpecificCollection(String value);
@@ -120,10 +120,10 @@ public class FilterUnactionableTextPipeline {
 				.get(FilterUnactionableTextFn.FILTERED_TEXT_TAG);
 		PCollection<EtlFailureData> failures = output.get(FilterUnactionableTextFn.ETL_FAILURE_TAG);
 
-		PCollection<String> topLevelSectionNames = output.get(FilterUnactionableTextFn.TOP_LEVEL_SECTION_TAG);
+//		PCollection<String> topLevelSectionNames = output.get(FilterUnactionableTextFn.TOP_LEVEL_SECTION_TAG);
 
-		topLevelSectionNames.apply("write tsv",
-				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
+//		topLevelSectionNames.apply("write tsv",
+//				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
 
 		/*
 		 * update the status entities to reflect the work completed, and store in
