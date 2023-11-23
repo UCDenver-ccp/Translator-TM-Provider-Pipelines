@@ -28,7 +28,7 @@ java -jar target/tm-pipelines-bundled-0.1.1.jar MEDLINE_XML_TO_TEXT \
 --gcpTempLocation="$TMP_LOCATION" \
 --workerZone=us-central1-c \
 --region=us-central1 \
---workerMachineType=n1-standard-16 \
+--workerMachineType=n1-highmem-2 \
 --numWorkers=10 \
 --maxNumWorkers=200 \
 --defaultWorkerLogLevel=INFO \
