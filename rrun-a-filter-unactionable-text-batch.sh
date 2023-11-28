@@ -17,7 +17,7 @@ SCRIPT=./scripts/pipelines/text/run_filter_unactionable_text.sh
 OUTPUT_PIPELINE_VERSION="0.1.0"
 OVERWRITE="YES"
 
-COLLECTION="PMC_SUBSET_0"
+COLLECTION="2023-11-26"
 echo "Starting filter_unactionable_text pipeline... $COLLECTION $(date)"
 $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${COLLECTION}.log" &
 
@@ -26,25 +26,29 @@ $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VER
 # ind=$(($INDEX + 0))
 # if (( ind <= $MAX_SUBSET_INDEX)); then
 #     echo "Starting filter_unactionable_text pipeline... ${ind} $(date)"
-#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${SUBSET_PREFIX}${ind}.log" &
+#     COLLECTION="${SUBSET_PREFIX}${ind}"
+#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${COLLECTION}.log" &
 #     sleep 120
 # fi
 # ind=$(($INDEX + 1))
 # if (( ind <= $MAX_SUBSET_INDEX)); then
 #     echo "Starting filter_unactionable_text pipeline... ${ind} $(date)"
-#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${SUBSET_PREFIX}${ind}.log" &
+#     COLLECTION="${SUBSET_PREFIX}${ind}"
+#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${COLLECTION}.log" &
 #     sleep 120
 # fi
 # ind=$(($INDEX + 2))
 # if (( ind <= $MAX_SUBSET_INDEX)); then
 #     echo "Starting filter_unactionable_text pipeline... ${ind} $(date)"
-#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${SUBSET_PREFIX}${ind}.log" &
+#     COLLECTION="${SUBSET_PREFIX}${ind}"
+#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${COLLECTION}.log" &
 #     sleep 120
 # fi
 # ind=$(($INDEX + 3))
 # if (( ind <= $MAX_SUBSET_INDEX)); then
 #     echo "Starting filter_unactionable_text pipeline... ${ind} $(date)"
-#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${SUBSET_PREFIX}${ind}.log" &
+#     COLLECTION="${SUBSET_PREFIX}${ind}"
+#     $SCRIPT "${TEXT_PIPELINE_KEY}" "${TEXT_PIPELINE_VERSION}" "${OUTPUT_PIPELINE_VERSION}" "${COLLECTION}" "${OVERWRITE}" "${PROJECT_ID}" "${STAGE_LOCATION}" "${TEMP_LOCATION}" "${JAR_VERSION}" &> "./logs/filter-unactionable-text-${COLLECTION}.log" &
 # fi
 # wait 
 # done

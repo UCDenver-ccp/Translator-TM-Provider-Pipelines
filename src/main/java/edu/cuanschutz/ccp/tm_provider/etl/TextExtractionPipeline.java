@@ -107,7 +107,7 @@ public class TextExtractionPipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
 		Set<DocumentCriteria> inputDocCriteria = new HashSet<DocumentCriteria>(
-				Arrays.asList(new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				Arrays.asList(new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 						options.getInputTextPipelineKey(), options.getInputTextPipelineVersion())));
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
@@ -117,7 +117,7 @@ public class TextExtractionPipeline {
 
 		// the output document criteria is used primarily to populate error messages in
 		// case of pipeline failures
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
 				pipelineVersion);
 
 		PCollectionTuple output = TextExtractionFn.process(statusEntity2Content, outputDocCriteria, timestamp,

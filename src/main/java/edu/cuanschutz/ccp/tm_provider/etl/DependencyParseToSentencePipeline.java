@@ -99,7 +99,7 @@ public class DependencyParseToSentencePipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE,
 				ProcessingStatusFlag.DP_DONE);
 
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				options.getTextPipelineKey(), options.getTextPipelineVersion());
 		DocumentCriteria inputDpDocCriteria = new DocumentCriteria(DocumentType.DEPENDENCY_PARSE, DocumentFormat.CONLLU,
 				PipelineKey.DEPENDENCY_PARSE_IMPORT, options.getDpPipelineVersion());

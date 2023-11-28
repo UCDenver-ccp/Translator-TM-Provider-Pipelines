@@ -1145,7 +1145,7 @@ public class PipelineMain {
 	 * @return
 	 */
 	public static String getDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
-		return getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
+		return getDocumentByType(inputDocuments, DocumentType.ACTIONABLE_TEXT, documentId);
 	}
 
 	/**
@@ -1156,7 +1156,7 @@ public class PipelineMain {
 	 * @return
 	 */
 	public static String getAugmentedDocumentText(Map<DocumentCriteria, String> inputDocuments, String documentId) {
-		String originalText = getDocumentByType(inputDocuments, DocumentType.TEXT, documentId);
+		String originalText = getDocumentByType(inputDocuments, DocumentType.ACTIONABLE_TEXT, documentId);
 		String augText = getDocumentByType(inputDocuments, DocumentType.AUGMENTED_TEXT, documentId);
 		return originalText + augText;
 	}
