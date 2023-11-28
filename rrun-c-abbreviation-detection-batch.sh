@@ -15,7 +15,8 @@ SOURCE_PATH="${WORK_BUCKET}/code-dependencies/ab3p-abbreviation/"
 TEXT_PIPELINE_KEY=FILTER_UNACTIONABLE_TEXT
 TEXT_PIPELINE_VERSION="0.1.0"
 SUBSET_PREFIX=PMC_SUBSET_
-MAX_SUBSET_INDEX=41
+# MAX_SUBSET_INDEX=41
+MAX_SUBSET_INDEX=40
 
 SCRIPT=./scripts/pipelines/concepts/run_abbreviations.sh
 WORKER_PATH=/tmp/abbrev
@@ -26,42 +27,42 @@ SENTENCE_PIPELINE_VERSION="recent"
 
 OUTPUT_PIPELINE_VERSION="0.3.0"
 
-# use the below to run a single collection
-echo "Starting abbreviation detection pipeline..."
-# COLLECTION=PMC_SUBSET_41
-# COLLECTION=TEST_41
-COLLECTION=TEST_ABBREV_NPE
-$SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> "./logs/abbreviation-detect-${COLLECTION}.log" &
+# # use the below to run a single collection
+# echo "Starting abbreviation detection pipeline..."
+# COLLECTION=PMC_SUBSET_0
+# # COLLECTION=TEST_41
+# # COLLECTION=TEST_ABBREV_NPE
+# $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> "./logs/abbreviation-detect-${COLLECTION}.log" &
 
 
-# for INDEX in $(seq 0 4 $MAX_SUBSET_INDEX)  
-#   do 
-#     ind=$(($INDEX + 0))
-#     if (( ind <= $MAX_SUBSET_INDEX)); then
-#         echo "Starting abbreviation detection pipeline... ${ind} $(date)"
-#         COLLECTION="${SUBSET_PREFIX}${ind}"
-#         $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
-#         sleep 120
-#     fi
-#     ind=$(($INDEX + 1))
-#     if (( ind <= $MAX_SUBSET_INDEX)); then
-#         echo "Starting abbreviation detection pipeline... ${ind} $(date)"
-#         COLLECTION="${SUBSET_PREFIX}${ind}"
-#         $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
-#         sleep 120
-#     fi
-#     ind=$(($INDEX + 2))
-#     if (( ind <= $MAX_SUBSET_INDEX)); then
-#         echo "Starting abbreviation detection pipeline... ${ind} $(date)"
-#         COLLECTION="${SUBSET_PREFIX}${ind}"
-#         $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
-#         sleep 120
-#     fi
-#     ind=$(($INDEX + 3))
-#     if (( ind <= $MAX_SUBSET_INDEX)); then
-#         echo "Starting abbreviation detection pipeline... ${ind} $(date)"
-#         COLLECTION="${SUBSET_PREFIX}${ind}"
-#         $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
-#     fi
-#     wait 
-#   done
+for INDEX in $(seq 1 4 $MAX_SUBSET_INDEX)  
+  do 
+    ind=$(($INDEX + 0))
+    if (( ind <= $MAX_SUBSET_INDEX)); then
+        echo "Starting abbreviation detection pipeline... ${ind} $(date)"
+        COLLECTION="${SUBSET_PREFIX}${ind}"
+        $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
+        sleep 120
+    fi
+    ind=$(($INDEX + 1))
+    if (( ind <= $MAX_SUBSET_INDEX)); then
+        echo "Starting abbreviation detection pipeline... ${ind} $(date)"
+        COLLECTION="${SUBSET_PREFIX}${ind}"
+        $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
+        sleep 120
+    fi
+    ind=$(($INDEX + 2))
+    if (( ind <= $MAX_SUBSET_INDEX)); then
+        echo "Starting abbreviation detection pipeline... ${ind} $(date)"
+        COLLECTION="${SUBSET_PREFIX}${ind}"
+        $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
+        sleep 120
+    fi
+    ind=$(($INDEX + 3))
+    if (( ind <= $MAX_SUBSET_INDEX)); then
+        echo "Starting abbreviation detection pipeline... ${ind} $(date)"
+        COLLECTION="${SUBSET_PREFIX}${ind}"
+        $SCRIPT $SOURCE_PATH $WORKER_PATH $TEXT_PIPELINE_KEY $TEXT_PIPELINE_VERSION $SENTENCE_PIPELINE_KEY $SENTENCE_PIPELINE_VERSION $OUTPUT_PIPELINE_VERSION $PROJECT_ID ${COLLECTION} ${STAGE_LOCATION} ${TEMP_LOCATION} ${JAR_VERSION} ${OVERWRITE} &> ./logs/abbreviation-detect-${COLLECTION}.log &
+    fi
+    wait 
+  done
