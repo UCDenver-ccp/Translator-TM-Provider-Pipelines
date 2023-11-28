@@ -102,10 +102,9 @@ public class AbbreviationFn
 		ProcessingStatus processingStatus = statusEntityToText.getKey();
 		String docId = processingStatus.getDocumentId();
 
-		String documentText = getDocumentText(statusEntityToText.getValue());
-		String sentenceAnnotsInBioNLP = getSentenceAnnots(statusEntityToText.getValue());
-
 		try {
+			String documentText = getDocumentText(statusEntityToText.getValue(), docId);
+			String sentenceAnnotsInBioNLP = getSentenceAnnots(statusEntityToText.getValue());
 
 			// write sentences to temporary file - one per line
 			File f = File.createTempFile(UUID.randomUUID().toString(), ".bionlp");
@@ -155,13 +154,14 @@ public class AbbreviationFn
 				"No sentences found for document. Cannot proceed with abbreviation detection.");
 	}
 
-	private String getDocumentText(Map<DocumentCriteria, String> map) {
+	private String getDocumentText(Map<DocumentCriteria, String> map, String docId) {
 		for (Entry<DocumentCriteria, String> entry : map.entrySet()) {
-			if (entry.getKey().getDocumentType() == DocumentType.TEXT) {
+			if (entry.getKey().getDocumentType() == DocumentType.ACTIONABLE_TEXT) {
 				return entry.getValue();
 			}
 		}
-		throw new IllegalArgumentException("No text found for document. Cannot proceed with abbreviation detection.");
+		throw new IllegalArgumentException(
+				String.format("No text found for document (%s). Cannot proceed with abbreviation detection.", docId));
 	}
 
 	/**
@@ -188,60 +188,85 @@ public class AbbreviationFn
 				@SuppressWarnings("unused")
 				String confidence = cols[2].trim();
 
-				// TODO: we are seeing some errors where we get a NPE on the next command.
-				// Somehow currentSentence is null (I think), e.g. PMID:36116712
-				// use current sentence to find span offset
-				int offset = sentenceToSpanMap.get(currentSentence).getSpanStart();
+				/*
+				 * TODO: there are occasionally issues with parsing the abbreviation output
+				 * (e.g., PMID:36116712, PMC10265367). Sometimes this is due to extra pipes in
+				 * the output (see example below). we are seeing some errors where we get a NPE
+				 * on the next command. This has been remedied to some extent by skipping
+				 * sentences where this occurs, allowing other abbreviations in the document to
+				 * be recorded.
+				 *
+				 * PMC10265367: Failure due to pipe in the long form
+				 * 
+				 * Current line: NOM|nominal|0.987697 [BREAK] Current sentence: NES||normalized
+				 * enrichment score|0.999408 [BREAK] Current sentence in sentenceToSpanMap:false
+				 * [BREAK]
+				 */
 
-				// look for the long and short forms in the sentence. If they appear more than
-				// once then use the pair that is closest together.
-				List<Span> shortFormSpans = new ArrayList<Span>();
-				Pattern p = Pattern.compile(StringUtil.toRegExpString(shortForm));
-				Matcher m = p.matcher(currentSentence);
-				while (m.find()) {
-					shortFormSpans.add(new Span(m.start(), m.end()));
-				}
+				// if the current sentence is not in the sentence-to-span map, then we skip
+				// processing. There may be an extra pipe in an abbreviation line (like the
+				// example above). If this is the case, we set currentSentence to null and
+				// unfortunately skip any abbreviations remaining in the sentence. But we do
+				// avoid a NPE on the next line so we will capture other abbreviations in the
+				// document.
+				if (currentSentence != null && sentenceToSpanMap.containsKey(currentSentence)) {
+
+					int offset = sentenceToSpanMap.get(currentSentence).getSpanStart();
+
+					// look for the long and short forms in the sentence. If they appear more than
+					// once then use the pair that is closest together.
+					List<Span> shortFormSpans = new ArrayList<Span>();
+					Pattern p = Pattern.compile(StringUtil.toRegExpString(shortForm));
+					Matcher m = p.matcher(currentSentence);
+					while (m.find()) {
+						shortFormSpans.add(new Span(m.start(), m.end()));
+					}
 
 //				if (shortFormSpans.isEmpty()) {
 //					throw new IllegalStateException(
 //							String.format("Unable to find short form (%s) in sentence: ", shortForm, currentSentence));
 //				}
 
-				List<Span> longFormSpans = new ArrayList<Span>();
-				p = Pattern.compile(StringUtil.toRegExpString(longForm));
-				m = p.matcher(currentSentence);
-				while (m.find()) {
-					longFormSpans.add(new Span(m.start(), m.end()));
-				}
+					List<Span> longFormSpans = new ArrayList<Span>();
+					p = Pattern.compile(StringUtil.toRegExpString(longForm));
+					m = p.matcher(currentSentence);
+					while (m.find()) {
+						longFormSpans.add(new Span(m.start(), m.end()));
+					}
 
 //				if (longFormSpans.isEmpty()) {
 //					throw new IllegalStateException(
 //							String.format("Unable to find long form (%s) in sentence: ", longForm, currentSentence));
 //				}
 
-				/*
-				 * TODO: sometimes we aren't able to find the short/long form for an
-				 * abbreviation pairing; for now we simply ignore and move on.
-				 */
-				if (!shortFormSpans.isEmpty() && !longFormSpans.isEmpty()) {
+					/*
+					 * TODO: sometimes we aren't able to find the short/long form for an
+					 * abbreviation pairing; for now we simply ignore and move on.
+					 */
+					if (!shortFormSpans.isEmpty() && !longFormSpans.isEmpty()) {
 
-					Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
-					// will be null if the only short form spans overlap with long form spans
-					if (shortLongFormSpans != null) {
-						TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
-						Span shortFormSpan = shortLongFormSpans[0];
-						Span longFormSpan = shortLongFormSpans[1];
-						TextAnnotation shortFormAnnot = factory.createAnnotation(shortFormSpan.getSpanStart() + offset,
-								shortFormSpan.getSpanEnd() + offset, shortForm, SHORT_FORM_TYPE);
-						TextAnnotation longFormAnnot = factory.createAnnotation(longFormSpan.getSpanStart() + offset,
-								longFormSpan.getSpanEnd() + offset, longForm, LONG_FORM_TYPE);
+						Span[] shortLongFormSpans = findNearestShortLongFormSpans(shortFormSpans, longFormSpans);
+						// will be null if the only short form spans overlap with long form spans
+						if (shortLongFormSpans != null) {
+							TextAnnotationFactory factory = TextAnnotationFactory.createFactoryWithDefaults();
+							Span shortFormSpan = shortLongFormSpans[0];
+							Span longFormSpan = shortLongFormSpans[1];
+							TextAnnotation shortFormAnnot = factory.createAnnotation(
+									shortFormSpan.getSpanStart() + offset, shortFormSpan.getSpanEnd() + offset,
+									shortForm, SHORT_FORM_TYPE);
+							TextAnnotation longFormAnnot = factory.createAnnotation(
+									longFormSpan.getSpanStart() + offset, longFormSpan.getSpanEnd() + offset, longForm,
+									LONG_FORM_TYPE);
 
-						TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
-								shortFormAnnot.getClassMention());
+							TextAnnotationUtil.addSlotValue(longFormAnnot, HAS_SHORT_FORM_RELATION,
+									shortFormAnnot.getClassMention());
 
-						td.addAnnotation(shortFormAnnot);
-						td.addAnnotation(longFormAnnot);
+							td.addAnnotation(shortFormAnnot);
+							td.addAnnotation(longFormAnnot);
+						}
 					}
+				} else {
+					currentSentence = null;
 				}
 
 			} else {
