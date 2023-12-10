@@ -52,7 +52,8 @@ public class ExtractedSentenceTest {
 				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, "sentence", sentence2,
 //				documentText,
-				"abstract", CollectionsUtil.createSet("Journal Article"), 1997, sentence2SpanStart, Collections.emptyList(),Collections.emptyList(),Collections.emptyList());
+				"abstract", CollectionsUtil.createSet("Journal Article"), 1997, sentence2SpanStart,
+				Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
 		String sentenceWithPlaceholders = es.getSentenceWithPlaceholders();
 
@@ -60,6 +61,31 @@ public class ExtractedSentenceTest {
 				PLACEHOLDER_Y);
 
 		assertEquals(expectedSentenceWithPlaceholders, sentenceWithPlaceholders);
+
+	}
+
+	@Test
+	public void testTsvSerializationDeserializationLoop() {
+		int sentence2SpanStart = 43;
+
+		List<String> otherEntityIds = Arrays.asList("OTHER_ID_1", "OTHER_ID_2");
+		List<String> otherEntityCoveredText = Arrays.asList("other_ct1", "other ct2");
+		List<List<Span>> otherEntitySpans = Arrays.asList(Arrays.asList(new Span(5, 10)),
+				Arrays.asList(new Span(10, 15)));
+
+		ExtractedSentence es = new ExtractedSentence(documentId, X_000001, "ConceptX1",
+				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
+				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, "sentence", sentence2,
+				"abstract", CollectionsUtil.createSet("Journal Article"), 1997, sentence2SpanStart, otherEntityIds,
+				otherEntityCoveredText, otherEntitySpans);
+
+		String tsv = es.toTsv();
+
+		System.out.println("TSV: " + tsv);
+		
+		ExtractedSentence loopedEs = ExtractedSentence.fromTsv(tsv, true);
+
+		assertEquals(es, loopedEs);
 
 	}
 
@@ -112,7 +138,8 @@ public class ExtractedSentenceTest {
 				entityPlaceholder1, entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword,
 				sentenceText,
 //				sentenceContext, 
-				documentZone, documentPublicationTypes, documentYearPublished, sentenceSpanStart, Collections.emptyList(),Collections.emptyList(),Collections.emptyList());
+				documentZone, documentPublicationTypes, documentYearPublished, sentenceSpanStart,
+				Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
 		assertEquals(expectedEs.getDocumentId(), es.getDocumentId());
 		assertEquals(expectedEs.getEntityCoveredText1(), es.getEntityCoveredText1());
@@ -162,7 +189,8 @@ public class ExtractedSentenceTest {
 				entityPlaceholder1, entityId2, entityCoveredText2, entitySpan2, entityPlaceholder2, keyword,
 				sentenceText,
 //				sentenceContext, 
-				documentZone, documentPublicationTypes, documentYearPublished, sentenceSpanStart, Collections.emptyList(),Collections.emptyList(),Collections.emptyList());
+				documentZone, documentPublicationTypes, documentYearPublished, sentenceSpanStart,
+				Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
 		assertEquals(expectedEs.getDocumentId(), es.getDocumentId());
 		assertEquals(expectedEs.getEntityCoveredText1(), es.getEntityCoveredText1());
@@ -192,7 +220,7 @@ public class ExtractedSentenceTest {
 				CollectionsUtil.createList(new Span(43 - 43, 52 - 43)), PLACEHOLDER_X, Y_000001, "conceptY1",
 				CollectionsUtil.createList(new Span(84 - 43, 93 - 43)), PLACEHOLDER_Y, keyword, sentence2,
 //				documentText,
-				null, null, 1997, 0, Collections.emptyList(),Collections.emptyList(),Collections.emptyList());
+				null, null, 1997, 0, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
 		// tests that null publication types don't result in NPE
 

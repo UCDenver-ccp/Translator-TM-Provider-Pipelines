@@ -141,6 +141,7 @@ public class ExtractedSentence extends DoFn {
 
 	/**
 	 * TODO: add other entity columns to TSV output!!!!!
+	 * 
 	 * @return
 	 */
 	public String toTsv() {
@@ -155,13 +156,37 @@ public class ExtractedSentence extends DoFn {
 			pubTypesStr = CollectionsUtil.createDelimitedString(documentPublicationTypes, "|");
 		}
 
+		String otherEntityIdsStr = "";
+		if (otherEntityIds != null) {
+			otherEntityIdsStr = CollectionsUtil.createDelimitedString(otherEntityIds, ";");
+		}
+
+		String otherEntityCoveredTextStr = "";
+		if (otherEntityCoveredText != null) {
+			otherEntityCoveredTextStr = CollectionsUtil.createDelimitedString(otherEntityCoveredText, "|");
+			// ensure there are no tabs as they would mess up the tab-delimited structure of
+			// the resultant file
+			otherEntityCoveredTextStr = otherEntityCoveredTextStr.replaceAll("\\t", " ");
+		}
+
+		String otherEntitySpansStr = "";
+		if (otherEntitySpans != null) {
+			List<String> spanStrs = new ArrayList<String>();
+			for (List<Span> spans : otherEntitySpans) {
+				String spanStr = convertToStr(spans);
+				spanStrs.add(spanStr);
+			}
+			otherEntitySpansStr = CollectionsUtil.createDelimitedString(spanStrs, "!");
+		}
+
 		try {
 
 			return CollectionsUtil.createDelimitedString(Arrays.asList(getSentenceIdentifier(),
 					getSentenceWithPlaceholders(), documentId, entityCoveredText1, entityId1, getSpanStr(entitySpan1),
 					entityCoveredText2, entityId2, getSpanStr(entitySpan2), keyword, sentenceText.length(), blankColumn,
 //					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceContext), "\t");
-					sentenceText, documentZone, pubTypesStr, documentYearPublished), "\t");
+					sentenceText, documentZone, pubTypesStr, documentYearPublished, sentenceSpanStart,
+					otherEntityIdsStr, otherEntityCoveredTextStr, otherEntitySpansStr), "\t");
 
 		} catch (NullPointerException e) {
 			StringBuilder msgBuilder = new StringBuilder();
@@ -184,6 +209,23 @@ public class ExtractedSentence extends DoFn {
 			throw new NullPointerException(msgBuilder.toString());
 		}
 
+	}
+
+	/**
+	 * @param spans
+	 * @return a string representation of the span list - semi-colon delimited, e.g.
+	 *         start1|end1;start2|end2
+	 */
+	private String convertToStr(List<Span> spans) {
+		StringBuilder sb = new StringBuilder();
+		for (Span span : spans) {
+			if (sb.length() > 0) {
+				sb.append(";");
+			}
+			sb.append(String.format("%d|%d", span.getSpanStart(), span.getSpanEnd()));
+		}
+
+		return sb.toString();
 	}
 
 	/**
@@ -224,7 +266,7 @@ public class ExtractedSentence extends DoFn {
 		String documentZone = cols[index++];
 		Set<String> documentPublicationTypes = new HashSet<String>(Arrays.asList(cols[index++].split("\\|")));
 		int documentYearPublished = Integer.parseInt(cols[index++]);
-		
+
 		int sentenceSpanStart = Integer.parseInt(cols[index++]);
 		List<String> otherEntityIds = Arrays.asList(cols[index++].split(";"));
 		List<String> otherEntityCoveredText = Arrays.asList(cols[index++].split("\\|"));
@@ -357,7 +399,7 @@ public class ExtractedSentence extends DoFn {
 			sentenceText = sentenceText.replaceAll(RegExPatterns.escapeCharacterForRegEx(getEntityCoveredText2()),
 					entityCoveredText2);
 		}
-		
+
 		for (String otherEntityCoveredText : getOtherEntityCoveredText()) {
 			if (otherEntityCoveredText.contains(" ")) {
 				String underscoredOtherEntityCoveredText = otherEntityCoveredText.replaceAll(" ", "_");
@@ -365,7 +407,6 @@ public class ExtractedSentence extends DoFn {
 						underscoredOtherEntityCoveredText);
 			}
 		}
-		
 
 		return sentenceText;
 
