@@ -206,6 +206,7 @@ public class ConceptCooccurrenceCountsFnTest {
 				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"), sectionAnnotationBionlp);
 		docCriteriaToContentMapPreCrfFiltering.put(
 				new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
+//				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
 				documentText);
 		docCriteriaToContentMapPreCrfFiltering.put(
 				new DocumentCriteria(DocumentType.CONCEPT_CS, DocumentFormat.BIONLP, PipelineKey.OGER, "0.1.0"),
@@ -227,6 +228,7 @@ public class ConceptCooccurrenceCountsFnTest {
 				PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"), sectionAnnotationBionlp);
 		docCriteriaToContentMapPostCrfFiltering.put(
 				new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
+//				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PipelineKey.MEDLINE_XML_TO_TEXT, "0.1.0"),
 				documentText);
 		docCriteriaToContentMapPostCrfFiltering.put(new DocumentCriteria(DocumentType.CONCEPT_ALL,
 				DocumentFormat.BIONLP, PipelineKey.CONCEPT_POST_PROCESS, "0.1.0"), conceptAllAnnotationBionlp);
