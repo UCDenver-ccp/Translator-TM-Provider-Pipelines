@@ -175,7 +175,7 @@ public class SentenceCooccurrenceBuilder implements Serializable {
 	 */
 	static TextDocument extractAllAnnotations(String docId, Map<DocumentType, String> docTypeToContent)
 			throws IOException {
-		String text = docTypeToContent.get(DocumentType.TEXT);
+		String text = docTypeToContent.get(DocumentType.ACTIONABLE_TEXT);
 		TextDocument td = new TextDocument(docId, null, text);
 
 		for (Entry<DocumentType, String> entry : docTypeToContent.entrySet()) {

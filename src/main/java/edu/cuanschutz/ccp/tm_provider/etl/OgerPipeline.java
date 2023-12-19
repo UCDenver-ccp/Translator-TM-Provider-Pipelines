@@ -166,7 +166,7 @@ public class OgerPipeline {
 		 */
 		DocumentCriteria inputAugTextDocCriteria = new DocumentCriteria(DocumentType.AUGMENTED_TEXT,
 				DocumentFormat.TEXT, options.getAugmentedTextPipelineKey(), options.getAugmentedTextPipelineVersion());
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				options.getTextPipelineKey(), options.getTextPipelineVersion());
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain

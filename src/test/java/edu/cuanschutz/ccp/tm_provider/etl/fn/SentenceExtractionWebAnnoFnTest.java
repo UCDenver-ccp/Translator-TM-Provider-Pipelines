@@ -422,8 +422,8 @@ public class SentenceExtractionWebAnnoFnTest {
 					.getDocTypeToContentMap(documentId, map);
 
 			Set<String> extractedSentences = SentenceExtractionWebAnnoFn.extractSentences(documentId, documentText,
-					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL,
-					new HashMap<String, Set<String>>());
+					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL);
+//					new HashMap<String, Set<String>>());
 			assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		}
 
@@ -434,8 +434,8 @@ public class SentenceExtractionWebAnnoFnTest {
 			// no keywords
 			keywords = null;
 			Set<String> extractedSentences = SentenceExtractionWebAnnoFn.extractSentences(documentId, documentText,
-					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL,
-					new HashMap<String, Set<String>>());
+					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL);
+//					new HashMap<String, Set<String>>());
 			assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 		}
 
@@ -446,8 +446,8 @@ public class SentenceExtractionWebAnnoFnTest {
 			// no keywords
 			keywords = new HashSet<String>();
 			Set<String> extractedSentences = SentenceExtractionWebAnnoFn.extractSentences(documentId, documentText,
-					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL,
-					new HashMap<String, Set<String>>());
+					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL);
+//					new HashMap<String, Set<String>>());
 			assertEquals("there should be a single extracted sentence", 1, extractedSentences.size());
 
 		}
@@ -459,8 +459,8 @@ public class SentenceExtractionWebAnnoFnTest {
 			// keyword not found so no sentence extracted
 			keywords = CollectionsUtil.createSet("notfound");
 			Set<String> extractedSentences = SentenceExtractionWebAnnoFn.extractSentences(documentId, documentText,
-					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL,
-					new HashMap<String, Set<String>>());
+					docTypeToContentMap, keywords, suffixToPlaceholderMap, tokenizer, DocumentType.CONCEPT_ALL);
+//					new HashMap<String, Set<String>>());
 			assertEquals("there should be no extracted sentences", 0, extractedSentences.size());
 		}
 	}

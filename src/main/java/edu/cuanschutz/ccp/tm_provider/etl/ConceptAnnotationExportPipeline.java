@@ -97,7 +97,7 @@ public class ConceptAnnotationExportPipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE,
 				ProcessingStatusFlag.CONCEPT_POST_PROCESSING_DONE);
 
-		DocumentCriteria textDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria textDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				options.getTextInputPipelineKey(), options.getTextInputPipelineVersion());
 		DocumentCriteria conceptDocCriteria = new DocumentCriteria(DocumentType.CONCEPT_ALL, DocumentFormat.BIONLP,
 				PipelineKey.CONCEPT_POST_PROCESS, options.getConceptPostProcessPipelineVersion());
@@ -112,7 +112,7 @@ public class ConceptAnnotationExportPipeline {
 		 * outputDocCriteria is only used to create a failure document if an error
 		 * occurs
 		 */
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
 				pipelineVersion);
 
 		PCollectionTuple output = ConceptAnnotationExportFileBuilderFn.process(statusEntity2Content, outputDocCriteria,

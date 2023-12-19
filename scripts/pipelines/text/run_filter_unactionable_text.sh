@@ -3,20 +3,20 @@
 TEXT_PIPELINE_KEY=$1
 TEXT_PIPELINE_VERSION=$2
 OUTPUT_PIPELINE_VERSION=$3
-OUTPUT_BUCKET=$4
-COLLECTION=$5
-OVERWRITE=$6
-PROJECT=$7
-STAGE_LOCATION=$8
-TMP_LOCATION=$9
-JAR_VERSION=${10}
+#OUTPUT_BUCKET=$4
+COLLECTION=$4
+OVERWRITE=$5
+PROJECT=$6
+STAGE_LOCATION=$7
+TMP_LOCATION=$8
+JAR_VERSION=$9
 
-JOB_NAME=$(echo "FILTER_UNACTIONABLE_TEXT" | tr '_' '-')
+JOB_NAME=$(echo "FILTER-UNACTIONABLE-TEXT-${COLLECTION}" | tr '_' '-')
 
 echo "TEXT_PIPELINE_KEY: $TEXT_PIPELINE_KEY"
 echo "TEXT_PIPELINE_VERSION: $TEXT_PIPELINE_VERSION"
 echo "OUTPUT_PIPELINE_VERSION: $OUTPUT_PIPELINE_VERSION"
-echo "OUTPUT_BUCKET: $OUTPUT_BUCKET"
+#echo "OUTPUT_BUCKET: $OUTPUT_BUCKET"
 echo "JAR_VERSION: $JAR_VERSION"
 echo "COLLECTION: $COLLECTION"
 echo "OVERWRITE: $OVERWRITE"
@@ -28,7 +28,6 @@ java -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" FILTER_UNACTIONABLE_T
 --textPipelineKey="$TEXT_PIPELINE_KEY" \
 --textPipelineVersion="$TEXT_PIPELINE_VERSION" \
 --outputPipelineVersion="$OUTPUT_PIPELINE_VERSION" \
---outputBucket="$OUTPUT_BUCKET" \
 --overwrite="$OVERWRITE" \
 --collection="$COLLECTION" \
 --project="${PROJECT}" \
@@ -37,7 +36,8 @@ java -jar "target/tm-pipelines-bundled-${JAR_VERSION}.jar" FILTER_UNACTIONABLE_T
 --workerZone=us-central1-c \
 --region=us-central1 \
 --numWorkers=10 \
---maxNumWorkers=200 \
+--maxNumWorkers=50 \
+--workerMachineType=n1-highmem-2 \
 --autoscalingAlgorithm=THROUGHPUT_BASED \
 --defaultWorkerLogLevel=INFO \
 --runner=DataflowRunner

@@ -1,0 +1,16 @@
+steps:
+
+- id: 'build phenobert'
+  name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/phenobert:${_PHENOBERT_VERSION}', '-f', 'Dockerfile', '.' ]
+  timeout: 1500s
+  waitFor: ['-'] # start immediately
+
+- id: 'push phenobert'
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/phenobert:${_PHENOBERT_VERSION}']
+  waitFor: ['build phenobert']
+
+
+substitutions:
+    _PHENOBERT_VERSION: 1.2.0_0.1

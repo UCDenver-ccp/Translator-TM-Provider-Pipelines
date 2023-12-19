@@ -12,6 +12,11 @@ DB_USER_NAME=$9
 DB_PASSWORD=${10}
 CLOUD_SQL_REGION=${11}
 MYSQL_INSTANCE_NAME=${12}
+# the version of sentences that were used as input to the assertion extraction process
+SENTENCE_VERSION=${13}
+# the version with which to associate the inserted assertions
+DATABASE_VERSION=${14}
+JAR_VERSION=${15}
 
 
 ZONE='us-central1-c'
@@ -20,8 +25,11 @@ JOB_NAME=$(echo "CLASSIFIED-SENTENCE-STORAGE-${COLLECTION}-${BIOLINK_ASSOCIATION
 
 ASSOCIATION_KEY_LC=$(echo "$BIOLINK_ASSOCIATION" | tr '[:upper:]' '[:lower:]')
 
-BERT_INPUT_FILE_NAME_WITH_METADATA="bert-input-${ASSOCIATION_KEY_LC}.metadata.${COLLECTION}.tsv"
-TO_BE_CLASSIFIED_SENTENCE_BUCKET="${BUCKET}/output/sentences/${ASSOCIATION_KEY_LC}/${COLLECTION}"
+BERT_INPUT_FILE_NAME_WITH_METADATA="bert-input-${ASSOCIATION_KEY_LC}.metadata.${SENTENCE_VERSION}.${COLLECTION}.tsv.gz"
+TO_BE_CLASSIFIED_SENTENCE_BUCKET="${BUCKET}/output/sentences_tsv/${SENTENCE_VERSION}/${ASSOCIATION_KEY_LC}/${COLLECTION}"
+# eventually we want to include sentence version in the path like below but this will require changes to the predict dockerfile
+# CLASSIFIED_SENTENCE_PATH="${BUCKET}/output/classified_sentences/sent_${SENTENCE_VERSION}/${ASSOCIATION_KEY_LC}/model_${BERT_MODEL_VERSION}"
+# CLASSIFIED_SENTENCE_FILE_NAME="${ASSOCIATION_KEY_LC}.${SENTENCE_VERSION}_${BERT_MODEL_VERSION}.${COLLECTION}.classified_sentences.tsv.gz"
 CLASSIFIED_SENTENCE_PATH="${BUCKET}/output/classified_sentences/${ASSOCIATION_KEY_LC}/${BERT_MODEL_VERSION}"
 CLASSIFIED_SENTENCE_FILE_NAME="${ASSOCIATION_KEY_LC}.${BERT_MODEL_VERSION}.${COLLECTION}.classified_sentences.tsv.gz"
 CLASSIFIED_SENTENCE_FILE="${CLASSIFIED_SENTENCE_PATH}/${CLASSIFIED_SENTENCE_FILE_NAME}"
@@ -43,8 +51,9 @@ echo "DATABASE_NAME: $DATABASE_NAME"
 echo "DB_USER_NAME: $DB_USER_NAME"
 echo "CLOUD_SQL_REGION: $CLOUD_SQL_REGION"
 echo "MYSQL_INSTANCE_NAME: $MYSQL_INSTANCE_NAME"
+echo "DATABASE_VERSION: $DATABASE_VERSION"
 
-java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CLASSIFIED_SENTENCE_STORAGE \
+java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-${JAR_VERSION}.jar CLASSIFIED_SENTENCE_STORAGE \
 --jobName="$JOB_NAME" \
 --bertOutputFilePath="$CLASSIFIED_SENTENCE_FILE" \
 --sentenceMetadataFilePath="$METADATA_SENTENCE_FILE" \
@@ -55,6 +64,7 @@ java -Dfile.encoding=UTF-8 -jar target/tm-pipelines-bundled-0.1.0.jar CLASSIFIED
 --mySqlInstanceName="$MYSQL_INSTANCE_NAME" \
 --cloudSqlRegion="$CLOUD_SQL_REGION" \
 --bertScoreInclusionMinimumThreshold=0.9 \
+--databaseVersion=${DATABASE_VERSION} \
 --project="${PROJECT}" \
 --stagingLocation="$STAGE_LOCATION" \
 --gcpTempLocation="$TMP_LOCATION" \

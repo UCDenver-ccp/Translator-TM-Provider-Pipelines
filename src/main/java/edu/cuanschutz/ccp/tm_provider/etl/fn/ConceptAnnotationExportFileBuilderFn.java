@@ -55,7 +55,7 @@ public class ConceptAnnotationExportFileBuilderFn
 							String annotationsInBionlp = null;
 							for (Entry<DocumentCriteria, String> entry : statusToContentMap.getValue().entrySet()) {
 								DocumentCriteria dc = entry.getKey();
-								if (dc.getDocumentType() == DocumentType.TEXT) {
+								if (dc.getDocumentType() == DocumentType.ACTIONABLE_TEXT) {
 									documentText = entry.getValue();
 								} else if (dc.getDocumentType() == DocumentType.CONCEPT_ALL) {
 									annotationsInBionlp = entry.getValue();

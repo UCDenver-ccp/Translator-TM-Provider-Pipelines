@@ -54,6 +54,7 @@ public class TextExtractionPipeline {
 	public static final String DOCUMENT_COLLECTIONS_COMMENT_PREFIX = COMMENT_INDICATOR
 			+ DOCUMENT_COLLECTIONS_PREFIX_PART;
 	public static final String DOCUMENT_COLLECTIONS_DELIMITER = "|";
+	public static final String DOCUMENT_END_COMMENT = COMMENT_INDICATOR + "DOCUMENT_END";
 
 	public interface Options extends DataflowPipelineOptions {
 
@@ -106,7 +107,7 @@ public class TextExtractionPipeline {
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
 		Set<DocumentCriteria> inputDocCriteria = new HashSet<DocumentCriteria>(
-				Arrays.asList(new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+				Arrays.asList(new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 						options.getInputTextPipelineKey(), options.getInputTextPipelineVersion())));
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
@@ -116,7 +117,7 @@ public class TextExtractionPipeline {
 
 		// the output document criteria is used primarily to populate error messages in
 		// case of pipeline failures
-		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
+		DocumentCriteria outputDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, PIPELINE_KEY,
 				pipelineVersion);
 
 		PCollectionTuple output = TextExtractionFn.process(statusEntity2Content, outputDocCriteria, timestamp,

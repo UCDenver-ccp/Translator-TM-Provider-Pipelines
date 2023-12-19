@@ -88,7 +88,8 @@ public class SentenceSegmentationPipeline {
 		// we require that the documents have a plain text version
 		Set<ProcessingStatusFlag> requiredProcessStatusFlags = EnumSet.of(ProcessingStatusFlag.TEXT_DONE);
 
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		// TODO: Medline XML pipeline needs to produce ACTIONABLE_TEXT
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				options.getInputPipelineKey(), options.getInputPipelineVersion());
 
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain

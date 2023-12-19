@@ -125,7 +125,7 @@ public class DocumentTextAugmentationPipeline {
 		 * specifying different pipeline keys and pipeline versions. These are set in
 		 * the options for this pipeline.
 		 */
-		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT,
+		DocumentCriteria inputTextDocCriteria = new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT,
 				options.getTextPipelineKey(), options.getTextPipelineVersion());
 		DocumentCriteria inputSentDocCriteria = new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 				options.getSentencePipelineKey(), options.getSentencePipelineVersion());

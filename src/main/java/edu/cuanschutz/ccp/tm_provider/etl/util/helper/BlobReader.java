@@ -13,7 +13,7 @@ import edu.ucdenver.ccp.common.file.CharacterEncoding;
 public class BlobReader {
 
 	public static void main(String[] args) throws UnsupportedEncodingException {
-		String blob = "bm90IHN1cmUgLS0gbnVsbCBUaHJvd2FibGUu ".trim();
+		String blob = "".trim();
 
 		byte[] decodedBytes = Base64.getDecoder().decode(blob);
 		String decodedString = new String(decodedBytes, CharacterEncoding.UTF_8.getCharacterSetName());

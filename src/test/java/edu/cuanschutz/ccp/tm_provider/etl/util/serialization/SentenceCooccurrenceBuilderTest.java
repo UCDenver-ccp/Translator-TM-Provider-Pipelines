@@ -47,7 +47,7 @@ public class SentenceCooccurrenceBuilderTest {
 				CharacterEncoding.UTF_8);
 		text = ClassPathUtil.getContentsFromClasspathResource(getClass(), "12345.txt", CharacterEncoding.UTF_8);
 
-		docTypeToContent.put(DocumentType.TEXT, text);
+		docTypeToContent.put(DocumentType.ACTIONABLE_TEXT, text);
 		docTypeToContent.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
 		docTypeToContent.put(DocumentType.CONCEPT_CL, conceptCl);
 		docTypeToContent.put(DocumentType.DEPENDENCY_PARSE, dependency);
@@ -68,7 +68,7 @@ public class SentenceCooccurrenceBuilderTest {
 		docTypeToContent = new HashMap<DocumentType, String>();
 		docTypeToContent.put(DocumentType.CONCEPT_CL, conceptCl);
 		docTypeToContent.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
-		docTypeToContent.put(DocumentType.TEXT, text);
+		docTypeToContent.put(DocumentType.ACTIONABLE_TEXT, text);
 
 		TextDocument td = SentenceCooccurrenceBuilder.extractAllAnnotations(docId, docTypeToContent);
 		assertEquals(docId, td.getSourceid());
@@ -95,7 +95,7 @@ public class SentenceCooccurrenceBuilderTest {
 
 		docTypeToContent = new HashMap<DocumentType, String>();
 		docTypeToContent.put(DocumentType.DEPENDENCY_PARSE, dependency);
-		docTypeToContent.put(DocumentType.TEXT, text);
+		docTypeToContent.put(DocumentType.ACTIONABLE_TEXT, text);
 
 		TextDocument td = SentenceCooccurrenceBuilder.extractAllAnnotations(docId, docTypeToContent);
 		assertEquals(docId, td.getSourceid());
@@ -182,7 +182,7 @@ public class SentenceCooccurrenceBuilderTest {
 				CharacterEncoding.UTF_8);
 		String text = ClassPathUtil.getContentsFromClasspathResource(getClass(), "7890.txt", CharacterEncoding.UTF_8);
 
-		docTypeToContentMap.put(DocumentType.TEXT, text);
+		docTypeToContentMap.put(DocumentType.ACTIONABLE_TEXT, text);
 		docTypeToContentMap.put(DocumentType.SENTENCE, sentences);
 		docTypeToContentMap.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
 		docTypeToContentMap.put(DocumentType.CONCEPT_CL, conceptCl);
@@ -236,7 +236,7 @@ public class SentenceCooccurrenceBuilderTest {
 				CharacterEncoding.UTF_8);
 		String text = ClassPathUtil.getContentsFromClasspathResource(getClass(), "567.txt", CharacterEncoding.UTF_8);
 
-		docTypeToContentMap.put(DocumentType.TEXT, text);
+		docTypeToContentMap.put(DocumentType.ACTIONABLE_TEXT, text);
 		docTypeToContentMap.put(DocumentType.SENTENCE, sentences);
 		docTypeToContentMap.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
 		docTypeToContentMap.put(DocumentType.CONCEPT_CL, conceptCl);
@@ -271,7 +271,7 @@ public class SentenceCooccurrenceBuilderTest {
 				CharacterEncoding.UTF_8);
 		String text = ClassPathUtil.getContentsFromClasspathResource(getClass(), "567.txt", CharacterEncoding.UTF_8);
 
-		docTypeToContentMap.put(DocumentType.TEXT, text);
+		docTypeToContentMap.put(DocumentType.ACTIONABLE_TEXT, text);
 		docTypeToContentMap.put(DocumentType.SENTENCE, sentences);
 		docTypeToContentMap.put(DocumentType.CONCEPT_CHEBI, conceptChebi);
 

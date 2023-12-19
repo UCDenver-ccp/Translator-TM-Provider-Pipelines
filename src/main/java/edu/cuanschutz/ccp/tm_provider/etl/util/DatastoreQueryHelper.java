@@ -21,6 +21,7 @@ import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.Transaction;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.cloud.datastore.Value;
 
@@ -367,6 +368,69 @@ public class DatastoreQueryHelper {
 
 	}
 
+	
+	// NOTE: Unfinished -- TODO: convert Document.TEXT to Document.ACTIONABLE_TEXT for Pubmed docs
+//	public void convertMedlineTextDocumentToActionableText() {
+//
+//		 com.google.cloud.datastore.KeyQuery.Builder builder = Query.newKeyQueryBuilder().setKind(DatastoreConstants.DOCUMENT_KIND);
+//		 builder.setFilter(PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_COLLECTIONS, "PUBMED"));
+//		 builder.setFilter(PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_PIPELINE, "MEDLINE_XML_TO_TEXT"));
+//		 builder.setFilter(PropertyFilter.eq(DatastoreConstants.DOCUMENT_PROPERTY_TYPE, "TEXT"));
+//		
+//		QueryResults<Key> results = datastore.run(builder.build());
+//		int count = 0;
+//		List<Key> keys = new ArrayList<Key>();
+//		while (results.hasNext()) {
+//			if (count++ % 250 == 0) {
+//				System.out.println("progress: " + count);
+//				util.setStatus(keys, flags, initialValue);
+//				entities = new ArrayList<Key>();
+//			}
+//			Key key = results.next();
+//			keys.add(key);
+//		}
+//
+//		System.out.println("final setting type...");
+//		util.setStatus(keys, flags, initialValue);
+//		System.out.println("done.");
+//	}
+//	
+//	
+//	public void setDocumentAttribute(List<Key> keys, Set<ProcessingStatusFlag> statusFlags, boolean status) {
+//		Transaction transaction = datastore.newTransaction();
+//		try {
+//
+//			int count = 0;
+//			for (Key key : keys) {
+//				if (count++ % 100 == 0) {
+//					System.out.println("progress: " + count);
+//				}
+////				String keyName = DatastoreKeyUtil.getStatusKeyName(docId);
+////				Key key = datastore.newKeyFactory().setKind(STATUS_KIND).newKey(keyName);
+//
+//				Entity statusEntity = transaction.get(key);
+//				if (statusEntity != null) {
+//					Builder builder = Entity.newBuilder(statusEntity);
+//					statusFlags.remove(ProcessingStatusFlag.NOOP);
+//					for (ProcessingStatusFlag flag : statusFlags) {
+//						builder.set(flag.getDatastoreFlagPropertyName(), status);
+//					}
+//					transaction.put(builder.build());
+//				} else {
+//					throw new IllegalArgumentException(
+//							String.format("Unable to find status for key %s. Cannot update status for tasks:%s.",
+//									key.toString(), statusFlags.toString()));
+//				}
+//			}
+//			transaction.commit();
+//		} finally {
+//			if (transaction.isActive()) {
+//				transaction.rollback();
+//			}
+//		}
+//	}
+//	
+	
 	public static void main(String[] args) throws IOException {
 //		new DatastoreQueryHelper().getDocumentKeys();
 //		new DatastoreQueryHelper().getStatuses();

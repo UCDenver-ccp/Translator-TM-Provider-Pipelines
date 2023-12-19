@@ -17,7 +17,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
@@ -68,7 +67,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 			PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntityToText, Set<String> keywords,
 			DocumentCriteria outputDocCriteria, com.google.cloud.Timestamp timestamp,
 			Set<DocumentCriteria> requiredDocumentCriteria, Map<String, String> prefixToPlaceholderMap,
-			DocumentType conceptDocumentType, PCollectionView<Map<String, Set<String>>> ancestorsMapView) {
+			DocumentType conceptDocumentType) {// , PCollectionView<Map<String, Set<String>>> ancestorsMapView) {
 
 		return statusEntityToText.apply("Identify concept annotations",
 				ParDo.of(new DoFn<KV<ProcessingStatus, Map<DocumentCriteria, String>>, KV<ProcessingStatus, String>>() {
@@ -81,7 +80,7 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
 
-						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
+//						Map<String, Set<String>> ancestorsMap = context.sideInput(ancestorsMapView);
 
 						try {
 							String documentText = PipelineMain.getDocumentText(statusEntityToText.getValue(), docId);
@@ -90,7 +89,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 									.getDocTypeToContentMap(docId, statusEntityToText.getValue());
 
 							Set<String> extractedSentences = extractSentences(docId, documentText, docTypeToContentMap,
-									keywords, prefixToPlaceholderMap, tokenizer, conceptDocumentType, ancestorsMap);
+									keywords, prefixToPlaceholderMap, tokenizer, conceptDocumentType);// ,
+																										// ancestorsMap);
 							if (extractedSentences == null) {
 								PipelineMain.logFailure(ETL_FAILURE_TAG,
 										"Unable to extract sentences due to missing documents for: " + docId
@@ -108,8 +108,8 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 						}
 					}
 
-				}).withSideInputs(ancestorsMapView).withOutputTags(EXTRACTED_SENTENCES_TAG,
-						TupleTagList.of(ETL_FAILURE_TAG)));
+				})// .withSideInputs(ancestorsMapView)
+						.withOutputTags(EXTRACTED_SENTENCES_TAG, TupleTagList.of(ETL_FAILURE_TAG)));
 	}
 
 	/**
@@ -126,8 +126,9 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 	@VisibleForTesting
 	protected static Set<String> extractSentences(String documentId, String documentText,
 			Map<DocumentType, Collection<TextAnnotation>> docTypeToContentMap, Set<String> keywords,
-			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer, DocumentType conceptDocumentType,
-			Map<String, Set<String>> ancestorMap) throws IOException {
+			Map<String, String> prefixToPlaceholderMap, SimpleTokenizer tokenizer, DocumentType conceptDocumentType
+//			Map<String, Set<String>> ancestorMap
+	) throws IOException {
 
 		Collection<TextAnnotation> sentenceAnnots = docTypeToContentMap.get(DocumentType.SENTENCE);
 		Collection<TextAnnotation> conceptAnnots = docTypeToContentMap.get(conceptDocumentType);
@@ -150,9 +151,9 @@ public class SentenceExtractionWebAnnoFn extends DoFn<KV<String, String>, KV<Str
 		}
 
 		List<TextAnnotation> conceptXAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
-				Arrays.asList(xPrefix), ancestorMap);
+				Arrays.asList(xPrefix));// , ancestorMap);
 		List<TextAnnotation> conceptYAnnots = SentenceExtractionFn.getAnnotsByPrefix(conceptAnnots,
-				Arrays.asList(yPrefix), ancestorMap);
+				Arrays.asList(yPrefix));// , ancestorMap);
 
 		System.out.println("CONCEPT X: " + conceptXAnnots.size());
 		System.out.println("CONCEPT Y: " + conceptYAnnots.size());

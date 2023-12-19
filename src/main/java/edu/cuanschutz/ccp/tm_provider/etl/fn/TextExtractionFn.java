@@ -83,7 +83,7 @@ public class TextExtractionFn extends DoFn<KV<String, String>, KV<String, String
 								String docCollectionsCommentLine = TextExtractionPipeline.DOCUMENT_COLLECTIONS_COMMENT_PREFIX
 										+ docCollectionsStr + "\n";
 								documentText = docIdCommentLine + docCollectionsCommentLine + "\n" + documentText
-										+ "\n";
+										+ "\n" + TextExtractionPipeline.DOCUMENT_END_COMMENT + "\n";
 
 								out.get(EXTRACTED_TEXT_TAG).output(KV.of(statusEntity, documentText));
 							}

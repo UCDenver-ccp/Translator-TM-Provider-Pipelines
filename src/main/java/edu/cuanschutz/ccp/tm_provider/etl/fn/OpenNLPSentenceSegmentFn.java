@@ -71,11 +71,11 @@ public class OpenNLPSentenceSegmentFn extends DoFn<KV<String, String>, KV<String
 							MultiOutputReceiver out) {
 						ProcessingStatus statusEntity = statusEntityToText.getKey();
 						String docId = statusEntity.getDocumentId();
-						// there is only one entry in the input map and it is the plain text of the
-						// input document
-						String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
-
 						try {
+							// there is only one entry in the input map and it is the plain text of the
+							// input document
+							String plainText = statusEntityToText.getValue().entrySet().iterator().next().getValue();
+
 							String bionlp = getSentencesAsBioNLP(docId, plainText);
 
 							/*

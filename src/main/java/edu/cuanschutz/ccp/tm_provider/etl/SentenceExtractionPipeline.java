@@ -33,6 +33,7 @@ import edu.cuanschutz.ccp.tm_provider.etl.fn.EtlFailureToEntityFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ExtractedSentence;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.PCollectionUtil.Delimiter;
+import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceDpInputBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceExtractionFn;
 import edu.cuanschutz.ccp.tm_provider.etl.fn.SentenceTsvBuilderFn;
 import edu.cuanschutz.ccp.tm_provider.etl.util.DatastoreProcessingStatusUtil.OverwriteOutput;
@@ -123,11 +124,17 @@ public class SentenceExtractionPipeline {
 
 		void setCollection(String value);
 
-		@Description("Path to the bucket where results will be written")
+		@Description("Path to the bucket where TSV results will be written")
 		@Required
-		String getOutputBucket();
+		String getTsvOutputBucket();
 
-		void setOutputBucket(String bucketPath);
+		void setTsvOutputBucket(String bucketPath);
+
+		@Description("Path to the bucket where DP input files results will be written")
+		@Required
+		String getDpInputOutputBucket();
+
+		void setDpInputOutputBucket(String bucketPath);
 
 		@Description("Overwrite any previous runs")
 		@Required
@@ -135,23 +142,29 @@ public class SentenceExtractionPipeline {
 
 		void setOverwrite(OverwriteOutput value);
 
-		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
-		@Required
-		String getAncestorMapFilePath();
+		// the anscestor map file used to be used to distinguish between the GO_BP,
+		// GO_CC, and GO_MF hierarchies. Now we have prefixed those classes with GO_BP,
+		// GO_CC, or GO_MF so we don't need to import the map. This will decrease the
+		// computational load when running. Also, we have had recent issues with using
+		// large maps as side inputs to beam pipelines.
 
-		void setAncestorMapFilePath(String path);
-
-		@Description("delimiter used to separate columns in the ancestor map file")
-		@Required
-		Delimiter getAncestorMapFileDelimiter();
-
-		void setAncestorMapFileDelimiter(Delimiter delimiter);
-
-		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
-		@Required
-		Delimiter getAncestorMapFileSetDelimiter();
-
-		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
+//		@Description("path to (pattern for) the file(s) containing mappings from ontology class to ancestor classes")
+//		@Required
+//		String getAncestorMapFilePath();
+//
+//		void setAncestorMapFilePath(String path);
+//
+//		@Description("delimiter used to separate columns in the ancestor map file")
+//		@Required
+//		Delimiter getAncestorMapFileDelimiter();
+//
+//		void setAncestorMapFileDelimiter(Delimiter delimiter);
+//
+//		@Description("delimiter used to separate items in the set in the second column of the ancestor map file")
+//		@Required
+//		Delimiter getAncestorMapFileSetDelimiter();
+//
+//		void setAncestorMapFileSetDelimiter(Delimiter delimiter);
 
 		@Description("CURIEs indicating concept identifiers that should be excluded from the extracted sentences")
 		@Required
@@ -216,12 +229,12 @@ public class SentenceExtractionPipeline {
 
 		DocumentType conceptDocumentType = extractConceptDocumentTypeFromInputDocCriteria(inputDocCriteria);
 
-		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
-				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
-				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
+//		final PCollectionView<Map<String, Set<String>>> ancestorMapView = PCollectionUtil.fromKeyToSetTwoColumnFiles(
+//				"ancestor map", p, options.getAncestorMapFilePath(), options.getAncestorMapFileDelimiter(),
+//				options.getAncestorMapFileSetDelimiter(), Compression.GZIP).apply(View.<String, Set<String>>asMap());
 
 		PCollectionTuple output = SentenceExtractionFn.process(statusEntity2Content, keywords, outputDocCriteria,
-				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType, ancestorMapView,
+				timestamp, inputDocCriteria, prefixesToPlaceholderMap, conceptDocumentType, // ancestorMapView,
 				conceptIdsToExclude);
 
 		PCollection<KV<ProcessingStatus, ExtractedSentence>> extractedSentences = output
@@ -239,9 +252,15 @@ public class SentenceExtractionPipeline {
 
 		// de-duplication of extracted sentences?
 		output = SentenceTsvBuilderFn.process(extractedSentences, outputDocCriteria, timestamp);
+		PCollectionTuple dpInputBuilderOutput = SentenceDpInputBuilderFn.process(extractedSentences, outputDocCriteria,
+				timestamp);
 
 		PCollection<KV<ProcessingStatus, String>> statusToOutputTsv = output.get(SentenceTsvBuilderFn.OUTPUT_TSV_TAG);
 		failures = output.get(SentenceTsvBuilderFn.ETL_FAILURE_TAG);
+
+		PCollection<KV<ProcessingStatus, String>> statusToOutputDp = dpInputBuilderOutput
+				.get(SentenceDpInputBuilderFn.OUTPUT_SENTENCE_FOR_DP_TAG);
+		PCollection<EtlFailureData> failuresDp = dpInputBuilderOutput.get(SentenceDpInputBuilderFn.ETL_FAILURE_TAG);
 
 		/*
 		 * store failures from output file format creation
@@ -249,6 +268,13 @@ public class SentenceExtractionPipeline {
 		failureEntities = failures.apply("tsv failures->datastore", ParDo.of(new EtlFailureToEntityFn()));
 		nonredundantFailureEntities = PipelineMain.deduplicateEntitiesByKey(failureEntities);
 		nonredundantFailureEntities.apply("failure_entity->datastore",
+				DatastoreIO.v1().write().withProjectId(options.getProject()));
+
+		/* store failures from the DP input file creation */
+		PCollection<KV<String, Entity>> failureEntitiesDp = failuresDp.apply("tsv failures->datastore",
+				ParDo.of(new EtlFailureToEntityFn()));
+		PCollection<Entity> nonredundantFailureEntitiesDp = PipelineMain.deduplicateEntitiesByKey(failureEntitiesDp);
+		nonredundantFailureEntitiesDp.apply("dp_failure_entity->datastore",
 				DatastoreIO.v1().write().withProjectId(options.getProject()));
 
 		/*
@@ -267,7 +293,7 @@ public class SentenceExtractionPipeline {
 					DatastoreIO.v1().write().withProjectId(options.getProject()));
 		}
 
-		// output sentences to file
+		// output sentences in TSV format to file
 		PCollection<String> outputTsv = statusToOutputTsv
 				.apply(ParDo.of(new DoFn<KV<ProcessingStatus, String>, String>() {
 					private static final long serialVersionUID = 1L;
@@ -278,8 +304,22 @@ public class SentenceExtractionPipeline {
 						c.output(element.getValue());
 					}
 				}));
-		outputTsv.apply("write tsv",
-				TextIO.write().to(options.getOutputBucket()).withSuffix("." + options.getCollection() + ".tsv"));
+		outputTsv.apply("write tsv", TextIO.write().to(options.getTsvOutputBucket()).withCompression(Compression.GZIP)
+				.withSuffix("." + options.getCollection() + ".tsv"));
+
+		// output sentences in input format for Turky DP
+		PCollection<String> outputForTurkuDp = statusToOutputDp
+				.apply(ParDo.of(new DoFn<KV<ProcessingStatus, String>, String>() {
+					private static final long serialVersionUID = 1L;
+
+					@ProcessElement
+					public void processElement(ProcessContext c) {
+						KV<ProcessingStatus, String> element = c.element();
+						c.output(element.getValue());
+					}
+				}));
+		outputForTurkuDp.apply("write turku input", TextIO.write().to(options.getDpInputOutputBucket())
+				.withCompression(Compression.GZIP).withSuffix("." + options.getCollection() + ".txt"));
 
 		p.run().waitUntilFinish();
 	}

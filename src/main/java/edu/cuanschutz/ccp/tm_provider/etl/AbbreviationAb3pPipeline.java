@@ -145,7 +145,7 @@ public class AbbreviationAb3pPipeline {
 		Set<DocumentCriteria> inputDocCriteria = CollectionsUtil.createSet(
 				new DocumentCriteria(DocumentType.SENTENCE, DocumentFormat.BIONLP,
 						options.getInputSentencePipelineKey(), options.getInputSentencePipelineVersion()),
-				new DocumentCriteria(DocumentType.TEXT, DocumentFormat.TEXT, options.getInputTextPipelineKey(),
+				new DocumentCriteria(DocumentType.ACTIONABLE_TEXT, DocumentFormat.TEXT, options.getInputTextPipelineKey(),
 						options.getInputTextPipelineVersion()));
 		PCollection<KV<ProcessingStatus, Map<DocumentCriteria, String>>> statusEntity2Content = PipelineMain
 				.getStatusEntity2Content(inputDocCriteria, options.getProject(), p, targetProcessingStatusFlag,
