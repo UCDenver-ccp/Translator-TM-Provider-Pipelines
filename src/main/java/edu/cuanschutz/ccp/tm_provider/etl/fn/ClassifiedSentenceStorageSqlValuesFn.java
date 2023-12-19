@@ -25,6 +25,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
 import edu.cuanschutz.ccp.tm_provider.etl.fn.ClassifiedSentenceStorageSqlValuesFn.AssertionTableValues;
 import edu.cuanschutz.ccp.tm_provider.etl.util.BiolinkConstants.BiolinkAssociation;
@@ -38,6 +39,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkResult>, AssertionTableValues> {
+
+	private static final Logger logger = Logger.getLogger(ClassifiedSentenceStorageSqlValuesFn.class);
 
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("serial")
@@ -110,6 +113,7 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 
 				String metadataLine = null;
 				Iterator<String> metadataLineIter = result.getAll(metadataTag).iterator();
+				boolean skip = false;
 				if (metadataLineIter.hasNext()) {
 					metadataLine = metadataLineIter.next();
 					if (metadataLineIter.hasNext()) {
@@ -140,41 +144,54 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 						 */
 						String nextMetadataLine = metadataLineIter.next();
 						if (!nextMetadataLine.equals(metadataLine)) {
-							throw new IllegalArgumentException(
-									"Did not expect another line to match from the metadata file: " + metadataLine
-											+ " --- != --- " + nextMetadataLine);
+
+							// 12/11/23 -- this does happen but the next line seems to be very similar -
+							// -maybe somehow a whitespace issue. Throwing an exception is too severe. We
+							// will skip just to be safe, but TODO: revisit this skip as it's probably not
+							// necessary.
+//							throw new IllegalArgumentException(
+//									"Did not expect another line to match from the metadata file: " + metadataLine
+//											+ " --- != --- " + nextMetadataLine);
+
+							logger.warn(String.format(
+									"Encountered multiple metadata lines - this seems to happen occasionally but ideally should not. "
+											+ "Need to investigate at a future date. Line1 = %s !!!!! Line2 = %s",
+									metadataLine, nextMetadataLine));
+							skip = true;
 						}
 					}
 				}
 
-				List<AssertionTableValues> assertionTableValues = new ArrayList<AssertionTableValues>();
-				List<EvidenceTableValues> evidenceTableValues = new ArrayList<EvidenceTableValues>();
-				List<EntityTableValues> entityTableValues = new ArrayList<EntityTableValues>();
-				List<EvidenceScoreTableValues> evidenceScoreTableValues = new ArrayList<EvidenceScoreTableValues>();
-				List<EvidenceVersionTableValues> evidenceVersionTableValues = new ArrayList<EvidenceVersionTableValues>();
+				if (!skip) {
+					List<AssertionTableValues> assertionTableValues = new ArrayList<AssertionTableValues>();
+					List<EvidenceTableValues> evidenceTableValues = new ArrayList<EvidenceTableValues>();
+					List<EntityTableValues> entityTableValues = new ArrayList<EntityTableValues>();
+					List<EvidenceScoreTableValues> evidenceScoreTableValues = new ArrayList<EvidenceScoreTableValues>();
+					List<EvidenceVersionTableValues> evidenceVersionTableValues = new ArrayList<EvidenceVersionTableValues>();
 
-				processLines(biolinkAssoc, bertScoreInclusionMinimumThreshold, databaseVersion, bertOutputLine,
-						metadataLine, assertionTableValues, evidenceTableValues, entityTableValues,
-						evidenceScoreTableValues, evidenceVersionTableValues);
+					processLines(biolinkAssoc, bertScoreInclusionMinimumThreshold, databaseVersion, bertOutputLine,
+							metadataLine, assertionTableValues, evidenceTableValues, entityTableValues,
+							evidenceScoreTableValues, evidenceVersionTableValues);
 
-				for (AssertionTableValues val : assertionTableValues) {
-					out.get(ASSERTION_VALUES_OUTPUT_TAG).output(val);
-				}
+					for (AssertionTableValues val : assertionTableValues) {
+						out.get(ASSERTION_VALUES_OUTPUT_TAG).output(val);
+					}
 
-				for (EvidenceTableValues val : evidenceTableValues) {
-					out.get(EVIDENCE_VALUES_OUTPUT_TAG).output(val);
-				}
+					for (EvidenceTableValues val : evidenceTableValues) {
+						out.get(EVIDENCE_VALUES_OUTPUT_TAG).output(val);
+					}
 
-				for (EvidenceVersionTableValues val : evidenceVersionTableValues) {
-					out.get(EVIDENCE_VERSION_VALUES_OUTPUT_TAG).output(val);
-				}
+					for (EvidenceVersionTableValues val : evidenceVersionTableValues) {
+						out.get(EVIDENCE_VERSION_VALUES_OUTPUT_TAG).output(val);
+					}
 
-				for (EntityTableValues val : entityTableValues) {
-					out.get(ENTITY_VALUES_OUTPUT_TAG).output(val);
-				}
+					for (EntityTableValues val : entityTableValues) {
+						out.get(ENTITY_VALUES_OUTPUT_TAG).output(val);
+					}
 
-				for (EvidenceScoreTableValues val : evidenceScoreTableValues) {
-					out.get(EVIDENCE_SCORE_OUTPUT_TAG).output(val);
+					for (EvidenceScoreTableValues val : evidenceScoreTableValues) {
+						out.get(EVIDENCE_SCORE_OUTPUT_TAG).output(val);
+					}
 				}
 
 			}
@@ -986,8 +1003,6 @@ public class ClassifiedSentenceStorageSqlValuesFn extends DoFn<KV<String, CoGbkR
 		public void verifyDeterministic() throws NonDeterministicException {
 		}
 
-		
-		
 //		@Override
 //		public List<? extends Coder<?>> getCoderArguments() {
 //			return Collections.emptyList();
