@@ -68,7 +68,7 @@ dag = DAG(dag_id='load-medline-xml-dag', default_args=args, catchup=False, sched
 # to downloaded-files.txt
 download_op = BashOperator(
     task_id='download-pubmed-update-files',
-    bash_command="mkdir -p /home/airflow/gcs/data/medline_load/update_files && cd /home/airflow/gcs/data/medline_load/update_files && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed23n*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > downloaded-files.txt",
+    bash_command="mkdir -p /home/airflow/gcs/data/medline_load/update_files && cd /home/airflow/gcs/data/medline_load/update_files && wget -N 'ftp://ftp.ncbi.nlm.nih.gov:21/pubmed/updatefiles/pubmed24n*' 2>&1  | grep done | grep '.gz' | grep -v '.gz.md5' | tr -s ' ' | cut -f 7 -d ' '  > downloaded-files.txt",
     dag=dag)
 
 # TODO: the md5sum verify could be targeted to only the newly downloaded files
